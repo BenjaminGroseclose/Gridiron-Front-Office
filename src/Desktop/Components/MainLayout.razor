@@ -1,0 +1,39 @@
+﻿@inherits LayoutComponentBase
+
+@* Required *@
+<MudThemeProvider IsDarkMode="true" Theme="@CustomTheme" />
+<MudPopoverProvider />
+
+@* Needed for dialogs *@
+<MudDialogProvider />
+
+@* Needed for snackbars *@
+<MudSnackbarProvider />
+
+<MudLayout Height="100vh">
+	@Body
+</MudLayout>
+
+
+@code {
+
+	MudTheme CustomTheme = new MudTheme()
+	{
+		PaletteDark = new PaletteDark()
+		{
+			Primary = "#2563EB",
+			Secondary = "#475569",
+			Background = "#0A0E27",
+			Surface = "#1A1F3A",
+			TextPrimary = "#F1F5F9",
+			TextSecondary = "#94A3B8",
+			DividerLight = "#475569",
+
+			Success = "#38B000",
+			Warning = "#FFB703",
+			Error = "#C1121F",
+			Info = "#00B4D8"
+		}
+
+	};
+}

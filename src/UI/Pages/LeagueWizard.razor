@@ -1,0 +1,50 @@
+@page "/league-setup"
+@implements IDisposable
+
+@inject ILeagueWizardService LeagueWizardService
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="ma-auto">
+	<MudText Typo="Typo.h3" Class="mt-3 mb-3">New Game</MudText>
+
+	<MudStepper CenterLabels="true">
+		<MudStep Title="Profile" Icon="@Icons.Material.Filled.Person">
+			<MudPaper Elevation="2" Class="pa-4">
+				<LeagueWizardProfile />
+			</MudPaper>
+
+		</MudStep>
+		<MudStep Title="League Settings" Icon="@Icons.Material.Filled.Settings">
+			<MudPaper Elevation="2" Class="pa-4">
+				<LeagueWizardSettings />
+			</MudPaper>
+
+		</MudStep>
+		<MudStep Title="Team Selection" Icon="@Icons.Material.Filled.Group">
+			<MudPaper Elevation="2" Class="pa-4">
+				<LeagueWizardTeam />
+			</MudPaper>
+
+		</MudStep>
+		<MudStep Title="League Customization" Icon="@Icons.Material.Filled.DashboardCustomize">
+			<MudPaper Elevation="2" Class="pa-4">
+				<LeagueWizardCustomization />
+			</MudPaper>
+
+		</MudStep>
+	</MudStepper>
+
+</MudContainer>
+
+@code {
+
+	protected override void OnInitialized()
+	{
+		LeagueWizardService.OnChange += StateHasChanged;
+	}
+
+	public void Dispose()
+	{
+		LeagueWizardService.OnChange -= StateHasChanged;
+	}
+
+}

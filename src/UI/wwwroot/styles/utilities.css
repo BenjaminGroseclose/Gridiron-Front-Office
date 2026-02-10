@@ -1,0 +1,24 @@
+/* ===================================
+   Border Utilities with MudBlazor Colors
+   =================================== */
+
+/* Border Color Utilities */
+.border-primary {
+  border: 1px solid var(--mud-palette-primary);
+}
+
+.border-success {
+  border: 1px solid var(--mud-palette-success);
+}
+
+.border-error {
+  border: 1px solid var(--mud-palette-error);
+}
+
+.border-warning {
+  border: 1px solid var(--mud-palette-warning);
+}
+
+.border-info {
+  border: 1px solid var(--mud-palette-info);
+}

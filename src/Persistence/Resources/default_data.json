@@ -1,0 +1,604 @@
+{
+  "Stadiums": [
+    {
+      "StadiumID": 1,
+      "Name": "Scorpion Stadium",
+      "Capacity": 73626,
+      "Location": "Arizona"
+    },
+    {
+      "StadiumID": 2,
+      "Name": "Raptor Nest",
+      "Capacity": 75000,
+      "Location": "Atlanta, Georgia"
+    },
+    {
+      "StadiumID": 3,
+      "Name": "Crow's Roost Stadium",
+      "Capacity": 71008,
+      "Location": "Baltimore, Maryland"
+    },
+    {
+      "StadiumID": 4,
+      "Name": "Bison Grounds",
+      "Capacity": 70060,
+      "Location": "Buffalo, New York"
+    },
+    {
+      "StadiumID": 5,
+      "Name": "Cougar Valley Stadium",
+      "Capacity": 75525,
+      "Location": "Charlotte, North Carolina"
+    },
+    {
+      "StadiumID": 6,
+      "Name": "Bear's Den",
+      "Capacity": 61500,
+      "Location": "Chicago, Illinois"
+    },
+    {
+      "StadiumID": 7,
+      "Name": "Tiger Arena",
+      "Capacity": 65535,
+      "Location": "Cincinnati, Ohio"
+    },
+    {
+      "StadiumID": 8,
+      "Name": "Bulldog Yard",
+      "Capacity": 67431,
+      "Location": "Cleveland, Ohio"
+    },
+    {
+      "StadiumID": 9,
+      "Name": "Ranger Field",
+      "Capacity": 80000,
+      "Location": "Arlington, Texas"
+    },
+    {
+      "StadiumID": 10,
+      "Name": "Mustang Arena",
+      "Capacity": 76125,
+      "Location": "Denver, Colorado"
+    },
+    {
+      "StadiumID": 11,
+      "Name": "Bobcat Stadium",
+      "Capacity": 65400,
+      "Location": "Detroit, Michigan"
+    },
+    {
+      "StadiumID": 12,
+      "Name": "Beaver Lodge",
+      "Capacity": 81441,
+      "Location": "Green Bay, Wisconsin"
+    },
+    {
+      "StadiumID": 13,
+      "Name": "Driller Field",
+      "Capacity": 72220,
+      "Location": "Houston, Texas"
+    },
+    {
+      "StadiumID": 14,
+      "Name": "Stallion Grounds",
+      "Capacity": 67000,
+      "Location": "Indianapolis, Indiana"
+    },
+    {
+      "StadiumID": 15,
+      "Name": "Leopard's Lair",
+      "Capacity": 69132,
+      "Location": "Jacksonville, Florida"
+    },
+    {
+      "StadiumID": 16,
+      "Name": "Warrior Stadium",
+      "Capacity": 76416,
+      "Location": "Kansas City, Missouri"
+    },
+    {
+      "StadiumID": 17,
+      "Name": "Bandit's Bay",
+      "Capacity": 61629,
+      "Location": "Las Vegas, Nevada"
+    },
+    {
+      "StadiumID": 18,
+      "Name": "Bolt Arena",
+      "Capacity": 70240,
+      "Location": "Los Angeles, California"
+    },
+    {
+      "StadiumID": 19,
+      "Name": "Horn Field",
+      "Capacity": 70240,
+      "Location": "Los Angeles, California"
+    },
+    {
+      "StadiumID": 20,
+      "Name": "Shark Tank Stadium",
+      "Capacity": 65326,
+      "Location": "Miami, Florida"
+    },
+    {
+      "StadiumID": 21,
+      "Name": "Nordic Hall",
+      "Capacity": 66655,
+      "Location": "Minneapolis, Minnesota"
+    },
+    {
+      "StadiumID": 22,
+      "Name": "Minuteman Field",
+      "Capacity": 65878,
+      "Location": "Foxborough, Massachusetts"
+    },
+    {
+      "StadiumID": 23,
+      "Name": "Angel's Garden",
+      "Capacity": 73208,
+      "Location": "New Orleans, Louisiana"
+    },
+    {
+      "StadiumID": 24,
+      "Name": "Goliath Stadium",
+      "Capacity": 82500,
+      "Location": "East Rutherford, New Jersey"
+    },
+    {
+      "StadiumID": 25,
+      "Name": "Pilot's Port",
+      "Capacity": 82500,
+      "Location": "East Rutherford, New Jersey"
+    },
+    {
+      "StadiumID": 26,
+      "Name": "Hawk's Nest",
+      "Capacity": 69596,
+      "Location": "Philadelphia, Pennsylvania"
+    },
+    {
+      "StadiumID": 27,
+      "Name": "Ironworker's Mile",
+      "Capacity": 68400,
+      "Location": "Pittsburgh, Pennsylvania"
+    },
+    {
+      "StadiumID": 28,
+      "Name": "Gold Rush Stadium",
+      "Capacity": 75000,
+      "Location": "Santa Clara, California"
+    },
+    {
+      "StadiumID": 29,
+      "Name": "Osprey Field",
+      "Capacity": 72000,
+      "Location": "Seattle, Washington"
+    },
+    {
+      "StadiumID": 30,
+      "Name": "Corsair's Cove",
+      "Capacity": 75000,
+      "Location": "Tampa, Florida"
+    },
+    {
+      "StadiumID": 31,
+      "Name": "Olympian Arena",
+      "Capacity": 69143,
+      "Location": "Nashville, Tennessee"
+    },
+    {
+      "StadiumID": 32,
+      "Name": "General's Fort",
+      "Capacity": 82000,
+      "Location": "Washington, D.C."
+    }
+  ],
+  "Conferences": [
+    {
+      "ConferenceID": 1,
+      "Name": "American Football Conference",
+      "Abbreviation": "AFC"
+    },
+    {
+      "ConferenceID": 2,
+      "Name": "National Football Conference",
+      "Abbreviation": "NFC"
+    }
+  ],
+  "Divisions": [
+    {
+      "DivisionID": 1,
+      "Name": "East",
+      "ConferenceID": 1
+    },
+    {
+      "DivisionID": 2,
+      "Name": "North",
+      "ConferenceID": 1
+    },
+    {
+      "DivisionID": 3,
+      "Name": "South",
+      "ConferenceID": 1
+    },
+    {
+      "DivisionID": 4,
+      "Name": "West",
+      "ConferenceID": 1
+    },
+    {
+      "DivisionID": 5,
+      "Name": "East",
+      "ConferenceID": 2
+    },
+    {
+      "DivisionID": 6,
+      "Name": "North",
+      "ConferenceID": 2
+    },
+    {
+      "DivisionID": 7,
+      "Name": "South",
+      "ConferenceID": 2
+    },
+    {
+      "DivisionID": 8,
+      "Name": "West",
+      "ConferenceID": 2
+    }
+  ],
+  "Teams": [
+    {
+      "TeamID": 1,
+      "City": "Arizona",
+      "Name": "Scorpions",
+      "Abbreviation": "ARI",
+      "PrimaryColor": "#97233F",
+      "SecondaryColor": "#000000",
+      "ConferenceID": 2,
+      "DivisionID": 8,
+      "StadiumID": 1
+    },
+    {
+      "TeamID": 2,
+      "City": "Atlanta",
+      "Name": "Raptors",
+      "Abbreviation": "ATL",
+      "PrimaryColor": "#A71930",
+      "SecondaryColor": "#000000",
+      "ConferenceID": 2,
+      "DivisionID": 7,
+      "StadiumID": 2
+    },
+    {
+      "TeamID": 3,
+      "City": "Baltimore",
+      "Name": "Crows",
+      "Abbreviation": "BAL",
+      "PrimaryColor": "#241773",
+      "SecondaryColor": "#000000",
+      "ConferenceID": 1,
+      "DivisionID": 2,
+      "StadiumID": 3
+    },
+    {
+      "TeamID": 4,
+      "City": "Buffalo",
+      "Name": "Bisons",
+      "Abbreviation": "BUF",
+      "PrimaryColor": "#00338D",
+      "SecondaryColor": "#C60C30",
+      "ConferenceID": 1,
+      "DivisionID": 1,
+      "StadiumID": 4
+    },
+    {
+      "TeamID": 5,
+      "City": "Carolina",
+      "Name": "Cougars",
+      "Abbreviation": "CAR",
+      "PrimaryColor": "#0085CA",
+      "SecondaryColor": "#101820",
+      "ConferenceID": 2,
+      "DivisionID": 7,
+      "StadiumID": 5
+    },
+    {
+      "TeamID": 6,
+      "City": "Chicago",
+      "Name": "Bruins",
+      "Abbreviation": "CHI",
+      "PrimaryColor": "#0B162A",
+      "SecondaryColor": "#C83803",
+      "ConferenceID": 2,
+      "DivisionID": 6,
+      "StadiumID": 6
+    },
+    {
+      "TeamID": 7,
+      "City": "Cincinnati",
+      "Name": "Tigers",
+      "Abbreviation": "CIN",
+      "PrimaryColor": "#FB4F14",
+      "SecondaryColor": "#000000",
+      "ConferenceID": 1,
+      "DivisionID": 2,
+      "StadiumID": 7
+    },
+    {
+      "TeamID": 8,
+      "City": "Cleveland",
+      "Name": "Bulldogs",
+      "Abbreviation": "CLE",
+      "PrimaryColor": "#311D00",
+      "SecondaryColor": "#FF3C00",
+      "ConferenceID": 1,
+      "DivisionID": 2,
+      "StadiumID": 8
+    },
+    {
+      "TeamID": 9,
+      "City": "Dallas",
+      "Name": "Rangers",
+      "Abbreviation": "DAL",
+      "PrimaryColor": "#003594",
+      "SecondaryColor": "#869397",
+      "ConferenceID": 2,
+      "DivisionID": 5,
+      "StadiumID": 9
+    },
+    {
+      "TeamID": 10,
+      "City": "Denver",
+      "Name": "Mustangs",
+      "Abbreviation": "DEN",
+      "PrimaryColor": "#FB4F14",
+      "SecondaryColor": "#002244",
+      "ConferenceID": 1,
+      "DivisionID": 4,
+      "StadiumID": 10
+    },
+    {
+      "TeamID": 11,
+      "City": "Detroit",
+      "Name": "Bobcats",
+      "Abbreviation": "DET",
+      "PrimaryColor": "#0076B6",
+      "SecondaryColor": "#B0B7BC",
+      "ConferenceID": 2,
+      "DivisionID": 6,
+      "StadiumID": 11
+    },
+    {
+      "TeamID": 12,
+      "City": "Green Bay",
+      "Name": "Beavers",
+      "Abbreviation": "GB",
+      "PrimaryColor": "#203731",
+      "SecondaryColor": "#FFB612",
+      "ConferenceID": 2,
+      "DivisionID": 6,
+      "StadiumID": 12
+    },
+    {
+      "TeamID": 13,
+      "City": "Houston",
+      "Name": "Drillers",
+      "Abbreviation": "HOU",
+      "PrimaryColor": "#03202F",
+      "SecondaryColor": "#A71930",
+      "ConferenceID": 1,
+      "DivisionID": 3,
+      "StadiumID": 13
+    },
+    {
+      "TeamID": 14,
+      "City": "Indianapolis",
+      "Name": "Stallions",
+      "Abbreviation": "IND",
+      "PrimaryColor": "#002C5F",
+      "SecondaryColor": "#A2AAAD",
+      "ConferenceID": 1,
+      "DivisionID": 3,
+      "StadiumID": 14
+    },
+    {
+      "TeamID": 15,
+      "City": "Jacksonville",
+      "Name": "Leopards",
+      "Abbreviation": "JAX",
+      "PrimaryColor": "#006778",
+      "SecondaryColor": "#9F792C",
+      "ConferenceID": 1,
+      "DivisionID": 3,
+      "StadiumID": 15
+    },
+    {
+      "TeamID": 16,
+      "City": "Kansas City",
+      "Name": "Warriors",
+      "Abbreviation": "KC",
+      "PrimaryColor": "#E31837",
+      "SecondaryColor": "#FFB81C",
+      "ConferenceID": 1,
+      "DivisionID": 4,
+      "StadiumID": 16
+    },
+    {
+      "TeamID": 17,
+      "City": "Las Vegas",
+      "Name": "Bandits",
+      "Abbreviation": "LV",
+      "PrimaryColor": "#000000",
+      "SecondaryColor": "#A5ACAF",
+      "ConferenceID": 1,
+      "DivisionID": 4,
+      "StadiumID": 17
+    },
+    {
+      "TeamID": 18,
+      "City": "Los Angeles",
+      "Name": "Bolts",
+      "Abbreviation": "LAC",
+      "PrimaryColor": "#0080C6",
+      "SecondaryColor": "#FFC20E",
+      "ConferenceID": 1,
+      "DivisionID": 4,
+      "StadiumID": 18
+    },
+    {
+      "TeamID": 19,
+      "City": "Los Angeles",
+      "Name": "Horns",
+      "Abbreviation": "LAR",
+      "PrimaryColor": "#003594",
+      "SecondaryColor": "#FFA300",
+      "ConferenceID": 2,
+      "DivisionID": 8,
+      "StadiumID": 19
+    },
+    {
+      "TeamID": 20,
+      "City": "Miami",
+      "Name": "Makos",
+      "Abbreviation": "MIA",
+      "PrimaryColor": "#008E97",
+      "SecondaryColor": "#FC4C02",
+      "ConferenceID": 1,
+      "DivisionID": 1,
+      "StadiumID": 20
+    },
+    {
+      "TeamID": 21,
+      "City": "Minnesota",
+      "Name": "Norsemen",
+      "Abbreviation": "MIN",
+      "PrimaryColor": "#4F2683",
+      "SecondaryColor": "#FFC62F",
+      "ConferenceID": 2,
+      "DivisionID": 6,
+      "StadiumID": 21
+    },
+    {
+      "TeamID": 22,
+      "City": "New England",
+      "Name": "Minutemen",
+      "Abbreviation": "NE",
+      "PrimaryColor": "#002244",
+      "SecondaryColor": "#C60C30",
+      "ConferenceID": 1,
+      "DivisionID": 1,
+      "StadiumID": 22
+    },
+    {
+      "TeamID": 23,
+      "City": "New Orleans",
+      "Name": "Angels",
+      "Abbreviation": "NO",
+      "PrimaryColor": "#D3BC8D",
+      "SecondaryColor": "#101820",
+      "ConferenceID": 2,
+      "DivisionID": 7,
+      "StadiumID": 23
+    },
+    {
+      "TeamID": 24,
+      "City": "New York",
+      "Name": "Goliaths",
+      "Abbreviation": "NYG",
+      "PrimaryColor": "#0B2265",
+      "SecondaryColor": "#A71930",
+      "ConferenceID": 2,
+      "DivisionID": 5,
+      "StadiumID": 24
+    },
+    {
+      "TeamID": 25,
+      "City": "New York",
+      "Name": "Pilots",
+      "Abbreviation": "NYJ",
+      "PrimaryColor": "#125740",
+      "SecondaryColor": "#FFFFFF",
+      "ConferenceID": 1,
+      "DivisionID": 1,
+      "StadiumID": 25
+    },
+    {
+      "TeamID": 26,
+      "City": "Philadelphia",
+      "Name": "Hawks",
+      "Abbreviation": "PHI",
+      "PrimaryColor": "#004C54",
+      "SecondaryColor": "#A5ACAF",
+      "ConferenceID": 2,
+      "DivisionID": 5,
+      "StadiumID": 26
+    },
+    {
+      "TeamID": 27,
+      "City": "Pittsburgh",
+      "Name": "Ironworkers",
+      "Abbreviation": "PIT",
+      "PrimaryColor": "#101820",
+      "SecondaryColor": "#FFB612",
+      "ConferenceID": 1,
+      "DivisionID": 2,
+      "StadiumID": 27
+    },
+    {
+      "TeamID": 28,
+      "City": "San Francisco",
+      "Name": "Miners",
+      "Abbreviation": "SF",
+      "PrimaryColor": "#AA0000",
+      "SecondaryColor": "#B3995D",
+      "ConferenceID": 2,
+      "DivisionID": 8,
+      "StadiumID": 28
+    },
+    {
+      "TeamID": 29,
+      "City": "Seattle",
+      "Name": "Ospreys",
+      "Abbreviation": "SEA",
+      "PrimaryColor": "#002244",
+      "SecondaryColor": "#69BE28",
+      "ConferenceID": 2,
+      "DivisionID": 8,
+      "StadiumID": 29
+    },
+    {
+      "TeamID": 30,
+      "City": "Tampa Bay",
+      "Name": "Corsairs",
+      "Abbreviation": "TB",
+      "PrimaryColor": "#D50A0A",
+      "SecondaryColor": "#FF7900",
+      "ConferenceID": 2,
+      "DivisionID": 7,
+      "StadiumID": 30
+    },
+    {
+      "TeamID": 31,
+      "City": "Tennessee",
+      "Name": "Olympians",
+      "Abbreviation": "TEN",
+      "PrimaryColor": "#0C2340",
+      "SecondaryColor": "#4B92DB",
+      "ConferenceID": 1,
+      "DivisionID": 3,
+      "StadiumID": 31
+    },
+    {
+      "TeamID": 32,
+      "City": "Washington",
+      "Name": "Generals",
+      "Abbreviation": "WAS",
+      "PrimaryColor": "#5A1414",
+      "SecondaryColor": "#FFB612",
+      "ConferenceID": 2,
+      "DivisionID": 5,
+      "StadiumID": 32
+    }
+  ]
+}

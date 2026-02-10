@@ -1,0 +1,88 @@
+/* ===================================
+   Color Utilities with MudBlazor Palette
+   =================================== */
+
+/* Text Color Utilities */
+.text-primary {
+  color: var(--mud-palette-primary);
+}
+
+.text-success {
+  color: var(--mud-palette-success);
+}
+
+.text-error {
+  color: var(--mud-palette-error);
+}
+
+.text-warning {
+  color: var(--mud-palette-warning);
+}
+
+.text-info {
+  color: var(--mud-palette-info);
+}
+
+.text-muted {
+  color: var(--mud-palette-text-secondary);
+}
+
+/* Background Color Utilities */
+.bg-primary {
+  background-color: var(--mud-palette-primary);
+}
+
+.bg-primary-light {
+  background-color: var(--mud-palette-primary-lighter);
+}
+
+.bg-success {
+  background-color: var(--mud-palette-success);
+}
+
+.bg-error {
+  background-color: var(--mud-palette-error);
+}
+
+.bg-warning {
+  background-color: var(--mud-palette-warning);
+}
+
+.bg-info {
+  background-color: var(--mud-palette-info);
+}
+
+.bg-surface {
+  background-color: var(--mud-palette-surface);
+}
+
+.bg-background {
+  background-color: var(--mud-palette-background);
+}
+
+/* Text on Colored Backgrounds */
+.text-primary-dark {
+  color: var(--mud-palette-primary-darken);
+}
+
+.text-primary-light {
+  color: var(--mud-palette-primary-lighten);
+}
+
+/* Gray Scale */
+.text-dark {
+  color: var(--mud-palette-text-primary);
+}
+
+.text-light {
+  color: var(--mud-palette-text-secondary);
+}
+
+/* Hover Color Transitions */
+.hover-primary:hover {
+  color: var(--mud-palette-primary);
+}
+
+.hover-bg-primary:hover {
+  background-color: var(--mud-palette-primary-lighter);
+}

@@ -1,0 +1,228 @@
+@inject ILeagueWizardService LeagueWizardService
+@using GridironFrontOffice.Domain.Enums
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-6">
+	<MudGrid Spacing="4">
+		<!-- Left Section: Profile Form -->
+		<MudItem xs="12" md="4">
+			<MudPaper Elevation="0" Class="pa-6">
+				<MudStack Spacing="4">
+					<MudStack Spacing="1">
+						<MudText Typo="Typo.h5" Color="Color.Primary">
+							<MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-2" />
+							Profile Setup
+						</MudText>
+						<MudText Typo="Typo.body2">
+							Configure your league and coach details
+						</MudText>
+					</MudStack>
+
+					<MudDivider />
+
+					<MudTextField T="string" Variant="Variant.Outlined" Label="League Name"
+												HelperText="Give your league a unique name" @bind-Text="_leagueName"
+												@bind-Text:after="UpdateLeagueWizardService" Immediate="false" Required="true" />
+
+					<MudTextField T="string" Variant="Variant.Outlined" Label="Coach Name"
+												HelperText="Your name as the head coach" @bind-Text="_coachName"
+												@bind-Text:after="UpdateLeagueWizardService" Immediate="false" Required="true" />
+
+					<MudDatePicker Label="Coach Birthdate" Variant="Variant.Outlined" HelperText="Age of the coach"
+												 @bind-Date="_selectedDate" @bind-Date:after="UpdateLeagueWizardService" MaxDate="DateTime.Now.AddYears(-18)"
+												 OpenTo="OpenTo.Year" />
+				</MudStack>
+			</MudPaper>
+		</MudItem>
+
+		<!-- Right Section: Difficulty Selection -->
+		<MudItem xs="12" md="8">
+			<MudStack Spacing="3">
+				<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+					<MudIcon Icon="@Icons.Material.Filled.Speed" Color="Color.Primary" Size="Size.Large" />
+					<MudStack Spacing="0">
+						<MudText Typo="Typo.h5">League Difficulty</MudText>
+						<MudText Typo="Typo.body2" Color="Color.Secondary">
+							Choose your challenge level - affects AI behavior, trades, scouting, and more
+						</MudText>
+					</MudStack>
+					<InfoTooltip
+					Text="Difficulty affects CPU decision-making, trade fairness, free agency competition, scouting accuracy, and overall challenge level."
+					Placement="Placement.Right" />
+				</MudStack>
+
+				<MudGrid Spacing="3">
+					<!-- Easy Difficulty -->
+					<MudItem xs="12" sm="4">
+						<MudCard Elevation="@(_selectedDifficulty == LeagueDifficultyLevel.Easy ? 8 : 2)"
+										 Class="@GetDifficultyCardClass(LeagueDifficultyLevel.Easy)"
+										 onclick="@(() => SelectDifficulty(LeagueDifficultyLevel.Easy))"
+										 Style="height: 100%; cursor: pointer; transition: all 0.3s ease;">
+							<MudCardHeader Class="pb-2">
+								<CardHeaderAvatar>
+									<MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
+										<MudIcon Icon="@Icons.Material.Filled.SentimentSatisfied" />
+									</MudAvatar>
+								</CardHeaderAvatar>
+								<CardHeaderContent>
+									<MudText Typo="Typo.h6">Easy</MudText>
+									<MudText Typo="Typo.body2">Casual Play</MudText>
+								</CardHeaderContent>
+							</MudCardHeader>
+							<MudCardContent>
+								<MudStack Spacing="2">
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+										<MudText Typo="Typo.body2">Favorable trade offers</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+										<MudText Typo="Typo.body2">Less aggressive CPU</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+										<MudText Typo="Typo.body2">Forgiving progression</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+										<MudText Typo="Typo.body2">Perfect for beginners</MudText>
+									</MudStack>
+								</MudStack>
+							</MudCardContent>
+						</MudCard>
+					</MudItem>
+
+					<!-- Normal Difficulty -->
+					<MudItem xs="12" sm="4">
+						<MudCard Elevation="@(_selectedDifficulty == LeagueDifficultyLevel.Normal ? 8 : 2)"
+										 Class="@GetDifficultyCardClass(LeagueDifficultyLevel.Normal)"
+										 onclick="@(() => SelectDifficulty(LeagueDifficultyLevel.Normal))"
+										 Style="height: 100%; cursor: pointer; transition: all 0.3s ease;">
+							<MudCardHeader Class="pb-2">
+								<CardHeaderAvatar>
+									<MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
+										<MudIcon Icon="@Icons.Material.Filled.Balance" />
+									</MudAvatar>
+								</CardHeaderAvatar>
+								<CardHeaderContent>
+									<MudText Typo="Typo.h6">Normal</MudText>
+									<MudText Typo="Typo.body2">Balanced</MudText>
+								</CardHeaderContent>
+							</MudCardHeader>
+							<MudCardContent>
+								<MudStack Spacing="2">
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Warning" />
+										<MudText Typo="Typo.body2">Realistic trade values</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Warning" />
+										<MudText Typo="Typo.body2">Balanced CPU play</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Warning" />
+										<MudText Typo="Typo.body2">Fair progression rate</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Warning" />
+										<MudText Typo="Typo.body2">Recommended default</MudText>
+									</MudStack>
+								</MudStack>
+							</MudCardContent>
+						</MudCard>
+					</MudItem>
+
+					<!-- Hard Difficulty -->
+					<MudItem xs="12" sm="4">
+						<MudCard Elevation="@(_selectedDifficulty == LeagueDifficultyLevel.Hard ? 8 : 2)"
+										 Class="@GetDifficultyCardClass(LeagueDifficultyLevel.Hard)"
+										 onclick="@(() => SelectDifficulty(LeagueDifficultyLevel.Hard))"
+										 Style="height: 100%; cursor: pointer; transition: all 0.3s ease;">
+							<MudCardHeader Class="pb-2">
+								<CardHeaderAvatar>
+									<MudAvatar Color="Color.Error" Variant="Variant.Filled" Size="Size.Large">
+										<MudIcon Icon="@Icons.Material.Filled.Whatshot" />
+									</MudAvatar>
+								</CardHeaderAvatar>
+								<CardHeaderContent>
+									<MudText Typo="Typo.h6">Hard</MudText>
+									<MudText Typo="Typo.body2">Competitive</MudText>
+								</CardHeaderContent>
+							</MudCardHeader>
+							<MudCardContent>
+								<MudStack Spacing="2">
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Error" />
+										<MudText Typo="Typo.body2">Tough negotiations</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Error" />
+										<MudText Typo="Typo.body2">Aggressive CPU teams</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Error" />
+										<MudText Typo="Typo.body2">Slower progression</MudText>
+									</MudStack>
+									<MudStack Row="true" Spacing="1" AlignItems="AlignItems.Start">
+										<MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Error" />
+										<MudText Typo="Typo.body2">For veterans only</MudText>
+									</MudStack>
+								</MudStack>
+							</MudCardContent>
+						</MudCard>
+					</MudItem>
+				</MudGrid>
+			</MudStack>
+		</MudItem>
+	</MudGrid>
+</MudContainer>
+
+@code {
+	private string _leagueName = string.Empty;
+	private string _coachName = string.Empty;
+	private DateTime? _selectedDate;
+	private LeagueDifficultyLevel _selectedDifficulty = LeagueDifficultyLevel.Normal;
+
+	protected override void OnInitialized()
+	{
+		_leagueName = LeagueWizardService.CurrentLeagueSetupForm.LeagueName ?? string.Empty;
+		_coachName = LeagueWizardService.CurrentLeagueSetupForm.CoachName ?? string.Empty;
+		_selectedDate = LeagueWizardService.CurrentLeagueSetupForm.CoachDateOfBirth == default ? DateTime.Now.AddYears(-30) :
+			LeagueWizardService.CurrentLeagueSetupForm.CoachDateOfBirth;
+		_selectedDifficulty = LeagueWizardService.CurrentLeagueSetupForm.LeagueDifficulty;
+
+
+		LeagueWizardService.OnChange += StateHasChanged;
+
+		base.OnInitialized();
+	}
+
+	public void Dispose()
+	{
+		LeagueWizardService.OnChange -= StateHasChanged;
+	}
+
+	void UpdateLeagueWizardService()
+	{
+		LeagueWizardService.UpdateProfile(_leagueName, _coachName, _selectedDate, _selectedDifficulty);
+	}
+
+	void SelectDifficulty(LeagueDifficultyLevel difficulty)
+	{
+		_selectedDifficulty = difficulty;
+		UpdateLeagueWizardService();
+	}
+
+	private string GetDifficultyCardClass(LeagueDifficultyLevel difficulty)
+	{
+		var isSelected = _selectedDifficulty == difficulty;
+		var borderColor = difficulty switch
+		{
+			LeagueDifficultyLevel.Easy => isSelected ? "mud-border-success mud-border-solid" : "",
+			LeagueDifficultyLevel.Normal => isSelected ? "mud-border-warning mud-border-solid" : "",
+			LeagueDifficultyLevel.Hard => isSelected ? "mud-border-error mud-border-solid" : "",
+			_ => ""
+		};
+
+		return $"border {borderColor}".Trim();
+	}
+}

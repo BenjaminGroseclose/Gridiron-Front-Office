@@ -1,0 +1,14 @@
+@using System.ComponentModel.DataAnnotations
+
+<MudTooltip Text="@Text" Placement="@Placement">
+	<MudIcon Class="ma-auto" Icon="@Icons.Material.Filled.Info" Color="Color.Default" />
+</MudTooltip>
+
+@code {
+	[Required]
+	[Parameter]
+	public string Text { get; set; } = string.Empty;
+
+	[Parameter]
+	public Placement Placement { get; set; } = Placement.Top;
+}

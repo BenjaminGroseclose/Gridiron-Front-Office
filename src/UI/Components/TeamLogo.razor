@@ -1,0 +1,45 @@
+@using System.ComponentModel.DataAnnotations
+@using GridironFrontOffice.Domain
+
+@if (!string.IsNullOrEmpty(_logoPath))
+{
+	<img src="@_logoPath" alt="@_abbreviation Logo" height="@_height" width="@_width" />
+}
+else
+{
+	<div class="d-flex align-items-center justify-content-center rounded"
+			 style="background-color: @_backgroundColor; height:@_height; width:@_width;">
+		<MudText Typo="Typo.subtitle2">@_abbreviation</MudText>
+	</div>
+}
+
+@code {
+
+	[Required]
+	[Parameter]
+	public Team? Team { get; set; }
+
+	private string _logoPath => Team?.LogoPath ?? string.Empty;
+	private string _abbreviation => Team?.Abbreviation ?? string.Empty;
+	private string _backgroundColor => Team?.PrimaryColor ?? "#e0e0e0";
+
+	[Parameter]
+	public string Size { get; set; } = "sm";
+
+	private string _height => Size switch
+	{
+		"sm" => "25px",
+		"md" => "50px",
+		"lg" => "100px",
+		_ => "25px"
+	};
+
+	private string _width => Size switch
+	{
+		"sm" => "50px",
+		"md" => "100px",
+		"lg" => "150px",
+		_ => "50px"
+	};
+
+}
