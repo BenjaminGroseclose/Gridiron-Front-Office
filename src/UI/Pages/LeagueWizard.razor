@@ -1,50 +1,86 @@
 @page "/league-setup"
+@using GridironFrontOffice.UI.Services
 @implements IDisposable
 
+@inject INavigationService NavigationService
 @inject ILeagueWizardService LeagueWizardService
 
-<MudContainer MaxWidth="MaxWidth.Large" Class="ma-auto">
-	<MudText Typo="Typo.h3" Class="mt-3 mb-3">New Game</MudText>
+<MudContainer MaxWidth="MaxWidth.Medium" Class="ma-auto">
+	<MudStack Row="true" AlignItems="AlignItems.Center" JustifyContent="Center">
+		<MudIcon Icon="@Icons.Material.Filled.SportsFootball" Size="Size.Large" Color="Color.Primary" />
+		<MudText Typo="Typo.h3" Class="mt-3 mb-3">New Game</MudText>
 
-	<MudStepper CenterLabels="true">
-		<MudStep Title="Profile" Icon="@Icons.Material.Filled.Person">
-			<MudPaper Elevation="2" Class="pa-4">
-				<LeagueWizardProfile />
-			</MudPaper>
+		<MudSpacer />
 
-		</MudStep>
-		<MudStep Title="League Settings" Icon="@Icons.Material.Filled.Settings">
-			<MudPaper Elevation="2" Class="pa-4">
-				<LeagueWizardSettings />
-			</MudPaper>
+		<MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" Tooltip="Close League Setup"
+									 OnClick="NavigateToHome" />
+	</MudStack>
 
-		</MudStep>
-		<MudStep Title="Team Selection" Icon="@Icons.Material.Filled.Group">
-			<MudPaper Elevation="2" Class="pa-4">
-				<LeagueWizardTeam />
-			</MudPaper>
+	<MudStepper @bind-ActiveIndex="_activeStep">
+		<ChildContent>
+			<MudStep Label="Profile" Completed="LeagueWizardService.CompletedSteps.Contains(0)">
+				<MudPaper Class="pa-4">
+					<LeagueWizardProfile />
+				</MudPaper>
+			</MudStep>
+			<MudStep Label="League Settings" Completed="LeagueWizardService.CompletedSteps.Contains(1)">
+				<MudPaper Class="pa-4">
+					<LeagueWizardSettings />
+				</MudPaper>
+			</MudStep>
+			<MudStep Label="Data Configuration" Completed="LeagueWizardService.CompletedSteps.Contains(2)">
+				<MudPaper Class="pa-4">
+					<LeagueWizardData />
+				</MudPaper>
+			</MudStep>
+		</ChildContent>
+		<ActionContent>
+			<MudStack Row="true" Style="width: 100%;" Justify="Justify.SpaceBetween">
+				<MudButton Variant="Variant.Text" OnClick="LeagueWizardService.GoToPreviousStep" Disabled="_activeStep == 0">
+					Back
+				</MudButton>
 
-		</MudStep>
-		<MudStep Title="League Customization" Icon="@Icons.Material.Filled.DashboardCustomize">
-			<MudPaper Elevation="2" Class="pa-4">
-				<LeagueWizardCustomization />
-			</MudPaper>
+				@if (_activeStep < 2)
+				{
 
-		</MudStep>
+					<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LeagueWizardService.GoToNextStep"
+										 Disabled="!LeagueWizardService.CanProceedToNextStep">Next</MudButton>
+				}
+				else
+				{
+					<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="LeagueWizardService.GoToNextStep"
+										 Disabled="!LeagueWizardService.CanCreateLeague">Create League</MudButton>
+				}
+			</MudStack>
+		</ActionContent>
 	</MudStepper>
 
 </MudContainer>
 
 @code {
 
+	private int _activeStep = 0;
+
 	protected override void OnInitialized()
 	{
-		LeagueWizardService.OnChange += StateHasChanged;
+		LeagueWizardService.OnChange += UpdateActiveStep;
+		_activeStep = LeagueWizardService.CurrentStep;
+	}
+
+	private void UpdateActiveStep()
+	{
+		_activeStep = LeagueWizardService.CurrentStep;
+		StateHasChanged();
 	}
 
 	public void Dispose()
 	{
-		LeagueWizardService.OnChange -= StateHasChanged;
+		LeagueWizardService.OnChange -= UpdateActiveStep;
+	}
+
+	void NavigateToHome()
+	{
+		NavigationService.NavigateTo("/");
 	}
 
 }

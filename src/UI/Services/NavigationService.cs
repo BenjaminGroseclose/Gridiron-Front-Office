@@ -48,5 +48,4 @@ public class NavigationService : INavigationService
 		// Perform the actual navigation
 		_navigationManager.NavigateTo(route);
 	}
-
 }

@@ -13,6 +13,8 @@
 
   <ItemGroup>
 		<EmbeddedResource Include="Resources\default_data.json" />
+		<EmbeddedResource Include="Resources\name_pool.json" />
+		<EmbeddedResource Include="Resources\player_archetypes.json" />
   </ItemGroup>
 
   <PropertyGroup>

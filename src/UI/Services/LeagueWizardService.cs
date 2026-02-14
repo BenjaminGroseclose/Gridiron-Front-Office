@@ -1,6 +1,5 @@
 using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
-using GridironFrontOffice.Domain.Enums;
 using GridironFrontOffice.Domain.Forms;
 using GridironFrontOffice.Persistence.Interfaces;
 
@@ -12,6 +11,7 @@ namespace GridironFrontOffice.UI.Services;
 public class LeagueSetupService : ILeagueWizardService
 {
 	private readonly ISeedDataService _seedDataService;
+	// Private fields to hold the state of the league setup process
 	private LeagueSetupForm _leagueSetupForm;
 	private int _currentStep = 0;
 	private const int TOTAL_STEPS = 3;
@@ -20,6 +20,7 @@ public class LeagueSetupService : ILeagueWizardService
 	private IEnumerable<Conference> _availableConferences = [];
 	private IEnumerable<Division> _availableDivisions = [];
 	private IEnumerable<Stadium> _availableStadiums = [];
+	private bool? _isDefaultDataSelected = null;
 
 	public event Action? OnChange;
 
@@ -28,7 +29,18 @@ public class LeagueSetupService : ILeagueWizardService
 	public LeagueSetupService(ISeedDataService seedDataService)
 	{
 		_seedDataService = seedDataService;
-		_leagueSetupForm = new LeagueSetupForm();
+		_leagueSetupForm = new LeagueSetupForm()
+		{
+			CoachName = string.Empty,
+			CoachExperience = "Rookie",
+			LeagueName = string.Empty,
+			RosterSize = 53,
+			PracticeSquadSize = 16,
+			InjuriesEnabled = true,
+			SalaryCap = 255,
+			SalaryCapFloor = 0.9,
+			StartingYear = 2025
+		};
 		LoadDataAsync();
 	}
 
@@ -45,6 +57,7 @@ public class LeagueSetupService : ILeagueWizardService
 			_availableConferences = conferences;
 			_availableDivisions = divisions;
 			NotifyStateChanged();
+
 		}
 		catch (Exception ex)
 		{
@@ -65,69 +78,43 @@ public class LeagueSetupService : ILeagueWizardService
 			switch (_currentStep)
 			{
 				case 0:
-					return !string.IsNullOrWhiteSpace(_leagueSetupForm.LeagueName)
-						&& !string.IsNullOrWhiteSpace(_leagueSetupForm.CoachName)
-						&& _leagueSetupForm.CoachDateOfBirth != default;
+					return !string.IsNullOrWhiteSpace(_leagueSetupForm.CoachName) && !string.IsNullOrWhiteSpace(_leagueSetupForm.CoachExperience);
 				case 1:
-					return _leagueSetupForm.SelectedTeamID > 0;
+					return _leagueSetupForm.RosterSize.HasValue &&
+							_leagueSetupForm.PracticeSquadSize.HasValue &&
+							_leagueSetupForm.InjuriesEnabled.HasValue &&
+							_leagueSetupForm.SalaryCap.HasValue &&
+							_leagueSetupForm.SalaryCapFloor.HasValue &&
+							_leagueSetupForm.StartingYear.HasValue;
 				case 2:
-					return !string.IsNullOrWhiteSpace(_leagueSetupForm.LeagueName);
+					return _isDefaultDataSelected.HasValue; // Ensure the user has selected a data configuration option
 				default:
 					return false;
 			}
 		}
 	}
 
-	public IEnumerable<Team> AvailableTeams => _availableTeams;
-
-	public void FinalizeLeagueSetup()
-	{
-		throw new NotImplementedException();
-	}
-
-	public void ResetLeagueSetup()
-	{
-		_leagueSetupForm = new LeagueSetupForm();
-		NotifyStateChanged();
-	}
-
-	public void UpdateProfile(string leagueName, string coachName, DateTime? coachDateOfBirth, LeagueDifficultyLevel leagueDifficulty)
-	{
-		_leagueSetupForm.LeagueName = leagueName;
-		_leagueSetupForm.CoachName = coachName;
-		if (coachDateOfBirth.HasValue)
-		{
-			_leagueSetupForm.CoachDateOfBirth = coachDateOfBirth.Value;
-		}
-		_leagueSetupForm.LeagueDifficulty = leagueDifficulty;
-		NotifyStateChanged();
-	}
-
-	public void UpdateLeagueSettings(bool injuriesEnabled, int numOfPlayoffsTeams, int numOfRegularSeasonGames, int rosterSize, int practiceSquadSize, bool canBeFired)
-	{
-		_leagueSetupForm.InjuriesEnabled = injuriesEnabled;
-		_leagueSetupForm.NumOfPlayoffsTeams = numOfPlayoffsTeams;
-		_leagueSetupForm.NumOfRegularSeasonGames = numOfRegularSeasonGames;
-		_leagueSetupForm.RosterSize = rosterSize;
-		_leagueSetupForm.PracticeSquadSize = practiceSquadSize;
-		_leagueSetupForm.CanBeFired = canBeFired;
-		_completedSteps = _completedSteps.Append(_currentStep).Distinct().ToArray();
-		NotifyStateChanged();
-	}
-
-	public void UpdateSelectedTeam(int teamID)
-	{
-		_leagueSetupForm.SelectedTeamID = teamID;
-		_completedSteps = _completedSteps.Append(_currentStep).Distinct().ToArray();
-		NotifyStateChanged();
-	}
-
+	public bool CanCreateLeague => _leagueSetupForm.IsValid();
 
 	public void GoToNextStep()
 	{
+		// Check if Form is complete for the current step before allowing navigation to the next step
+		if (_currentStep == 2)
+		{
+			if (!CanCreateLeague)
+			{
+				return; // Prevent proceeding to the next step if the form is not valid
+			}
+			else
+			{
+
+			}
+		}
+
 		if (_currentStep < TOTAL_STEPS - 1) // Assuming there are 3 steps indexed 0-2
 		{
 			_currentStep++;
+			_completedSteps = _completedSteps.Append(_currentStep - 1).ToArray(); // Mark the previous step as completed
 			NotifyStateChanged();
 		}
 	}
@@ -137,25 +124,39 @@ public class LeagueSetupService : ILeagueWizardService
 		if (_currentStep > 0)
 		{
 			_currentStep--;
+			_completedSteps = _completedSteps.Where(step => step < _currentStep).ToArray(); // Remove the current step from completed steps
 			NotifyStateChanged();
 		}
 	}
 
-
-	/// <summary>
-	/// Gets the list of available teams for selection
-	/// </summary>
 	public IEnumerable<Team> GetAvailableTeams() => _availableTeams;
 
-	/// <summary>
-	/// Gets the list of available conferences for selection
-	/// </summary>
 	public IEnumerable<Conference> GetConferences() => _availableConferences;
 
-	/// <summary>
-	/// Gets the list of available divisions for selection
-	/// </summary>
 	public IEnumerable<Division> GetDivisions() => _availableDivisions;
 
 	public IEnumerable<Stadium> GetStadiums() => _availableStadiums;
+
+	public void UpdateLeagueSetupForm(LeagueSetupForm updatedForm)
+	{
+		var form = CurrentLeagueSetupForm;
+
+		form.CoachName = updatedForm.CoachName ?? form.CoachName;
+		form.CoachExperience = updatedForm.CoachExperience ?? form.CoachExperience;
+		form.LeagueName = updatedForm.LeagueName ?? form.LeagueName;
+		form.RosterSize = updatedForm.RosterSize ?? form.RosterSize;
+		form.PracticeSquadSize = updatedForm.PracticeSquadSize ?? form.PracticeSquadSize;
+		form.InjuriesEnabled = updatedForm.InjuriesEnabled ?? form.InjuriesEnabled;
+		form.SalaryCap = updatedForm.SalaryCap ?? form.SalaryCap;
+		form.SalaryCapFloor = updatedForm.SalaryCapFloor ?? form.SalaryCapFloor;
+		form.StartingYear = updatedForm.StartingYear ?? form.StartingYear;
+		NotifyStateChanged();
+	}
+
+	public void SelectDataConfiguration(bool isDefault, string? jsonFilePath = null)
+	{
+		this._isDefaultDataSelected = isDefault;
+
+		// TODO: Implement logic to load custom data from JSON file if isDefault is false and jsonFilePath is provided
+	}
 }

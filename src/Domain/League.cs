@@ -38,13 +38,6 @@ public class League : BaseEntity
 	// League Settings
 
 	/// <summary>
-	/// The league difficulty setting for the league.
-	/// The AI will be easier or harder to compete against based on this setting.
-	/// For example, a harder difficulty might have the AI make better trades, manage their roster more effectively, and perform better in games.
-	/// </summary>
-	public LeagueDifficultyLevel LeagueDifficulty { get; set; }
-
-	/// <summary>
 	/// Whether injuries are enabled in the league.
 	/// </summary>
 	public bool InjuriesEnabled { get; set; }

@@ -1,11 +1,24 @@
 @page "/"
 @inject INavigationService NavigationService
 
-<MudPaper Class="ma-auto pa-6" Style="max-width: 500px">
-	<MudText Typo="Typo.h3" Align="Align.Center" Class="mt-6">Welcome to Gridiron Front Office</MudText>
-	<MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-6">Your ultimate football management simulator</MudText>
 
-	<div class="d-flex flex-column align-center mb-6 gap-3">
+
+<div class="pa-3">
+	<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" JustifyContent="Center">
+		<div class="d-flex justify-center mb-4">
+			<img src="img/logo.svg" alt="Gridiron Front Office" style="width: 100px; height: 100px;" />
+		</div>
+
+		<MudText Typo="Typo.h3" Color="Color.Primary" Align="Align.Center">Gridiron Front Office</MudText>
+	</MudStack>
+
+
+
+	<MudText Typo="Typo.h5" Align="Align.Center">Command your franchise with precision analytics and
+		high-stakes executive decision-making.
+	</MudText>
+
+	<MudStack Spacing="3" Class="mt-6">
 		<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => NavigateTo("/league-setup"))"
 							 Style="width: 200px;">
 			Create
@@ -21,9 +34,8 @@
 		<MudButton Variant="Variant.Outlined" Color="Color.Error" Style="width: 200px;">
 			Quit
 		</MudButton>
-
-	</div>
-</MudPaper>
+	</MudStack>
+</div>
 
 @code {
 

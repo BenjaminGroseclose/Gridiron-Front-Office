@@ -1,0 +1,14 @@
+<svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Outer Football Silhouette (Geometric Data Bars) -->
+    <rect x="35" y="10" width="30" height="8" rx="2" fill="#2563EB" />
+    <rect x="20" y="25" width="60" height="10" rx="2" fill="#2563EB" />
+    <rect x="10" y="45" width="80" height="12" rx="2" fill="#2563EB" />
+    <rect x="20" y="67" width="60" height="10" rx="2" fill="#2563EB" />
+    <rect x="35" y="82" width="30" height="8" rx="2" fill="#2563EB" />
+    
+    <!-- Laces (The "Analytics" Spark) -->
+    <path d="M50 35V65" stroke="#F1F5F9" stroke-width="4" stroke-linecap="round"/>
+    <path d="M42 42H58" stroke="#F1F5F9" stroke-width="3" stroke-linecap="round"/>
+    <path d="M42 50H58" stroke="#F1F5F9" stroke-width="3" stroke-linecap="round"/>
+    <path d="M42 58H58" stroke="#F1F5F9" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,434 @@
+{
+	"1": [
+		{
+			"Name": "Field General",
+			"Weight": 0.25,
+			"Attributes": {
+				"ThrowPower": [84, 3], "ShortAccuracy": [92, 2], "MediumAccuracy": [88, 3], "LongAccuracy": [82, 4],
+				"BreakSack": [65, 5], "ThrowOnTheRun": [70, 6], "Mobility": [60, 5], "DecisionMakingSpeed": [95, 2],
+				"Awareness": [92, 3], "Speed": [65, 5], "Agility": [70, 5], "FootballIQ": [94, 2], "Leadership": [90, 3]
+			}
+		},
+		{
+			"Name": "Pocket Passer",
+			"Weight": 0.35,
+			"Attributes": {
+				"ThrowPower": [90, 2], "ShortAccuracy": [88, 3], "MediumAccuracy": [90, 2], "LongAccuracy": [88, 3],
+				"BreakSack": [70, 6], "ThrowOnTheRun": [65, 5], "Mobility": [55, 7], "DecisionMakingSpeed": [90, 3],
+				"Awareness": [88, 4], "Speed": [60, 7], "Agility": [65, 6]
+			}
+		},
+		{
+			"Name": "Scrambler",
+			"Weight": 0.20,
+			"Attributes": {
+				"ThrowPower": [88, 4], "ShortAccuracy": [78, 5], "MediumAccuracy": [75, 6], "LongAccuracy": [70, 8],
+				"BreakSack": [88, 4], "ThrowOnTheRun": [94, 2], "Mobility": [92, 2], "DecisionMakingSpeed": [72, 8],
+				"Awareness": [75, 10], "Speed": [88, 4], "Agility": [92, 3], "Elusiveness": [85, 4]
+			}
+		},
+		{
+			"Name": "Dual-Threat",
+			"Weight": 0.20,
+			"Attributes": {
+				"ThrowPower": [86, 3], "ShortAccuracy": [82, 4], "MediumAccuracy": [80, 5], "LongAccuracy": [75, 6],
+				"BreakSack": [80, 5], "ThrowOnTheRun": [88, 3], "Mobility": [85, 4], "DecisionMakingSpeed": [82, 5],
+				"Awareness": [80, 5], "Speed": [82, 4], "Agility": [85, 4], "Carrying": [75, 6], "Elusiveness": [78, 5]
+			}
+		}
+	],
+	"2": [
+		{
+			"Name": "Power Back",
+			"Weight": 0.30,
+			"Attributes": {
+				"Speed": [86, 3], "Strength": [90, 3], "Carrying": [92, 2], "Trucking": [94, 2], "Elusiveness": [65, 5],
+				"BallSecurity": [90, 3], "Stamina": [88, 4], "Awareness": [82, 5], "PassBlocking": [72, 6]
+			}
+		},
+		{
+			"Name": "Elusive Back",
+			"Weight": 0.30,
+			"Attributes": {
+				"Speed": [93, 2], "Agility": [95, 2], "Carrying": [85, 4], "Trucking": [60, 8], "Elusiveness": [94, 2],
+				"BallSecurity": [82, 5], "Catching": [78, 5], "Separation": [85, 4]
+			}
+		},
+		{
+			"Name": "Receiving Back",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [90, 3], "Agility": [92, 3], "Carrying": [80, 5], "Catching": [92, 2], "RouteRunning": [85, 4],
+				"Hands": [90, 3], "Separation": [88, 3], "Elusiveness": [85, 4], "CatchInTraffic": [85, 4]
+			}
+		},
+		{
+			"Name": "All-Purpose",
+			"Weight": 0.15,
+			"Attributes": {
+				"Speed": [90, 3], "Agility": [90, 3], "Carrying": [85, 4], "Trucking": [78, 5], "Elusiveness": [85, 4],
+				"BallSecurity": [85, 4], "Catching": [85, 4], "RouteRunning": [78, 5], "PassBlocking": [75, 5]
+			}
+		}
+	],
+	"3": [
+		{
+			"Name": "Deep Threat",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [95, 2], "Agility": [90, 4], "Catching": [85, 4], "RouteRunning": [80, 5], "Separation": [94, 3],
+				"Release": [82, 5], "JumpBallAbility": [88, 4], "Hands": [85, 4]
+			}
+		},
+		{
+			"Name": "Route Technician",
+			"Weight": 0.30,
+			"Attributes": {
+				"Speed": [88, 3], "Agility": [94, 2], "Catching": [92, 2], "CatchInTraffic": [90, 3], "RouteRunning": [96, 2],
+				"Separation": [94, 2], "Hands": [95, 1], "Release": [88, 3]
+			}
+		},
+		{
+			"Name": "Possession Receiver",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [85, 4], "Catching": [94, 2], "CatchInTraffic": [94, 2], "Hands": [96, 1], "RouteRunning": [88, 3],
+				"Awareness": [90, 3], "Release": [85, 4], "JumpBallAbility": [85, 4]
+			}
+		},
+		{
+			"Name": "Slot Receiver",
+			"Weight": 0.20,
+			"Attributes": {
+				"Speed": [92, 3], "Agility": [96, 2], "Catching": [90, 3], "RouteRunning": [92, 2], "Separation": [92, 2],
+				"Release": [90, 3], "Elusiveness": [88, 3], "CatchInTraffic": [86, 4]
+			}
+		}
+	],
+	"4": [
+		{
+			"Name": "Receiving TE",
+			"Weight": 0.35,
+			"Attributes": {
+				"Speed": [87, 3], "Strength": [82, 5], "Catching": [92, 2], "CatchInTraffic": [92, 2], "RouteRunning": [88, 3],
+				"JumpBallAbility": [90, 3], "Hands": [90, 3], "RunBlocking": [65, 8], "PassBlocking": [60, 8]
+			}
+		},
+		{
+			"Name": "Blocking TE",
+			"Weight": 0.30,
+			"Attributes": {
+				"Speed": [78, 5], "Strength": [92, 2], "RunBlocking": [94, 2], "PassBlocking": [90, 3], "Catching": [72, 6],
+				"Awareness": [85, 4], "Hands": [75, 5]
+			}
+		},
+		{
+			"Name": "Hybrid TE",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [84, 4], "Strength": [86, 4], "Catching": [85, 4], "CatchInTraffic": [85, 4], "RouteRunning": [82, 5],
+				"RunBlocking": [82, 5], "PassBlocking": [80, 5], "Hands": [85, 4]
+			}
+		},
+		{
+			"Name": "Move TE",
+			"Weight": 0.10,
+			"Attributes": {
+				"Speed": [90, 3], "Agility": [88, 3], "Catching": [88, 3], "RouteRunning": [90, 3], "Separation": [86, 4],
+				"Release": [88, 3], "JumpBallAbility": [85, 4], "Elusiveness": [82, 5]
+			}
+		}
+	],
+	"5": [
+		{
+			"Name": "Pass Protector",
+			"Weight": 0.40,
+			"Attributes": {
+				"Strength": [88, 4], "PassBlocking": [94, 2], "RunBlocking": [80, 5], "Awareness": [90, 3], "Agility": [82, 4],
+				"FootballIQ": [85, 4]
+			}
+		},
+		{
+			"Name": "Road Grader",
+			"Weight": 0.35,
+			"Attributes": {
+				"Strength": [95, 2], "PassBlocking": [78, 5], "RunBlocking": [94, 2], "Awareness": [82, 5], "Stamina": [90, 3]
+			}
+		},
+		{
+			"Name": "Balanced Tackle",
+			"Weight": 0.25,
+			"Attributes": {
+				"Strength": [90, 3], "PassBlocking": [88, 3], "RunBlocking": [88, 3], "Awareness": [86, 4], "Agility": [80, 5],
+				"FootballIQ": [82, 5]
+			}
+		}
+	],
+	"6": [
+		{
+			"Name": "Mauler",
+			"Weight": 0.40,
+			"Attributes": {
+				"Strength": [96, 2], "PassBlocking": [82, 5], "RunBlocking": [95, 2], "Awareness": [80, 5]
+			}
+		},
+		{
+			"Name": "Puller",
+			"Weight": 0.30,
+			"Attributes": {
+				"Strength": [88, 4], "Agility": [85, 4], "Speed": [72, 6], "PassBlocking": [80, 5], "RunBlocking": [90, 3],
+				"Awareness": [85, 4]
+			}
+		},
+		{
+			"Name": "Balanced Guard",
+			"Weight": 0.30,
+			"Attributes": {
+				"Strength": [90, 3], "PassBlocking": [88, 3], "RunBlocking": [88, 3], "Awareness": [85, 4], "FootballIQ": [82, 5]
+			}
+		}
+	],
+	"7": [
+		{
+			"Name": "Anchor",
+			"Weight": 0.40,
+			"Attributes": {
+				"Strength": [94, 2], "PassBlocking": [90, 3], "RunBlocking": [88, 4], "Awareness": [88, 3], "FootballIQ": [90, 3]
+			}
+		},
+		{
+			"Name": "Technician",
+			"Weight": 0.35,
+			"Attributes": {
+				"Strength": [85, 4], "PassBlocking": [92, 2], "RunBlocking": [85, 4], "Awareness": [94, 2], "FootballIQ": [95, 2],
+				"Agility": [80, 5]
+			}
+		},
+		{
+			"Name": "Athletic Center",
+			"Weight": 0.25,
+			"Attributes": {
+				"Strength": [88, 4], "Agility": [85, 4], "Speed": [70, 6], "PassBlocking": [85, 4], "RunBlocking": [88, 3],
+				"Awareness": [88, 4], "FootballIQ": [88, 4]
+			}
+		}
+	],
+	"8": [
+		{
+			"Name": "Speed Rusher",
+			"Weight": 0.35,
+			"Attributes": {
+				"Speed": [90, 3], "Agility": [92, 2], "FinesseMoves": [94, 2], "PowerMoves": [72, 6], "BlockShedding": [80, 5],
+				"Pursuit": [92, 3], "Tackling": [82, 5]
+			}
+		},
+		{
+			"Name": "Power Rusher",
+			"Weight": 0.30,
+			"Attributes": {
+				"Strength": [94, 2], "PowerMoves": [94, 2], "FinesseMoves": [70, 7], "BlockShedding": [90, 3], "Tackling": [88, 4],
+				"Pursuit": [82, 5]
+			}
+		},
+		{
+			"Name": "Run Defender",
+			"Weight": 0.20,
+			"Attributes": {
+				"Strength": [92, 3], "BlockShedding": [94, 2], "RunDefense": [94, 2], "GapIntegrity": [92, 2], "Tackling": [92, 2],
+				"Pursuit": [85, 4], "PowerMoves": [82, 5]
+			}
+		},
+		{
+			"Name": "Complete Edge",
+			"Weight": 0.15,
+			"Attributes": {
+				"Speed": [86, 4], "Strength": [88, 4], "PowerMoves": [85, 4], "FinesseMoves": [85, 4], "BlockShedding": [88, 3],
+				"Pursuit": [88, 3], "Tackling": [88, 3], "RunDefense": [85, 4]
+			}
+		}
+	],
+	"9": [
+		{
+			"Name": "Nose Tackle",
+			"Weight": 0.35,
+			"Attributes": {
+				"Strength": [96, 2], "BlockShedding": [92, 2], "RunDefense": [95, 2], "GapIntegrity": [94, 2], "Tackling": [88, 4],
+				"PowerMoves": [78, 5]
+			}
+		},
+		{
+			"Name": "3-Tech",
+			"Weight": 0.40,
+			"Attributes": {
+				"Speed": [82, 4], "Agility": [85, 4], "Strength": [90, 3], "PowerMoves": [88, 3], "FinesseMoves": [82, 5],
+				"BlockShedding": [88, 3], "Pursuit": [85, 4], "Tackling": [85, 4]
+			}
+		},
+		{
+			"Name": "Interior Disruptor",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [80, 5], "Strength": [88, 4], "PowerMoves": [92, 2], "FinesseMoves": [88, 3], "BlockShedding": [90, 3],
+				"Pursuit": [88, 3], "Awareness": [82, 5]
+			}
+		}
+	],
+	"10": [
+		{
+			"Name": "Field General",
+			"Weight": 0.20,
+			"Attributes": {
+				"Awareness": [95, 2], "PlayRecognition": [96, 1], "Tackling": [92, 2], "Pursuit": [88, 3], "RunDefense": [90, 3],
+				"ZoneCoverage": [78, 5], "FootballIQ": [94, 2], "Leadership": [88, 4]
+			}
+		},
+		{
+			"Name": "Run Stopper",
+			"Weight": 0.35,
+			"Attributes": {
+				"Strength": [92, 2], "Tackling": [95, 2], "RunDefense": [94, 2], "GapIntegrity": [90, 3], "Pursuit": [88, 4],
+				"Awareness": [85, 4], "BlockShedding": [85, 4]
+			}
+		},
+		{
+			"Name": "Coverage Specialist",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [88, 3], "Agility": [90, 3], "ManCoverage": [82, 4], "ZoneCoverage": [90, 3], "PlayRecognition": [88, 3],
+				"Pursuit": [90, 3], "Awareness": [88, 4]
+			}
+		},
+		{
+			"Name": "Blitzer",
+			"Weight": 0.20,
+			"Attributes": {
+				"Speed": [86, 4], "Strength": [88, 4], "PowerMoves": [85, 4], "FinesseMoves": [82, 5], "Pursuit": [92, 2],
+				"Tackling": [90, 3], "BlockShedding": [88, 3]
+			}
+		}
+	],
+	"11": [
+		{
+			"Name": "Shutdown Corner",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [94, 2], "Agility": [95, 2], "ManCoverage": [96, 2], "ZoneCoverage": [82, 4], "PressCoverage": [92, 3],
+				"PlayRecognition": [88, 3]
+			}
+		},
+		{
+			"Name": "Zone Corner",
+			"Weight": 0.30,
+			"Attributes": {
+				"Speed": [90, 3], "Agility": [92, 3], "ZoneCoverage": [94, 2], "ManCoverage": [78, 5], "PlayRecognition": [92, 2],
+				"Awareness": [90, 3], "Catching": [72, 8]
+			}
+		},
+		{
+			"Name": "Press Corner",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [92, 3], "Strength": [78, 5], "ManCoverage": [90, 3], "PressCoverage": [96, 2], "Agility": [90, 3],
+				"PlayRecognition": [82, 5]
+			}
+		},
+		{
+			"Name": "Slot Corner",
+			"Weight": 0.20,
+			"Attributes": {
+				"Speed": [92, 3], "Agility": [96, 2], "ManCoverage": [88, 3], "ZoneCoverage": [86, 4], "Tackling": [80, 5],
+				"PlayRecognition": [88, 3], "Awareness": [88, 4]
+			}
+		}
+	],
+	"12": [
+		{
+			"Name": "Ball Hawk",
+			"Weight": 0.30,
+			"Attributes": {
+				"Speed": [90, 3], "ZoneCoverage": [94, 2], "PlayRecognition": [95, 2], "Catching": [82, 5], "Awareness": [94, 2],
+				"Pursuit": [85, 4], "ManCoverage": [78, 5]
+			}
+		},
+		{
+			"Name": "Box Safety",
+			"Weight": 0.30,
+			"Attributes": {
+				"Strength": [85, 4], "Tackling": [92, 2], "RunDefense": [90, 3], "Pursuit": [94, 2], "GapIntegrity": [85, 4],
+				"BlockShedding": [78, 5], "ZoneCoverage": [75, 6]
+			}
+		},
+		{
+			"Name": "Cover Safety",
+			"Weight": 0.25,
+			"Attributes": {
+				"Speed": [92, 2], "Agility": [90, 3], "ManCoverage": [88, 3], "ZoneCoverage": [90, 3], "PlayRecognition": [88, 3],
+				"Awareness": [90, 3]
+			}
+		},
+		{
+			"Name": "Hybrid Safety",
+			"Weight": 0.15,
+			"Attributes": {
+				"Speed": [88, 4], "Strength": [82, 5], "Tackling": [85, 4], "ManCoverage": [82, 5], "ZoneCoverage": [85, 4],
+				"PlayRecognition": [88, 3], "Pursuit": [88, 3], "RunDefense": [80, 5]
+			}
+		}
+	],
+	"13": [
+		{
+			"Name": "Power Kicker",
+			"Weight": 0.50,
+			"Attributes": {
+				"KickPower": [96, 2], "KickAccuracy": [82, 5], "Awareness": [70, 10]
+			}
+		},
+		{
+			"Name": "Precision Kicker",
+			"Weight": 0.50,
+			"Attributes": {
+				"KickPower": [84, 4], "KickAccuracy": [96, 1], "Awareness": [85, 4]
+			}
+		}
+	],
+	"14": [
+		{
+			"Name": "Boomer",
+			"Weight": 0.40,
+			"Attributes": {
+				"KickPower": [96, 2], "KickAccuracy": [78, 6], "Awareness": [72, 8]
+			}
+		},
+		{
+			"Name": "Coffin Corner",
+			"Weight": 0.35,
+			"Attributes": {
+				"KickPower": [82, 4], "KickAccuracy": [95, 2], "Awareness": [88, 4]
+			}
+		},
+		{
+			"Name": "Hang Time Specialist",
+			"Weight": 0.25,
+			"Attributes": {
+				"KickPower": [88, 3], "KickAccuracy": [88, 3], "Awareness": [85, 4]
+			}
+		}
+	],
+	"15": [
+		{
+			"Name": "Reliable Snapper",
+			"Weight": 0.70,
+			"Attributes": {
+				"Awareness": [92, 3], "Consistency": [95, 2], "Strength": [75, 6]
+			}
+		},
+		{
+			"Name": "Athletic Snapper",
+			"Weight": 0.30,
+			"Attributes": {
+				"Awareness": [88, 4], "Consistency": [90, 3], "Strength": [80, 5], "Speed": [70, 6], "Tackling": [75, 6]
+			}
+		}
+	]
+
+}

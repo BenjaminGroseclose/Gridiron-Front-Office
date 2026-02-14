@@ -1,5 +1,4 @@
 using GridironFrontOffice.Domain;
-using GridironFrontOffice.Domain.Enums;
 using GridironFrontOffice.Domain.Forms;
 
 namespace GridironFrontOffice.Application.Interfaces;
@@ -10,6 +9,12 @@ public interface ILeagueWizardService
 	/// The current league setup data being configured
 	/// </summary>
 	LeagueSetupForm CurrentLeagueSetupForm { get; }
+
+	/// <summary>
+	/// Whether the league can be created with the current settings and selections
+	/// This should validate that all required fields are filled out and that the selections are valid
+	/// </summary>
+	bool CanCreateLeague { get; }
 
 	/// <summary>
 	/// The current step in the league setup process, indexed from 0
@@ -42,13 +47,17 @@ public interface ILeagueWizardService
 	void GoToPreviousStep();
 
 	/// <summary>
-	/// Updates the league settings with the provided league setting data
+	/// Updates the league setup form with new data and triggers state change notifications
 	/// </summary>
-	void UpdateLeagueSettings(bool injuriesEnabled, int numOfPlayoffsTeams, int numOfRegularSeasonGames, int rosterSize, int practiceSquadSize, bool canBeFired);
-	void UpdateSelectedTeam(int teamID);
-	void UpdateProfile(string leagueName, string playerName, DateTime? playerDateOfBirth, LeagueDifficultyLevel leagueDifficulty);
-	void ResetLeagueSetup();
-	void FinalizeLeagueSetup();
+	/// <param name="updatedForm">A partial league setup form containing the updated values</param>
+	void UpdateLeagueSetupForm(LeagueSetupForm updatedForm);
+
+	/// <summary>
+	/// Selects the data configuration for the league, either default seed data or custom data from a JSON file
+	/// </summary>
+	/// <param name="isDefault">Whether to use the default seed data or custom data</param>
+	/// <param name="jsonFilePath">The path to the JSON file containing custom data, if applicable</param>
+	void SelectDataConfiguration(bool isDefault, string? jsonFilePath = null);
 
 	/// <summary>
 	/// Gets the list of available teams for selection

@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Domain\GridironFrontOffice.Domain.csproj" />
     <ProjectReference Include="..\Simulation\GridironFrontOffice.Simulation.csproj" />
+		<ProjectReference Include="..\Persistence\GridironFrontOffice.Persistence.csproj" />
   </ItemGroup>
 
 	<ItemGroup>
