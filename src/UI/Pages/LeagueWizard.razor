@@ -18,9 +18,10 @@
 
 	<MudStepper @bind-ActiveIndex="_activeStep">
 		<ChildContent>
-			<MudStep Label="Profile" Completed="LeagueWizardService.CompletedSteps.Contains(0)">
+
+			<MudStep Label="Data Configuration" Completed="LeagueWizardService.CompletedSteps.Contains(0)">
 				<MudPaper Class="pa-4">
-					<LeagueWizardProfile />
+					<LeagueWizardData />
 				</MudPaper>
 			</MudStep>
 			<MudStep Label="League Settings" Completed="LeagueWizardService.CompletedSteps.Contains(1)">
@@ -28,17 +29,21 @@
 					<LeagueWizardSettings />
 				</MudPaper>
 			</MudStep>
-			<MudStep Label="Data Configuration" Completed="LeagueWizardService.CompletedSteps.Contains(2)">
+			<MudStep Label="Team Selection" Completed="LeagueWizardService.CompletedSteps.Contains(2)">
 				<MudPaper Class="pa-4">
-					<LeagueWizardData />
+					<LeagueWizardTeams />
 				</MudPaper>
+
 			</MudStep>
 		</ChildContent>
 		<ActionContent>
-			<MudStack Row="true" Style="width: 100%;" Justify="Justify.SpaceBetween">
-				<MudButton Variant="Variant.Text" OnClick="LeagueWizardService.GoToPreviousStep" Disabled="_activeStep == 0">
-					Back
-				</MudButton>
+			<MudStack Row="true" Justify="Justify.SpaceBetween">
+				@if (_activeStep == 2)
+				{
+					<MudButton Variant="Variant.Text" OnClick="LeagueWizardService.GoToPreviousStep">
+						Back
+					</MudButton>
+				}
 
 				@if (_activeStep < 2)
 				{

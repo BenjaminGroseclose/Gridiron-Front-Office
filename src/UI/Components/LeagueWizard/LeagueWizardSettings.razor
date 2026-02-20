@@ -1,4 +1,5 @@
 @inject ILeagueWizardService LeagueWizardService
+@implements IDisposable
 
 
 <MudStack Spacing="3">
@@ -6,52 +7,33 @@
 
 	<MudDivider />
 
-	<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="_leagueName"
-								@bind-Value:after="UpdateLeagueWizardService" FullWidth="true"></MudTextField>
-
-
-	<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int" @bind-Value="_rosterSize"
-									 @bind-Value:after="UpdateLeagueWizardService" Min="8">
+	<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int" @bind-Value="RosterSize" Min="8">
 	</MudNumericField>
 
 
-	<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int" @bind-Value="_practiceSquadSize"
-									 @bind-Value:after="UpdateLeagueWizardService" Min="8">
+	<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int" @bind-Value="PracticeSquadSize"
+									 Min="8">
 	</MudNumericField>
 
-	<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Checked="_injuriesEnabled"
-							 @bind-Checked:after="UpdateLeagueWizardService">
+	<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Checked="InjuriesEnabled">
 	</MudCheckBox>
 
 
-	<MudCheckBox Label="Can be Fired" T="bool" @bind-Checked="_canBeFired"
-							 @bind-Checked:after="UpdateLeagueWizardService">
+	<MudCheckBox Label="Can be Fired" T="bool" @bind-Checked="CanBeFired">
 	</MudCheckBox>
 
-	<MudNumericField T="double" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="_salaryCap"
-									 @bind-Value:after="UpdateLeagueWizardService" Min="0">
+	<MudNumericField T="double" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="SalaryCap" Min="0">
 	</MudNumericField>
 
-	<MudNumericField T="double" Label="Salary Floor (%)" Variant="Variant.Outlined" @bind-Value="_salaryCapFloor"
-									 @bind-Value:after="UpdateLeagueWizardService" Min="0">
+	<MudNumericField T="double" Label="Salary Floor (%)" Variant="Variant.Outlined" @bind-Value="SalaryCapFloor" Min="0">
 	</MudNumericField>
 
 </MudStack>
 
 @code {
 
-	// League Settings with defaults
-	private string _leagueName;
-	private bool _injuriesEnabled;
-	private int _rosterSize;
-	private int _practiceSquadSize;
-	private bool _canBeFired;
-	private double _salaryCap;
-	private double _salaryCapFloor;
-
 	protected override void OnInitialized()
 	{
-		this.UpdateLocalPropertiesFromService();
 		LeagueWizardService.OnChange += UpdateState;
 		base.OnInitialized();
 	}
@@ -61,26 +43,74 @@
 		LeagueWizardService.OnChange -= UpdateState;
 	}
 
-	void UpdateLeagueWizardService()
+	private int RosterSize
 	{
-
+		get => LeagueWizardService.CurrentLeagueSetupForm.RosterSize ?? 53;
+		set
+		{
+			var form = LeagueWizardService.CurrentLeagueSetupForm;
+			form.RosterSize = value;
+			LeagueWizardService.UpdateLeagueSetupForm(form);
+		}
 	}
 
-	void UpdateState()
+	private int PracticeSquadSize
 	{
-		this.UpdateLocalPropertiesFromService();
+		get => LeagueWizardService.CurrentLeagueSetupForm.PracticeSquadSize ?? 16;
+		set
+		{
+			var form = LeagueWizardService.CurrentLeagueSetupForm;
+			form.PracticeSquadSize = value;
+			LeagueWizardService.UpdateLeagueSetupForm(form);
+		}
+	}
+
+	private bool InjuriesEnabled
+	{
+		get => LeagueWizardService.CurrentLeagueSetupForm.InjuriesEnabled ?? false;
+		set
+		{
+			var form = LeagueWizardService.CurrentLeagueSetupForm;
+			form.InjuriesEnabled = value;
+			LeagueWizardService.UpdateLeagueSetupForm(form);
+		}
+	}
+
+	private bool CanBeFired
+	{
+		get => LeagueWizardService.CurrentLeagueSetupForm.CanBeFired ?? false;
+		set
+		{
+			var form = LeagueWizardService.CurrentLeagueSetupForm;
+			form.CanBeFired = value;
+			LeagueWizardService.UpdateLeagueSetupForm(form);
+		}
+	}
+
+	private double SalaryCap
+	{
+		get => LeagueWizardService.CurrentLeagueSetupForm.SalaryCap ?? 255.0;
+		set
+		{
+			var form = LeagueWizardService.CurrentLeagueSetupForm;
+			form.SalaryCap = value;
+			LeagueWizardService.UpdateLeagueSetupForm(form);
+		}
+	}
+
+	private double SalaryCapFloor
+	{
+		get => LeagueWizardService.CurrentLeagueSetupForm.SalaryCapFloor ?? 0.9;
+		set
+		{
+			var form = LeagueWizardService.CurrentLeagueSetupForm;
+			form.SalaryCapFloor = value;
+			LeagueWizardService.UpdateLeagueSetupForm(form);
+		}
+	}
+
+	private void UpdateState()
+	{
 		StateHasChanged();
-	}
-
-	private void UpdateLocalPropertiesFromService()
-	{
-		var form = LeagueWizardService.CurrentLeagueSetupForm;
-		_leagueName = form.LeagueName ?? string.Empty;
-		_injuriesEnabled = form.InjuriesEnabled ?? false;
-		_rosterSize = form.RosterSize ?? 53;
-		_practiceSquadSize = form.PracticeSquadSize ?? 16;
-		_canBeFired = form.CanBeFired ?? false;
-		_salaryCap = form.SalaryCap ?? 255.0;
-		_salaryCapFloor = form.SalaryCapFloor ?? 0.9;
 	}
 }

@@ -2,20 +2,10 @@ namespace GridironFrontOffice.Domain.Forms;
 
 public class LeagueSetupForm
 {
-	// Coach Profile
-	public string? CoachName { get; set; }
-
 	/// <summary>
-	/// The coach's date of birth, used to calculate their age and determine if they are eligible to coach
-	/// Rookie, Intermediate, and Veteran
+	/// Whether or not to use the default league data
 	/// </summary>
-	public string? CoachExperience { get; set; }
-
-	/// <summary>
-	/// The coach's coaching philosophy, which will influence their preferences for player attributes and team strategy
-	/// Offensive, Defensive, Balanced
-	/// </summary>
-	public string? CoachPhilosophy { get; set; }
+	public bool? UsingDefaultData { get; set; }
 
 	// League Settings
 	public string? LeagueName { get; set; }
@@ -39,17 +29,18 @@ public class LeagueSetupForm
 
 	public int? StartingYear { get; set; }
 
+	public int? SelectedTeamID { get; set; }
+
 	public bool IsValid()
 	{
-		return !string.IsNullOrEmpty(CoachName) &&
-			   !string.IsNullOrEmpty(CoachExperience) &&
-			   !string.IsNullOrEmpty(LeagueName) &&
+		return !string.IsNullOrEmpty(LeagueName) &&
 			   RosterSize.HasValue &&
 			   PracticeSquadSize.HasValue &&
 			   InjuriesEnabled.HasValue &&
 			   CanBeFired.HasValue &&
 			   SalaryCap.HasValue &&
 			   SalaryCapFloor.HasValue &&
-			   StartingYear.HasValue;
+			   StartingYear.HasValue &&
+			   SelectedTeamID.HasValue;
 	}
 }

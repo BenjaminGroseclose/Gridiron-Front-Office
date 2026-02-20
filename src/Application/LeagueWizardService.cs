@@ -1,68 +1,42 @@
 using GridironFrontOffice.Application.Interfaces;
-using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Forms;
-using GridironFrontOffice.Persistence.Interfaces;
+using GridironFrontOffice.Persistence;
 
-namespace GridironFrontOffice.UI.Services;
+namespace GridironFrontOffice.Application.Services;
 
 /// <summary>
 /// Service responsible for setting up a new league
 /// </summary>
 public class LeagueSetupService : ILeagueWizardService
 {
-	private readonly ISeedDataService _seedDataService;
+	private readonly GameManager _gameManager;
+
 	// Private fields to hold the state of the league setup process
 	private LeagueSetupForm _leagueSetupForm;
 	private int _currentStep = 0;
 	private const int TOTAL_STEPS = 3;
 	private int[] _completedSteps = Array.Empty<int>();
-	private IEnumerable<Team> _availableTeams = [];
-	private IEnumerable<Conference> _availableConferences = [];
-	private IEnumerable<Division> _availableDivisions = [];
-	private IEnumerable<Stadium> _availableStadiums = [];
 	private bool? _isDefaultDataSelected = null;
+	private bool _loadingLeague = false;
 
 	public event Action? OnChange;
 
 	public LeagueSetupForm CurrentLeagueSetupForm => _leagueSetupForm;
 
-	public LeagueSetupService(ISeedDataService seedDataService)
+	public LeagueSetupService()
 	{
-		_seedDataService = seedDataService;
+		_gameManager = new GameManager();
 		_leagueSetupForm = new LeagueSetupForm()
 		{
-			CoachName = string.Empty,
-			CoachExperience = "Rookie",
 			LeagueName = string.Empty,
 			RosterSize = 53,
 			PracticeSquadSize = 16,
 			InjuriesEnabled = true,
 			SalaryCap = 255,
 			SalaryCapFloor = 0.9,
-			StartingYear = 2025
+			StartingYear = 2025,
+			SelectedTeamID = null
 		};
-		LoadDataAsync();
-	}
-
-	/// <summary>
-	/// Loads the available teams from seed data
-	/// </summary>
-	private async void LoadDataAsync()
-	{
-		try
-		{
-			var (teams, stadiums, conferences, divisions) = await _seedDataService.LoadDefaultDataAsync();
-			_availableTeams = teams;
-			_availableStadiums = stadiums;
-			_availableConferences = conferences;
-			_availableDivisions = divisions;
-			NotifyStateChanged();
-
-		}
-		catch (Exception ex)
-		{
-			System.Diagnostics.Debug.WriteLine($"Failed to load teams: {ex.Message}");
-		}
 	}
 
 	private void NotifyStateChanged() => OnChange?.Invoke();
@@ -78,7 +52,7 @@ public class LeagueSetupService : ILeagueWizardService
 			switch (_currentStep)
 			{
 				case 0:
-					return !string.IsNullOrWhiteSpace(_leagueSetupForm.CoachName) && !string.IsNullOrWhiteSpace(_leagueSetupForm.CoachExperience);
+					return _isDefaultDataSelected.HasValue; // Ensure the user has selected a data configuration option
 				case 1:
 					return _leagueSetupForm.RosterSize.HasValue &&
 							_leagueSetupForm.PracticeSquadSize.HasValue &&
@@ -87,7 +61,7 @@ public class LeagueSetupService : ILeagueWizardService
 							_leagueSetupForm.SalaryCapFloor.HasValue &&
 							_leagueSetupForm.StartingYear.HasValue;
 				case 2:
-					return _isDefaultDataSelected.HasValue; // Ensure the user has selected a data configuration option
+					return _leagueSetupForm.SelectedTeamID.HasValue; // Ensure the user has selected a team
 				default:
 					return false;
 			}
@@ -95,6 +69,8 @@ public class LeagueSetupService : ILeagueWizardService
 	}
 
 	public bool CanCreateLeague => _leagueSetupForm.IsValid();
+
+	public bool LoadingLeague => _loadingLeague;
 
 	public void GoToNextStep()
 	{
@@ -107,8 +83,14 @@ public class LeagueSetupService : ILeagueWizardService
 			}
 			else
 			{
-
+				_loadingLeague = true; // Start loading league data based on the user's selections
+				NotifyStateChanged();
 			}
+		}
+
+		if (_currentStep == 0 && !string.IsNullOrEmpty(this.CurrentLeagueSetupForm.LeagueName))
+		{
+			this._gameManager.CreateNewGame(this.CurrentLeagueSetupForm.LeagueName);
 		}
 
 		if (_currentStep < TOTAL_STEPS - 1) // Assuming there are 3 steps indexed 0-2
@@ -129,20 +111,10 @@ public class LeagueSetupService : ILeagueWizardService
 		}
 	}
 
-	public IEnumerable<Team> GetAvailableTeams() => _availableTeams;
-
-	public IEnumerable<Conference> GetConferences() => _availableConferences;
-
-	public IEnumerable<Division> GetDivisions() => _availableDivisions;
-
-	public IEnumerable<Stadium> GetStadiums() => _availableStadiums;
-
 	public void UpdateLeagueSetupForm(LeagueSetupForm updatedForm)
 	{
 		var form = CurrentLeagueSetupForm;
 
-		form.CoachName = updatedForm.CoachName ?? form.CoachName;
-		form.CoachExperience = updatedForm.CoachExperience ?? form.CoachExperience;
 		form.LeagueName = updatedForm.LeagueName ?? form.LeagueName;
 		form.RosterSize = updatedForm.RosterSize ?? form.RosterSize;
 		form.PracticeSquadSize = updatedForm.PracticeSquadSize ?? form.PracticeSquadSize;
@@ -150,12 +122,18 @@ public class LeagueSetupService : ILeagueWizardService
 		form.SalaryCap = updatedForm.SalaryCap ?? form.SalaryCap;
 		form.SalaryCapFloor = updatedForm.SalaryCapFloor ?? form.SalaryCapFloor;
 		form.StartingYear = updatedForm.StartingYear ?? form.StartingYear;
+		form.UsingDefaultData = updatedForm.UsingDefaultData ?? form.UsingDefaultData;
+
+		form.SelectedTeamID = updatedForm.SelectedTeamID ?? form.SelectedTeamID;
+
 		NotifyStateChanged();
 	}
 
 	public void SelectDataConfiguration(bool isDefault, string? jsonFilePath = null)
 	{
 		this._isDefaultDataSelected = isDefault;
+		CurrentLeagueSetupForm.UsingDefaultData = isDefault;
+		NotifyStateChanged();
 
 		// TODO: Implement logic to load custom data from JSON file if isDefault is false and jsonFilePath is provided
 	}

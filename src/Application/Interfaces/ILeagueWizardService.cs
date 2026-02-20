@@ -1,4 +1,3 @@
-using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Forms;
 
 namespace GridironFrontOffice.Application.Interfaces;
@@ -32,6 +31,11 @@ public interface ILeagueWizardService
 	bool CanProceedToNextStep { get; }
 
 	/// <summary>
+	/// Whether the league data is currently being loaded based on the user's selection of default vs custom data
+	/// </summary>
+	bool LoadingLeague { get; }
+
+	/// <summary>
 	/// Event triggered when the state of the wizard changes
 	/// </summary>
 	event Action OnChange;
@@ -58,24 +62,4 @@ public interface ILeagueWizardService
 	/// <param name="isDefault">Whether to use the default seed data or custom data</param>
 	/// <param name="jsonFilePath">The path to the JSON file containing custom data, if applicable</param>
 	void SelectDataConfiguration(bool isDefault, string? jsonFilePath = null);
-
-	/// <summary>
-	/// Gets the list of available teams for selection
-	/// </summary>
-	IEnumerable<Team> GetAvailableTeams();
-
-	/// <summary>
-	/// Gets the list of available conferences for selection
-	/// </summary>
-	IEnumerable<Conference> GetConferences();
-
-	/// <summary>
-	/// Gets the list of available divisions for selection
-	/// </summary>
-	IEnumerable<Division> GetDivisions();
-
-	/// <summary>
-	/// Gets the list of available stadiums for selection
-	/// </summary>
-	IEnumerable<Stadium> GetStadiums();
 }

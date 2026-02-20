@@ -1,7 +1,11 @@
 @inject ILeagueWizardService LeagueWizardService
+@implements IDisposable
 
 <MudContainer MaxWidth="MaxWidth.Large" class="py-4">
 	<MudText Typo="Typo.h4" Class="mb-6">League Setup Options</MudText>
+
+	<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="LeagueName" FullWidth="true">
+	</MudTextField>
 
 	<MudGrid Spacing="3">
 		<!-- Default Data Card -->
@@ -46,7 +50,8 @@
 				</MudCardContent>
 
 				<MudCardActions>
-					<MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true">
+					<MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+										 OnClick="() => LeagueWizardService.SelectDataConfiguration(true)">
 						Use Default Data
 					</MudButton>
 				</MudCardActions>
@@ -95,7 +100,8 @@
 				</MudCardContent>
 
 				<MudCardActions>
-					<MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true">
+					<MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true"
+										 OnClick="() => LeagueWizardService.SelectDataConfiguration(true)">
 						Upload JSON File
 					</MudButton>
 				</MudCardActions>
@@ -105,5 +111,30 @@
 </MudContainer>
 
 @code {
+	protected override void OnInitialized()
+	{
+		LeagueWizardService.OnChange += UpdateState;
+		base.OnInitialized();
+	}
 
+	public void Dispose()
+	{
+		LeagueWizardService.OnChange -= UpdateState;
+	}
+
+	private string LeagueName
+	{
+		get => LeagueWizardService.CurrentLeagueSetupForm.LeagueName ?? string.Empty;
+		set
+		{
+			var form = LeagueWizardService.CurrentLeagueSetupForm;
+			form.LeagueName = value;
+			LeagueWizardService.UpdateLeagueSetupForm(form);
+		}
+	}
+
+	private void UpdateState()
+	{
+		StateHasChanged();
+	}
 }
