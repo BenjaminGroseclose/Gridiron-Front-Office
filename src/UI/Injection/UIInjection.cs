@@ -8,7 +8,6 @@ public static class UIInjection
 {
 	public static void Configure(IServiceCollection services)
 	{
-		services.AddSingleton<INavigationService, NavigationService>();
-		services.AddSingleton<ILeagueWizardService, LeagueSetupService>();
+		services.AddScoped<INavigationService, NavigationService>();
 	}
 }

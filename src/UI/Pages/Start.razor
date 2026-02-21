@@ -3,22 +3,23 @@
 
 
 
-<div class="pa-3">
-	<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" JustifyContent="Center">
+<div class="pa-3 ma-auto" style="width: fit-content;">
+	<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.Center">
 		<div class="d-flex justify-center mb-4">
 			<img src="img/logo.svg" alt="Gridiron Front Office" style="width: 100px; height: 100px;" />
 		</div>
 
-		<MudText Typo="Typo.h3" Color="Color.Primary" Align="Align.Center">Gridiron Front Office</MudText>
+		<MudText Typo="Typo.h3" Color="Color.Primary" Align="Align.Center">Gridiron Front Office
+		</MudText>
 	</MudStack>
 
 
 
-	<MudText Typo="Typo.h5" Align="Align.Center">Command your franchise with precision analytics and
-		high-stakes executive decision-making.
+	<MudText Typo="Typo.h5" Style="max-width: 650px;" Align="Align.Center">Command your franchise with precision analytics
+		and high-stakes executive decision-making.
 	</MudText>
 
-	<MudStack Spacing="3" Class="mt-6">
+	<MudStack Spacing="3" Class="mt-6" AlignItems="AlignItems.Center" Justify="Justify.Center">
 		<MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => NavigateTo("/league-setup"))"
 							 Style="width: 200px;">
 			Create
@@ -38,7 +39,6 @@
 </div>
 
 @code {
-
 	void NavigateTo(string route)
 	{
 		NavigationService.NavigateTo(route);

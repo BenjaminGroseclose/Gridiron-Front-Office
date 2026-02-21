@@ -1,22 +1,46 @@
 using GridironFrontOffice.Domain;
 using GridironFrontOffice.Framework;
 using SQLite;
+using SQLitePCL;
 
 namespace GridironFrontOffice.Persistence;
 
 public class GameManager
 {
+	private static readonly object SqliteInitLock = new();
+	private static bool _sqliteInitialized;
 	private readonly string _baseSavePath;
 
 	public SQLiteConnection? CurrentConnection { get; private set; }
 
 	public GameManager(string folder = "GFO_Saves")
 	{
+		EnsureSqliteInitialized();
+
 		_baseSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folder);
 
 		if (!Directory.Exists(_baseSavePath))
 		{
 			Directory.CreateDirectory(_baseSavePath);
+		}
+	}
+
+	private static void EnsureSqliteInitialized()
+	{
+		if (_sqliteInitialized)
+		{
+			return;
+		}
+
+		lock (SqliteInitLock)
+		{
+			if (_sqliteInitialized)
+			{
+				return;
+			}
+
+			Batteries_V2.Init();
+			_sqliteInitialized = true;
 		}
 	}
 

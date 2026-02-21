@@ -29,8 +29,15 @@ public class NavigationService : INavigationService
 			// Track the route in AppState
 			_appState.PopRoute();
 
+			var route = _appState.CurrentState.CurrentRoute;
+			if (string.IsNullOrWhiteSpace(route))
+			{
+				_logger.LogWarning("No valid route found after popping route history.");
+				return;
+			}
+
 			// Perform the actual navigation
-			_navigationManager.NavigateTo(_appState.CurrentState.CurrentRoute);
+			_navigationManager.NavigateTo(route);
 		}
 		else
 		{

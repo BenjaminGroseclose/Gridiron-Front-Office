@@ -37,13 +37,16 @@
 			</MudStep>
 		</ChildContent>
 		<ActionContent>
-			<MudStack Row="true" Justify="Justify.SpaceBetween">
+			<MudStack Row="true" Justify="_activeStep == 2 ? Justify.FlexEnd : Justify.SpaceBetween" Class="ma-4 w-100"
+								Style="width: 100%;">
 				@if (_activeStep == 2)
 				{
 					<MudButton Variant="Variant.Text" OnClick="LeagueWizardService.GoToPreviousStep">
 						Back
 					</MudButton>
 				}
+
+				<MudSpacer />
 
 				@if (_activeStep < 2)
 				{

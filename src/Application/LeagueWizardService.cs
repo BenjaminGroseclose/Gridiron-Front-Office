@@ -2,7 +2,7 @@ using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain.Forms;
 using GridironFrontOffice.Persistence;
 
-namespace GridironFrontOffice.Application.Services;
+namespace GridironFrontOffice.Application;
 
 /// <summary>
 /// Service responsible for setting up a new league

@@ -21,7 +21,7 @@ public class League : BaseEntity
 	/// <summary>
 	/// The current date in the league.
 	/// </summary>
-	public DateOnly CurrentDate { get; set; }
+	public DateTime CurrentDate { get; set; }
 
 	// Player Information
 
@@ -29,11 +29,6 @@ public class League : BaseEntity
 	/// The name of the player managing the team.
 	/// </summary>
 	public string PlayerName { get; set; }
-
-	/// <summary>
-	/// The date of birth of the player managing the team.
-	/// </summary>
-	public DateOnly PlayerDateOfBirth { get; set; }
 
 	// League Settings
 
