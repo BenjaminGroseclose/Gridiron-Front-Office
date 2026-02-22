@@ -1,11 +1,7 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using SQLite;
-
 namespace GridironFrontOffice.Domain;
 
 public class Team : BaseEntity
 {
-	[PrimaryKey, AutoIncrement]
 	public int TeamID { get; set; }
 
 	/// <summary>
@@ -42,7 +38,6 @@ public class Team : BaseEntity
 	/// <summary>
 	/// The ID of the conference this team belongs to.
 	/// </summary>
-	[ForeignKey("Conference")]
 	public int ConferenceID { get; set; }
 
 	public Conference Conference { get; set; }
@@ -50,7 +45,6 @@ public class Team : BaseEntity
 	/// <summary>
 	/// The ID of the division this team belongs to.
 	/// </summary>
-	[ForeignKey("Division")]
 	public int DivisionID { get; set; }
 
 	public Division Division { get; set; }
@@ -58,7 +52,6 @@ public class Team : BaseEntity
 	/// <summary>
 	/// The ID of the stadium this team plays in.
 	/// </summary>
-	[ForeignKey("Stadium")]
 	public int StadiumID { get; set; }
 
 	public Stadium Stadium { get; set; }

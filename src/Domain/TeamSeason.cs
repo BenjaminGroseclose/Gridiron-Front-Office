@@ -1,5 +1,3 @@
-using SQLite;
-
 namespace GridironFrontOffice.Domain;
 
 public class TeamSeason : BaseEntity
@@ -7,7 +5,6 @@ public class TeamSeason : BaseEntity
 	/// <summary>
 	/// The unique identifier for the TeamSeason.
 	/// </summary>
-	[PrimaryKey, AutoIncrement]
 	public int TeamSeasonID { get; set; }
 
 	/// <summary>

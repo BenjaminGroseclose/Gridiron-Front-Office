@@ -1,22 +1,17 @@
 using GridironFrontOffice.Domain;
 using GridironFrontOffice.Framework;
-using SQLite;
-using SQLitePCL;
+using Microsoft.EntityFrameworkCore;
 
 namespace GridironFrontOffice.Persistence;
 
 public class GameManager
 {
-	private static readonly object SqliteInitLock = new();
-	private static bool _sqliteInitialized;
 	private readonly string _baseSavePath;
 
-	public SQLiteConnection? CurrentConnection { get; private set; }
+	public string? CurrentDatabasePath { get; private set; }
 
 	public GameManager(string folder = "GFO_Saves")
 	{
-		EnsureSqliteInitialized();
-
 		_baseSavePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, folder);
 
 		if (!Directory.Exists(_baseSavePath))
@@ -25,24 +20,7 @@ public class GameManager
 		}
 	}
 
-	private static void EnsureSqliteInitialized()
-	{
-		if (_sqliteInitialized)
-		{
-			return;
-		}
-
-		lock (SqliteInitLock)
-		{
-			if (_sqliteInitialized)
-			{
-				return;
-			}
-
-			Batteries_V2.Init();
-			_sqliteInitialized = true;
-		}
-	}
+	public bool HasActiveConnection => string.IsNullOrWhiteSpace(CurrentDatabasePath) == false;
 
 	/// <summary>
 	/// Creates a new game save with the specified name.
@@ -60,15 +38,9 @@ public class GameManager
 			throw ex;
 		}
 
-		CurrentConnection = new SQLiteConnection(fullPath);
+		CurrentDatabasePath = fullPath;
 
 		InitializeDatabaseSchema();
-
-		// Speed boost: Enable Write-Ahead Logging
-		CurrentConnection.Execute("PRAGMA journal_mode=WAL;");
-
-		// Enforce foreign key constraints for this connection
-		CurrentConnection.Execute("PRAGMA foreign_keys = ON;");
 	}
 
 	public void LoadGame(string saveName)
@@ -81,13 +53,10 @@ public class GameManager
 			throw ex;
 		}
 
-		CurrentConnection = new SQLiteConnection(fullPath);
+		CurrentDatabasePath = fullPath;
 
-		// Speed boost: Enable Write-Ahead Logging
-		CurrentConnection.Execute("PRAGMA journal_mode=WAL;");
-
-		// Enforce foreign key constraints for this connection
-		CurrentConnection.Execute("PRAGMA foreign_keys = ON;");
+		using var context = CreateDbContext();
+		ConfigureSqlitePragmas(context);
 	}
 
 	private string GetSavePath(string saveName)
@@ -97,16 +66,33 @@ public class GameManager
 
 	private void InitializeDatabaseSchema()
 	{
-		if (CurrentConnection == null)
+		if (CurrentDatabasePath == null)
 		{
 			throw new InvalidOperationException("No active database connection.");
 		}
 
-		CurrentConnection.CreateTable<League>();
-		CurrentConnection.CreateTable<Player>();
-		CurrentConnection.CreateTable<Stadium>();
-		CurrentConnection.CreateTable<Conference>();
-		CurrentConnection.CreateTable<Division>();
-		CurrentConnection.CreateTable<Team>();
+		using var context = CreateDbContext();
+		context.Database.EnsureCreated();
+		ConfigureSqlitePragmas(context);
+	}
+
+	public GridironFrontOfficeDbContext CreateDbContext()
+	{
+		if (CurrentDatabasePath == null)
+		{
+			throw new InvalidOperationException("No active database connection.");
+		}
+
+		var options = new DbContextOptionsBuilder<GridironFrontOfficeDbContext>()
+			.UseSqlite($"Data Source={CurrentDatabasePath}")
+			.Options;
+
+		return new GridironFrontOfficeDbContext(options);
+	}
+
+	private static void ConfigureSqlitePragmas(GridironFrontOfficeDbContext context)
+	{
+		context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+		context.Database.ExecuteSqlRaw("PRAGMA foreign_keys = ON;");
 	}
 }

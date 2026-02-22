@@ -43,7 +43,7 @@ public interface ILeagueWizardService
 	/// <summary>>
 	/// Navigates to the next step in the league setup process
 	/// </summary>
-	void GoToNextStep();
+	Task GoToNextStepAsync();
 
 	/// <summary>
 	/// Navigates to the previous step in the league setup process

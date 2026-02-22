@@ -1,6 +1,9 @@
 using GridironFrontOffice.Application.Interfaces;
+using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Forms;
+using GridironFrontOffice.Framework;
 using GridironFrontOffice.Persistence;
+using GridironFrontOffice.Persistence.Interfaces;
 
 namespace GridironFrontOffice.Application;
 
@@ -10,6 +13,13 @@ namespace GridironFrontOffice.Application;
 public class LeagueSetupService : ILeagueWizardService
 {
 	private readonly GameManager _gameManager;
+	private readonly IBaseRepository<Team> _teamRepository;
+	private readonly IBaseRepository<Conference> _conferenceRepository;
+	private readonly IBaseRepository<Division> _divisionRepository;
+	private readonly IBaseRepository<Player> _playerRepository;
+	private readonly IBaseRepository<Stadium> _stadiumRepository;
+	private readonly ISeedDataService _seedDataService;
+	private readonly IPlayerGeneratorService _playerGeneratorService;
 
 	// Private fields to hold the state of the league setup process
 	private LeagueSetupForm _leagueSetupForm;
@@ -23,9 +33,23 @@ public class LeagueSetupService : ILeagueWizardService
 
 	public LeagueSetupForm CurrentLeagueSetupForm => _leagueSetupForm;
 
-	public LeagueSetupService()
+	public LeagueSetupService(GameManager gameManager,
+		IBaseRepository<Team> teamRepository,
+		IBaseRepository<Conference> conferenceRepository,
+		IBaseRepository<Division> divisionRepository,
+		IBaseRepository<Player> playerRepository,
+		IBaseRepository<Stadium> stadiumRepository,
+		ISeedDataService seedDataService,
+		IPlayerGeneratorService playerGeneratorService)
 	{
-		_gameManager = new GameManager();
+		_gameManager = gameManager;
+		_teamRepository = teamRepository;
+		_conferenceRepository = conferenceRepository;
+		_divisionRepository = divisionRepository;
+		_stadiumRepository = stadiumRepository;
+		_playerRepository = playerRepository;
+		_seedDataService = seedDataService;
+		_playerGeneratorService = playerGeneratorService;
 		_leagueSetupForm = new LeagueSetupForm()
 		{
 			LeagueName = string.Empty,
@@ -72,7 +96,7 @@ public class LeagueSetupService : ILeagueWizardService
 
 	public bool LoadingLeague => _loadingLeague;
 
-	public void GoToNextStep()
+	public async Task GoToNextStepAsync()
 	{
 		// Check if Form is complete for the current step before allowing navigation to the next step
 		if (_currentStep == 2)
@@ -83,14 +107,20 @@ public class LeagueSetupService : ILeagueWizardService
 			}
 			else
 			{
-				_loadingLeague = true; // Start loading league data based on the user's selections
+
 				NotifyStateChanged();
 			}
 		}
 
-		if (_currentStep == 0 && !string.IsNullOrEmpty(this.CurrentLeagueSetupForm.LeagueName))
+		if (_currentStep == 0)
 		{
-			this._gameManager.CreateNewGame(this.CurrentLeagueSetupForm.LeagueName);
+			if (string.IsNullOrEmpty(CurrentLeagueSetupForm.LeagueName))
+			{
+				throw new DomainException("League name should have been set prior to proceeding to the next step. This should have been validated on the UI side.");
+			}
+
+			await this.InitializeLeagueDataAsync();
+
 		}
 
 		if (_currentStep < TOTAL_STEPS - 1) // Assuming there are 3 steps indexed 0-2
@@ -131,10 +161,47 @@ public class LeagueSetupService : ILeagueWizardService
 
 	public void SelectDataConfiguration(bool isDefault, string? jsonFilePath = null)
 	{
-		this._isDefaultDataSelected = isDefault;
+		_isDefaultDataSelected = isDefault;
 		CurrentLeagueSetupForm.UsingDefaultData = isDefault;
 		NotifyStateChanged();
 
 		// TODO: Implement logic to load custom data from JSON file if isDefault is false and jsonFilePath is provided
+	}
+
+	private async Task InitializeLeagueDataAsync()
+	{
+		// Step 1: Start loading
+		_loadingLeague = true;
+		NotifyStateChanged();
+
+		if (CurrentLeagueSetupForm.LeagueName == null)
+		{
+			throw new DomainException("League name must be set before initializing league data.");
+		}
+
+		// Step 2: Create Game Save and Initialize Database Schema
+		_gameManager.CreateNewGame(CurrentLeagueSetupForm.LeagueName);
+
+		// Step 3: Load Seed Data into Database
+		// TODO: Handle JSON seed data loading if the user selected custom data configuration
+
+		var (teams, stadiums, conferences, divisions) = await _seedDataService.LoadDefaultDataAsync();
+
+		// Load stadiums, conferences, divisions, and teams first since players depend on teams existing in the database
+		await _stadiumRepository.BulkInsertAsync(stadiums);
+		await _conferenceRepository.BulkInsertAsync(conferences);
+		await _divisionRepository.BulkInsertAsync(divisions);
+		await _teamRepository.BulkInsertAsync(teams);
+
+		// Step 4: Generate Players for each team based on the selected roster size and practice squad size
+		var allTeams = await _teamRepository.GetAllAsync();
+
+		foreach (var team in allTeams)
+		{
+			var playersToGenerate = await _playerGeneratorService.GeneratePlayersForTeamAsync(team.TeamID);
+			await _playerRepository.BulkInsertAsync(playersToGenerate);
+		}
+
+		_loadingLeague = false;
 	}
 }

@@ -1,12 +1,11 @@
 using GridironFrontOffice.Domain.Enums;
 using GridironFrontOffice.Domain.Helpers;
-using SQLite;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GridironFrontOffice.Domain;
 
 public class Player : BaseEntity
 {
-	[PrimaryKey, AutoIncrement]
 	public int PlayerID { get; set; }
 
 	public string FirstName { get; set; } = string.Empty;
@@ -29,7 +28,18 @@ public class Player : BaseEntity
 	/// College the player attended
 	/// </summary>
 	public string College { get; set; } = string.Empty;
+
+	/// <summary>
+	/// Number of years the player has been in the league. 
+	/// A rookie would have 0 years of experience, while a veteran might have 5 or more years.
+	/// </summary>
 	public int ExperienceYears { get; set; }
+
+	/// <summary>
+	/// The player's archetype, which can influence their attributes and play style. 
+	/// For example, a QB archetype might be "Pocket Passer", "Dual Threat", or "Gunslinger". 
+	/// </summary>
+	public string Archetype { get; set; } = string.Empty;
 
 	/// <summary>
 	/// Weight in pounds
@@ -115,11 +125,11 @@ public class Player : BaseEntity
 	public int KickPower { get; set; }
 	public int KickAccuracy { get; set; }
 
-	[Ignore]
+	[NotMapped]
 	public int OverallRating => PlayerRatingHelper.CalculateOverallRating(this);
-	[Ignore]
+	[NotMapped]
 	public bool IsRookie => ExperienceYears == 0;
-	[Ignore]
+	[NotMapped]
 	public string FullName => $"{FirstName} {LastName}";
 
 	public override int ID

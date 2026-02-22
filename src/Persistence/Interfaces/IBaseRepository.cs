@@ -1,25 +1,24 @@
 using GridironFrontOffice.Domain;
-using SQLite;
 
 namespace GridironFrontOffice.Persistence.Interfaces;
 
 /// <summary>
-/// Repository interface for League entity data access operations.
+/// Repository interface for entity data access operations.
 /// </summary>
 public interface IBaseRepository<T> where T : BaseEntity
 {
 	/// <summary>
-	/// Gets a league by its ID.
+	/// Gets an entity by its ID.
 	/// </summary>
-	/// <param name="entityId">The entity ID.</param>
+	/// <param name="entityID">The entity ID.</param>
 	/// <returns>The entity if found, otherwise null.</returns>
-	Task<T?> GetByIdAsync(int entityId);
+	Task<T?> GetByIDAsync(int entityID);
 
 	/// <summary>
 	/// Gets all entities.
 	/// </summary>
 	/// <returns>A collection of all entities.</returns>
-	Task<IEnumerable<T>> GetAllAsync();
+	Task<IQueryable<T>> GetAllAsync();
 
 	/// <summary>
 	/// Inserts a new entity.
@@ -38,7 +37,13 @@ public interface IBaseRepository<T> where T : BaseEntity
 	/// <summary>
 	/// Deletes an entity by its ID.
 	/// </summary>
-	/// <param name="entityId">The entity ID to delete.</param>
+	/// <param name="entityID">The entity ID to delete.</param>
 	/// <returns>The number of rows deleted.</returns>
-	Task<bool> DeleteAsync(int entityId);
+	Task<bool> DeleteAsync(int entityID);
+
+	/// <summary>
+	/// Inserts multiple entities in bulk.
+	/// </summary>
+	/// <param name="entities">The collection of entities to insert.</param>
+	Task BulkInsertAsync(IEnumerable<T> entities);
 }

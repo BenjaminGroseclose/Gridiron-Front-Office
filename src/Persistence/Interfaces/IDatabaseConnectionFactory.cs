@@ -1,17 +1,14 @@
-using SQLite;
-
 namespace GridironFrontOffice.Persistence.Interfaces;
 
 /// <summary>
-/// Provides access to the SQLite database connection.
+/// Provides access to the active game's Entity Framework database context.
 /// </summary>
 public interface IDatabaseConnectionFactory
 {
 	/// <summary>
-	/// Gets the current active database connection.
+	/// Creates a database context bound to the active game save.
 	/// </summary>
-	/// <returns>The active SQLiteConnection, or null if no connection is active.</returns>
-	SQLiteConnection? GetConnection();
+	GridironFrontOfficeDbContext CreateDbContext();
 
 	/// <summary>
 	/// Indicates whether a database connection is currently active.

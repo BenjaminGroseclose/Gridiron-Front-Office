@@ -1,5 +1,3 @@
-using GridironFrontOffice.Domain.Enums;
-
 namespace GridironFrontOffice.Persistence.Models;
 
 /// <summary>
@@ -15,23 +13,15 @@ public class PlayerArchetype
 {
 	public string Name { get; set; }
 
-	public string Description { get; set; }
+	/// <summary>
+	/// The weight that determines how likely this archetype is to be selected when generating a player for the associated position.
+	/// </summary>
+	public decimal Weight { get; set; }
 
 	/// <summary>
-	/// The position associated with this player archetype. This indicates the role or 
-	/// position that players of this archetype are likely to play on the field.
+	/// A dictionary where the key is the name of the attribute (e.g., "Speed", "Strength", "Agility") and the value is an array of two integers.
+	/// The first integer in the array represents the mean value for that attribute, and the second integer represents the standard deviation. 
+	/// This allows for more realistic player generation by creating players that have attributes that vary around a mean.
 	/// </summary>
-	public PlayerPosition Position { get; set; }
-
-	/// <summary>
-	/// A weight used to determine how likely this archetype is to be 
-	/// selected when generating players. Higher values indicate a greater likelihood of selection.
-	/// </summary>
-	public int SelectionWeight { get; set; }
-
-	public int[] HeightRange { get; set; }
-
-	public int[] WeightRange { get; set; }
-
 	public Dictionary<string, int[]> AttributeStandardDeviation { get; set; }
 }

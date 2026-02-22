@@ -1,5 +1,4 @@
 using GridironFrontOffice.Persistence.Interfaces;
-using SQLite;
 
 namespace GridironFrontOffice.Persistence;
 
@@ -16,10 +15,10 @@ public class DatabaseConnectionFactory : IDatabaseConnectionFactory
 		_gameManager = gameManager;
 	}
 
-	public SQLiteConnection? GetConnection()
+	public GridironFrontOfficeDbContext CreateDbContext()
 	{
-		return _gameManager.CurrentConnection;
+		return _gameManager.CreateDbContext();
 	}
 
-	public bool HasActiveConnection => _gameManager.CurrentConnection != null;
+	public bool HasActiveConnection => _gameManager.HasActiveConnection;
 }

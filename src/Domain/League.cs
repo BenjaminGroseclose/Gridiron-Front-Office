@@ -1,11 +1,9 @@
 using GridironFrontOffice.Domain.Enums;
-using SQLite;
 
 namespace GridironFrontOffice.Domain;
 
 public class League : BaseEntity
 {
-	[PrimaryKey, AutoIncrement]
 	public int LeagueID { get; set; }
 
 	/// <summary>

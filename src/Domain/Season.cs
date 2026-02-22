@@ -1,5 +1,4 @@
 using GridironFrontOffice.Domain.Enums;
-using SQLite;
 
 namespace GridironFrontOffice.Domain;
 
@@ -8,7 +7,6 @@ public class Season : BaseEntity
 	/// <summary>
 	/// The unique identifier for the season.
 	/// </summary>
-	[PrimaryKey, AutoIncrement]
 	public int SeasonID { get; set; }
 
 	/// <summary>
