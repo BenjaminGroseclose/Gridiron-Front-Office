@@ -105,8 +105,11 @@ You **MUST** follow this exact structure for the output:
 
 ### DO (Always)
 
+- **Review Documentation**: Always review existing documentation in comments and in the `docs` folder before asking questions or writing the PRD.
+- **Ask Clarifying Questions**: Always ask at least 2 clarifying questions to fill knowledge gaps before proceeding.
 - **Define Testing**: For AI systems, specify how to test and validate output quality.
 - **Iterate**: Present a draft and ask for feedback on specific sections.
+- **Update Documentation**: Ensure the PRD is stored in the appropriate `docs/features/` folder with a clear filename.
 
 ### DON'T (Avoid)
 

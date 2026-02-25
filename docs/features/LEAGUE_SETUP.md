@@ -134,10 +134,10 @@ public record LeagueSetupDto(
     string LeagueName,
     int RosterSize,              // 46, 50, 53, 55
     int PracticeSquadSize,       // 0, 10, 14, 16
-    decimal SalaryCap,           // Dollar amount
+    double SalaryCap,           // Dollar amount
     bool InjuriesEnabled,        // true | false
     bool HardCapEnabled,         // true | false
-    decimal SalaryCapFloor,      // Percentage (e.g., 0.90 = 90%)
+    double SalaryCapFloor,      // Percentage (e.g., 0.90 = 90%)
     int StartingYear,            // 2024-2034
     
     // Team Selection (set after research)
@@ -156,10 +156,10 @@ public record LeagueConfigDto(
     string LeagueName,
     int RosterSize,
     int PracticeSquadSize,
-    decimal SalaryCap,
+    double SalaryCap,
     bool InjuriesEnabled,
     bool HardCapEnabled,
-    decimal SalaryCapFloor,
+    double SalaryCapFloor,
     int StartingYear
 );
 
@@ -171,8 +171,8 @@ public record TeamSelectionDto(
     int OverallRating,
     int OffenseRating,
     int DefenseRating,
-    decimal CapSpace,
-    decimal DeadMoney,
+    double CapSpace,
+    double DeadMoney,
     List<string> TopNeeds
 );
 ```
@@ -224,9 +224,9 @@ public record TeamSelectionDto(
 | League Name | Text | 2 | 100 | Yes |
 | Roster Size | Select | - | - | Yes |
 | Practice Squad | Select | - | - | Yes |
-| Salary Cap | Decimal | 100M | 500M | Yes |
+| Salary Cap | double | 100M | 500M | Yes |
 | Starting Year | Select | 2024 | 2034 | Yes |
-| Salary Cap Floor | Decimal | 0% | 100% | No (default 90%) |
+| Salary Cap Floor | double | 0% | 100% | No (default 90%) |
 
 ### Error Handling & Edge Cases
 
@@ -265,7 +265,7 @@ public record TeamSelectionDto(
 |------|------------|--------|-----------|
 | Form validation latency on large selections | Low | Medium | Client-side validation only; no server calls during form entry. |
 | Data loss on browser crash mid-setup | Medium | High | Auto-save to session storage every 10 seconds. Restore on reload. |
-| Salary cap calculation errors | Medium | High | Unit test all cap calculations. Use `decimal` type for money. |
+| Salary cap calculation errors | Medium | High | Unit test all cap calculations. Use `double` type for money. |
 | Team data inconsistency (stale ratings) | Low | Medium | Cache team stats with 1-hour TTL. Display "Last updated" timestamp. |
 | Mobile responsiveness on wizard | Medium | Medium | Test on tablets (9-13 inch) and phones. Stack form fields vertically. |
 

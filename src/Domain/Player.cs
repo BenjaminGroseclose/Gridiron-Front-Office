@@ -4,6 +4,16 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GridironFrontOffice.Domain;
 
+/// <summary>
+/// Represents a player in the football simulation game. This class contains various properties that define the player's identity, physical attributes, skills, and other characteristics that can influence their performance on the field. The Player class is a central entity in the game, as it is used to create teams, simulate games, and manage player careers throughout the season.
+/// 
+/// Theory: Each player is assigned a BasePotential value (0 to 100) that represents long-term talent.
+/// The player generation process uses BasePotential to bias archetype attribute means up or down.
+/// 
+/// Each player has position-specific "peak years". Ratings ramp up before peak, plateau during peak,
+/// and decline gradually after peak. This creates realistic age-based curves while allowing outliers.
+/// 
+/// </summary>
 public class Player : BaseEntity
 {
 	public int PlayerID { get; set; }
@@ -12,16 +22,14 @@ public class Player : BaseEntity
 	public string LastName { get; set; } = string.Empty;
 
 	/// <summary>
-	/// Age of the player
-	/// TODO: This should be calculated from DateOfBirth, based on the current date in the game
-	/// </summary>
-	public int Age { get; set; }
-
-	/// <summary>
 	/// Date of birth 
 	/// </summary>
 	public DateTime DateOfBirth { get; set; }
 
+	/// <summary>
+	/// Position the player plays on the field, which can influence their 
+	/// attributes and play style.
+	/// </summary>
 	public PlayerPosition Position { get; set; }
 
 	/// <summary>
@@ -42,6 +50,11 @@ public class Player : BaseEntity
 	public string Archetype { get; set; } = string.Empty;
 
 	/// <summary>
+	/// Base potential in the range 0 to 100.
+	/// </summary>
+	public int BasePotential { get; set; }
+
+	/// <summary>
 	/// Weight in pounds
 	/// </summary>
 	public int Weight { get; set; }
@@ -49,7 +62,7 @@ public class Player : BaseEntity
 	/// <summary>
 	/// Height in inches
 	/// </summary>
-	public int Height { get; set; }
+	public double Height { get; set; }
 
 	/// <summary>
 	/// Jersey number of the player
@@ -88,7 +101,7 @@ public class Player : BaseEntity
 	public int Mobility { get; set; }
 	public int DecisionMakingSpeed { get; set; }
 
-	// WR/TE/RB Attributes
+	// WR / TE / RB Attributes
 	public int Carrying { get; set; }
 	public int Trucking { get; set; }
 	public int Elusiveness { get; set; }

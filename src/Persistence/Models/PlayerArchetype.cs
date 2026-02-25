@@ -16,7 +16,7 @@ public class PlayerArchetype
 	/// <summary>
 	/// The weight that determines how likely this archetype is to be selected when generating a player for the associated position.
 	/// </summary>
-	public decimal Weight { get; set; }
+	public int Weight { get; set; }
 
 	/// <summary>
 	/// A dictionary where the key is the name of the attribute (e.g., "Speed", "Strength", "Agility") and the value is an array of two integers.
