@@ -9,6 +9,7 @@ namespace GridironFrontOffice.Application;
 
 public class PlayerGeneratorService : IPlayerGeneratorService
 {
+	#region Constants and Fields
 	private const int BASE_POTENTIAL_MEAN = 50;
 	private const int BASE_POTENTIAL_STDDEV = 15;
 	private const int MIN_GENERATION_AGE = 20;
@@ -244,6 +245,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		{ PlayerPosition.P, (27, 35, 0.8, 0.015) },
 		{ PlayerPosition.LS, (27, 35, 0.8, 0.015) }
 	};
+	#endregion
 
 	private readonly ISeedDataService _seedDataService;
 
@@ -305,7 +307,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			Height = this.GenerateAttributeValue(POSITION_HEIGHT_CONSTANTS[position][0], POSITION_HEIGHT_CONSTANTS[position][1], random),
 		};
 
-		var archetypeAttributes = playerArchetype.AttributeStandardDeviation;
+		var archetypeAttributes = playerArchetype.Attributes;
 
 		foreach (var attribute in PLAYER_ATTRIBUTES)
 		{

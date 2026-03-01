@@ -23,6 +23,11 @@ public class GameManager
 	public bool HasActiveConnection => string.IsNullOrWhiteSpace(CurrentDatabasePath) == false;
 
 	/// <summary>
+	/// The directory where save files are stored. Useful for debugging the resolved path.
+	/// </summary>
+	public string SaveDirectory => _baseSavePath;
+
+	/// <summary>
 	/// Creates a new game save with the specified name.
 	/// </summary>
 	/// <param name="saveName">The file name for the new game save.</param>
@@ -54,9 +59,6 @@ public class GameManager
 		}
 
 		CurrentDatabasePath = fullPath;
-
-		using var context = CreateDbContext();
-		ConfigureSqlitePragmas(context);
 	}
 
 	private string GetSavePath(string saveName)
@@ -72,8 +74,18 @@ public class GameManager
 		}
 
 		using var context = CreateDbContext();
-		context.Database.EnsureCreated();
-		ConfigureSqlitePragmas(context);
+		bool created = context.Database.EnsureCreated();
+
+		if (!created)
+		{
+			// EnsureCreated returns false when the database already existed.
+			// This means the file was present before this call — tables may or may not exist.
+			System.Diagnostics.Debug.WriteLine($"[GameManager] EnsureCreated returned false. Database already existed at: {CurrentDatabasePath}");
+		}
+		else
+		{
+			System.Diagnostics.Debug.WriteLine($"[GameManager] Database schema created at: {CurrentDatabasePath}");
+		}
 	}
 
 	public GridironFrontOfficeDbContext CreateDbContext()
@@ -85,14 +97,9 @@ public class GameManager
 
 		var options = new DbContextOptionsBuilder<GridironFrontOfficeDbContext>()
 			.UseSqlite($"Data Source={CurrentDatabasePath}")
+			.AddInterceptors(new SqlitePragmaInterceptor())
 			.Options;
 
 		return new GridironFrontOfficeDbContext(options);
-	}
-
-	private static void ConfigureSqlitePragmas(GridironFrontOfficeDbContext context)
-	{
-		context.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
-		context.Database.ExecuteSqlRaw("PRAGMA foreign_keys = ON;");
 	}
 }

@@ -48,17 +48,16 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 		return rowsAffected > 0;
 	}
 
-	public async Task<IQueryable<T>> GetAllAsync()
+	public async Task<IEnumerable<T>> GetAllAsync()
 	{
 		await using var context = GetDbContext();
-		var query = context.Set<T>().AsNoTracking();
-		return await Task.FromResult(query);
+		return await context.Set<T>().AsNoTracking().ToListAsync();
 	}
 
 	public async Task<T?> GetByIDAsync(int entityId)
 	{
 		await using var context = GetDbContext();
-		return await context.Set<T>().AsNoTracking().FirstOrDefaultAsync(e => e.ID == entityId);
+		return await context.FindAsync<T>(entityId);
 	}
 
 	public async Task<int> InsertAsync(T entity)

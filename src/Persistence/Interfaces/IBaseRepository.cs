@@ -18,7 +18,7 @@ public interface IBaseRepository<T> where T : BaseEntity
 	/// Gets all entities.
 	/// </summary>
 	/// <returns>A collection of all entities.</returns>
-	Task<IQueryable<T>> GetAllAsync();
+	Task<IEnumerable<T>> GetAllAsync();
 
 	/// <summary>
 	/// Inserts a new entity.

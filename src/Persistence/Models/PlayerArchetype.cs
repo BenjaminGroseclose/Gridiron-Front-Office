@@ -23,5 +23,5 @@ public class PlayerArchetype
 	/// The first integer in the array represents the mean value for that attribute, and the second integer represents the standard deviation. 
 	/// This allows for more realistic player generation by creating players that have attributes that vary around a mean.
 	/// </summary>
-	public Dictionary<string, int[]> AttributeStandardDeviation { get; set; }
+	public Dictionary<string, int[]> Attributes { get; set; }
 }

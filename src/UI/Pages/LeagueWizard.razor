@@ -50,13 +50,12 @@
 
 				@if (_activeStep < 2)
 				{
-
-					<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LeagueWizardService.GoToNextStep"
+					<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => GoToNextStep()"
 										 Disabled="!LeagueWizardService.CanProceedToNextStep">Next</MudButton>
 				}
 				else
 				{
-					<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="LeagueWizardService.GoToNextStep"
+					<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => GoToNextStep()"
 										 Disabled="!LeagueWizardService.CanCreateLeague">Create League</MudButton>
 				}
 			</MudStack>
@@ -89,6 +88,11 @@
 	void NavigateToHome()
 	{
 		NavigationService.NavigateTo("/");
+	}
+
+	async Task GoToNextStep()
+	{
+		await LeagueWizardService.GoToNextStepAsync();
 	}
 
 }

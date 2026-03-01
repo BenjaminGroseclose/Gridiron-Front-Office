@@ -14,6 +14,13 @@
 	@Body
 </MudLayout>
 
+<ErrorBoundary>
+	<ErrorContent Context="ex">
+		@* Fallback UI displayed when an error occurs **@
+
+		<div class="mud-theme-error rounded" role="alert">An error occurred: @ex.Message</div>
+	</ErrorContent>
+</ErrorBoundary>
 
 @code {
 
@@ -28,12 +35,10 @@
 			TextPrimary = "#F1F5F9",
 			TextSecondary = "#94A3B8",
 			DividerLight = "#475569",
-
 			Success = "#38B000",
 			Warning = "#FFB703",
 			Error = "#C1121F",
 			Info = "#00B4D8"
 		}
-
 	};
 }
