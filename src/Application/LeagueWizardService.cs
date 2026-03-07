@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Forms;
@@ -28,6 +29,7 @@ public class LeagueSetupService : ILeagueWizardService
 	private int[] _completedSteps = Array.Empty<int>();
 	private bool? _isDefaultDataSelected = null;
 	private bool _loadingLeague = false;
+	private bool _leagueCreated = false;
 
 	public event Action? OnChange;
 
@@ -94,7 +96,7 @@ public class LeagueSetupService : ILeagueWizardService
 
 	public bool CanCreateLeague => _leagueSetupForm.IsValid();
 
-	public bool LoadingLeague => _loadingLeague;
+	public bool LoadingLeague => _loadingLeague && !_leagueCreated;
 
 	public async Task GoToNextStepAsync()
 	{
@@ -168,6 +170,18 @@ public class LeagueSetupService : ILeagueWizardService
 		// TODO: Implement logic to load custom data from JSON file if isDefault is false and jsonFilePath is provided
 	}
 
+	public async Task<IEnumerable<Team>> GetTeamsForSelection()
+	{
+		if (!_leagueCreated)
+		{
+			return Enumerable.Empty<Team>(); // Return an empty list if the league has not been created yet
+		}
+
+		var teams = await _teamRepository.GetAllAsync();
+
+		return teams;
+	}
+
 	private async Task InitializeLeagueDataAsync()
 	{
 		// Step 1: Start loading
@@ -203,5 +217,7 @@ public class LeagueSetupService : ILeagueWizardService
 		}
 
 		_loadingLeague = false;
+		_leagueCreated = true;
+		NotifyStateChanged();
 	}
 }

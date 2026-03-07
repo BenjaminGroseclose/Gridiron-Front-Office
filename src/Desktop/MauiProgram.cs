@@ -31,6 +31,36 @@ public static class MauiProgram
 		builder.Logging.SetMinimumLevel(LogLevel.Debug);
 #endif
 
-		return builder.Build();
+		var app = builder.Build();
+
+		// Setup Global exception handling
+		var logger = app.Services.GetService<ILogger<App>>();
+
+		if (logger == null)
+		{
+			Console.WriteLine("Warning: Logger service not found. Global exception handling will not log exceptions.");
+		}
+		else
+		{
+			ConfigureGlobalExceptionHandling(logger);
+		}
+
+		return app;
+	}
+
+
+	private static void ConfigureGlobalExceptionHandling(ILogger logger)
+	{
+		AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+		{
+			var ex = e.ExceptionObject as Exception;
+			if (ex != null)
+			{
+				// Log the exception using your logging framework
+				logger?.LogError(ex, "Unhandled exception occurred");
+
+				// Optionally, show a user-friendly message or perform other actions
+			}
+		};
 	}
 }

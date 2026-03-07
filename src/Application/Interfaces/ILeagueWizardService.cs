@@ -1,3 +1,4 @@
+using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Forms;
 
 namespace GridironFrontOffice.Application.Interfaces;
@@ -62,4 +63,10 @@ public interface ILeagueWizardService
 	/// <param name="isDefault">Whether to use the default seed data or custom data</param>
 	/// <param name="jsonFilePath">The path to the JSON file containing custom data, if applicable</param>
 	void SelectDataConfiguration(bool isDefault, string? jsonFilePath = null);
+
+	/// <summary>
+	/// Retrieves the list of teams available for selection when using default seed data. This is used to populate the team selection dropdown in the first step of the league setup process.
+	/// </summary>
+	/// <returns></returns>
+	Task<IEnumerable<Team>> GetTeamsForSelection();
 }

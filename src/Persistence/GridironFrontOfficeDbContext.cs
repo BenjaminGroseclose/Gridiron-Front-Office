@@ -97,5 +97,9 @@ public class GridironFrontOfficeDbContext : DbContext
 			.HasOne(x => x.Game)
 			.WithMany()
 			.HasForeignKey(x => x.GameID);
+		modelBuilder.Entity<GameStats>()
+			.HasOne(x => x.Team)
+			.WithMany()
+			.HasForeignKey(x => x.TeamID);
 	}
 }

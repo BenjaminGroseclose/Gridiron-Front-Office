@@ -75,17 +75,6 @@ public class GameManager
 
 		using var context = CreateDbContext();
 		bool created = context.Database.EnsureCreated();
-
-		if (!created)
-		{
-			// EnsureCreated returns false when the database already existed.
-			// This means the file was present before this call — tables may or may not exist.
-			System.Diagnostics.Debug.WriteLine($"[GameManager] EnsureCreated returned false. Database already existed at: {CurrentDatabasePath}");
-		}
-		else
-		{
-			System.Diagnostics.Debug.WriteLine($"[GameManager] Database schema created at: {CurrentDatabasePath}");
-		}
 	}
 
 	public GridironFrontOfficeDbContext CreateDbContext()

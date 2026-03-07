@@ -1,5 +1,57 @@
+@inject ILeagueWizardService LeagueWizardService
+@implements IDisposable
+
+<MudText Typo="Typo.h5" Class="mb-3">Team Selection (@AvailableTeams.Count())</MudText>
+
+@if (LoadingLeague)
+{
+	<MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="ma-auto mt-6" />
+}
+else
+{
+	@foreach (var team in AvailableTeams)
+	{
+		<MudCheckBox Label="@team.Name" T="bool"></MudCheckBox>
+	}
+}
+
+
 @code {
 
+	IEnumerable<Team> AvailableTeams = Enumerable.Empty<Team>();
+	private bool LoadingLeague
+	{
+		get => LeagueWizardService.LoadingLeague;
+	}
 
+	protected override async Task OnInitializedAsync()
+	{
+		LeagueWizardService.OnChange += UpdateState;
+		await base.OnInitializedAsync();
 
+		AvailableTeams = await LeagueWizardService.GetTeamsForSelection();
+	}
+
+	public void Dispose()
+	{
+		LeagueWizardService.OnChange -= UpdateState;
+	}
+
+	private void UpdateState()
+	{
+		InvokeAsync(async () =>
+		{
+			if (LeagueWizardService.LoadingLeague)
+			{
+				AvailableTeams = Enumerable.Empty<Team>();
+			}
+			else
+			{
+				AvailableTeams = await LeagueWizardService.GetTeamsForSelection();
+			}
+			StateHasChanged();
+		});
+
+		StateHasChanged();
+	}
 }
