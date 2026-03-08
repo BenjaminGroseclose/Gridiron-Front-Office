@@ -3,9 +3,18 @@
 
 <MudText Typo="Typo.h5" Class="mb-3">Team Selection (@AvailableTeams.Count())</MudText>
 
-@if (LoadingLeague)
+@if (LeagueWizardService.LoadingLeague)
 {
-	<MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" Class="ma-auto mt-6" />
+	<MudStack AlignItems="AlignItems.Center" Class="mt-6">
+		<MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+		<MudText Typo="Typo.body2" Class="mt-2">Setting up your league, this may take a moment...</MudText>
+	</MudStack>
+}
+else if (LeagueWizardService.InitializationError != null)
+{
+	<MudAlert Severity="Severity.Error" Class="mt-4">
+		@LeagueWizardService.InitializationError
+	</MudAlert>
 }
 else
 {
@@ -19,39 +28,38 @@ else
 @code {
 
 	IEnumerable<Team> AvailableTeams = Enumerable.Empty<Team>();
-	private bool LoadingLeague
-	{
-		get => LeagueWizardService.LoadingLeague;
-	}
 
 	protected override async Task OnInitializedAsync()
 	{
-		LeagueWizardService.OnChange += UpdateState;
+		LeagueWizardService.OnChange += OnServiceStateChanged;
 		await base.OnInitializedAsync();
 
-		AvailableTeams = await LeagueWizardService.GetTeamsForSelection();
+		await RefreshTeamsAsync();
 	}
 
 	public void Dispose()
 	{
-		LeagueWizardService.OnChange -= UpdateState;
+		LeagueWizardService.OnChange -= OnServiceStateChanged;
 	}
 
-	private void UpdateState()
+	private async Task RefreshTeamsAsync()
+	{
+		if (LeagueWizardService.LeagueCreated)
+		{
+			AvailableTeams = await LeagueWizardService.GetTeamsForSelection();
+		}
+		else
+		{
+			AvailableTeams = Enumerable.Empty<Team>();
+		}
+	}
+
+	private void OnServiceStateChanged()
 	{
 		InvokeAsync(async () =>
 		{
-			if (LeagueWizardService.LoadingLeague)
-			{
-				AvailableTeams = Enumerable.Empty<Team>();
-			}
-			else
-			{
-				AvailableTeams = await LeagueWizardService.GetTeamsForSelection();
-			}
+			await RefreshTeamsAsync();
 			StateHasChanged();
 		});
-
-		StateHasChanged();
 	}
 }

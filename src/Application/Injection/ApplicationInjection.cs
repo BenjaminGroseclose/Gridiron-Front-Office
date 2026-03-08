@@ -12,6 +12,6 @@ public static class ApplicationInjection
 		services.AddSingleton<AppState>();
 
 		services.AddScoped<IPlayerGeneratorService, PlayerGeneratorService>();
-		services.AddSingleton<ILeagueWizardService, LeagueSetupService>();
+		services.AddScoped<ILeagueWizardService, LeagueSetupService>();
 	}
 }

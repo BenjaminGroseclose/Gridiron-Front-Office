@@ -37,6 +37,16 @@ public interface ILeagueWizardService
 	bool LoadingLeague { get; }
 
 	/// <summary>
+	/// Whether the league has been successfully created (data seeded)
+	/// </summary>
+	bool LeagueCreated { get; }
+
+	/// <summary>
+	/// Error message from the most recent initialization attempt, or null if initialization succeeded
+	/// </summary>
+	string? InitializationError { get; }
+
+	/// <summary>
 	/// Event triggered when the state of the wizard changes
 	/// </summary>
 	event Action OnChange;

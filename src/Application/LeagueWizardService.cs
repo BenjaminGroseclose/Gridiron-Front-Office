@@ -30,6 +30,7 @@ public class LeagueSetupService : ILeagueWizardService
 	private bool? _isDefaultDataSelected = null;
 	private bool _loadingLeague = false;
 	private bool _leagueCreated = false;
+	private string? _initializationError = null;
 
 	public event Action? OnChange;
 
@@ -96,7 +97,11 @@ public class LeagueSetupService : ILeagueWizardService
 
 	public bool CanCreateLeague => _leagueSetupForm.IsValid();
 
-	public bool LoadingLeague => _loadingLeague && !_leagueCreated;
+	public bool LoadingLeague => _loadingLeague;
+
+	public bool LeagueCreated => _leagueCreated;
+
+	public string? InitializationError => _initializationError;
 
 	public async Task GoToNextStepAsync()
 	{
@@ -121,7 +126,17 @@ public class LeagueSetupService : ILeagueWizardService
 				throw new DomainException("League name should have been set prior to proceeding to the next step. This should have been validated on the UI side.");
 			}
 
-			await this.InitializeLeagueDataAsync();
+			// Guard against re-entry: skip init if already loading or already completed
+			if (!_loadingLeague && !_leagueCreated)
+			{
+				await this.InitializeLeagueDataAsync();
+			}
+
+			// Abort navigation if initialization failed
+			if (_initializationError != null)
+			{
+				return;
+			}
 
 		}
 
@@ -186,6 +201,7 @@ public class LeagueSetupService : ILeagueWizardService
 	{
 		// Step 1: Start loading
 		_loadingLeague = true;
+		_initializationError = null;
 		NotifyStateChanged();
 
 		if (CurrentLeagueSetupForm.LeagueName == null)
@@ -193,31 +209,42 @@ public class LeagueSetupService : ILeagueWizardService
 			throw new DomainException("League name must be set before initializing league data.");
 		}
 
-		// Step 2: Create Game Save and Initialize Database Schema
-		_gameManager.CreateNewGame(CurrentLeagueSetupForm.LeagueName);
-
-		// Step 3: Load Seed Data into Database
-		// TODO: Handle JSON seed data loading if the user selected custom data configuration
-
-		var (teams, stadiums, conferences, divisions) = await _seedDataService.LoadDefaultDataAsync();
-
-		// Load stadiums, conferences, divisions, and teams first since players depend on teams existing in the database
-		await _stadiumRepository.BulkInsertAsync(stadiums);
-		await _conferenceRepository.BulkInsertAsync(conferences);
-		await _divisionRepository.BulkInsertAsync(divisions);
-		await _teamRepository.BulkInsertAsync(teams);
-
-		// Step 4: Generate Players for each team based on the selected roster size and practice squad size
-		var allTeams = await _teamRepository.GetAllAsync();
-
-		foreach (var team in allTeams)
+		try
 		{
-			var playersToGenerate = await _playerGeneratorService.GeneratePlayersForTeamAsync(team.TeamID);
-			await _playerRepository.BulkInsertAsync(playersToGenerate);
-		}
+			// Step 2: Create Game Save and Initialize Database Schema
+			_gameManager.CreateNewGame(CurrentLeagueSetupForm.LeagueName);
 
-		_loadingLeague = false;
-		_leagueCreated = true;
-		NotifyStateChanged();
+			// Step 3: Load Seed Data into Database
+			// TODO: Handle JSON seed data loading if the user selected custom data configuration
+
+			var (teams, stadiums, conferences, divisions) = await _seedDataService.LoadDefaultDataAsync();
+
+			// Load stadiums, conferences, divisions, and teams first since players depend on teams existing in the database
+			await _stadiumRepository.BulkInsertAsync(stadiums);
+			await _conferenceRepository.BulkInsertAsync(conferences);
+			await _divisionRepository.BulkInsertAsync(divisions);
+			await _teamRepository.BulkInsertAsync(teams);
+
+			// Step 4: Generate Players for each team based on the selected roster size and practice squad size
+			var allTeams = await _teamRepository.GetAllAsync();
+
+			foreach (var team in allTeams)
+			{
+				var playersToGenerate = await _playerGeneratorService.GeneratePlayersForTeamAsync(team.TeamID);
+				await _playerRepository.BulkInsertAsync(playersToGenerate);
+			}
+
+			_leagueCreated = true;
+		}
+		catch (Exception ex)
+		{
+			_initializationError = ex is DomainException de ? de.Message : "Failed to initialize league data. Please try again.";
+			_leagueCreated = false;
+		}
+		finally
+		{
+			_loadingLeague = false;
+			NotifyStateChanged();
+		}
 	}
 }

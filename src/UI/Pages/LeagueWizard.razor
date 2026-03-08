@@ -41,7 +41,8 @@
 								Style="width: 100%;">
 				@if (_activeStep == 2)
 				{
-					<MudButton Variant="Variant.Text" OnClick="LeagueWizardService.GoToPreviousStep">
+					<MudButton Variant="Variant.Text" OnClick="LeagueWizardService.GoToPreviousStep"
+										 Disabled="LeagueWizardService.LoadingLeague">
 						Back
 					</MudButton>
 				}
@@ -51,7 +52,17 @@
 				@if (_activeStep < 2)
 				{
 					<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => GoToNextStep()"
-										 Disabled="!LeagueWizardService.CanProceedToNextStep">Next</MudButton>
+										 Disabled="!LeagueWizardService.CanProceedToNextStep || LeagueWizardService.LoadingLeague">
+						@if (LeagueWizardService.LoadingLeague)
+						{
+							<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+							<span>Setting Up...</span>
+						}
+						else
+						{
+							<span>Next</span>
+						}
+					</MudButton>
 				}
 				else
 				{
@@ -76,8 +87,11 @@
 
 	private void UpdateActiveStep()
 	{
-		_activeStep = LeagueWizardService.CurrentStep;
-		StateHasChanged();
+		InvokeAsync(() =>
+		{
+			_activeStep = LeagueWizardService.CurrentStep;
+			StateHasChanged();
+		});
 	}
 
 	public void Dispose()

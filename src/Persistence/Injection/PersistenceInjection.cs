@@ -12,8 +12,8 @@ public static class PersistenceInjection
 		services.AddSingleton<GameManager>();
 		services.AddSingleton<IDatabaseConnectionFactory, DatabaseConnectionFactory>();
 
-		// Register seed data service
-		services.AddScoped<ISeedDataService, SeedDataService>();
+		// SeedDataService is stateless JSON loading — singleton is safe and avoids repeated file reads
+		services.AddSingleton<ISeedDataService, SeedDataService>();
 
 		// Register repositories here
 		services.AddScoped<IBaseRepository<League>, BaseRepository<League>>();
