@@ -1,7 +1,8 @@
+@using GridironFrontOffice.Domain.Forms
 @inject ILeagueWizardService LeagueWizardService
 @implements IDisposable
 
-<MudText Typo="Typo.h5" Class="mb-3">Team Selection (@AvailableTeams.Count())</MudText>
+<MudText Typo="Typo.h5" Class="mb-3">Team Selection</MudText>
 
 @if (LeagueWizardService.LoadingLeague)
 {
@@ -18,10 +19,23 @@ else if (LeagueWizardService.InitializationError != null)
 }
 else
 {
-	@foreach (var team in AvailableTeams)
-	{
-		<MudCheckBox Label="@team.Name" T="bool"></MudCheckBox>
-	}
+	<MudGrid Spacing="4">
+		@foreach (var team in AvailableTeams)
+		{
+			<MudItem>
+				<MudPaper Elevation="2" Class="p-3"
+									Style="@SelectedStyle(team.ID, LeagueWizardService.CurrentLeagueSetupForm.SelectedTeamID)"
+									OnClick="@(() => LeagueWizardService.UpdateLeagueSetupForm(new LeagueSetupForm { SelectedTeamID = team.ID }))">
+					<div class="d-flex gap-1 align-center">
+						<MudText Typo="Typo.h6">@team.Name</MudText>
+						<MudText Typo="Typo.body2" Color="Color.Secondary">@team.City</MudText>
+					</div>
+
+					<MudCheckBox Checked="@(LeagueWizardService.CurrentLeagueSetupForm.SelectedTeamID == team.ID)" T="bool" />
+				</MudPaper>
+			</MudItem>
+		}
+	</MudGrid>
 }
 
 
@@ -40,6 +54,16 @@ else
 	public void Dispose()
 	{
 		LeagueWizardService.OnChange -= OnServiceStateChanged;
+	}
+
+	private string SelectedStyle(int teamID, int? selectedTeamID)
+	{
+		if (selectedTeamID.HasValue && teamID == selectedTeamID.Value)
+		{
+			return "border: 2px solid var(--mud-palette-success);";
+		}
+
+		return string.Empty;
 	}
 
 	private async Task RefreshTeamsAsync()

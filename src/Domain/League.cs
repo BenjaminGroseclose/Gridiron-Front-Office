@@ -21,12 +21,11 @@ public class League : BaseEntity
 	/// </summary>
 	public DateTime CurrentDate { get; set; }
 
-	// Player Information
-
 	/// <summary>
-	/// The name of the player managing the team.
+	/// The data source for the league. Determines how the league data is stored and loaded.
+	/// <see cref="LeagueDataSource"/>
 	/// </summary>
-	public string PlayerName { get; set; }
+	public LeagueDataSource DataSource { get; set; }
 
 	// League Settings
 

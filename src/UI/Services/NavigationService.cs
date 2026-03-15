@@ -45,7 +45,7 @@ public class NavigationService : INavigationService
 		}
 	}
 
-	public void NavigateTo(string route)
+	public void NavigateTo(string route, Dictionary<string, object>? queryParameters = null)
 	{
 		_logger.LogInformation("Navigating to {Route}", route);
 

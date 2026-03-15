@@ -1,5 +1,7 @@
 @page "/league-setup"
+@using GridironFrontOffice.Application
 @using GridironFrontOffice.UI.Services
+@using System.Dynamic
 @implements IDisposable
 
 @inject INavigationService NavigationService
@@ -42,7 +44,7 @@
 				@if (_activeStep == 2)
 				{
 					<MudButton Variant="Variant.Text" OnClick="LeagueWizardService.GoToPreviousStep"
-										 Disabled="LeagueWizardService.LoadingLeague">
+										 Disabled="_isLoading">
 						Back
 					</MudButton>
 				}
@@ -52,11 +54,10 @@
 				@if (_activeStep < 2)
 				{
 					<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => GoToNextStep()"
-										 Disabled="!LeagueWizardService.CanProceedToNextStep || LeagueWizardService.LoadingLeague">
-						@if (LeagueWizardService.LoadingLeague)
+										 Disabled="!LeagueWizardService.CanProceedToNextStep || _isLoading">
+						@if (_isLoading)
 						{
 							<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
-							<span>Setting Up...</span>
 						}
 						else
 						{
@@ -67,7 +68,7 @@
 				else
 				{
 					<MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="() => GoToNextStep()"
-										 Disabled="!LeagueWizardService.CanCreateLeague">Create League</MudButton>
+										 Disabled="!LeagueWizardService.CanCreateLeague || _isLoading">Create League</MudButton>
 				}
 			</MudStack>
 		</ActionContent>
@@ -78,6 +79,7 @@
 @code {
 
 	private int _activeStep = 0;
+	private bool _isLoading = false;
 
 	protected override void OnInitialized()
 	{
@@ -85,11 +87,12 @@
 		_activeStep = LeagueWizardService.CurrentStep;
 	}
 
-	private void UpdateActiveStep()
+	private async void UpdateActiveStep()
 	{
-		InvokeAsync(() =>
+		await InvokeAsync(() =>
 		{
 			_activeStep = LeagueWizardService.CurrentStep;
+			_isLoading = LeagueWizardService.LoadingLeague;
 			StateHasChanged();
 		});
 	}
@@ -108,5 +111,4 @@
 	{
 		await LeagueWizardService.GoToNextStepAsync();
 	}
-
 }
