@@ -3,6 +3,7 @@ using MudBlazor.Services;
 using GridironFrontOffice.Persistence.Injection;
 using GridironFrontOffice.Application.Injection;
 using GridironFrontOffice.UI.Injection;
+using Serilog;
 
 namespace GridironFrontOffice.Desktop;
 
@@ -10,6 +11,22 @@ public static class MauiProgram
 {
 	public static MauiApp CreateMauiApp()
 	{
+		var logPath = Path.Combine(FileSystem.AppDataDirectory, "logs", "gfo-.log");
+
+		Log.Logger = new LoggerConfiguration()
+#if DEBUG
+			.MinimumLevel.Debug()
+			.WriteTo.Debug()
+#else
+			.MinimumLevel.Warning()
+#endif
+			.WriteTo.File(
+				logPath,
+				rollingInterval: RollingInterval.Day,
+				retainedFileCountLimit: 7,
+				outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
+			.CreateLogger();
+
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
@@ -21,14 +38,15 @@ public static class MauiProgram
 		builder.Services.AddMauiBlazorWebView();
 		builder.Services.AddMudServices();
 
+		builder.Logging.ClearProviders();
+		builder.Logging.AddSerilog(dispose: true);
+
 		PersistenceInjection.Configure(builder.Services);
 		ApplicationInjection.Configure(builder.Services);
 		UIInjection.Configure(builder.Services);
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
-		builder.Logging.SetMinimumLevel(LogLevel.Debug);
 #endif
 
 		var app = builder.Build();
@@ -48,19 +66,22 @@ public static class MauiProgram
 		return app;
 	}
 
-
-	private static void ConfigureGlobalExceptionHandling(ILogger logger)
+	private static void ConfigureGlobalExceptionHandling(Microsoft.Extensions.Logging.ILogger logger)
 	{
 		AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
 		{
 			var ex = e.ExceptionObject as Exception;
 			if (ex != null)
 			{
-				// Log the exception using your logging framework
 				logger?.LogError(ex, "Unhandled exception occurred");
-
-				// Optionally, show a user-friendly message or perform other actions
+				Log.CloseAndFlush(); // ensure logs are written before process exits
 			}
+		};
+
+		TaskScheduler.UnobservedTaskException += (sender, e) =>
+		{
+			logger.LogError(e.Exception, "Unobserved task exception");
+			e.SetObserved();
 		};
 	}
 }

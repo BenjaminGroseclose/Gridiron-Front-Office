@@ -29,7 +29,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 
 		if (rowsAffected == 0)
 		{
-			var ex = new DomainException($"Failed to insert {typeof(T).Name} entities during bulk insert.", $"{typeof(T).Name.ToUpper()}_BULK_INSERT_FAILED", isFatal: false, retryable: true);
+			var ex = new DomainException($"Failed to insert {typeof(T).Name} entities during bulk insert.", $"{typeof(T).Name.ToUpper()}_BULK_INSERT_FAILED");
 			throw ex;
 		}
 	}
@@ -68,7 +68,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 
 		if (rowsAffected == 0)
 		{
-			var ex = new DomainException($"Failed to insert {typeof(T).Name} entity.", $"{typeof(T).Name.ToUpper()}_INSERT_FAILED", isFatal: false, retryable: true);
+			var ex = new DomainException($"Failed to insert {typeof(T).Name} entity.", $"{typeof(T).Name.ToUpper()}_INSERT_FAILED");
 			throw ex;
 		}
 
@@ -83,7 +83,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 
 		if (rowsAffected == 0)
 		{
-			var ex = new DomainException($"Failed to update {typeof(T).Name} entity.", $"{typeof(T).Name.ToUpper()}_UPDATE_FAILED", isFatal: false, retryable: true);
+			var ex = new DomainException($"Failed to update {typeof(T).Name} entity.", $"{typeof(T).Name.ToUpper()}_UPDATE_FAILED");
 			throw ex;
 		}
 
@@ -94,7 +94,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 	{
 		if (_databaseConnectionFactory.HasActiveConnection == false)
 		{
-			throw new DomainException("No active database connection.", "NO_ACTIVE_DB_CONNECTION", isFatal: true, retryable: false);
+			throw new DomainException("No active database connection.", "NO_ACTIVE_DB_CONNECTION");
 		}
 
 		return _databaseConnectionFactory.CreateDbContext();

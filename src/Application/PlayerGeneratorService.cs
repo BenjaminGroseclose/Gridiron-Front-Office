@@ -289,7 +289,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 		if (archetypesForPosition.Count == 0)
 		{
-			throw new DomainException($"No archetypes found for position {position}", "NO_ARCHETYPES_FOR_POSITION", isFatal: true, retryable: false);
+			throw new DomainException($"No archetypes found for position {position}", "NO_ARCHETYPES_FOR_POSITION");
 		}
 
 		var playerArchetype = SelectWeightedArchetype(archetypesForPosition, random);
@@ -337,7 +337,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 			if (player.GetType().GetProperty(attribute).GetValue(player) == null)
 			{
-				throw new DomainException($"Attribute {attribute} was not set for player {player.FirstName} {player.LastName}", "ATTRIBUTE_NOT_SET", isFatal: true, retryable: false);
+				throw new DomainException($"Attribute {attribute} was not set for player {player.FirstName} {player.LastName}", "ATTRIBUTE_NOT_SET");
 			}
 		}
 

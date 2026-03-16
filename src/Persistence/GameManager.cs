@@ -38,7 +38,7 @@ public class GameManager
 
 		if (File.Exists(fullPath))
 		{
-			var ex = new DomainException("A save with this name already exists.", "SAVE_ALREADY_EXISTS", isFatal: false, retryable: false);
+			var ex = new DomainException("A save with this name already exists.", "SAVE_ALREADY_EXISTS");
 			ex.Details.Add("SaveName", saveName);
 			throw ex;
 		}
@@ -53,7 +53,7 @@ public class GameManager
 		string fullPath = GetSavePath(saveName);
 		if (!File.Exists(fullPath))
 		{
-			var ex = new DomainException("Save not found", "SAVE_NOT_FOUND", isFatal: false, retryable: false);
+			var ex = new DomainException("Save not found", "SAVE_NOT_FOUND");
 			ex.Details.Add("SaveName", saveName);
 			throw ex;
 		}

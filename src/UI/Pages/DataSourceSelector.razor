@@ -2,6 +2,7 @@
 @using GridironFrontOffice.Domain.Enums
 
 @inject INavigationService NavigationService
+@inject ILeagueWizardService LeagueWizardService
 
 <MudContainer MaxWidth="MaxWidth.Large" class="py-4">
 	<MudText Typo="Typo.h4" Class="mb-6">League Setup Options</MudText>
@@ -12,7 +13,7 @@
 	<MudGrid Spacing="3">
 		<!-- Default Data Card -->
 		<MudItem xs="12" sm="6" Class="mt-3">
-			<MudCard Outlined="true">
+			<MudCard Outlined="true" Style="@SelectedStyle(LeagueDataSource.Default)">
 				<MudCardHeader Class="pb-2">
 					<CardHeaderContent>
 						<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
@@ -52,9 +53,8 @@
 				</MudCardContent>
 
 				<MudCardActions>
-					<MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-										 OnClick="() => Source = LeagueDataSource.Default">
-						Use Default Data
+					<MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="() => Source = LeagueDataSource.Default">
+						Default Data
 					</MudButton>
 				</MudCardActions>
 			</MudCard>
@@ -62,7 +62,7 @@
 
 		<!-- Custom JSON Upload Card -->
 		<MudItem xs="12" sm="6" Class="mt-3">
-			<MudCard Outlined="true">
+			<MudCard Outlined="true" Style="@SelectedStyle(LeagueDataSource.JSON)">
 				<MudCardHeader Class="pb-2">
 					<CardHeaderContent>
 						<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
@@ -102,8 +102,7 @@
 				</MudCardContent>
 
 				<MudCardActions>
-					<MudButton Variant="Variant.Filled" Color="Color.Info" FullWidth="true"
-										 OnClick="() => Source = LeagueDataSource.JSON">
+					<MudButton Variant="Variant.Outlined" Color="Color.Info" OnClick="() => Source = LeagueDataSource.JSON">
 						Upload JSON File
 					</MudButton>
 				</MudCardActions>
@@ -111,8 +110,8 @@
 		</MudItem>
 	</MudGrid>
 
-	<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6" FullWidth="true"
-						 OnClick="NavigateToLeagueWizard" Disabled="Source == null">
+	<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6 justify-end" OnClick="NavigateToLeagueWizard"
+						 Disabled="Source == null || string.IsNullOrWhiteSpace(LeagueName)">
 		Continue to League Setup
 	</MudButton>
 </MudContainer>
@@ -121,6 +120,7 @@
 
 	private string LeagueName { get; set; } = "My League";
 	private LeagueDataSource? Source { get; set; } = null;
+	private bool IsLoading { get; set; } = false;
 
 
 	void NavigateToLeagueWizard()
@@ -130,6 +130,8 @@
 			return; // Should never happen since the button is disabled, but just in case
 		}
 
+		IsLoading = true;
+
 		// Pass the selected league name and data source as query parameters
 		var queryParams = new Dictionary<string, object>
 		{
@@ -137,7 +139,11 @@
 			{ "dataSource", Source?.ToString() }
 		};
 
-		
 		NavigationService.NavigateTo("/league-wizard", queryParams);
+	}
+
+	private string SelectedStyle(LeagueDataSource option)
+	{
+		return Source == option ? "border: 2px solid var(--mud-palette-primary);" : string.Empty;
 	}
 }

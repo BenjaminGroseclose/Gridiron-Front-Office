@@ -4,16 +4,14 @@ public class DomainException : Exception
 {
 	private readonly string _message;
 	private readonly string _code;
-	private readonly bool _isFatal;
-	private readonly bool _retryable;
 	public Dictionary<string, object> Details;
+	public string Code => _code;
+	public override string Message => _message;
 
-	public DomainException(string message, string code = "DOMAIN_ERROR", bool isFatal = false, bool retryable = false)
+	public DomainException(string message, string code = "DOMAIN_ERROR")
 		: base(message)
 	{
 		_message = message;
 		_code = code;
-		_isFatal = isFatal;
-		_retryable = retryable;
 	}
 }

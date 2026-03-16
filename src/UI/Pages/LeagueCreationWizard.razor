@@ -1,0 +1,21 @@
+@page "/league-wizard"
+@using GridironFrontOffice.Domain.Enums
+
+@inject INavigationService NavigationService
+@inject ILeagueWizardService LeagueWizardService
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="ma-auto">
+
+
+</MudContainer>
+
+@code {
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string LeagueName { get; set; }
+
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public LeagueDataSource DataSource { get; set; }
+}
