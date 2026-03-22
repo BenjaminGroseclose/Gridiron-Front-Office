@@ -52,7 +52,14 @@ public class NavigationService : INavigationService
 		// Track the route in AppState
 		_appState.PushRoute(route);
 
+		// Construct the full URL with query parameters if provided
+		string fullUrl = route;
+		if (queryParameters != null && queryParameters.Count > 0)
+		{
+			fullUrl = _navigationManager.GetUriWithQueryParameters(route, queryParameters);
+		}
+
 		// Perform the actual navigation
-		_navigationManager.NavigateTo(route);
+		_navigationManager.NavigateTo(fullUrl);
 	}
 }

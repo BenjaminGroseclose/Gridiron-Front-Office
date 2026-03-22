@@ -5,17 +5,172 @@
 @inject ILeagueWizardService LeagueWizardService
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="ma-auto">
+	<MudText>@LeagueName, @DataSource</MudText>
+
+	
+
+	<MudStack Spacing="3">
+		<MudSelect T="Team"
+					 Label="Favorite Team"
+					 Variant="Variant.Outlined"
+					 Dense="true"
+					 @bind-Value="SelectedTeam"
+					 ToStringFunc="GetTeamDisplayName">
+			@foreach (var team in Teams)
+			{
+				<MudSelectItem T="Team" Value="@team">
+					<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+						<MudAvatar Size="Size.Small" Style="@GetTeamAvatarStyle(team)">
+							@team.Abbreviation
+						</MudAvatar>
+						<MudStack Spacing="0">
+							<MudText Typo="Typo.body1">@team.City @team.Name</MudText>
+							<MudText Typo="Typo.caption" Color="Color.Secondary">@team.Abbreviation</MudText>
+						</MudStack>
+					</MudStack>
+				</MudSelectItem>
+			}
+		</MudSelect>
+
+		<MudText Typo="Typo.h5" Class="mb-3">League Settings</MudText>
+
+		<MudDivider />
+
+		<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int?" @bind-Value="RosterSize" Min="8">
+		</MudNumericField>
+
+
+		<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int?" @bind-Value="PracticeSquadSize"
+										Min="8">
+		</MudNumericField>
+
+		<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Checked="InjuriesEnabled">
+		</MudCheckBox>
+
+
+		<MudCheckBox Label="Can be Fired" T="bool" @bind-Checked="CanBeFired">
+		</MudCheckBox>
+
+		<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="SalaryCap" Min="0">
+		</MudNumericField>
+
+		<MudNumericField T="double?" Label="Salary Floor (%)" Variant="Variant.Outlined" @bind-Value="SalaryCapFloor" Min="0">
+		</MudNumericField>
+
+		<MudButton OnClick="CreateLeague">Create</MudButton>
+
+	</MudStack>
 
 
 </MudContainer>
 
 @code {
 
-	[Parameter]
-	[SupplyParameterFromQuery]
-	public string LeagueName { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+		public string? LeagueName { get; set; }
 
-	[Parameter]
-	[SupplyParameterFromQuery]
-	public LeagueDataSource DataSource { get; set; }
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int? DataSource { get; set; }
+
+    public IEnumerable<Team> Teams { get; set; } = new List<Team>();
+
+    protected override async Task OnInitializedAsync()
+    {
+				Teams = await LeagueWizardService.GetDefaultTeams();
+        await base.OnInitializedAsync();
+    }
+
+	private class LeagueSetupForm
+	{
+		public int? RosterSize { get; set; }
+		public int? PracticeSquadSize { get; set; }
+		public bool InjuriesEnabled { get; set; }
+		public bool CanBeFired { get; set; }
+		public double? SalaryCap { get; set; }
+		public double? SalaryCapFloor { get; set; }
+
+		public bool IsValid()
+		{
+			return RosterSize.HasValue && PracticeSquadSize.HasValue && SalaryCap.HasValue && SalaryCapFloor.HasValue;
+		}
+	}
+	
+	private LeagueSetupForm LeagueSetup { get; set; } = new LeagueSetupForm();
+
+	private int? RosterSize
+	{
+		get => LeagueSetup.RosterSize;
+		set => LeagueSetup.RosterSize = value;
+	}
+
+	private int? PracticeSquadSize
+	{
+		get => LeagueSetup.PracticeSquadSize;
+		set => LeagueSetup.PracticeSquadSize = value;
+	}
+
+	private bool InjuriesEnabled
+	{
+		get => LeagueSetup.InjuriesEnabled;
+		set => LeagueSetup.InjuriesEnabled = value;
+	}
+
+	private bool CanBeFired
+	{
+		get => LeagueSetup.CanBeFired;
+		set => LeagueSetup.CanBeFired = value;
+	}
+
+	private double? SalaryCap
+	{
+		get => LeagueSetup.SalaryCap;
+		set => LeagueSetup.SalaryCap = value;
+	}
+
+	private double? SalaryCapFloor
+	{
+		get => LeagueSetup.SalaryCapFloor;
+		set => LeagueSetup.SalaryCapFloor = value;
+	}
+
+	private Team? SelectedTeam { get; set; }
+
+	private static string GetTeamDisplayName(Team? team)
+	{
+		return team is null ? string.Empty : $"{team.City} {team.Name}";
+	}
+
+	private static string GetTeamAvatarStyle(Team team)
+	{
+		var backgroundColor = string.IsNullOrWhiteSpace(team.PrimaryColor) ? "#1f2937" : team.PrimaryColor;
+		var textColor = string.IsNullOrWhiteSpace(team.SecondaryColor) ? "#f9fafb" : team.SecondaryColor;
+
+		return $"background:{backgroundColor};color:{textColor};font-weight:700;";
+	}
+
+	private async Task CreateLeague()
+	{
+		if (!LeagueSetup.IsValid())
+		{
+			// Show some validation error message to the user
+			return;
+		}
+
+		var leagueSettings = new LeagueSettings
+		{
+			RosterSize = LeagueSetup.RosterSize.Value,
+			PracticeSquadSize = LeagueSetup.PracticeSquadSize.Value,
+			InjuriesEnabled = LeagueSetup.InjuriesEnabled,
+			CanBeFired = LeagueSetup.CanBeFired,
+			SalaryCap = LeagueSetup.SalaryCap.Value * 1_000_000, // Convert from millions to actual value
+			SalaryCapFloor = (LeagueSetup.SalaryCapFloor.Value / 100) * (LeagueSetup.SalaryCap.Value * 1_000_000) // Calculate floor based on percentage
+		};
+
+		await LeagueWizardService.CreateLeagueAsync(LeagueName!, DataSource!.Value, leagueSettings, SelectedTeam?.Id);
+		
+		// Navigate to the main league page after creation
+		NavigationService.NavigateTo("/league");
+	}
 }

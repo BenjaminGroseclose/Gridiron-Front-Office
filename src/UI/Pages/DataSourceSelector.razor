@@ -4,6 +4,10 @@
 @inject INavigationService NavigationService
 @inject ILeagueWizardService LeagueWizardService
 
+@if (IsLoading) {
+	<LoadingSpinner />
+} else {
+
 <MudContainer MaxWidth="MaxWidth.Large" class="py-4">
 	<MudText Typo="Typo.h4" Class="mb-6">League Setup Options</MudText>
 
@@ -111,19 +115,21 @@
 	</MudGrid>
 
 	<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6 justify-end" OnClick="NavigateToLeagueWizard"
-						 Disabled="Source == null || string.IsNullOrWhiteSpace(LeagueName)">
+						 Disabled="Source == null || string.IsNullOrWhiteSpace(LeagueName) || PendingCreateLeague">
 		Continue to League Setup
 	</MudButton>
 </MudContainer>
+}
 
 @code {
 
 	private string LeagueName { get; set; } = "My League";
 	private LeagueDataSource? Source { get; set; } = null;
 	private bool IsLoading { get; set; } = false;
+	private bool PendingCreateLeague { get; set; } = false;
 
 
-	void NavigateToLeagueWizard()
+	async Task NavigateToLeagueWizard()
 	{
 		if (Source == null)
 		{
@@ -131,19 +137,41 @@
 		}
 
 		IsLoading = true;
+		PendingCreateLeague = true;
+		await InvokeAsync(StateHasChanged);
+	}
 
-		// Pass the selected league name and data source as query parameters
-		var queryParams = new Dictionary<string, object>
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!PendingCreateLeague)
 		{
-			{ "leagueName", LeagueName },
-			{ "dataSource", Source?.ToString() }
-		};
+			return;
+		}
 
-		NavigationService.NavigateTo("/league-wizard", queryParams);
+		PendingCreateLeague = false;
+
+		try
+		{
+			await this.LeagueWizardService.CreateDefaultLeagueAsync(this.LeagueName);
+
+			// Pass the selected league name and data source as query parameters
+			var queryParams = new Dictionary<string, object>
+			{
+				{ "LeagueName", LeagueName },
+				{ "DataSource", (int)Source! }
+			};
+
+			NavigationService.NavigateTo("/league-wizard", queryParams);
+		}
+		finally
+		{
+			IsLoading = false;
+			await InvokeAsync(StateHasChanged);
+		}
 	}
 
 	private string SelectedStyle(LeagueDataSource option)
 	{
 		return Source == option ? "border: 2px solid var(--mud-palette-primary);" : string.Empty;
 	}
-}
+}						
