@@ -56,5 +56,15 @@ public class Team : BaseEntity
 
 	public Stadium Stadium { get; set; }
 
+	/// <summary>
+	/// The contracts associated with this team. This allows us to track which players 
+	/// are currently under contract with the team, as well as their contract history. 
+	/// A player can have multiple contracts over their career if they switch teams, 
+	/// so this collection helps us manage the team's roster and player affiliations over time.
+	/// </summary>
+	public IEnumerable<ContractYear> ContractYears { get; set; }
+
+	public decimal CurrentSalaryCap => ContractYears.Where(cy => cy.IsCurrent).Sum(cy => cy.BaseSalary + cy.BonusEarnings);
+
 	public override int ID => TeamID;
 }

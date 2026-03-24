@@ -54,8 +54,16 @@
 		<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="SalaryCap" Min="0">
 		</MudNumericField>
 
-		<MudNumericField T="double?" Label="Salary Floor (%)" Variant="Variant.Outlined" @bind-Value="SalaryCapFloor" Min="0">
-		</MudNumericField>
+		<MudSelect
+			Label="Number of Playoff Teams"
+			T="int"
+			@bind-Value="NumberOfPlayoffTeams"
+		>
+			@for (int i = 6; i <= 16; i += 2)
+			{
+				<MudSelectItem T="int" Value="@i">@i</MudSelectItem>
+			}
+		</MudSelect>
 
 		<MudButton OnClick="CreateLeague">Create</MudButton>
 
@@ -89,11 +97,11 @@
 		public bool InjuriesEnabled { get; set; }
 		public bool CanBeFired { get; set; }
 		public double? SalaryCap { get; set; }
-		public double? SalaryCapFloor { get; set; }
+		public int NumberoOfPlayoffTeams { get; set; }
 
 		public bool IsValid()
 		{
-			return RosterSize.HasValue && PracticeSquadSize.HasValue && SalaryCap.HasValue && SalaryCapFloor.HasValue;
+			return RosterSize.HasValue && PracticeSquadSize.HasValue && SalaryCap.HasValue && SalaryCap.Value > 0 && NumberoOfPlayoffTeams > 0;
 		}
 	}
 	
@@ -129,10 +137,10 @@
 		set => LeagueSetup.SalaryCap = value;
 	}
 
-	private double? SalaryCapFloor
+	public int NumberOfPlayoffTeams
 	{
-		get => LeagueSetup.SalaryCapFloor;
-		set => LeagueSetup.SalaryCapFloor = value;
+		get => LeagueSetup.NumberoOfPlayoffTeams;
+		set => LeagueSetup.NumberoOfPlayoffTeams = value;
 	}
 
 	private Team? SelectedTeam { get; set; }
@@ -158,17 +166,22 @@
 			return;
 		}
 
-		var leagueSettings = new LeagueSettings
+		var league = new League
 		{
-			RosterSize = LeagueSetup.RosterSize.Value,
-			PracticeSquadSize = LeagueSetup.PracticeSquadSize.Value,
-			InjuriesEnabled = LeagueSetup.InjuriesEnabled,
-			CanBeFired = LeagueSetup.CanBeFired,
-			SalaryCap = LeagueSetup.SalaryCap.Value * 1_000_000, // Convert from millions to actual value
-			SalaryCapFloor = (LeagueSetup.SalaryCapFloor.Value / 100) * (LeagueSetup.SalaryCap.Value * 1_000_000) // Calculate floor based on percentage
+			Name = LeagueName!,
+			DataSource = (LeagueDataSource)DataSource!.Value,
+			CurrentDate = new DateTime(2025, 2, 15), // Start date for the league
+			InjuriesEnabled = this.InjuriesEnabled,
+			NumOfPlayoffsTeams = this.NumberOfPlayoffTeams,
+			CanBeFired = this.CanBeFired,
+			NumOfRegularSeasonGames = 17,
+			RosterSize = this.RosterSize!.Value,
+			PracticeSquadSize = this.PracticeSquadSize!.Value,
+			SalaryCap = this.SalaryCap!.Value * 1_000_000 // Convert from millions to actual value
 		};
 
-		await LeagueWizardService.CreateLeagueAsync(LeagueName!, DataSource!.Value, leagueSettings, SelectedTeam?.Id);
+
+		await LeagueWizardService.CreateLeagueAsync(league, SelectedTeam?.ID);
 		
 		// Navigate to the main league page after creation
 		NavigationService.NavigateTo("/league");

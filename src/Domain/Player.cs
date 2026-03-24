@@ -69,6 +69,27 @@ public class Player : BaseEntity
 	/// </summary>
 	public int JerseyNumber { get; set; }
 
+	// Contracts
+
+	/// <summary>
+	/// A list of contracts that the player has signed with different teams throughout their career.
+	/// This allows us to track the player's team affiliations over time, as well as the details 
+	/// of each contract such as duration, salary, and any special clauses. A player can have 
+	/// multiple contracts if they switch teams during their career, and this list helps us
+	///  manage those relationships effectively.
+	/// </summary>
+	public List<Contract> Contracts { get; set; }
+
+	/// <summary>
+	/// The player's current contract.
+	/// </summary>
+	public Contract? CurrentContract => Contracts.FirstOrDefault(c => c.IsCurrent);
+
+	/// <summary>
+	/// The team that the player is currently contracted to. This is derived from the CurrentContract
+	/// </summary>
+	public Team? CurrentTeam => CurrentContract?.CurrentTeam;
+
 
 	// Player Personal Attributes
 	public int Leadership { get; set; }

@@ -53,6 +53,13 @@ public class League : BaseEntity
 	/// </summary>
 	public bool CanBeFired { get; set; }
 
+	/// <summary>
+	/// The salary cap for teams in the league.
+	/// </summary>
+	public double SalaryCap { get; set; }
+
+	public double SalaryFloor { get { return SalaryCap * 0.75; } }
+
 	public override int ID
 	{
 		get => LeagueID;

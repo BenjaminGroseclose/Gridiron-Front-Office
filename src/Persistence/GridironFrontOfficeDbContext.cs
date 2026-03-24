@@ -30,6 +30,10 @@ public class GridironFrontOfficeDbContext : DbContext
 
 		modelBuilder.Entity<Player>().HasKey(x => x.PlayerID);
 		modelBuilder.Entity<Player>().Property(x => x.PlayerID).ValueGeneratedOnAdd();
+		modelBuilder.Entity<Player>()
+			.HasMany<Contract>()
+			.WithOne(x => x.Player)
+			.HasForeignKey(x => x.PlayerID);
 
 		modelBuilder.Entity<Stadium>().HasKey(x => x.StadiumID);
 		modelBuilder.Entity<Stadium>().Property(x => x.StadiumID).ValueGeneratedOnAdd();
@@ -98,6 +102,20 @@ public class GridironFrontOfficeDbContext : DbContext
 			.WithMany()
 			.HasForeignKey(x => x.GameID);
 		modelBuilder.Entity<GameStats>()
+			.HasOne(x => x.Team)
+			.WithMany()
+			.HasForeignKey(x => x.TeamID);
+
+		modelBuilder.Entity<Contract>().HasKey(x => x.ContractID);
+		modelBuilder.Entity<Contract>().Property(x => x.ContractID).ValueGeneratedOnAdd();
+
+		modelBuilder.Entity<ContractYear>().HasKey(x => x.ContractYearID);
+		modelBuilder.Entity<ContractYear>().Property(x => x.ContractYearID).ValueGeneratedOnAdd();
+		modelBuilder.Entity<ContractYear>()
+			.HasOne(x => x.Contract)
+			.WithMany(x => x.YearlyBreakdown)
+			.HasForeignKey(x => x.ContractID);
+		modelBuilder.Entity<ContractYear>()
 			.HasOne(x => x.Team)
 			.WithMany()
 			.HasForeignKey(x => x.TeamID);

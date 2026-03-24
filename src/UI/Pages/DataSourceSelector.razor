@@ -4,7 +4,7 @@
 @inject INavigationService NavigationService
 @inject ILeagueWizardService LeagueWizardService
 
-@if (IsLoading) {
+@if (_pendingOperation != null) {
 	<LoadingSpinner />
 } else {
 
@@ -115,7 +115,7 @@
 	</MudGrid>
 
 	<MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-6 justify-end" OnClick="NavigateToLeagueWizard"
-						 Disabled="Source == null || string.IsNullOrWhiteSpace(LeagueName) || PendingCreateLeague">
+						 Disabled="Source == null || string.IsNullOrWhiteSpace(LeagueName) || _pendingOperation != null">
 		Continue to League Setup
 	</MudButton>
 </MudContainer>
@@ -125,11 +125,44 @@
 
 	private string LeagueName { get; set; } = "My League";
 	private LeagueDataSource? Source { get; set; } = null;
-	private bool IsLoading { get; set; } = false;
-	private bool PendingCreateLeague { get; set; } = false;
 
+
+	private Task? _pendingOperation = null;
+	private string? _errorMessage = null;
 
 	async Task NavigateToLeagueWizard()
+	{
+			if (Source == null || string.IsNullOrWhiteSpace(LeagueName))
+					return;
+
+			_errorMessage = null;
+			
+			try
+			{
+					_pendingOperation = LeagueWizardService.CreateDefaultLeagueAsync(LeagueName);
+					await _pendingOperation;
+
+					var queryParams = new Dictionary<string, object>
+					{
+							{ "LeagueName", LeagueName },
+							{ "DataSource", (int)Source! }
+					};
+
+					NavigationService.NavigateTo("/league-wizard", queryParams);
+			}
+			catch (Exception ex)
+			{
+					_errorMessage = ex.Message;
+			}
+			finally
+			{
+					_pendingOperation = null;
+					await InvokeAsync(StateHasChanged);
+			}
+	}
+
+
+	@* async Task NavigateToLeagueWizard()
 	{
 		if (Source == null)
 		{
@@ -168,7 +201,7 @@
 			IsLoading = false;
 			await InvokeAsync(StateHasChanged);
 		}
-	}
+	} *@
 
 	private string SelectedStyle(LeagueDataSource option)
 	{

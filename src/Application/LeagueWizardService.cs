@@ -70,5 +70,6 @@ public class LeagueSetupService : ILeagueWizardService
 		}
 	}
 
+	public Task CreateLeagueAsync(League league, int? userTeamId) => throw new NotImplementedException();
 	public async Task<IEnumerable<Team>> GetDefaultTeams() => await this._teamRepository.GetAllAsync();
 }

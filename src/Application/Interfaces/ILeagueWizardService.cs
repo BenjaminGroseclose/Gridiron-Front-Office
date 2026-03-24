@@ -19,5 +19,5 @@ public interface ILeagueWizardService
 	/// <summary>
 	/// Creates a new league with settings
 	/// </summary>
-	Task CreateLeagueAsync(string leagueName, IEnumerable<Team> teams, double? salaryCapFloor);
+	Task CreateLeagueAsync(League league, int? userTeamId);
 }
