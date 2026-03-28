@@ -17,6 +17,7 @@ public class LeagueSetupService : ILeagueWizardService
 	private readonly IBaseRepository<Division> _divisionRepository;
 	private readonly IBaseRepository<Player> _playerRepository;
 	private readonly IBaseRepository<Stadium> _stadiumRepository;
+	private readonly IBaseRepository<League> _leagueRepository;
 	private readonly ISeedDataService _seedDataService;
 	private readonly IPlayerGeneratorService _playerGeneratorService;
 
@@ -26,6 +27,7 @@ public class LeagueSetupService : ILeagueWizardService
 		IBaseRepository<Division> divisionRepository,
 		IBaseRepository<Player> playerRepository,
 		IBaseRepository<Stadium> stadiumRepository,
+		IBaseRepository<League> leagueRepository,
 		ISeedDataService seedDataService,
 		IPlayerGeneratorService playerGeneratorService)
 	{
@@ -34,6 +36,7 @@ public class LeagueSetupService : ILeagueWizardService
 		_conferenceRepository = conferenceRepository;
 		_divisionRepository = divisionRepository;
 		_stadiumRepository = stadiumRepository;
+		_leagueRepository = leagueRepository;
 		_playerRepository = playerRepository;
 		_seedDataService = seedDataService;
 		_playerGeneratorService = playerGeneratorService;
@@ -51,7 +54,6 @@ public class LeagueSetupService : ILeagueWizardService
 
 		// Step 3: Load Seed Data into Database
 		// TODO: Handle JSON seed data loading if the user selected custom data configuration
-
 		var (teams, stadiums, conferences, divisions) = await _seedDataService.LoadDefaultDataAsync();
 
 		// Load stadiums, conferences, divisions, and teams first since players depend on teams existing in the database
@@ -70,6 +72,14 @@ public class LeagueSetupService : ILeagueWizardService
 		}
 	}
 
-	public Task CreateLeagueAsync(League league, int? userTeamId) => throw new NotImplementedException();
+	public async Task CreateLeagueAsync(League league, int? userTeamId)
+	{
+		// Step 1: Create League Settings
+		await _leagueRepository.InsertAsync(league);
+
+		// Step 2: Create contracts for all players in the league based on their draft position and the rookie wage scale
+	}
+
+
 	public async Task<IEnumerable<Team>> GetDefaultTeams() => await this._teamRepository.GetAllAsync();
 }

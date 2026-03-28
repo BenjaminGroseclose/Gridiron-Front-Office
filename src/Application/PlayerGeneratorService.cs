@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Enums;
@@ -305,19 +306,27 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			Archetype = playerArchetype.Name,
 			Weight = this.GenerateAttributeValue(POSITION_WEIGHT_CONSTANTS[position][0], POSITION_WEIGHT_CONSTANTS[position][1], random),
 			Height = this.GenerateAttributeValue(POSITION_HEIGHT_CONSTANTS[position][0], POSITION_HEIGHT_CONSTANTS[position][1], random),
+			DraftPick = GenerateDraftPick(position, basePotential, random)
 		};
 
 		var archetypeAttributes = playerArchetype.Attributes;
 
 		foreach (var attribute in PLAYER_ATTRIBUTES)
 		{
+			var property = player.GetType().GetProperty(attribute);
+
+			if (property == null)
+			{
+				throw new DomainException($"Player class is missing property for attribute {attribute}", "MISSING_PLAYER_ATTRIBUTE_PROPERTY");
+			}
+
 			if (archetypeAttributes.ContainsKey(attribute))
 			{
 				var mean = archetypeAttributes[attribute][0];
 				var stdDev = archetypeAttributes[attribute][1];
 				var adjustedMean = AdjustMeanForPotential(mean, stdDev, basePotential);
 				var value = this.GenerateAttributeValue(adjustedMean, stdDev, random);
-				player.GetType().GetProperty(attribute).SetValue(player, value);
+				property.SetValue(player, value);
 			}
 			else if (GLOBAL_ATTRIBUTE_CONSTANTS.ContainsKey(attribute))
 			{
@@ -325,17 +334,18 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 				var stdDev = GLOBAL_ATTRIBUTE_CONSTANTS[attribute][1];
 				var adjustedMean = AdjustMeanForPotential(mean, stdDev, basePotential);
 				var value = this.GenerateAttributeValue(adjustedMean, stdDev, random);
-				player.GetType().GetProperty(attribute).SetValue(player, value);
+				property.SetValue(player, value);
 			}
 			else
 			{
 				// If no specific archetype or global constant is defined for this attribute, generate a random value with a default mean and stddev
 				var adjustedMean = AdjustMeanForPotential(50, 15, basePotential);
 				var value = this.GenerateAttributeValue(adjustedMean, 15, random); // Default mean of 50 and stddev of 15
-				player.GetType().GetProperty(attribute).SetValue(player, value);
+				property.SetValue(player, value);
 			}
 
-			if (player.GetType().GetProperty(attribute).GetValue(player) == null)
+
+			if (property?.GetValue(player) == null)
 			{
 				throw new DomainException($"Attribute {attribute} was not set for player {player.FirstName} {player.LastName}", "ATTRIBUTE_NOT_SET");
 			}
@@ -507,5 +517,86 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			}
 		}
 		return "Walk-on (No College)";
+	}
+
+	private int? GenerateDraftPick(PlayerPosition position, int basePotential, Random random)
+	{
+		// Stage 1: Decide if drafted vs UDFA
+		double draftedProbability = GetDraftedProbabilityFromBasePotential(basePotential);
+		if (random.NextDouble() > draftedProbability)
+		{
+			return null; // Undrafted
+		}
+
+		// Stage 2: Select round with front-loaded weights
+		int round = SelectDraftRound(position, random);
+
+		// Stage 3: Select pick uniformly within that round
+		int pickInRound = random.Next(1, 33); // 1-32 picks per round
+		int overallPick = ((round - 1) * 32) + pickInRound;
+
+		// Clamp for round 7 (only has picks 1-33, not full 32)
+		if (overallPick > 257)
+		{
+			overallPick = 257;
+		}
+
+		return overallPick;
+	}
+
+	private double GetDraftedProbabilityFromBasePotential(int basePotential)
+	{
+		// Logistic curve: higher potential → more likely drafted
+		// Midpoint at 55 (slightly above average 50), slope 0.1
+		double z = (basePotential - 55) / 10.0;
+		double logistic = 1.0 / (1.0 + Math.Exp(-z));
+
+		// Clamp so UDFA always possible and drafted is never guaranteed
+		return Math.Clamp(logistic, 0.20, 0.99);
+	}
+
+	private int SelectDraftRound(PlayerPosition position, Random random)
+	{
+		// Baseline round weights (rounds 1-7)
+		double[] baselineWeights = { 30, 22, 16, 12, 9, 7, 4 };
+
+		// Apply light position bias
+		double[] weights = (double[])baselineWeights.Clone();
+
+		// QB/EDGE/OT skew earlier
+		if (position == PlayerPosition.QB || position == PlayerPosition.EDGE || position == PlayerPosition.OT)
+		{
+			weights[0] *= 1.1;
+			weights[1] *= 1.05;
+			weights[5] *= 0.9;
+			weights[6] *= 0.85;
+		}
+
+		// K/P/LS skew later
+		if (position == PlayerPosition.K || position == PlayerPosition.P || position == PlayerPosition.LS)
+		{
+			weights[0] *= 0.85;
+			weights[1] *= 0.9;
+			weights[5] *= 1.2;
+			weights[6] *= 1.3;
+		}
+
+		// Normalize weights to sum to 100
+		double total = weights.Sum();
+		for (int i = 0; i < weights.Length; i++) weights[i] /= total / 100.0;
+
+		// Weighted random selection
+		double roll = random.NextDouble() * 100.0;
+		double cursor = 0;
+		for (int i = 0; i < weights.Length; i++)
+		{
+			cursor += weights[i];
+			if (roll < cursor)
+			{
+				return i + 1; // Rounds 1-7
+			}
+		}
+
+		return 7; // Fallback
 	}
 }

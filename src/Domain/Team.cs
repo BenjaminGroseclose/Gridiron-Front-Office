@@ -63,7 +63,6 @@ public class Team : BaseEntity
 	/// so this collection helps us manage the team's roster and player affiliations over time.
 	/// </summary>
 	public IEnumerable<ContractYear> ContractYears { get; set; }
-
 	public decimal CurrentSalaryCap => ContractYears.Where(cy => cy.IsCurrent).Sum(cy => cy.BaseSalary + cy.BonusEarnings);
 
 	public override int ID => TeamID;

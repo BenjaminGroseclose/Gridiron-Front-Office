@@ -69,6 +69,25 @@ public class Player : BaseEntity
 	/// </summary>
 	public int JerseyNumber { get; set; }
 
+	/// <summary>
+	/// The drat pick number at which the player was selected in the NFL Draft. If null then the player is undrafted (UDFA).
+	/// Picks range from 1 to 257 for the 7 rounds of the draft, with picks 1-32 in round 1, picks 33-64 in round 2, and so on.
+	/// </summary>
+	public int? DraftPick { get; set; }
+
+	/// <summary>
+	/// The round in which the player was drafted, derived from the DraftPick. 
+	/// If DraftPick is null, then this will be null to indicate an undrafted free agent (UDFA).
+	/// </summary>
+	[NotMapped]
+	public int? DraftRound => DraftPick.HasValue ? ((DraftPick.Value - 1) / 32) + 1 : null; // Assuming 32 picks per round
+
+	/// <summary>
+	/// Indicates whether the player was undrafted (UDFA). 
+	/// </summary>
+	[NotMapped]
+	public bool IsUndrafted => !DraftPick.HasValue;
+
 	// Contracts
 
 	/// <summary>
@@ -78,7 +97,7 @@ public class Player : BaseEntity
 	/// multiple contracts if they switch teams during their career, and this list helps us
 	///  manage those relationships effectively.
 	/// </summary>
-	public List<Contract> Contracts { get; set; }
+	public List<Contract> Contracts { get; set; } = new List<Contract>();
 
 	/// <summary>
 	/// The player's current contract.
