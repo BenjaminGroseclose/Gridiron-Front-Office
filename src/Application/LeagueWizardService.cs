@@ -18,6 +18,7 @@ public class LeagueSetupService : ILeagueWizardService
 	private readonly IBaseRepository<Player> _playerRepository;
 	private readonly IBaseRepository<Stadium> _stadiumRepository;
 	private readonly IBaseRepository<League> _leagueRepository;
+	private readonly IBaseRepository<Contract> _contractRepository;
 	private readonly ISeedDataService _seedDataService;
 	private readonly IPlayerGeneratorService _playerGeneratorService;
 
@@ -42,7 +43,7 @@ public class LeagueSetupService : ILeagueWizardService
 		_playerGeneratorService = playerGeneratorService;
 	}
 
-	public async Task CreateDefaultLeagueAsync(string leagueName)
+	public async Task CreateDefaultLeagueAsync(string leagueName, int startYear)
 	{
 		if (leagueName == null)
 		{
@@ -67,7 +68,7 @@ public class LeagueSetupService : ILeagueWizardService
 
 		foreach (var team in allTeams)
 		{
-			var playersToGenerate = await _playerGeneratorService.GeneratePlayersForTeamAsync(team.TeamID);
+			var playersToGenerate = await _playerGeneratorService.GeneratePlayersForTeamAsync(team.TeamID, startYear);
 			await _playerRepository.BulkInsertAsync(playersToGenerate);
 		}
 	}
@@ -77,7 +78,7 @@ public class LeagueSetupService : ILeagueWizardService
 		// Step 1: Create League Settings
 		await _leagueRepository.InsertAsync(league);
 
-		// Step 2: Create contracts for all players in the league based on their draft position and the rookie wage scale
+
 	}
 
 

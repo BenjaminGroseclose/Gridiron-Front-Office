@@ -1,3 +1,6 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using GridironFrontOffice.Domain.Enums;
+
 namespace GridironFrontOffice.Domain;
 
 public class ContractYear : BaseEntity
@@ -31,7 +34,7 @@ public class ContractYear : BaseEntity
 	/// the player's total compensation for the year, which is important for salary cap 
 	/// management and financial planning for the team.
 	/// </summary>
-	public decimal BonusEarnings { get; set; }
+	public decimal SigningBonus { get; set; }
 
 	/// <summary>
 	/// The guaranteed money for this contract year. This is the portion of the player's earnings
@@ -39,7 +42,34 @@ public class ContractYear : BaseEntity
 	/// </summary>
 	public decimal GuaranteedMoney { get; set; }
 
+	/// <summary>
+	/// The contract option type for this contract year. 
+	/// This indicates whether the contract includes a player 
+	/// option, team option, or no option for this year. 
+	/// </summary>
+	public ContractOptionType OptionType { get; set; }
+
+	[NotMapped]
+	public bool HasOption => OptionType != ContractOptionType.None;
+
+	public bool OptionExercised { get; private set; }
+
 	public bool IsCurrent { get; set; }
 
 	public override int ID => ContractYearID;
+
+	public void ExerciseOption()
+	{
+		if (!HasOption)
+		{
+			throw new InvalidOperationException("This contract year does not have an option to exercise.");
+		}
+
+		if (OptionExercised)
+		{
+			throw new InvalidOperationException("The option for this contract year has already been exercised.");
+		}
+
+		OptionExercised = true;
+	}
 }

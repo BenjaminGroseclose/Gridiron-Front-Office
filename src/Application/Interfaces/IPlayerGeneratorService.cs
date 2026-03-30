@@ -23,5 +23,5 @@ public interface IPlayerGeneratorService
 	/// the balance of the team may vary based on randomness (some team may hav 3 runnings back while other might have 4)
 	/// </summary>
 	/// <returns>The list of generated players for the team.</returns>
-	Task<IEnumerable<Player>> GeneratePlayersForTeamAsync(int teamID);
+	Task<IEnumerable<Player>> GeneratePlayersForTeamAsync(int teamID, int startYear);
 }

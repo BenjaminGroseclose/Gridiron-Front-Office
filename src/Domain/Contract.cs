@@ -57,7 +57,7 @@ public class Contract : BaseEntity
 
 	public int TermLength => EndYear - StartYear + 1;
 
-	public decimal Salary => YearlyBreakdown.Sum(cy => cy.BaseSalary + cy.BonusEarnings);
+	public decimal Salary => YearlyBreakdown.Sum(cy => cy.BaseSalary + cy.SigningBonus);
 
 	public decimal GuaranteedMoney => YearlyBreakdown.Sum(cy => cy.GuaranteedMoney);
 

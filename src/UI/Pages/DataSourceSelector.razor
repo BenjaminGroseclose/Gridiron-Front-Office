@@ -11,8 +11,12 @@
 <MudContainer MaxWidth="MaxWidth.Large" class="py-4">
 	<MudText Typo="Typo.h4" Class="mb-6">League Setup Options</MudText>
 
-	<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="LeagueName" FullWidth="true">
-	</MudTextField>
+	<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Class="mb-4">
+		<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="LeagueName" FullWidth="true">
+		</MudTextField>
+		<MudTextField Label="Start Year" Variant="Variant.Outlined" T="int" @bind-Value="StartYear" FullWidth="true">
+		</MudTextField>
+	</MudStack>
 
 	<MudGrid Spacing="3">
 		<!-- Default Data Card -->
@@ -124,6 +128,7 @@
 @code {
 
 	private string LeagueName { get; set; } = "My League";
+	public int StartYear { get; set; } = DateTime.Now.Year;
 	private LeagueDataSource? Source { get; set; } = null;
 
 
@@ -132,14 +137,15 @@
 
 	async Task NavigateToLeagueWizard()
 	{
-			if (Source == null || string.IsNullOrWhiteSpace(LeagueName))
+			if (Source == null || string.IsNullOrWhiteSpace(LeagueName)) {
 					return;
+			}
 
 			_errorMessage = null;
 			
 			try
 			{
-					_pendingOperation = LeagueWizardService.CreateDefaultLeagueAsync(LeagueName);
+					_pendingOperation = LeagueWizardService.CreateDefaultLeagueAsync(LeagueName, StartYear);
 					await _pendingOperation;
 
 					var queryParams = new Dictionary<string, object>
@@ -160,48 +166,6 @@
 					await InvokeAsync(StateHasChanged);
 			}
 	}
-
-
-	@* async Task NavigateToLeagueWizard()
-	{
-		if (Source == null)
-		{
-			return; // Should never happen since the button is disabled, but just in case
-		}
-
-		IsLoading = true;
-		PendingCreateLeague = true;
-		await InvokeAsync(StateHasChanged);
-	}
-
-	protected override async Task OnAfterRenderAsync(bool firstRender)
-	{
-		if (!PendingCreateLeague)
-		{
-			return;
-		}
-
-		PendingCreateLeague = false;
-
-		try
-		{
-			await this.LeagueWizardService.CreateDefaultLeagueAsync(this.LeagueName);
-
-			// Pass the selected league name and data source as query parameters
-			var queryParams = new Dictionary<string, object>
-			{
-				{ "LeagueName", LeagueName },
-				{ "DataSource", (int)Source! }
-			};
-
-			NavigationService.NavigateTo("/league-wizard", queryParams);
-		}
-		finally
-		{
-			IsLoading = false;
-			await InvokeAsync(StateHasChanged);
-		}
-	} *@
 
 	private string SelectedStyle(LeagueDataSource option)
 	{

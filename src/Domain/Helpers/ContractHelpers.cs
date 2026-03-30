@@ -15,6 +15,9 @@ public static class ContractHelpers
 		{ 7, new RoundBounds(221, 257, 4450000m, 4320000m) }
 	};
 
+	public static readonly decimal UndraftedFreeAgentValue = 3950000m; // 3 years at $1.3M per year (2026 minimum)
+
+
 	public static decimal GetRookieContractValue(int pick)
 	{
 		// Find the round this pick belongs to
@@ -23,7 +26,7 @@ public static class ContractHelpers
 		// If pick is out of bounds (UDFA), return the standard 3-year min estimate
 		if (roundData == null)
 		{
-			return 3950000m;
+			return UndraftedFreeAgentValue;
 		}
 
 		// 1. Calculate the 'progress' through the round (0.0 to 1.0)
@@ -34,6 +37,11 @@ public static class ContractHelpers
 		decimal interpolatedValue = roundData.StartValue - (totalDrop * (decimal)progress);
 
 		return Math.Round(interpolatedValue, 0);
+	}
+
+	public static decimal GetBaselineContractValue(int overallRating, int potentialRating, int experienceYears)
+	{
+		// Baseline value is influenced by overall rating, potential, and experience.
 	}
 
 

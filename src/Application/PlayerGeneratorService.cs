@@ -1,7 +1,7 @@
-using System.Runtime.InteropServices;
 using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Enums;
+using GridironFrontOffice.Domain.Helpers;
 using GridironFrontOffice.Framework;
 using GridironFrontOffice.Persistence.Interfaces;
 using GridironFrontOffice.Persistence.Models;
@@ -356,7 +356,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		return player;
 	}
 
-	public async Task<IEnumerable<Player>> GeneratePlayersForTeamAsync(int teamID)
+	public async Task<IEnumerable<Player>> GeneratePlayersForTeamAsync(int teamID, int startYear)
 	{
 		var namePool = await _seedDataService.LoadNamePoolAsync();
 		var archetypesByPosition = await _seedDataService.LoadPlayerArchetypesAsync();
@@ -376,10 +376,101 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 				age = NormalizeAge(age);
 				var player = await GeneratePlayerAsync(position, namePool, archetypesByPosition, age);
 				players.Add(player);
+
+				// Create Contracts
+
+
 			}
 		}
 
 		return players;
+	}
+
+	private Contract GenerateInitialContractForPlayer(Player player, int teamID, int startYear)
+	{
+		Contract? contract = null;
+		var contractStartYear = startYear - player.ExperienceYears;
+
+		if (player.IsUndrafted && player.ExperienceYears >= 3)
+		{
+			var totalValue = ContractHelpers.UndraftedFreeAgentValue;
+			var termLength = 3;
+			var contractYears = new List<ContractYear>();
+
+			for (int year = 0; year < termLength; year++)
+			{
+				var yearlyValue = totalValue / termLength;
+				var yearOfContract = contractStartYear + year;
+
+				contractYears.Add(new ContractYear
+				{
+					Year = yearOfContract,
+					BaseSalary = yearlyValue,
+					SigningBonus = 0,
+					GuaranteedMoney = 0,
+					TeamID = teamID,
+					IsCurrent = yearOfContract == startYear,
+					OptionType = ContractOptionType.None
+				});
+			}
+
+			contract = new Contract
+			{
+				PlayerID = player.PlayerID,
+				ContractStatus = ContractStatus.Active,
+				ContractType = ContractType.Rookie,
+				StartYear = contractStartYear,
+				EndYear = contractStartYear + termLength,
+				SignedDate = new DateTime(contractStartYear, 3, 1), // Assume contract is signed on March 1st of the contract start year
+				YearlyBreakdown = contractYears
+			};
+		}
+		else if (player.ExperienceYears >= 4 && player.DraftPick.HasValue)
+		{
+			var totalValue = ContractHelpers.GetRookieContractValue(player.DraftPick.Value);
+			var termLength = player.DraftRound == 1 ? 5 : 4;
+			var contractYears = new List<ContractYear>();
+
+			for (int year = 0; year < termLength; year++)
+			{
+				var yearlyValue = totalValue / termLength;
+				var yearOfContract = contractStartYear + year;
+
+				contractYears.Add(new ContractYear
+				{
+					Year = yearOfContract,
+					BaseSalary = yearlyValue,
+					SigningBonus = 0,
+					GuaranteedMoney = 0,
+					TeamID = teamID,
+					IsCurrent = yearOfContract == startYear,
+					OptionType = year == 4 && player.DraftRound == 1 ? ContractOptionType.TeamOption : ContractOptionType.None
+				});
+			}
+
+			contract = new Contract
+			{
+				PlayerID = player.PlayerID,
+				ContractStatus = ContractStatus.Active,
+				ContractType = ContractType.Rookie,
+				StartYear = contractStartYear,
+				EndYear = contractStartYear + termLength,
+				SignedDate = new DateTime(contractStartYear, 3, 1), // Assume contract is signed on March 1st of the contract start year
+				YearlyBreakdown = contractYears
+			};
+		}
+		else
+		{
+			// Non Rookie players, value is determined by experience and potential, with a minimum floor for veterans
+			var totalValue = ContractHelpers.GetBaselineContractValue(player.OverallRating, player.BasePotential, player.ExperienceYears);
+		}
+
+		if (contract == null)
+		{
+			throw new DomainException($"Failed to generate contract for player {player.FirstName} {player.LastName}", "CONTRACT_GENERATION_FAILED");
+		}
+
+		return contract;
 	}
 
 	private int GenerateAttributeValue(double mean, double stdDev, Random random = null)
