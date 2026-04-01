@@ -5,17 +5,11 @@
 @inject ILeagueWizardService LeagueWizardService
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="ma-auto">
-	<MudText>@LeagueName, @DataSource</MudText>
-
-	
+	<MudText>@LeagueName</MudText>
 
 	<MudStack Spacing="3">
-		<MudSelect T="Team"
-					 Label="Favorite Team"
-					 Variant="Variant.Outlined"
-					 Dense="true"
-					 @bind-Value="SelectedTeam"
-					 ToStringFunc="GetTeamDisplayName">
+		<MudSelect T="Team" Label="Favorite Team" Variant="Variant.Outlined" Dense="true" @bind-Value="SelectedTeam"
+							 ToStringFunc="GetTeamDisplayName">
 			@foreach (var team in Teams)
 			{
 				<MudSelectItem T="Team" Value="@team">
@@ -41,7 +35,7 @@
 
 
 		<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int?" @bind-Value="PracticeSquadSize"
-										Min="8">
+										 Min="8">
 		</MudNumericField>
 
 		<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Checked="InjuriesEnabled">
@@ -51,21 +45,18 @@
 		<MudCheckBox Label="Can be Fired" T="bool" @bind-Checked="CanBeFired">
 		</MudCheckBox>
 
-		<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="SalaryCap" Min="0">
+		<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="SalaryCap"
+										 Min="0">
 		</MudNumericField>
 
-		<MudSelect
-			Label="Number of Playoff Teams"
-			T="int"
-			@bind-Value="NumberOfPlayoffTeams"
-		>
+		<MudSelect Label="Number of Playoff Teams" T="int" @bind-Value="NumberOfPlayoffTeams">
 			@for (int i = 6; i <= 16; i += 2)
 			{
 				<MudSelectItem T="int" Value="@i">@i</MudSelectItem>
 			}
 		</MudSelect>
 
-		<MudButton OnClick="CreateLeague">Create</MudButton>
+		<MudButton Disabled="!LeagueSetup.IsValid()" OnClick="CreateLeague">Create</MudButton>
 
 	</MudStack>
 
@@ -74,21 +65,21 @@
 
 @code {
 
-    [Parameter]
-    [SupplyParameterFromQuery]
-		public string? LeagueName { get; set; }
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public string? LeagueName { get; set; }
 
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public int? DataSource { get; set; }
+	[Parameter]
+	[SupplyParameterFromQuery]
+	public int? DataSource { get; set; }
 
-    public IEnumerable<Team> Teams { get; set; } = new List<Team>();
+	public IEnumerable<Team> Teams { get; set; } = new List<Team>();
 
-    protected override async Task OnInitializedAsync()
-    {
-				Teams = await LeagueWizardService.GetDefaultTeams();
-        await base.OnInitializedAsync();
-    }
+	protected override async Task OnInitializedAsync()
+	{
+		Teams = await LeagueWizardService.GetDefaultTeams();
+		await base.OnInitializedAsync();
+	}
 
 	private class LeagueSetupForm
 	{
@@ -101,7 +92,8 @@
 
 		public bool IsValid()
 		{
-			return RosterSize.HasValue && PracticeSquadSize.HasValue && SalaryCap.HasValue && SalaryCap.Value > 0 && NumberoOfPlayoffTeams > 0;
+			return RosterSize.HasValue && PracticeSquadSize.HasValue && SalaryCap.HasValue && SalaryCap.Value > 0 &&
+NumberoOfPlayoffTeams > 0;
 		}
 	}
 	
