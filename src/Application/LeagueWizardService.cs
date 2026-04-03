@@ -18,7 +18,6 @@ public class LeagueSetupService : ILeagueWizardService
 	private readonly IBaseRepository<Player> _playerRepository;
 	private readonly IBaseRepository<Stadium> _stadiumRepository;
 	private readonly IBaseRepository<League> _leagueRepository;
-	private readonly IBaseRepository<Contract> _contractRepository;
 	private readonly ISeedDataService _seedDataService;
 	private readonly IPlayerGeneratorService _playerGeneratorService;
 
@@ -77,6 +76,8 @@ public class LeagueSetupService : ILeagueWizardService
 	{
 		// Step 1: Create League Settings
 		await _leagueRepository.InsertAsync(league);
+
+		// Step 2: Create Schedule / Games
 
 
 	}
