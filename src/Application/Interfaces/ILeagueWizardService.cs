@@ -20,5 +20,5 @@ public interface ILeagueWizardService
 	/// <summary>
 	/// Creates a new league with settings
 	/// </summary>
-	Task CreateLeagueAsync(League league, int? userTeamId);
+	Task CreateLeagueAsync(LeagueSetting league, int? userTeamId);
 }

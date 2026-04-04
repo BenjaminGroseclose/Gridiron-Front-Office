@@ -2,19 +2,20 @@ using GridironFrontOffice.Domain.Enums;
 
 namespace GridironFrontOffice.Domain;
 
-public class League : BaseEntity
+public class LeagueSetting : BaseEntity
 {
-	public int LeagueID { get; set; }
+	public int LeagueSettingID { get; set; }
 
 	/// <summary>
 	/// The name of the league. Should match the filename of the database.
+	/// This also should change year over year
 	/// </summary>
 	public string Name { get; set; }
 
 	/// <summary>
-	/// The current season year for the league.
+	/// The season that these settings apply to. This should change year over year.
 	/// </summary>
-	public int CurrentSeason { get; set; }
+	public int SeasonID { get; set; }
 
 	/// <summary>
 	/// The current date in the league.
@@ -36,7 +37,10 @@ public class League : BaseEntity
 
 	public int NumOfPlayoffsTeams { get; set; }
 
-	public int NumOfRegularSeasonGames { get; set; }
+	/// <summary>
+	/// The number of regular season weeks in the league. This should be set before creating the schedule for the season.
+	/// </summary>
+	public int NumOfRegularSeasonWeeks { get; set; }
 
 	/// <summary>
 	/// The roster size for teams in the league.
@@ -62,6 +66,6 @@ public class League : BaseEntity
 
 	public override int ID
 	{
-		get => LeagueID;
+		get => LeagueSettingID;
 	}
 }

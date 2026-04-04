@@ -6,13 +6,14 @@ public class Season : BaseEntity
 {
 	/// <summary>
 	/// The unique identifier for the season.
+	/// This should be the year of the season (e.g. 2024 for the 2024 season).
 	/// </summary>
 	public int SeasonID { get; set; }
 
 	/// <summary>
 	/// The year the season takes place in.
 	/// </summary>
-	public int Year { get; set; }
+	public int Year => SeasonID;
 
 	/// <summary>
 	/// The status of the season.

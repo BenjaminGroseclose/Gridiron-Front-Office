@@ -9,7 +9,7 @@ public class GridironFrontOfficeDbContext : DbContext
 	{
 	}
 
-	public DbSet<League> Leagues => Set<League>();
+	public DbSet<LeagueSetting> LeagueSettings => Set<LeagueSetting>();
 	public DbSet<Player> Players => Set<Player>();
 	public DbSet<Stadium> Stadiums => Set<Stadium>();
 	public DbSet<Conference> Conferences => Set<Conference>();
@@ -25,8 +25,8 @@ public class GridironFrontOfficeDbContext : DbContext
 	{
 		base.OnModelCreating(modelBuilder);
 
-		modelBuilder.Entity<League>().HasKey(x => x.LeagueID);
-		modelBuilder.Entity<League>().Property(x => x.LeagueID).ValueGeneratedOnAdd();
+		modelBuilder.Entity<LeagueSetting>().HasKey(x => x.LeagueSettingID);
+		modelBuilder.Entity<LeagueSetting>().Property(x => x.LeagueSettingID).ValueGeneratedOnAdd();
 
 		modelBuilder.Entity<Player>().HasKey(x => x.PlayerID);
 		modelBuilder.Entity<Player>().Property(x => x.PlayerID).ValueGeneratedOnAdd();
@@ -119,5 +119,9 @@ public class GridironFrontOfficeDbContext : DbContext
 			.HasOne(x => x.Team)
 			.WithMany()
 			.HasForeignKey(x => x.TeamID);
+		modelBuilder.Entity<ContractYear>()
+			.HasOne<Season>()
+			.WithMany()
+			.HasForeignKey(x => x.SeasonID);
 	}
 }

@@ -158,7 +158,7 @@ NumberoOfPlayoffTeams > 0;
 			return;
 		}
 
-		var league = new League
+		var leagueSettings = new LeagueSetting
 		{
 			Name = LeagueName!,
 			DataSource = (LeagueDataSource)DataSource!.Value,
@@ -166,14 +166,14 @@ NumberoOfPlayoffTeams > 0;
 			InjuriesEnabled = this.InjuriesEnabled,
 			NumOfPlayoffsTeams = this.NumberOfPlayoffTeams,
 			CanBeFired = this.CanBeFired,
-			NumOfRegularSeasonGames = 17,
+			NumOfRegularSeasonWeeks = 17,
 			RosterSize = this.RosterSize!.Value,
 			PracticeSquadSize = this.PracticeSquadSize!.Value,
 			SalaryCap = this.SalaryCap!.Value * 1_000_000 // Convert from millions to actual value
 		};
 
 
-		await LeagueWizardService.CreateLeagueAsync(league, SelectedTeam?.ID);
+		await LeagueWizardService.CreateLeagueAsync(leagueSettings, SelectedTeam?.ID);
 		
 		// Navigate to the main league page after creation
 		NavigationService.NavigateTo("/league");

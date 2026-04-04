@@ -1,3 +1,5 @@
+using GridironFrontOffice.Domain.Enums;
+
 namespace GridironFrontOffice.Domain;
 
 public class Team : BaseEntity
@@ -65,5 +67,22 @@ public class Team : BaseEntity
 	public IEnumerable<ContractYear> ContractYears { get; set; }
 	public decimal CurrentSalaryCap => ContractYears.Where(cy => cy.IsCurrent).Sum(cy => cy.BaseSalary + cy.SigningBonus);
 
+	/// <summary>
+	/// The status of the team. This can be used to indicate if the team is active or inactive in the league.
+	/// For example, if a team is removed from the league, we can set its status to Inactive instead of deleting it from the database,
+	///  which allows us to maintain historical data about the team and its players.
+	/// </summary>
+	public TeamStatus Status { get; set; }
+
 	public override int ID => TeamID;
+
+	public IEnumerable<ContractYear> GetContractsForSeason(int seasonID)
+	{
+		if (ContractYears == null)
+		{
+			throw new Exception($"Team {Name} has no contract years defined.");
+		}
+
+		return ContractYears.Where(cy => cy.SeasonID == seasonID);
+	}
 }

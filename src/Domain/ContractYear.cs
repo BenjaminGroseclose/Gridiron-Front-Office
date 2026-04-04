@@ -18,7 +18,7 @@ public class ContractYear : BaseEntity
 	public int TeamID { get; set; }
 	public Team Team { get; set; }
 
-	public int Year { get; set; }
+	public int SeasonID { get; set; }
 
 	/// <summary>
 	/// The base salary for this contract year. This is the amount the player will 
