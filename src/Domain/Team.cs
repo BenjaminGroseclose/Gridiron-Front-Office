@@ -39,16 +39,14 @@ public class Team : BaseEntity
 
 	/// <summary>
 	/// The ID of the conference this team belongs to.
+	/// This is a foreign key that links to the Conference entity, allowing us to identify which conference the team is in for organizational and scheduling purposes.
 	/// </summary>
-	public int ConferenceID { get; set; }
-
 	public Conference Conference { get; set; }
 
 	/// <summary>
-	/// The ID of the division this team belongs to.
+	/// The division this team belongs to. 
+	/// <see cref="Division"/> 
 	/// </summary>
-	public int DivisionID { get; set; }
-
 	public Division Division { get; set; }
 
 	/// <summary>
@@ -84,5 +82,17 @@ public class Team : BaseEntity
 		}
 
 		return ContractYears.Where(cy => cy.SeasonID == seasonID);
+	}
+
+	public string DisplayName => $"{City} {Name}";
+	public string ConferenceAndDivision
+	{
+		get
+		{
+			var conferenceName = Conference.ToString();
+			var divisionName = Division.ToString();
+
+			return $"{conferenceName} {divisionName}";
+		}
 	}
 }

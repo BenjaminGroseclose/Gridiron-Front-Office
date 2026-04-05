@@ -12,8 +12,6 @@ public class GridironFrontOfficeDbContext : DbContext
 	public DbSet<LeagueSetting> LeagueSettings => Set<LeagueSetting>();
 	public DbSet<Player> Players => Set<Player>();
 	public DbSet<Stadium> Stadiums => Set<Stadium>();
-	public DbSet<Conference> Conferences => Set<Conference>();
-	public DbSet<Division> Divisions => Set<Division>();
 	public DbSet<Team> Teams => Set<Team>();
 	public DbSet<Game> Games => Set<Game>();
 	public DbSet<Season> Seasons => Set<Season>();
@@ -38,26 +36,8 @@ public class GridironFrontOfficeDbContext : DbContext
 		modelBuilder.Entity<Stadium>().HasKey(x => x.StadiumID);
 		modelBuilder.Entity<Stadium>().Property(x => x.StadiumID).ValueGeneratedOnAdd();
 
-		modelBuilder.Entity<Conference>().HasKey(x => x.ConferenceID);
-		modelBuilder.Entity<Conference>().Property(x => x.ConferenceID).ValueGeneratedOnAdd();
-
-		modelBuilder.Entity<Division>().HasKey(x => x.DivisionID);
-		modelBuilder.Entity<Division>().Property(x => x.DivisionID).ValueGeneratedOnAdd();
-		modelBuilder.Entity<Division>()
-			.HasOne<Conference>()
-			.WithMany()
-			.HasForeignKey(x => x.ConferenceID);
-
 		modelBuilder.Entity<Team>().HasKey(x => x.TeamID);
 		modelBuilder.Entity<Team>().Property(x => x.TeamID).ValueGeneratedOnAdd();
-		modelBuilder.Entity<Team>()
-			.HasOne(x => x.Conference)
-			.WithMany()
-			.HasForeignKey(x => x.ConferenceID);
-		modelBuilder.Entity<Team>()
-			.HasOne(x => x.Division)
-			.WithMany()
-			.HasForeignKey(x => x.DivisionID);
 		modelBuilder.Entity<Team>()
 			.HasOne(x => x.Stadium)
 			.WithMany()

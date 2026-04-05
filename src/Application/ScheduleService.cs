@@ -1,5 +1,7 @@
+using System.Security;
 using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
+using GridironFrontOffice.Domain.Enums;
 using GridironFrontOffice.Persistence.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -25,12 +27,7 @@ public class ScheduleService : IScheduleService
 		_logger = logger;
 	}
 
-	public async Task<bool> CreateFreshSchedule(int seasonID)
-	{
-
-	}
-
-	public Task<bool> CreateScheduleFromPreviousSeason(int seasonID, int previousSeasonID)
+	public async Task<bool> CreateScheduleFromPreviousSeason(int seasonID, int previousSeasonID)
 	{
 		var leagueSettings = (await _leagueSettingRepository.GetAllAsync()).FirstOrDefault(ls => ls.SeasonID == seasonID);
 
@@ -72,6 +69,7 @@ public class ScheduleService : IScheduleService
 		_logger.LogInformation($"Created {games.Count} games for season {seasonID}");
 
 		await _gameRepository.BulkInsertAsync(games);
+		return true;
 	}
 	public async Task<IEnumerable<Game>> GetSchedule(int seasonID)
 	{
@@ -90,4 +88,50 @@ public class ScheduleService : IScheduleService
 		var games = await _gameRepository.GetAllAsync();
 		return games.Where(g => g.SeasonID == seasonID && g.WeekID == weekID).OrderBy(g => g.GameDate).ToList();
 	}
+
+	private List<Matchup> GenerateOpponents(Team team, IEnumerable<Team> allTeams, int season)
+	{
+		var matchups = new List<Matchup>();
+
+		// 1. Divisional matchups (play each team in the same division twice)
+		var divisionalOpponents = allTeams.Where(t => t.Division == team.Division && t.TeamID != team.TeamID).ToList();
+		foreach (var opponent in divisionalOpponents)
+		{
+			matchups.Add(new Matchup { OpponentID = opponent.TeamID, IsHome = true });
+			matchups.Add(new Matchup { OpponentID = opponent.TeamID, IsHome = false }); // Play twice
+		}
+
+		// 2. Intra-conference matchups
+		// Example: 2026 AFC East plays AFC West
+		int intraConferenceDivisionID = (team.DivisionID + 1) % 4; // Simple rotation for example 
+
+		return matchups;
+	}
+
+	private Division GetIntraRotation(Division division, int season)
+	{
+		return (division, season % 3) switch
+		{
+			(Division.North, 2024) => Division.South,
+			(Division.North, 2025) => Division.East,
+			(Division.North, 2026) => Division.West,
+			(Division.South, 2024) => Division.East,
+			(Division.South, 2025) => Division.West,
+			(Division.South, 2026) => Division.North,
+			(Division.East, 2024) => Division.West,
+			(Division.East, 2025) => Division.North,
+			(Division.East, 2026) => Division.South,
+			(Division.West, 2024) => Division.North,
+			(Division.West, 2025) => Division.South,
+			(Division.West, 2026) => Division.East,
+			_ => throw new Exception($"No intra-conference rotation defined for division {division} and season {season}")
+		};
+	}
+
+	private class Matchup
+	{
+		public int OpponentID { get; set; }
+		public bool IsHome { get; set; }
+	}
+
 }
