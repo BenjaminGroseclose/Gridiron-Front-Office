@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Security;
 using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
@@ -12,17 +13,17 @@ public class ScheduleService : IScheduleService
 	/// <summary>
 	/// This is the list of weeks where team can have a bye week.
 	/// </summary>
-	private readonly int[] BYE_WEEKS = new int[] { 5, 10 }; // Example bye weeks for a 16-week season
+	private readonly int[] BYE_WEEKS = new int[] { 5, 6, 7, 8, 9, 10, 11, 12 }; // Example bye weeks for a 16-week season
 
 	private readonly IBaseRepository<Game> _gameRepository;
-	private readonly IBaseRepository<Team> _teamRepository;
+	private readonly ITeamService _teamService;
 	private readonly IBaseRepository<LeagueSetting> _leagueSettingRepository;
 	private readonly ILogger<ScheduleService> _logger;
 
-	public ScheduleService(IBaseRepository<Game> gameRepository, IBaseRepository<Team> teamRepository, IBaseRepository<LeagueSetting> leagueSettingRepository, ILogger<ScheduleService> logger)
+	public ScheduleService(IBaseRepository<Game> gameRepository, ITeamService teamService, IBaseRepository<LeagueSetting> leagueSettingRepository, ILogger<ScheduleService> logger)
 	{
 		_gameRepository = gameRepository;
-		_teamRepository = teamRepository;
+		_teamService = teamService;
 		_leagueSettingRepository = leagueSettingRepository;
 		_logger = logger;
 	}
@@ -38,7 +39,8 @@ public class ScheduleService : IScheduleService
 
 		var numberOfWeeks = leagueSettings.NumOfRegularSeasonWeeks;
 
-		var teams = await _teamRepository.GetAllAsync();
+		var teams = await _teamService.GetAllTeamsAsync();
+		var previousSeasonStandings = await _teamService.GetTeamStandings(previousSeasonID);
 
 		if (teams == null || teams.Count() < 2)
 		{
@@ -103,7 +105,18 @@ public class ScheduleService : IScheduleService
 
 		// 2. Intra-conference matchups
 		// Example: 2026 AFC East plays AFC West
-		int intraConferenceDivisionID = (team.DivisionID + 1) % 4; // Simple rotation for example 
+		Division intraRotation = GetIntraRotation(team.Division, season);
+		var intraConferenceOpponents = allTeams.Where(t => t.Division == intraRotation && t.Conference == team.Conference).ToList();
+
+		// 3. Inter-conference matchups
+		// Example: 2026 AFC East plays NFC North
+		Division interRotation = GetInterRotation(team.Division, season);
+		var interConferenceOpponents = allTeams.Where(t => t.Division == interRotation && t.Conference != team.Conference).ToList();
+
+		// Same-Seed Intra Conference
+		var excludedDivs = new List<Division> { team.Division, intraRotation };
+
+
 
 		return matchups;
 	}
@@ -112,19 +125,43 @@ public class ScheduleService : IScheduleService
 	{
 		return (division, season % 3) switch
 		{
-			(Division.North, 2024) => Division.South,
-			(Division.North, 2025) => Division.East,
-			(Division.North, 2026) => Division.West,
-			(Division.South, 2024) => Division.East,
-			(Division.South, 2025) => Division.West,
-			(Division.South, 2026) => Division.North,
-			(Division.East, 2024) => Division.West,
-			(Division.East, 2025) => Division.North,
-			(Division.East, 2026) => Division.South,
-			(Division.West, 2024) => Division.North,
-			(Division.West, 2025) => Division.South,
-			(Division.West, 2026) => Division.East,
+			(Division.North, 0) => Division.South,
+			(Division.North, 1) => Division.East,
+			(Division.North, 2) => Division.West,
+			(Division.South, 0) => Division.East,
+			(Division.South, 1) => Division.West,
+			(Division.South, 2) => Division.North,
+			(Division.East, 0) => Division.West,
+			(Division.East, 1) => Division.North,
+			(Division.East, 2) => Division.South,
+			(Division.West, 0) => Division.North,
+			(Division.West, 1) => Division.South,
+			(Division.West, 2) => Division.East,
 			_ => throw new Exception($"No intra-conference rotation defined for division {division} and season {season}")
+		};
+	}
+
+	private Division GetInterRotation(Division division, int season)
+	{
+		return (division, season % 4) switch
+		{
+			(Division.North, 0) => Division.North,
+			(Division.North, 1) => Division.South,
+			(Division.North, 2) => Division.East,
+			(Division.North, 3) => Division.West,
+			(Division.South, 0) => Division.South,
+			(Division.South, 1) => Division.East,
+			(Division.South, 2) => Division.West,
+			(Division.South, 3) => Division.North,
+			(Division.East, 0) => Division.East,
+			(Division.East, 1) => Division.West,
+			(Division.East, 2) => Division.North,
+			(Division.East, 3) => Division.South,
+			(Division.West, 0) => Division.West,
+			(Division.West, 1) => Division.North,
+			(Division.West, 2) => Division.South,
+			(Division.West, 3) => Division.East,
+			_ => throw new Exception($"No inter-conference rotation defined for division {division} and season {season}")
 		};
 	}
 

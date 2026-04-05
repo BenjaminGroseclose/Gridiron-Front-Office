@@ -67,7 +67,7 @@ public class GridironFrontOfficeDbContext : DbContext
 		modelBuilder.Entity<TeamSeason>().HasKey(x => x.TeamSeasonID);
 		modelBuilder.Entity<TeamSeason>().Property(x => x.TeamSeasonID).ValueGeneratedOnAdd();
 		modelBuilder.Entity<TeamSeason>()
-			.HasOne<Team>()
+			.HasOne(x => x.Team)
 			.WithMany()
 			.HasForeignKey(x => x.TeamID);
 		modelBuilder.Entity<TeamSeason>()

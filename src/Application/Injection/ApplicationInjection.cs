@@ -13,5 +13,7 @@ public static class ApplicationInjection
 
 		services.AddScoped<IPlayerGeneratorService, PlayerGeneratorService>();
 		services.AddScoped<ILeagueWizardService, LeagueSetupService>();
+		services.AddScoped<ITeamService, TeamService>();
+		services.AddScoped<IScheduleService, ScheduleService>();
 	}
 }

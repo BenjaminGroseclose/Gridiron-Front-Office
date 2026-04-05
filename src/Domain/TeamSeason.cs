@@ -12,6 +12,8 @@ public class TeamSeason : BaseEntity
 	/// </summary>
 	public int TeamID { get; set; }
 
+	public Team Team { get; set; }
+
 	/// <summary>
 	/// The ID of the season.
 	/// </summary>
