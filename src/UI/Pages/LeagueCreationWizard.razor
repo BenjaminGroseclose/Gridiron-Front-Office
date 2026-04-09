@@ -75,6 +75,8 @@
 
 	public IEnumerable<Team> Teams { get; set; } = new List<Team>();
 
+	private Task? _pendingOperation = null;
+
 	protected override async Task OnInitializedAsync()
 	{
 		Teams = await LeagueWizardService.GetDefaultTeams();
@@ -162,7 +164,8 @@ NumberoOfPlayoffTeams > 0;
 		{
 			Name = LeagueName!,
 			DataSource = (LeagueDataSource)DataSource!.Value,
-			CurrentDate = new DateTime(2025, 2, 15), // Start date for the league
+			CurrentDate = new DateTime(2026, 2, 15), // Start date for the league
+			SeasonID = 2026,
 			InjuriesEnabled = this.InjuriesEnabled,
 			NumOfPlayoffsTeams = this.NumberOfPlayoffTeams,
 			CanBeFired = this.CanBeFired,
@@ -173,7 +176,8 @@ NumberoOfPlayoffTeams > 0;
 		};
 
 
-		await LeagueWizardService.CreateLeagueAsync(leagueSettings, SelectedTeam?.ID);
+		_pendingOperation = LeagueWizardService.CreateLeagueAsync(leagueSettings, SelectedTeam?.ID);
+		await _pendingOperation;
 		
 		// Navigate to the main league page after creation
 		NavigationService.NavigateTo("/league");

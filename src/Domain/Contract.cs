@@ -74,7 +74,7 @@ public class Contract : BaseEntity
 	/// <returns>The contract year or null if not found</returns>
 	public ContractYear? GetYear(int year)
 	{
-		var contractYear = YearlyBreakdown.FirstOrDefault(cy => cy.Year == year);
+		var contractYear = YearlyBreakdown.FirstOrDefault(cy => cy.SeasonID == year);
 		return contractYear;
 	}
 

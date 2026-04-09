@@ -1,3 +1,5 @@
+using GridironFrontOffice.Domain.Enums;
+
 namespace GridironFrontOffice.Domain;
 
 public class Week : BaseEntity
@@ -12,6 +14,11 @@ public class Week : BaseEntity
 	public string Name { get; set; }
 
 	public IEnumerable<Game> Games { get; set; }
+
+	/// <summary>
+	/// The type of the week (PreSeason, RegularSeason, Playoffs, SuperBowl).
+	/// </summary>
+	public WeekType Type { get; set; }
 
 	public override int ID
 	{

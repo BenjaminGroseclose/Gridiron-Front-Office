@@ -1,3 +1,4 @@
+using System.Reflection.Metadata;
 using GridironFrontOffice.Domain;
 
 namespace GridironFrontOffice.Application.Interfaces;
@@ -7,6 +8,8 @@ public interface IScheduleService
 	Task<IEnumerable<Game>> GetSchedule(int seasonID);
 	Task<IEnumerable<Game>> GetScheduleForWeek(int seasonID, int week);
 	Task<IEnumerable<Game>> GetScheduleForTeam(int seasonID, int teamID);
+
+	Task<bool> StartSeason(int seasonID, int numberOfWeeks);
 
 	/// <summary>
 	/// Generates a schedule for the given season based on the previous season's schedule. Logic should attempt to follow

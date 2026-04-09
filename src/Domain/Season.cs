@@ -30,6 +30,8 @@ public class Season : BaseEntity
 	/// </summary>
 	public DateOnly StartDate { get; set; }
 
+	public DateOnly RegularSeasonStartDate { get; set; }
+
 	/// <summary>
 	/// The end date of the season.
 	/// </summary>

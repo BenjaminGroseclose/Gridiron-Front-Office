@@ -13,30 +13,27 @@ public class LeagueSetupService : ILeagueWizardService
 {
 	private readonly GameManager _gameManager;
 	private readonly IBaseRepository<Team> _teamRepository;
-	private readonly IBaseRepository<Conference> _conferenceRepository;
-	private readonly IBaseRepository<Division> _divisionRepository;
 	private readonly IBaseRepository<Player> _playerRepository;
 	private readonly IBaseRepository<Stadium> _stadiumRepository;
-	private readonly IBaseRepository<League> _leagueRepository;
+	private readonly IBaseRepository<LeagueSetting> _leagueSettingRepository;
 	private readonly ISeedDataService _seedDataService;
 	private readonly IPlayerGeneratorService _playerGeneratorService;
+	private readonly IScheduleService _scheduleService;
 
 	public LeagueSetupService(GameManager gameManager,
 		IBaseRepository<Team> teamRepository,
-		IBaseRepository<Conference> conferenceRepository,
-		IBaseRepository<Division> divisionRepository,
 		IBaseRepository<Player> playerRepository,
 		IBaseRepository<Stadium> stadiumRepository,
-		IBaseRepository<League> leagueRepository,
+		IBaseRepository<LeagueSetting> leagueSettingRepository,
 		ISeedDataService seedDataService,
-		IPlayerGeneratorService playerGeneratorService)
+		IPlayerGeneratorService playerGeneratorService,
+		IScheduleService scheduleService)
 	{
 		_gameManager = gameManager;
 		_teamRepository = teamRepository;
-		_conferenceRepository = conferenceRepository;
-		_divisionRepository = divisionRepository;
 		_stadiumRepository = stadiumRepository;
-		_leagueRepository = leagueRepository;
+		_leagueSettingRepository = leagueSettingRepository;
+		_scheduleService = scheduleService;
 		_playerRepository = playerRepository;
 		_seedDataService = seedDataService;
 		_playerGeneratorService = playerGeneratorService;
@@ -54,12 +51,10 @@ public class LeagueSetupService : ILeagueWizardService
 
 		// Step 3: Load Seed Data into Database
 		// TODO: Handle JSON seed data loading if the user selected custom data configuration
-		var (teams, stadiums, conferences, divisions) = await _seedDataService.LoadDefaultDataAsync();
+		var (teams, stadiums) = await _seedDataService.LoadDefaultDataAsync();
 
-		// Load stadiums, conferences, divisions, and teams first since players depend on teams existing in the database
+		// Load stadiums and teams first since players depend on teams existing in the database
 		await _stadiumRepository.BulkInsertAsync(stadiums);
-		await _conferenceRepository.BulkInsertAsync(conferences);
-		await _divisionRepository.BulkInsertAsync(divisions);
 		await _teamRepository.BulkInsertAsync(teams);
 
 		// Step 4: Generate Players for each team based on the selected roster size and practice squad size
@@ -72,13 +67,17 @@ public class LeagueSetupService : ILeagueWizardService
 		}
 	}
 
-	public async Task CreateLeagueAsync(League league, int? userTeamId)
+	public async Task CreateLeagueAsync(LeagueSetting league, int? userTeamId)
 	{
 		// Step 1: Create League Settings
-		await _leagueRepository.InsertAsync(league);
+		await _leagueSettingRepository.InsertAsync(league);
 
-		// Step 2: Create Schedule / Games
+		// Step 2: Create Season and Weeks
+		await _scheduleService.StartSeason(league.SeasonID, league.NumOfRegularSeasonWeeks);
 
+		// Step 3: Create Schedule / Games
+		// Pass -1 to indicate that there is no previous season to base the schedule on
+		await _scheduleService.CreateScheduleFromPreviousSeason(league.SeasonID, -1);
 
 	}
 

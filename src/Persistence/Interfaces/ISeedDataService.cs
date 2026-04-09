@@ -12,8 +12,8 @@ public interface ISeedDataService
 	/// <summary>
 	/// Loads the default data from the JSON resource file
 	/// </summary>
-	/// <returns>A tuple containing Teams, Stadiums, Conferences, and Divisions</returns>
-	Task<(IEnumerable<Team> Teams, IEnumerable<Stadium> Stadiums, IEnumerable<Conference> Conferences, IEnumerable<Division> Divisions)> LoadDefaultDataAsync();
+	/// <returns>A tuple containing Teams and Stadiums</returns>
+	Task<(IEnumerable<Team> Teams, IEnumerable<Stadium> Stadiums)> LoadDefaultDataAsync();
 
 	/// <summary>
 	/// Loads the name pool data from the JSON resource file. This method is used to populate the 

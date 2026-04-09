@@ -16,7 +16,7 @@ public class Game : BaseEntity
 	public int? HomeTeamScore { get; set; }
 	public int? AwayTeamScore { get; set; }
 
-	public DateTime GameDate { get; set; }
+	public DateTime GameDateTime { get; set; }
 
 	public override int ID
 	{

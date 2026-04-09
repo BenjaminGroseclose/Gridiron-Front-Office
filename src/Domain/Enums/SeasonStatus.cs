@@ -6,7 +6,9 @@ namespace GridironFrontOffice.Domain.Enums;
 /// </summary>
 public enum SeasonStatus
 {
-	NotStarted = 1,
-	InProgress = 2,
-	Completed = 3
+	OffSeason = 1,
+	PreSeason = 2,
+	InSeason = 3,
+	PostSeason = 4,
+	Completed = 5
 }

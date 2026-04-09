@@ -20,7 +20,7 @@ public class SeedDataService : ISeedDataService
 	private Dictionary<PlayerPosition, List<PlayerArchetype>> _playerArchetypes = null;
 
 	/// <inheritdoc/>
-	public async Task<(IEnumerable<Team> Teams, IEnumerable<Stadium> Stadiums, IEnumerable<Conference> Conferences, IEnumerable<Division> Divisions)> LoadDefaultDataAsync()
+	public async Task<(IEnumerable<Team> Teams, IEnumerable<Stadium> Stadiums)> LoadDefaultDataAsync()
 	{
 		try
 		{
@@ -40,9 +40,7 @@ public class SeedDataService : ISeedDataService
 
 					return (
 						data?.Teams ?? [],
-						data?.Stadiums ?? [],
-						data?.Conferences ?? [],
-						data?.Divisions ?? []
+						data?.Stadiums ?? []
 					);
 				}
 			}

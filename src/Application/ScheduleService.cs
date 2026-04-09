@@ -1,6 +1,7 @@
 using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
 using GridironFrontOffice.Domain.Enums;
+using GridironFrontOffice.Framework;
 using GridironFrontOffice.Persistence.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -14,28 +15,78 @@ public class ScheduleService : IScheduleService
 	private readonly int[] BYE_WEEKS = new int[] { 5, 6, 7, 8, 9, 10, 11, 12 };
 
 	private readonly IBaseRepository<Game> _gameRepository;
+	private readonly IBaseRepository<Season> _seasonRepository;
+	private readonly IBaseRepository<Week> _weekRepository;
 	private readonly ITeamService _teamService;
-	private readonly IBaseRepository<LeagueSetting> _leagueSettingRepository;
 	private readonly ILogger<ScheduleService> _logger;
 
-	public ScheduleService(IBaseRepository<Game> gameRepository, ITeamService teamService, IBaseRepository<LeagueSetting> leagueSettingRepository, ILogger<ScheduleService> logger)
+	public ScheduleService(IBaseRepository<Game> gameRepository, ITeamService teamService, IBaseRepository<Season> seasonRepository, IBaseRepository<Week> weekRepository, ILogger<ScheduleService> logger)
 	{
 		_gameRepository = gameRepository;
 		_teamService = teamService;
-		_leagueSettingRepository = leagueSettingRepository;
+		_seasonRepository = seasonRepository;
+		_weekRepository = weekRepository;
 		_logger = logger;
 	}
 
-	// TODO: Create Season / Weeks
+	// TODO: I think I need to create several years out for ContractYears to make sense
+	public async Task<bool> StartSeason(int seasonID, int numberOfWeeks)
+	{
+		var season = new Season
+		{
+			SeasonID = seasonID,
+			StartDate = new DateOnly(DateTime.Now.Year, 4, 1), // Placeholder start date of April 1st
+			RegularSeasonStartDate = new DateOnly(DateTime.Now.Year, 9, 1), // Placeholder regular season start date of September 1st
+			EndDate = new DateOnly(DateTime.Now.Year + 1, 3, 31), // Placeholder end date of March 31st
+			IsCurrentSeason = true,
+			Status = SeasonStatus.PreSeason
+		};
+
+		await _seasonRepository.InsertAsync(season);
+
+		var previousSeason = await _seasonRepository.GetByIDAsync(seasonID - 1);
+
+		if (previousSeason != null)
+		{
+			// Mark previous season as not current
+			previousSeason.IsCurrentSeason = false;
+			previousSeason.Status = SeasonStatus.Completed;
+			await _seasonRepository.UpdateAsync(previousSeason);
+		}
+		else
+		{
+			_logger.LogInformation($"No previous season found for seasonID {seasonID - 1}. This may be the first season.");
+		}
+
+
+		for (int weekNum = 1; weekNum <= numberOfWeeks; weekNum++)
+		{
+			var week = new Week
+			{
+				SeasonID = seasonID,
+				Name = $"Week {weekNum}",
+				Type = WeekType.RegularSeason
+			};
+
+			await _weekRepository.InsertAsync(week);
+		}
+
+		return true;
+	}
 
 	public async Task<bool> CreateScheduleFromPreviousSeason(int seasonID, int previousSeasonID)
 	{
-		var leagueSettings = (await _leagueSettingRepository.GetAllAsync()).FirstOrDefault(ls => ls.SeasonID == seasonID);
+		var currentSeason = await _seasonRepository.GetByIDAsync(seasonID);
 
-		if (leagueSettings == null)
+		if (currentSeason == null)
 		{
-			throw new Exception($"No league settings found for season {seasonID}");
+			throw new ArgumentException($"Season with ID {seasonID} does not exist.");
 		}
+
+		var weeks = (await _weekRepository.GetAllAsync())
+			.Where(w => w.SeasonID == seasonID)
+			.OrderBy(w => w.WeekID)
+			.ToList();
 
 		var teams = (await _teamService.GetAllTeamsAsync()).ToList();
 
@@ -75,7 +126,7 @@ public class ScheduleService : IScheduleService
 		}
 
 		// Assign games to weeks and set dates
-		var games = AssignGamesToWeeks(rawGames, teams, leagueSettings.NumOfRegularSeasonWeeks, leagueSettings.CurrentDate, seasonID);
+		var games = AssignGamesToWeeks(rawGames, teams, weeks, currentSeason);
 
 		_logger.LogInformation($"Created {games.Count} games for season {seasonID}");
 
@@ -92,13 +143,13 @@ public class ScheduleService : IScheduleService
 	public async Task<IEnumerable<Game>> GetScheduleForTeam(int seasonID, int teamID)
 	{
 		var games = await _gameRepository.GetAllAsync();
-		return games.Where(g => g.SeasonID == seasonID && (g.HomeTeamID == teamID || g.AwayTeamID == teamID)).OrderBy(g => g.GameDate).ToList();
+		return games.Where(g => g.SeasonID == seasonID && (g.HomeTeamID == teamID || g.AwayTeamID == teamID)).OrderBy(g => g.GameDateTime).ToList();
 	}
 
 	public async Task<IEnumerable<Game>> GetScheduleForWeek(int seasonID, int weekID)
 	{
 		var games = await _gameRepository.GetAllAsync();
-		return games.Where(g => g.SeasonID == seasonID && g.WeekID == weekID).OrderBy(g => g.GameDate).ToList();
+		return games.Where(g => g.SeasonID == seasonID && g.WeekID == weekID).OrderBy(g => g.GameDateTime).ToList();
 	}
 
 	// ---------------------------------------------------------------------------
@@ -265,9 +316,8 @@ public class ScheduleService : IScheduleService
 	private List<Game> AssignGamesToWeeks(
 		List<Game> games,
 		List<Team> teams,
-		int totalWeeks,
-		DateTime seasonStartDate,
-		int seasonID)
+		List<Week> weeks,
+		Season season)
 	{
 		// --- Assign bye weeks ---
 		// Spread teams evenly across available bye weeks, alternating conferences
@@ -285,44 +335,45 @@ public class ScheduleService : IScheduleService
 
 		// --- Track which teams are already scheduled each week ---
 		// Index 0 = week 1, index totalWeeks-1 = last week
-		var scheduledTeamsPerWeek = new HashSet<int>[totalWeeks + 1];
-		for (int w = 1; w <= totalWeeks; w++)
+		var scheduledTeamsPerWeek = new HashSet<int>[weeks.Count + 1];
+		for (int w = 1; w <= weeks.Count; w++)
 			scheduledTeamsPerWeek[w] = new HashSet<int>();
 
 		// --- Shuffle for variety (seeded for determinism per season) ---
-		var rng = new Random(seasonID);
+		var rng = new Random(season.SeasonID);
 		var shuffled = games.OrderBy(_ => rng.Next()).ToList();
+		var seasonStartDate = season.RegularSeasonStartDate;
 
 		// --- Greedy first-fit assignment ---
 		foreach (var game in shuffled)
 		{
 			bool assigned = false;
 
-			for (int week = 1; week <= totalWeeks; week++)
+			foreach (var week in weeks)
+
 			{
-				bool homeOnBye = byeWeek.TryGetValue(game.HomeTeamID, out int homeBye) && homeBye == week;
-				bool awayOnBye = byeWeek.TryGetValue(game.AwayTeamID, out int awayBye) && awayBye == week;
-				bool homeAlreadyPlaying = scheduledTeamsPerWeek[week].Contains(game.HomeTeamID);
-				bool awayAlreadyPlaying = scheduledTeamsPerWeek[week].Contains(game.AwayTeamID);
+				bool homeOnBye = byeWeek.TryGetValue(game.HomeTeamID, out int homeBye) && homeBye == week.WeekID;
+				bool awayOnBye = byeWeek.TryGetValue(game.AwayTeamID, out int awayBye) && awayBye == week.WeekID;
+				bool homeAlreadyPlaying = scheduledTeamsPerWeek[week.WeekID].Contains(game.HomeTeamID);
+				bool awayAlreadyPlaying = scheduledTeamsPerWeek[week.WeekID].Contains(game.AwayTeamID);
 
 				if (homeOnBye || awayOnBye || homeAlreadyPlaying || awayAlreadyPlaying)
+				{
 					continue;
+				}
 
-				game.WeekID = week;
-				game.GameDate = seasonStartDate.AddDays((week - 1) * 7);
-				scheduledTeamsPerWeek[week].Add(game.HomeTeamID);
-				scheduledTeamsPerWeek[week].Add(game.AwayTeamID);
+				game.WeekID = week.WeekID;
+				scheduledTeamsPerWeek[week.WeekID].Add(game.HomeTeamID);
+				scheduledTeamsPerWeek[week.WeekID].Add(game.AwayTeamID);
 				assigned = true;
 				break;
 			}
 
 			if (!assigned)
 			{
-				_logger.LogWarning(
-					$"Could not assign a week slot for game HomeTeam={game.HomeTeamID} AwayTeam={game.AwayTeamID} in season {game.SeasonID}. " +
-					$"Game scheduled to week 1 as fallback.");
-				game.WeekID = 1;
-				game.GameDate = seasonStartDate;
+				throw new DomainException(
+						$"Could not assign a week slot for game HomeTeam={game.HomeTeamID} AwayTeam={game.AwayTeamID} in season {game.SeasonID}. " +
+						$"Game scheduled to week 1 as fallback.", "SCHEDULING_ERROR");
 			}
 		}
 

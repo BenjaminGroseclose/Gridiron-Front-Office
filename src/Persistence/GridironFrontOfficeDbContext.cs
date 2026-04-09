@@ -44,7 +44,6 @@ public class GridironFrontOfficeDbContext : DbContext
 			.HasForeignKey(x => x.StadiumID);
 
 		modelBuilder.Entity<Season>().HasKey(x => x.SeasonID);
-		modelBuilder.Entity<Season>().Property(x => x.SeasonID).ValueGeneratedOnAdd();
 
 		modelBuilder.Entity<Week>().HasKey(x => x.WeekID);
 		modelBuilder.Entity<Week>().Property(x => x.WeekID).ValueGeneratedOnAdd();
