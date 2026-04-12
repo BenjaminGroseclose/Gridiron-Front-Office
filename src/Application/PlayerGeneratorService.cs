@@ -277,6 +277,9 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 		}
 		age = NormalizeAge(age);
+
+		// Assume players start their career at age 21, so experience is age minus 21
+		int experienceYears = Math.Max(0, age - 21);
 		dateOfBirth = DateTime.Now.AddYears(-age).AddDays(random.Next(0, 365));
 
 		var basePotential = GenerateAttributeValue(BASE_POTENTIAL_MEAN, BASE_POTENTIAL_STDDEV, random);
@@ -306,7 +309,8 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			Archetype = playerArchetype.Name,
 			Weight = this.GenerateAttributeValue(POSITION_WEIGHT_CONSTANTS[position][0], POSITION_WEIGHT_CONSTANTS[position][1], random),
 			Height = this.GenerateAttributeValue(POSITION_HEIGHT_CONSTANTS[position][0], POSITION_HEIGHT_CONSTANTS[position][1], random),
-			DraftPick = GenerateDraftPick(position, basePotential, random)
+			DraftPick = GenerateDraftPick(position, basePotential, random),
+			ExperienceYears = experienceYears
 		};
 
 		var archetypeAttributes = playerArchetype.Attributes;
@@ -386,12 +390,15 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		return players;
 	}
 
+	private const int ARCHIVED_SEASON_LOOKBACK = 5;
+
 	private Contract GenerateInitialContractForPlayer(Player player, int teamID, int startYear)
 	{
 		Contract? contract = null;
-		var rookieContractStartYear = startYear - player.ExperienceYears;
+		var earliestAllowedYear = startYear - ARCHIVED_SEASON_LOOKBACK;
+		var rookieContractStartYear = Math.Max(startYear - player.ExperienceYears, earliestAllowedYear);
 
-		if (player.IsUndrafted && player.ExperienceYears >= 3)
+		if (player.IsUndrafted && player.ExperienceYears <= 3)
 		{
 			var totalValue = ContractHelpers.UndraftedFreeAgentValue;
 			var termLength = 3;
@@ -404,7 +411,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 				contractYears.Add(new ContractYear
 				{
-					Year = yearOfContract,
+					SeasonID = yearOfContract,
 					BaseSalary = yearlyValue,
 					SigningBonus = 0,
 					GuaranteedMoney = 0,
@@ -420,7 +427,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 				ContractStatus = ContractStatus.Active,
 				ContractType = ContractType.Rookie,
 				StartYear = rookieContractStartYear,
-				EndYear = rookieContractStartYear + termLength,
+				EndYear = rookieContractStartYear + termLength - 1,
 				SignedDate = new DateTime(rookieContractStartYear, 3, 1), // Assume contract is signed on March 1st of the contract start year
 				YearlyBreakdown = contractYears
 			};
@@ -438,7 +445,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 				contractYears.Add(new ContractYear
 				{
-					Year = yearOfContract,
+					SeasonID = yearOfContract,
 					BaseSalary = yearlyValue,
 					SigningBonus = 0,
 					GuaranteedMoney = 0,
@@ -454,7 +461,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 				ContractStatus = ContractStatus.Active,
 				ContractType = ContractType.Rookie,
 				StartYear = rookieContractStartYear,
-				EndYear = rookieContractStartYear + termLength,
+				EndYear = rookieContractStartYear + termLength - 1,
 				SignedDate = new DateTime(rookieContractStartYear, 3, 1), // Assume contract is signed on March 1st of the contract start year
 				YearlyBreakdown = contractYears
 			};
@@ -463,7 +470,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		{
 			// Non Rookie players, value is determined by experience and potential, with a minimum floor for veterans
 			var totalValue = ContractHelpers.GetBaselineContractValue(player.OverallRating, player.BasePotential, player.ExperienceYears, player.Position);
-			var termLength = -1;
+			int termLength;
 
 			if (player.OverallRating >= 85)
 			{
@@ -479,7 +486,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			}
 
 			var contractYears = new List<ContractYear>();
-			var randomStartYear = startYear - new Random().Next(0, termLength);
+			var randomStartYear = Math.Max(startYear - new Random().Next(0, termLength), earliestAllowedYear);
 
 			for (int i = 0; i < termLength; i++)
 			{
@@ -488,7 +495,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 				contractYears.Add(new ContractYear
 				{
-					Year = yearOfContract,
+					SeasonID = yearOfContract,
 					BaseSalary = yearlyValue,
 					SigningBonus = 0,
 					GuaranteedMoney = 0,
@@ -504,7 +511,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 				ContractStatus = ContractStatus.Active,
 				ContractType = ContractType.Veteran,
 				StartYear = randomStartYear,
-				EndYear = randomStartYear + termLength,
+				EndYear = randomStartYear + termLength - 1,
 				SignedDate = new DateTime(randomStartYear, 3, 1), // Assume contract is signed on March 1st of the contract start year
 				YearlyBreakdown = contractYears
 			};

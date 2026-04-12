@@ -10,10 +10,11 @@ namespace GridironFrontOffice.Persistence.Interfaces;
 public interface ISeedDataService
 {
 	/// <summary>
-	/// Loads the default data from the JSON resource file
+	/// Loads the default data from the JSON resource file as well as generates initial 10 seasons for the league.
 	/// </summary>
-	/// <returns>A tuple containing Teams and Stadiums</returns>
-	Task<(IEnumerable<Team> Teams, IEnumerable<Stadium> Stadiums)> LoadDefaultDataAsync();
+	/// <param name="startYear">The starting year for the league's initial seasons</param>
+	/// <returns>A boolean indicating whether the default data was loaded and saved successfully</returns>
+	Task<bool> LoadDefaultDataAsync(int startYear);
 
 	/// <summary>
 	/// Loads the name pool data from the JSON resource file. This method is used to populate the 

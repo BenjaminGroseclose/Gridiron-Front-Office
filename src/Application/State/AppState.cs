@@ -10,7 +10,7 @@ public class AppState
 	private readonly object _sync = new();
 
 	public record StateSnapshot(
-		League? CurrentLeague,
+		LeagueSetting? CurrentLeagueSettings,
 		Season? CurrentSeason,
 		string? CurrentSavePath,
 		string? CurrentRoute,
@@ -21,7 +21,7 @@ public class AppState
 	);
 
 	public StateSnapshot CurrentState { get; private set; } = new StateSnapshot(
-		CurrentLeague: null,
+		CurrentLeagueSettings: null,
 		CurrentSeason: null,
 		CurrentSavePath: null,
 		CurrentRoute: null,
@@ -92,8 +92,8 @@ public class AppState
 			return s with { CurrentRoute = previousRoute, RouteHistory = new Stack<string>(newHistory.Reverse()) };
 		});
 	}
-	public void SetLeague(League? league) =>
-		UpdateState(s => s with { CurrentLeague = league });
+	public void SetLeagueSettings(LeagueSetting? leagueSettings) =>
+		UpdateState(s => s with { CurrentLeagueSettings = leagueSettings });
 	public void SetSeason(Season? season) =>
 		UpdateState(s => s with { CurrentSeason = season });
 	public void SetLoading(bool IsLoading) =>

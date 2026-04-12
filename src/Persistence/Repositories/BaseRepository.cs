@@ -16,36 +16,53 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 
 	public async Task BulkInsertAsync(IEnumerable<T> entities)
 	{
-		var entityList = entities.ToList();
-		if (entityList.Count == 0)
+		try
 		{
-			return;
+			var entityList = entities.ToList();
+			if (entityList.Count == 0)
+			{
+				return;
+			}
+
+			await using var context = GetDbContext();
+
+			await context.Set<T>().AddRangeAsync(entityList);
+			var rowsAffected = await context.SaveChangesAsync();
+
+			if (rowsAffected == 0)
+			{
+				var ex = new DomainException($"Failed to insert {typeof(T).Name} entities during bulk insert.", $"{typeof(T).Name.ToUpper()}_BULK_INSERT_FAILED");
+				throw ex;
+			}
 		}
-
-		await using var context = GetDbContext();
-
-		await context.Set<T>().AddRangeAsync(entityList);
-		var rowsAffected = await context.SaveChangesAsync();
-
-		if (rowsAffected == 0)
+		catch (Exception ex)
 		{
-			var ex = new DomainException($"Failed to insert {typeof(T).Name} entities during bulk insert.", $"{typeof(T).Name.ToUpper()}_BULK_INSERT_FAILED");
-			throw ex;
+			var domainEx = new DomainException($"An error occurred during bulk insert of {typeof(T).Name} entities.", $"{typeof(T).Name.ToUpper()}_BULK_INSERT_ERROR", ex);
+			throw domainEx;
 		}
 	}
 
 	public async Task<bool> DeleteAsync(int entityId)
 	{
-		await using var context = GetDbContext();
-		var entity = await this.GetByIDAsync(entityId);
-		if (entity == null)
+		try
 		{
-			return false;
-		}
+			await using var context = GetDbContext();
+			var entity = await this.GetByIDAsync(entityId);
+			if (entity == null)
+			{
+				return false;
+			}
 
-		context.Set<T>().Remove(entity);
-		var rowsAffected = await context.SaveChangesAsync();
-		return rowsAffected > 0;
+			context.Set<T>().Remove(entity);
+			var rowsAffected = await context.SaveChangesAsync();
+			return rowsAffected > 0;
+		}
+		catch (Exception ex)
+		{
+			var domainEx = new DomainException($"An error occurred while deleting {typeof(T).Name} entity with ID {entityId}.", $"{typeof(T).Name.ToUpper()}_DELETE_ERROR", ex);
+			domainEx.Details.Add("EntityID", entityId);
+			throw domainEx;
+		}
 	}
 
 	public async Task<IEnumerable<T>> GetAllAsync()
@@ -62,17 +79,25 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 
 	public async Task<int> InsertAsync(T entity)
 	{
-		await using var context = GetDbContext();
-		await context.Set<T>().AddAsync(entity);
-		var rowsAffected = await context.SaveChangesAsync();
-
-		if (rowsAffected == 0)
+		try
 		{
-			var ex = new DomainException($"Failed to insert {typeof(T).Name} entity.", $"{typeof(T).Name.ToUpper()}_INSERT_FAILED");
-			throw ex;
-		}
+			await using var context = GetDbContext();
+			await context.Set<T>().AddAsync(entity);
+			var rowsAffected = await context.SaveChangesAsync();
 
-		return entity.ID;
+			if (rowsAffected == 0)
+			{
+				var ex = new DomainException($"Failed to insert {typeof(T).Name} entity.", $"{typeof(T).Name.ToUpper()}_INSERT_FAILED");
+				throw ex;
+			}
+
+			return entity.ID;
+		}
+		catch (Exception ex)
+		{
+			var domainEx = new DomainException($"An error occurred while inserting {typeof(T).Name} entity.", $"{typeof(T).Name.ToUpper()}_INSERT_ERROR", ex);
+			throw domainEx;
+		}
 	}
 
 	public async Task<int> UpdateAsync(T entity)

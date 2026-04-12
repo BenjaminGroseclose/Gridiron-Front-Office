@@ -14,4 +14,11 @@ public class DomainException : Exception
 		_message = message;
 		_code = code;
 	}
+
+	public DomainException(string message, string code, Exception innerException)
+		: base(message, innerException)
+	{
+		_message = message;
+		_code = code;
+	}
 }

@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using GridironFrontOffice.Domain.Enums;
 
 namespace GridironFrontOffice.Domain;
@@ -13,6 +14,7 @@ public class Season : BaseEntity
 	/// <summary>
 	/// The year the season takes place in.
 	/// </summary>
+	[NotMapped]
 	public int Year => SeasonID;
 
 	/// <summary>

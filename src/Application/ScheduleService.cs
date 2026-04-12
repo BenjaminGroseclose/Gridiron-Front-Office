@@ -32,17 +32,18 @@ public class ScheduleService : IScheduleService
 	// TODO: I think I need to create several years out for ContractYears to make sense
 	public async Task<bool> StartSeason(int seasonID, int numberOfWeeks)
 	{
-		var season = new Season
-		{
-			SeasonID = seasonID,
-			StartDate = new DateOnly(DateTime.Now.Year, 4, 1), // Placeholder start date of April 1st
-			RegularSeasonStartDate = new DateOnly(DateTime.Now.Year, 9, 1), // Placeholder regular season start date of September 1st
-			EndDate = new DateOnly(DateTime.Now.Year + 1, 3, 31), // Placeholder end date of March 31st
-			IsCurrentSeason = true,
-			Status = SeasonStatus.PreSeason
-		};
+		var season = await _seasonRepository.GetByIDAsync(seasonID);
 
-		await _seasonRepository.InsertAsync(season);
+		if (season == null)
+		{
+			throw new ArgumentException($"Season with ID {seasonID} does not exist.");
+		}
+
+		season.Status = SeasonStatus.PreSeason;
+		season.IsCurrentSeason = true;
+		season.UpdateDate = DateTimeOffset.UtcNow;
+
+		await _seasonRepository.UpdateAsync(season);
 
 		var previousSeason = await _seasonRepository.GetByIDAsync(seasonID - 1);
 

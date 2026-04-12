@@ -1,0 +1,349 @@
+@page "/create-league"
+@using GridironFrontOffice.Domain.Enums
+
+@inject INavigationService NavigationService
+@inject ILeagueWizardService LeagueWizardService
+
+@if (_isLoading)
+{
+	<LoadingSpinner />
+}
+else
+{
+	<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
+		<MudText Typo="Typo.h4" Class="mb-4">Create a New League</MudText>
+
+		@if (!string.IsNullOrEmpty(_errorMessage))
+		{
+			<MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
+				@_errorMessage
+			</MudAlert>
+		}
+
+		<MudStepper @bind-ActiveIndex="_activeStep" Linear OnPreviewInteraction="OnPreviewInteraction">
+			<ChildContent>
+				@* Step 1: League Info & Data Source *@
+				<MudStep Title="League Info">
+				<MudStack Spacing="3" Class="pa-4">
+					<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
+						<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="_leagueName"
+													FullWidth="true" />
+						<MudTextField Label="Start Year" Variant="Variant.Outlined" T="int" @bind-Value="_startYear"
+													FullWidth="true" />
+					</MudStack>
+
+					<MudText Typo="Typo.h6" Class="mt-2">Data Source</MudText>
+
+					<MudGrid Spacing="3">
+						<MudItem xs="12" sm="6">
+							<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.Default)">
+								<MudCardHeader Class="pb-2">
+									<CardHeaderContent>
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+											<MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Large" Color="Color.Primary" />
+											<MudText Typo="Typo.h6" Class="mb-0">Use Default Data</MudText>
+										</MudStack>
+									</CardHeaderContent>
+								</MudCardHeader>
+								<MudCardContent>
+									<MudText Class="mb-3">Start with pre-configured teams, conferences, and rosters.</MudText>
+									<MudStack Spacing="1">
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+											<MudText>Ready-to-use league structure</MudText>
+										</MudStack>
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+											<MudText>Standard team and conference setup</MudText>
+										</MudStack>
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+											<MudText>Predefined player rosters</MudText>
+										</MudStack>
+									</MudStack>
+								</MudCardContent>
+								<MudCardActions>
+									<MudButton Variant="Variant.Outlined" Color="Color.Primary"
+														 OnClick="() => _dataSource = LeagueDataSource.Default">
+										Select Default
+									</MudButton>
+								</MudCardActions>
+							</MudCard>
+						</MudItem>
+
+						<MudItem xs="12" sm="6">
+							<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.JSON)">
+								<MudCardHeader Class="pb-2">
+									<CardHeaderContent>
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+											<MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Info" />
+											<MudText Typo="Typo.h6" Class="mb-0">Upload Custom JSON</MudText>
+										</MudStack>
+									</CardHeaderContent>
+								</MudCardHeader>
+								<MudCardContent>
+									<MudText Class="mb-3">Import your own league configuration via a JSON file.</MudText>
+									<MudStack Spacing="1">
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
+											<MudText>Complete customization of league data</MudText>
+										</MudStack>
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
+											<MudText>Support for custom teams and divisions</MudText>
+										</MudStack>
+										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
+											<MudText>Full control over initial data</MudText>
+										</MudStack>
+									</MudStack>
+								</MudCardContent>
+								<MudCardActions>
+									<MudButton Variant="Variant.Outlined" Color="Color.Info"
+														 OnClick="() => _dataSource = LeagueDataSource.JSON">
+										Select JSON
+									</MudButton>
+								</MudCardActions>
+							</MudCard>
+						</MudItem>
+					</MudGrid>
+				</MudStack>
+			</MudStep>
+
+			@* Step 2: League Settings *@
+			<MudStep Title="League Settings">
+				<MudStack Spacing="3" Class="pa-4">
+					<MudSelect T="Team" Label="Favorite Team" Variant="Variant.Outlined" Dense="true" @bind-Value="_selectedTeam"
+										 ToStringFunc="GetTeamDisplayName">
+						@foreach (var team in _teams)
+						{
+							<MudSelectItem T="Team" Value="@team">
+								<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+									<MudAvatar Size="Size.Small" Style="@GetTeamAvatarStyle(team)">
+										@team.Abbreviation
+									</MudAvatar>
+									<MudStack Spacing="0">
+										<MudText Typo="Typo.body1">@team.City @team.Name</MudText>
+										<MudText Typo="Typo.caption" Color="Color.Secondary">@team.Abbreviation</MudText>
+									</MudStack>
+								</MudStack>
+							</MudSelectItem>
+						}
+					</MudSelect>
+
+					<MudDivider />
+
+					<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int?" @bind-Value="_rosterSize" Min="8" />
+
+					<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int?"
+													 @bind-Value="_practiceSquadSize" Min="8" />
+
+					<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Value="_injuriesEnabled" />
+
+					<MudCheckBox Label="Can be Fired" T="bool" @bind-Value="_canBeFired" />
+
+					<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="_salaryCap"
+													 Min="0" />
+
+					<MudSelect Label="Number of Playoff Teams" T="int" @bind-Value="_numberOfPlayoffTeams">
+						@for (int i = 6; i <= 16; i += 2)
+						{
+							<MudSelectItem T="int" Value="@i">@i</MudSelectItem>
+						}
+					</MudSelect>
+				</MudStack>
+			</MudStep>
+			</ChildContent>
+
+			<CompletedContent>
+				<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
+					<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+					<MudText Typo="Typo.h5">League Created!</MudText>
+					<MudText>Your league "<strong>@_leagueName</strong>" has been created.</MudText>
+					<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToLeague">
+						Go to League
+					</MudButton>
+				</MudStack>
+			</CompletedContent>
+		</MudStepper>
+	</MudContainer>
+}
+
+@code {
+	private int _activeStep;
+	private bool _isLoading;
+	private string? _errorMessage;
+
+	// Step 1 fields
+	private string _leagueName = "My League";
+	private int _startYear = DateTime.Now.Year;
+	private LeagueDataSource? _dataSource;
+
+	// Step 2 fields
+	private IEnumerable<Team> _teams = [];
+	private Team? _selectedTeam;
+	private int? _rosterSize;
+	private int? _practiceSquadSize;
+	private bool _injuriesEnabled;
+	private bool _canBeFired;
+	private double? _salaryCap;
+	private int _numberOfPlayoffTeams;
+
+	private async Task OnPreviewInteraction(StepperInteractionEventArgs args)
+	{
+		if (args.Action == StepAction.Complete)
+		{
+			switch (args.StepIndex)
+			{
+				case 0:
+					if (!ValidateStep1())
+					{
+						args.Cancel = true;
+						return;
+					}
+					// Seed the database before advancing to step 2
+					args.Cancel = true;
+					await SeedLeagueData();
+					break;
+
+				case 1:
+					if (!ValidateStep2())
+					{
+						args.Cancel = true;
+						return;
+					}
+					args.Cancel = true;
+					await CreateLeagueAsync();
+					break;
+			}
+		}
+	}
+
+	private bool ValidateStep1()
+	{
+		if (string.IsNullOrWhiteSpace(_leagueName))
+		{
+			_errorMessage = "Please enter a league name.";
+			return false;
+		}
+
+		if (_dataSource is null)
+		{
+			_errorMessage = "Please select a data source.";
+			return false;
+		}
+
+		return true;
+	}
+
+	private bool ValidateStep2()
+	{
+		if (!_rosterSize.HasValue)
+		{
+			_errorMessage = "Please set a roster size.";
+			return false;
+		}
+
+		if (!_practiceSquadSize.HasValue)
+		{
+			_errorMessage = "Please set a practice squad size.";
+			return false;
+		}
+
+		if (!_salaryCap.HasValue || _salaryCap.Value <= 0)
+		{
+			_errorMessage = "Please set a valid salary cap.";
+			return false;
+		}
+
+		if (_numberOfPlayoffTeams <= 0)
+		{
+			_errorMessage = "Please select the number of playoff teams.";
+			return false;
+		}
+
+		return true;
+	}
+
+	private async Task SeedLeagueData()
+	{
+		_errorMessage = null;
+		_isLoading = true;
+		StateHasChanged();
+
+		try
+		{
+			await LeagueWizardService.CreateDefaultLeagueAsync(_leagueName, _startYear);
+			_teams = await LeagueWizardService.GetDefaultTeams();
+			_activeStep = 1;
+		}
+		catch (Exception ex)
+		{
+			_errorMessage = $"Failed to initialize league data: {ex.Message}";
+		}
+		finally
+		{
+			_isLoading = false;
+			StateHasChanged();
+		}
+	}
+
+	private async Task CreateLeagueAsync()
+	{
+		_errorMessage = null;
+		_isLoading = true;
+		StateHasChanged();
+
+		try
+		{
+			var leagueSettings = new LeagueSetting
+			{
+				Name = _leagueName,
+				DataSource = _dataSource!.Value,
+				CurrentDate = new DateTime(_startYear, 2, 15),
+				SeasonID = _startYear,
+				InjuriesEnabled = _injuriesEnabled,
+				NumOfPlayoffsTeams = _numberOfPlayoffTeams,
+				CanBeFired = _canBeFired,
+				NumOfRegularSeasonWeeks = 17,
+				RosterSize = _rosterSize!.Value,
+				PracticeSquadSize = _practiceSquadSize!.Value,
+				SalaryCap = _salaryCap!.Value * 1_000_000
+			};
+
+			await LeagueWizardService.CreateLeagueAsync(leagueSettings, _selectedTeam?.ID);
+			_activeStep = 2; // Advance to CompletedContent
+		}
+		catch (Exception ex)
+		{
+			_errorMessage = $"Failed to create league: {ex.Message}";
+		}
+		finally
+		{
+			_isLoading = false;
+			StateHasChanged();
+		}
+	}
+
+	private void NavigateToLeague()
+	{
+		NavigationService.NavigateTo("/league");
+	}
+
+	private string GetSelectedStyle(LeagueDataSource option)
+	{
+		return _dataSource == option ? "border: 2px solid var(--mud-palette-primary);" : string.Empty;
+	}
+
+	private static string GetTeamDisplayName(Team? team)
+	{
+		return team is null ? string.Empty : $"{team.City} {team.Name}";
+	}
+
+	private static string GetTeamAvatarStyle(Team team)
+	{
+		var backgroundColor = string.IsNullOrWhiteSpace(team.PrimaryColor) ? "#1f2937" : team.PrimaryColor;
+		var textColor = string.IsNullOrWhiteSpace(team.SecondaryColor) ? "#f9fafb" : team.SecondaryColor;
+		return $"background:{backgroundColor};color:{textColor};font-weight:700;";
+	}
+}

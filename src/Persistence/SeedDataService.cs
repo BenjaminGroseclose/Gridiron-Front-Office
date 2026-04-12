@@ -19,8 +19,19 @@ public class SeedDataService : ISeedDataService
 	private NamePool _namePool = null;
 	private Dictionary<PlayerPosition, List<PlayerArchetype>> _playerArchetypes = null;
 
+	private readonly IBaseRepository<Team> _teamRepository;
+	private readonly IBaseRepository<Stadium> _stadiumRepository;
+	private readonly IBaseRepository<Season> _seasonRepository;
+
+	public SeedDataService(IBaseRepository<Team> teamRepository, IBaseRepository<Stadium> stadiumRepository, IBaseRepository<Season> seasonRepository)
+	{
+		_teamRepository = teamRepository;
+		_stadiumRepository = stadiumRepository;
+		_seasonRepository = seasonRepository;
+	}
+
 	/// <inheritdoc/>
-	public async Task<(IEnumerable<Team> Teams, IEnumerable<Stadium> Stadiums)> LoadDefaultDataAsync()
+	public async Task<bool> LoadDefaultDataAsync(int startYear)
 	{
 		try
 		{
@@ -38,10 +49,14 @@ public class SeedDataService : ISeedDataService
 					var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 					var data = JsonSerializer.Deserialize<SeedData>(json, options);
 
-					return (
-						data?.Teams ?? [],
-						data?.Stadiums ?? []
-					);
+					await _stadiumRepository.BulkInsertAsync(data.Stadiums);
+					await _teamRepository.BulkInsertAsync(data.Teams);
+
+					var season = this.GenerateInitialSeasons(startYear);
+
+					await _seasonRepository.BulkInsertAsync(season);
+
+					return true;
 				}
 			}
 		}
@@ -123,6 +138,31 @@ public class SeedDataService : ISeedDataService
 		}
 	}
 
+	private const int ARCHIVED_SEASON_LOOKBACK = 5;
+
+	private List<Season> GenerateInitialSeasons(int startYear)
+	{
+		var seasons = new List<Season>();
+
+		for (int i = -ARCHIVED_SEASON_LOOKBACK; i < 10; i++)
+		{
+			int seasonID = startYear + i;
+			var isArchived = i < 0;
+
+			seasons.Add(new Season
+			{
+				SeasonID = seasonID,
+				Status = isArchived ? SeasonStatus.Archived : SeasonStatus.NotStarted,
+				IsCurrentSeason = false,
+				StartDate = new DateOnly(seasonID, 3, 1), // March 1st of the season year
+				RegularSeasonStartDate = new DateOnly(seasonID, 9, 1), // September 1st of the season year
+				EndDate = new DateOnly(seasonID + 1, 2, 28) // February 28th of the following year
+			});
+		}
+
+		return seasons;
+	}
+
 	/// <summary>
 	/// Internal class for deserializing the JSON structure
 	/// </summary>
@@ -130,7 +170,5 @@ public class SeedDataService : ISeedDataService
 	{
 		public List<Team> Teams { get; set; } = [];
 		public List<Stadium> Stadiums { get; set; } = [];
-		public List<Conference> Conferences { get; set; } = [];
-		public List<Division> Divisions { get; set; } = [];
 	}
 }
