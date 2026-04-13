@@ -13,12 +13,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 	#region Constants and Fields
 	private const int BASE_POTENTIAL_MEAN = 50;
 	private const int BASE_POTENTIAL_STDDEV = 15;
-	private const int MIN_GENERATION_AGE = 20;
-	private const int MAX_GENERATION_AGE = 40;
 	private const double POTENTIAL_STDDEV_MULTIPLIER = 1.0;
-	private const double AGE_NOISE_STDDEV = 0.02;
-	private const double AGE_MULTIPLIER_MIN = 0.6;
-	private const double AGE_MULTIPLIER_MAX = 1.1;
 
 	private readonly string[] PLAYER_ATTRIBUTES =
 	[
@@ -90,49 +85,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		"KickAccuracy"
 	];
 
-	private readonly string[] AGE_CURVE_ATTRIBUTES =
-	[
-		"Speed",
-		"Strength",
-		"Agility",
-		"Awareness",
-		"PlayRecognition",
-		"Stamina",
-		"Durability",
-		"ThrowPower",
-		"ShortAccuracy",
-		"MediumAccuracy",
-		"LongAccuracy",
-		"BreakSack",
-		"ThrowOnTheRun",
-		"Mobility",
-		"DecisionMakingSpeed",
-		"Carrying",
-		"Trucking",
-		"Elusiveness",
-		"Catching",
-		"CatchInTraffic",
-		"RouteRunning",
-		"Release",
-		"BallSecurity",
-		"Hands",
-		"JumpBallAbility",
-		"Separation",
-		"PassBlocking",
-		"RunBlocking",
-		"Pursuit",
-		"Tackling",
-		"RunDefense",
-		"GapIntegrity",
-		"BlockShedding",
-		"PowerMoves",
-		"FinesseMoves",
-		"ManCoverage",
-		"ZoneCoverage",
-		"PressCoverage",
-		"KickPower",
-		"KickAccuracy"
-	];
+
 
 	private readonly Dictionary<string, int[]> GLOBAL_ATTRIBUTE_CONSTANTS = new Dictionary<string, int[]>
 	{
@@ -227,25 +180,6 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		{ PlayerPosition.LS, new double[] { 29.4, 4.8 } }
 	};
 
-	private readonly Dictionary<PlayerPosition, (int peakStart, int peakEnd, double minMultiplier, double declinePerYear)> POSITION_AGE_CURVE =
-		new Dictionary<PlayerPosition, (int peakStart, int peakEnd, double minMultiplier, double declinePerYear)>
-	{
-		{ PlayerPosition.QB, (27, 33, 0.75, 0.02) },
-		{ PlayerPosition.RB, (23, 27, 0.72, 0.03) },
-		{ PlayerPosition.WR, (24, 29, 0.74, 0.025) },
-		{ PlayerPosition.TE, (25, 30, 0.75, 0.02) },
-		{ PlayerPosition.OT, (26, 33, 0.78, 0.018) },
-		{ PlayerPosition.OG, (26, 33, 0.78, 0.018) },
-		{ PlayerPosition.C, (26, 33, 0.78, 0.018) },
-		{ PlayerPosition.EDGE, (25, 30, 0.74, 0.025) },
-		{ PlayerPosition.DT, (25, 31, 0.75, 0.023) },
-		{ PlayerPosition.LB, (24, 30, 0.74, 0.025) },
-		{ PlayerPosition.CB, (23, 28, 0.72, 0.028) },
-		{ PlayerPosition.S, (24, 30, 0.74, 0.024) },
-		{ PlayerPosition.K, (27, 35, 0.8, 0.015) },
-		{ PlayerPosition.P, (27, 35, 0.8, 0.015) },
-		{ PlayerPosition.LS, (27, 35, 0.8, 0.015) }
-	};
 	#endregion
 
 	private readonly ISeedDataService _seedDataService;
@@ -276,7 +210,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			age = random.Next(21, 25); // Generate a random "rookie" age between 21 and 24
 
 		}
-		age = NormalizeAge(age);
+		age = Math.Clamp(age, PlayerAgingConstants.MIN_AGE, PlayerAgingConstants.MAX_AGE);
 
 		// Assume players start their career at age 21, so experience is age minus 21
 		int experienceYears = Math.Max(0, age - 21);
@@ -377,7 +311,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			for (int i = 0; i < count; i++)
 			{
 				var age = GenerateAttributeValue(POSITION_AGE_CONSTANTS[position][0], POSITION_AGE_CONSTANTS[position][1], random);
-				age = NormalizeAge(age);
+				age = Math.Clamp(age, PlayerAgingConstants.MIN_AGE, PlayerAgingConstants.MAX_AGE);
 				var player = await GeneratePlayerAsync(position, namePool, archetypesByPosition, age);
 				players.Add(player);
 
@@ -566,15 +500,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		return Math.Clamp(value, 1, 99); // Ensure attribute values are between 1 and 99
 	}
 
-	private int NormalizeAge(int age)
-	{
-		if (age <= 0)
-		{
-			return MIN_GENERATION_AGE;
-		}
 
-		return Math.Clamp(age, MIN_GENERATION_AGE, MAX_GENERATION_AGE);
-	}
 
 	private double AdjustMeanForPotential(double mean, double stdDev, int basePotential)
 	{
@@ -586,7 +512,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 	{
 		var multiplier = GetAgeMultiplier(position, age, random);
 
-		foreach (var attribute in AGE_CURVE_ATTRIBUTES)
+		foreach (var attribute in PlayerAgingConstants.AgeCurveAttributes)
 		{
 			var property = player.GetType().GetProperty(attribute);
 			if (property == null || property.PropertyType != typeof(int))
@@ -602,13 +528,13 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 	private double GetAgeMultiplier(PlayerPosition position, int age, Random random)
 	{
-		var (peakStart, peakEnd, minMultiplier, declinePerYear) = POSITION_AGE_CURVE[position];
+		var (peakStart, peakEnd, minMultiplier, declinePerYear) = PlayerAgingConstants.PositionAgeCurve[position];
 		double multiplier;
 
 		if (age <= peakStart)
 		{
-			var span = Math.Max(1, peakStart - MIN_GENERATION_AGE);
-			var t = Math.Clamp((age - MIN_GENERATION_AGE) / (double)span, 0.0, 1.0);
+			var span = Math.Max(1, peakStart - PlayerAgingConstants.MIN_AGE);
+			var t = Math.Clamp((age - PlayerAgingConstants.MIN_AGE) / (double)span, 0.0, 1.0);
 			multiplier = minMultiplier + (t * (1.0 - minMultiplier));
 		}
 		else if (age <= peakEnd)
@@ -624,8 +550,8 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 			}
 		}
 
-		multiplier += GenerateNormalValue(0, AGE_NOISE_STDDEV, random);
-		return Math.Clamp(multiplier, AGE_MULTIPLIER_MIN, AGE_MULTIPLIER_MAX);
+		multiplier += GenerateNormalValue(0, PlayerAgingConstants.AGE_NOISE_STDDEV, random);
+		return Math.Clamp(multiplier, PlayerAgingConstants.AGE_MULTIPLIER_MIN, PlayerAgingConstants.AGE_MULTIPLIER_MAX);
 	}
 
 	private PlayerArchetype SelectWeightedArchetype(List<PlayerArchetype> archetypes, Random random)
