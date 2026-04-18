@@ -24,135 +24,132 @@ else
 			<ChildContent>
 				@* Step 1: League Info & Data Source *@
 				<MudStep Title="League Info">
-				<MudStack Spacing="3" Class="pa-4">
-					<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
-						<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="_leagueName"
-													FullWidth="true" />
-						<MudTextField Label="Start Year" Variant="Variant.Outlined" T="int" @bind-Value="_startYear"
-													FullWidth="true" />
+					<MudStack Spacing="3" Class="pa-4">
+						<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
+							<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="_leagueName"
+														FullWidth="true" />
+							<MudTextField Label="Start Year" Variant="Variant.Outlined" T="int" @bind-Value="_startYear"
+														FullWidth="true" />
+						</MudStack>
+
+						<MudText Typo="Typo.h6" Class="mt-2">Data Source</MudText>
+
+						<MudGrid Spacing="3">
+							<MudItem xs="12" sm="6">
+								<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.Default)">
+									<MudCardHeader Class="pb-2">
+										<CardHeaderContent>
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+												<MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Large" Color="Color.Primary" />
+												<MudText Typo="Typo.h6" Class="mb-0">Use Default Data</MudText>
+											</MudStack>
+										</CardHeaderContent>
+									</MudCardHeader>
+									<MudCardContent>
+										<MudText Class="mb-3">Start with pre-configured teams, conferences, and rosters.</MudText>
+										<MudStack Spacing="1">
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+												<MudText>Ready-to-use league structure</MudText>
+											</MudStack>
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+												<MudText>Standard team and conference setup</MudText>
+											</MudStack>
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
+												<MudText>Predefined player rosters</MudText>
+											</MudStack>
+										</MudStack>
+									</MudCardContent>
+									<MudCardActions>
+										<MudButton Variant="Variant.Outlined" Color="Color.Primary"
+															 OnClick="() => _dataSource = LeagueDataSource.Default">
+											Select Default
+										</MudButton>
+									</MudCardActions>
+								</MudCard>
+							</MudItem>
+
+							<MudItem xs="12" sm="6">
+								<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.JSON)">
+									<MudCardHeader Class="pb-2">
+										<CardHeaderContent>
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+												<MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Info" />
+												<MudText Typo="Typo.h6" Class="mb-0">Upload Custom JSON</MudText>
+											</MudStack>
+										</CardHeaderContent>
+									</MudCardHeader>
+									<MudCardContent>
+										<MudText Class="mb-3">Import your own league configuration via a JSON file.</MudText>
+										<MudStack Spacing="1">
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
+												<MudText>Complete customization of league data</MudText>
+											</MudStack>
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
+												<MudText>Support for custom teams and divisions</MudText>
+											</MudStack>
+											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
+												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
+												<MudText>Full control over initial data</MudText>
+											</MudStack>
+										</MudStack>
+									</MudCardContent>
+									<MudCardActions>
+										<MudButton Variant="Variant.Outlined" Color="Color.Info"
+															 OnClick="() => _dataSource = LeagueDataSource.JSON">
+											Select JSON
+										</MudButton>
+									</MudCardActions>
+								</MudCard>
+							</MudItem>
+						</MudGrid>
 					</MudStack>
+				</MudStep>
 
-					<MudText Typo="Typo.h6" Class="mt-2">Data Source</MudText>
-
-					<MudGrid Spacing="3">
-						<MudItem xs="12" sm="6">
-							<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.Default)">
-								<MudCardHeader Class="pb-2">
-									<CardHeaderContent>
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-											<MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Large" Color="Color.Primary" />
-											<MudText Typo="Typo.h6" Class="mb-0">Use Default Data</MudText>
-										</MudStack>
-									</CardHeaderContent>
-								</MudCardHeader>
-								<MudCardContent>
-									<MudText Class="mb-3">Start with pre-configured teams, conferences, and rosters.</MudText>
-									<MudStack Spacing="1">
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
-											<MudText>Ready-to-use league structure</MudText>
-										</MudStack>
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
-											<MudText>Standard team and conference setup</MudText>
-										</MudStack>
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
-											<MudText>Predefined player rosters</MudText>
-										</MudStack>
+				@* Step 2: League Settings *@
+				<MudStep Title="League Settings">
+					<MudStack Spacing="3" Class="pa-4">
+						<MudSelect T="Team" Label="Favorite Team" Variant="Variant.Outlined" Dense="true" @bind-Value="_selectedTeam"
+											 ToStringFunc="GetTeamDisplayName">
+							@foreach (var team in _teams)
+							{
+								<MudSelectItem T="Team" Value="@team">
+									<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+										<MudAvatar Size="Size.Small" Style="@GetTeamAvatarStyle(team)">
+											@team.Abbreviation
+										</MudAvatar>
+										@team.City @team.Name
 									</MudStack>
-								</MudCardContent>
-								<MudCardActions>
-									<MudButton Variant="Variant.Outlined" Color="Color.Primary"
-														 OnClick="() => _dataSource = LeagueDataSource.Default">
-										Select Default
-									</MudButton>
-								</MudCardActions>
-							</MudCard>
-						</MudItem>
+								</MudSelectItem>
+							}
+						</MudSelect>
 
-						<MudItem xs="12" sm="6">
-							<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.JSON)">
-								<MudCardHeader Class="pb-2">
-									<CardHeaderContent>
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-											<MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Info" />
-											<MudText Typo="Typo.h6" Class="mb-0">Upload Custom JSON</MudText>
-										</MudStack>
-									</CardHeaderContent>
-								</MudCardHeader>
-								<MudCardContent>
-									<MudText Class="mb-3">Import your own league configuration via a JSON file.</MudText>
-									<MudStack Spacing="1">
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
-											<MudText>Complete customization of league data</MudText>
-										</MudStack>
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
-											<MudText>Support for custom teams and divisions</MudText>
-										</MudStack>
-										<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-											<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
-											<MudText>Full control over initial data</MudText>
-										</MudStack>
-									</MudStack>
-								</MudCardContent>
-								<MudCardActions>
-									<MudButton Variant="Variant.Outlined" Color="Color.Info"
-														 OnClick="() => _dataSource = LeagueDataSource.JSON">
-										Select JSON
-									</MudButton>
-								</MudCardActions>
-							</MudCard>
-						</MudItem>
-					</MudGrid>
-				</MudStack>
-			</MudStep>
+						<MudDivider />
 
-			@* Step 2: League Settings *@
-			<MudStep Title="League Settings">
-				<MudStack Spacing="3" Class="pa-4">
-					<MudSelect T="Team" Label="Favorite Team" Variant="Variant.Outlined" Dense="true" @bind-Value="_selectedTeam"
-										 ToStringFunc="GetTeamDisplayName">
-						@foreach (var team in _teams)
-						{
-							<MudSelectItem T="Team" Value="@team">
-								<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-									<MudAvatar Size="Size.Small" Style="@GetTeamAvatarStyle(team)">
-										@team.Abbreviation
-									</MudAvatar>
-									<MudStack Spacing="0">
-										<MudText Typo="Typo.body1">@team.City @team.Name</MudText>
-										<MudText Typo="Typo.caption" Color="Color.Secondary">@team.Abbreviation</MudText>
-									</MudStack>
-								</MudStack>
-							</MudSelectItem>
-						}
-					</MudSelect>
+						<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int?" @bind-Value="_rosterSize" Min="8" />
 
-					<MudDivider />
+						<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int?"
+														 @bind-Value="_practiceSquadSize" Min="8" />
 
-					<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int?" @bind-Value="_rosterSize" Min="8" />
+						<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Value="_injuriesEnabled" />
 
-					<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int?"
-													 @bind-Value="_practiceSquadSize" Min="8" />
+						<MudCheckBox Label="Can be Fired" T="bool" @bind-Value="_canBeFired" />
 
-					<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Value="_injuriesEnabled" />
+						<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="_salaryCap"
+														 Min="0" />
 
-					<MudCheckBox Label="Can be Fired" T="bool" @bind-Value="_canBeFired" />
-
-					<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="_salaryCap"
-													 Min="0" />
-
-					<MudSelect Label="Number of Playoff Teams" T="int" @bind-Value="_numberOfPlayoffTeams">
-						@for (int i = 6; i <= 16; i += 2)
-						{
-							<MudSelectItem T="int" Value="@i">@i</MudSelectItem>
-						}
-					</MudSelect>
-				</MudStack>
-			</MudStep>
+						<MudSelect Label="Number of Playoff Teams" T="int" @bind-Value="_numberOfPlayoffTeams">
+							@for (int numOfTeams = 6; numOfTeams <= 16; numOfTeams += 2)
+							{
+								<MudSelectItem T="int" Value="@numOfTeams">@numOfTeams</MudSelectItem>
+							}
+						</MudSelect>
+					</MudStack>
+				</MudStep>
 			</ChildContent>
 
 			<CompletedContent>
@@ -182,12 +179,12 @@ else
 	// Step 2 fields
 	private IEnumerable<Team> _teams = [];
 	private Team? _selectedTeam;
-	private int? _rosterSize;
-	private int? _practiceSquadSize;
-	private bool _injuriesEnabled;
-	private bool _canBeFired;
-	private double? _salaryCap;
-	private int _numberOfPlayoffTeams;
+	private int? _rosterSize = 53;
+	private int? _practiceSquadSize = 8;
+	private bool _injuriesEnabled = true;
+	private bool _canBeFired = false;
+	private double? _salaryCap = 301;
+	private int _numberOfPlayoffTeams = 14;
 
 	private async Task OnPreviewInteraction(StepperInteractionEventArgs args)
 	{

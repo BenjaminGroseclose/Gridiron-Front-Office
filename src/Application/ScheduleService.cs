@@ -20,7 +20,11 @@ public class ScheduleService : IScheduleService
 	private readonly ITeamService _teamService;
 	private readonly ILogger<ScheduleService> _logger;
 
-	public ScheduleService(IBaseRepository<Game> gameRepository, ITeamService teamService, IBaseRepository<Season> seasonRepository, IBaseRepository<Week> weekRepository, ILogger<ScheduleService> logger)
+	public ScheduleService(IBaseRepository<Game> gameRepository,
+						   ITeamService teamService,
+						   IBaseRepository<Season> seasonRepository,
+						   IBaseRepository<Week> weekRepository,
+						   ILogger<ScheduleService> logger)
 	{
 		_gameRepository = gameRepository;
 		_teamService = teamService;
@@ -29,7 +33,6 @@ public class ScheduleService : IScheduleService
 		_logger = logger;
 	}
 
-	// TODO: I think I need to create several years out for ContractYears to make sense
 	public async Task<bool> StartSeason(int seasonID, int numberOfWeeks)
 	{
 		var season = await _seasonRepository.GetByIDAsync(seasonID);
@@ -58,7 +61,6 @@ public class ScheduleService : IScheduleService
 		{
 			_logger.LogInformation($"No previous season found for seasonID {seasonID - 1}. This may be the first season.");
 		}
-
 
 		for (int weekNum = 1; weekNum <= numberOfWeeks; weekNum++)
 		{

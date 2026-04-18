@@ -37,8 +37,7 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 		}
 		catch (Exception ex)
 		{
-			var domainEx = new DomainException($"An error occurred during bulk insert of {typeof(T).Name} entities.", $"{typeof(T).Name.ToUpper()}_BULK_INSERT_ERROR", ex);
-			throw domainEx;
+			throw new DomainException($"An error occurred during bulk insert of {typeof(T).Name} entities.", $"{typeof(T).Name.ToUpper()}_BULK_INSERT_ERROR", ex);
 		}
 	}
 
