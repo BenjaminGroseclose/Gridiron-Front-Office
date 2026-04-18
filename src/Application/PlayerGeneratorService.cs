@@ -5,6 +5,7 @@ using GridironFrontOffice.Domain.Helpers;
 using GridironFrontOffice.Framework;
 using GridironFrontOffice.Persistence.Interfaces;
 using GridironFrontOffice.Persistence.Models;
+using Microsoft.Extensions.Logging;
 
 namespace GridironFrontOffice.Application;
 
@@ -183,14 +184,16 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 	#endregion
 
 	private readonly ISeedDataService _seedDataService;
+	private readonly ILogger<PlayerGeneratorService> _logger;
 
-	public PlayerGeneratorService(ISeedDataService seedDataService)
+	public PlayerGeneratorService(ISeedDataService seedDataService, ILogger<PlayerGeneratorService> logger)
 	{
 		_seedDataService = seedDataService;
+		_logger = logger;
 	}
 
 	/// <inheritdoc/>
-	public async Task<Player> GeneratePlayerAsync(PlayerPosition position, NamePool namePool = null, Dictionary<PlayerPosition, List<PlayerArchetype>> archetypesByPosition = null, int age = 0)
+	public async Task<Player> GeneratePlayerAsync(PlayerPosition position, NamePool? namePool = null, Dictionary<PlayerPosition, List<PlayerArchetype>> archetypesByPosition = null, int age = 0)
 	{
 		if (namePool == null)
 		{
@@ -299,6 +302,8 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 		var namePool = await _seedDataService.LoadNamePoolAsync();
 		var archetypesByPosition = await _seedDataService.LoadPlayerArchetypesAsync();
 
+		this._logger.LogInformation("Generating players for team {TeamID}", teamID);
+
 		// Generate a balanced team based on the defined position ranges
 		var players = new List<Player>();
 		var random = new Random();
@@ -320,6 +325,8 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 				player.Contracts.Add(contract);
 			}
 		}
+
+		this._logger.LogInformation("Finished generating {PlayerCount} players for team {TeamID}", players.Count, teamID);
 
 		return players;
 	}

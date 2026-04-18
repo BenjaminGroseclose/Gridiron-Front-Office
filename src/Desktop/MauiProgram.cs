@@ -14,18 +14,16 @@ public static class MauiProgram
 		var logPath = Path.Combine(FileSystem.AppDataDirectory, "logs", "gfo-.log");
 
 		Log.Logger = new LoggerConfiguration()
-#if DEBUG
-			.MinimumLevel.Debug()
+			.MinimumLevel.Information()
 			.WriteTo.Debug()
-#else
-			.MinimumLevel.Warning()
-#endif
 			.WriteTo.File(
 				logPath,
 				rollingInterval: RollingInterval.Day,
 				retainedFileCountLimit: 7,
 				outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj}{NewLine}{Exception}")
 			.CreateLogger();
+
+		Log.Information("Logging initialized. Log path: {LogPath}", logPath);
 
 		var builder = MauiApp.CreateBuilder();
 		builder

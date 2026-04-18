@@ -29,7 +29,7 @@ public class GridironFrontOfficeDbContext : DbContext
 		modelBuilder.Entity<Player>().HasKey(x => x.PlayerID);
 		modelBuilder.Entity<Player>().Property(x => x.PlayerID).ValueGeneratedOnAdd();
 		modelBuilder.Entity<Player>()
-			.HasMany<Contract>()
+			.HasMany(x => x.Contracts)
 			.WithOne(x => x.Player)
 			.HasForeignKey(x => x.PlayerID);
 

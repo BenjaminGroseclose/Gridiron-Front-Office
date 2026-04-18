@@ -12,7 +12,7 @@ public class ScheduleService : IScheduleService
 	/// <summary>
 	/// The weeks during which teams are eligible to have a bye week.
 	/// </summary>
-	private readonly int[] BYE_WEEKS = new int[] { 5, 6, 7, 8, 9, 10, 11, 12 };
+	private readonly int[] BYE_WEEKS = [5, 6, 7, 8, 9, 10, 11, 12];
 
 	private readonly IBaseRepository<Game> _gameRepository;
 	private readonly IBaseRepository<Season> _seasonRepository;
