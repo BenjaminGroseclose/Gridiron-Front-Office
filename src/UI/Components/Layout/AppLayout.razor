@@ -1,0 +1,135 @@
+@inherits LayoutComponentBase
+@layout MainLayout
+@inject AppState AppState
+@inject INavigationService NavigationService
+@implements IDisposable
+
+<MudLayout>
+    <MudAppBar Elevation="1" Dense="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="ToggleDrawer" />
+
+        @if (NavigationService.CanNavigateBack)
+        {
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack"
+                           Color="Color.Inherit"
+                           OnClick="NavigationService.NavigateBack" />
+        }
+
+        <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 ml-2">
+            <SeparatorTemplate>
+                <MudIcon Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" />
+            </SeparatorTemplate>
+        </MudBreadcrumbs>
+
+        <MudSpacer />
+
+        @if (_state.CurrentSeason is not null)
+        {
+            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Class="mr-2">
+                @_state.CurrentSeason.Year
+            </MudChip>
+        }
+
+        @if (_state.CurrentTime is not null)
+        {
+            <MudText Typo="Typo.body2" Class="mr-4">
+                @_state.CurrentTime.Value.ToString("MMM dd, yyyy")
+            </MudText>
+        }
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
+        <MudNavMenu>
+            <MudNavLink Icon="@Icons.Material.Filled.Home" Match="NavLinkMatch.All">Home</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.People" Match="NavLinkMatch.Prefix">Roster</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.CalendarMonth" Match="NavLinkMatch.Prefix">Schedule</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Leaderboard" Match="NavLinkMatch.Prefix">Standings</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.AttachMoney" Match="NavLinkMatch.Prefix">Finances</MudNavLink>
+            <MudNavLink Icon="@Icons.Material.Filled.Settings" Match="NavLinkMatch.Prefix">Settings</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent Class="pa-4">
+        @if (_state.IsLoading)
+        {
+            <LoadingSpinner />
+        }
+
+        @if (!string.IsNullOrEmpty(_state.Error))
+        {
+            <MudAlert Severity="Severity.Error"
+                      ShowCloseIcon="true"
+                      CloseIconClicked="DismissError"
+                      Class="mb-4">
+                @_state.Error
+            </MudAlert>
+        }
+
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private AppState.StateSnapshot _state = default!;
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override void OnInitialized()
+    {
+        _state = AppState.CurrentState;
+        BuildBreadcrumbs();
+        AppState.Subscribe(OnStateChanged);
+    }
+
+    private void OnStateChanged(AppState.StateSnapshot snapshot)
+    {
+        _state = snapshot;
+        BuildBreadcrumbs();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        _breadcrumbs = new List<BreadcrumbItem>();
+
+        var history = _state.RouteHistory.Reverse().ToList();
+        foreach (var route in history)
+        {
+            _breadcrumbs.Add(new BreadcrumbItem(RouteToLabel(route), href: route));
+        }
+
+        if (!string.IsNullOrEmpty(_state.CurrentRoute))
+        {
+            _breadcrumbs.Add(new BreadcrumbItem(RouteToLabel(_state.CurrentRoute), href: null, disabled: true));
+        }
+    }
+
+    private static string RouteToLabel(string route)
+    {
+        // Extract the meaningful segment from the route
+        var segment = route.Split('/', StringSplitOptions.RemoveEmptyEntries).LastOrDefault() ?? "Home";
+
+        // Skip GUIDs/IDs in breadcrumb labels
+        if (Guid.TryParse(segment, out _) || int.TryParse(segment, out _))
+        {
+            var segments = route.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            segment = segments.Length > 1 ? segments[^2] : "Home";
+        }
+
+        // Convert kebab-case to Title Case
+        return string.Join(' ', segment.Split('-').Select(s =>
+            s.Length > 0 ? char.ToUpper(s[0]) + s[1..] : s));
+    }
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private void DismissError() => AppState.SetError(null);
+
+    public void Dispose()
+    {
+        AppState.Unsubscribe(OnStateChanged);
+    }
+}
