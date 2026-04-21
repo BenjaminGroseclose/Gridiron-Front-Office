@@ -14,7 +14,7 @@ namespace GridironFrontOffice.Application;
 public class LeagueSetupService : ILeagueWizardService
 {
 	private readonly GameManager _gameManager;
-	private readonly IBaseRepository<Team> _teamRepository;
+	private readonly ITeamService _teamService;
 	private readonly IBaseRepository<Player> _playerRepository;
 	private readonly IBaseRepository<LeagueSetting> _leagueSettingRepository;
 	private readonly ISeedDataService _seedDataService;
@@ -24,7 +24,7 @@ public class LeagueSetupService : ILeagueWizardService
 	private readonly AppState _appState;
 
 	public LeagueSetupService(GameManager gameManager,
-		IBaseRepository<Team> teamRepository,
+		ITeamService teamService,
 		IBaseRepository<Player> playerRepository,
 		IBaseRepository<LeagueSetting> leagueSettingRepository,
 		ISeedDataService seedDataService,
@@ -34,7 +34,7 @@ public class LeagueSetupService : ILeagueWizardService
 		AppState appState)
 	{
 		_gameManager = gameManager;
-		_teamRepository = teamRepository;
+		_teamService = teamService;
 		_leagueSettingRepository = leagueSettingRepository;
 		_scheduleService = scheduleService;
 		_logger = logger;
@@ -61,7 +61,7 @@ public class LeagueSetupService : ILeagueWizardService
 			await _seedDataService.LoadDefaultDataAsync(startYear);
 
 			// Step 3: Generate Players for each team based on the selected roster size and practice squad size
-			var allTeams = await _teamRepository.GetAllAsync();
+			var allTeams = await _teamService.GetAllTeamsAsync();
 
 			foreach (var team in allTeams)
 			{
@@ -102,14 +102,14 @@ public class LeagueSetupService : ILeagueWizardService
 			_logger.LogInformation("Created schedule for season {SeasonID}", league.SeasonID);
 
 			// Step 4: Set User Team to team. 
-			var userTeam = await _teamRepository.GetByIDAsync(userTeamID.Value);
+			var userTeam = await _teamService.GetTeam(userTeamID.Value);
 			if (userTeam == null)
 			{
 				throw new DomainException($"User team with ID {userTeamID.Value} not found.");
 			}
 
 			userTeam.IsUserControlled = true;
-			await _teamRepository.UpdateAsync(userTeam);
+			await _teamService.UpdateTeam(userTeam);
 
 			_logger.LogInformation("Set user team with ID {UserTeamID} as user controlled", userTeamID.Value);
 
@@ -135,5 +135,5 @@ public class LeagueSetupService : ILeagueWizardService
 	}
 
 
-	public async Task<IEnumerable<Team>> GetDefaultTeams() => await this._teamRepository.GetAllAsync();
+	public async Task<IEnumerable<Team>> GetDefaultTeams() => await _teamService.GetAllTeamsAsync();
 }

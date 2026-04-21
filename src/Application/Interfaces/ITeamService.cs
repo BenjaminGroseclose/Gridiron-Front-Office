@@ -10,4 +10,6 @@ public interface ITeamService
 	Task<List<Standing>> GetTeamStandings(int seasonID);
 	Task<List<Standing>> GetTeamStandings(int seasonID, Conference conference);
 	Task<List<Standing>> GetTeamStandings(int seasonID, Conference conference, Division division);
+
+	Task UpdateTeam(Team team);
 }

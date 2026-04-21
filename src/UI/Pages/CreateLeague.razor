@@ -4,26 +4,29 @@
 @inject INavigationService NavigationService
 @inject ILeagueWizardService LeagueWizardService
 
-@if (_isLoading)
-{
-	<LoadingSpinner />
-}
-else
-{
-	<MudContainer MaxWidth="MaxWidth.Large" Class="py-4">
-		<MudText Typo="Typo.h4" Class="mb-4">Create a New League</MudText>
 
-		@if (!string.IsNullOrEmpty(_errorMessage))
-		{
-			<MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
-				@_errorMessage
-			</MudAlert>
-		}
+	<MudText Typo="Typo.h4" Class="mb-4">Create a New League</MudText>
 
-		<MudStepper @bind-ActiveIndex="_activeStep" Linear OnPreviewInteraction="OnPreviewInteraction">
-			<ChildContent>
-				@* Step 1: League Info & Data Source *@
-				<MudStep Title="League Info">
+	@if (!string.IsNullOrEmpty(_errorMessage))
+	{
+		<MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
+			@_errorMessage
+		</MudAlert>
+	}
+
+	<MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" OnPreviewInteraction="OnPreviewInteraction">
+		<ChildContent>
+			@* Step 1: League Info & Data Source *@
+			<MudStep Title="League Info">
+				@if (_isLoading)
+				{
+					<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
+						<MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+						<MudText>Initializing league data...</MudText>
+					</MudStack>
+				}
+				else
+				{
 					<MudStack Spacing="3" Class="pa-4">
 						<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
 							<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="_leagueName"
@@ -64,7 +67,7 @@ else
 									</MudCardContent>
 									<MudCardActions>
 										<MudButton Variant="Variant.Outlined" Color="Color.Primary"
-															 OnClick="() => _dataSource = LeagueDataSource.Default">
+															OnClick="() => _dataSource = LeagueDataSource.Default">
 											Select Default
 										</MudButton>
 									</MudCardActions>
@@ -100,7 +103,7 @@ else
 									</MudCardContent>
 									<MudCardActions>
 										<MudButton Variant="Variant.Outlined" Color="Color.Info"
-															 OnClick="() => _dataSource = LeagueDataSource.JSON">
+															OnClick="() => _dataSource = LeagueDataSource.JSON">
 											Select JSON
 										</MudButton>
 									</MudCardActions>
@@ -108,18 +111,28 @@ else
 							</MudItem>
 						</MudGrid>
 					</MudStack>
-				</MudStep>
+				}
+			</MudStep>
 
-				@* Step 2: League Settings *@
-				<MudStep Title="League Settings">
+			@* Step 2: League Settings *@
+			<MudStep Title="League Settings">
+				@if (_isLoading)
+				{
+					<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
+						<MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+						<MudText>Creating league...</MudText>
+					</MudStack>
+				}
+				else
+				{
 					<MudStack Spacing="3" Class="pa-4">
 						<MudSelect T="Team" Label="Favorite Team" Variant="Variant.Outlined" Dense="true" @bind-Value="_selectedTeam"
-											 ToStringFunc="GetTeamDisplayName">
+											ToStringFunc="GetTeamDisplayName">
 							@foreach (var team in _teams)
 							{
 								<MudSelectItem T="Team" Value="@team">
 									<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-										<MudAvatar Size="Size.Small" Style="@GetTeamAvatarStyle(team)">
+										<MudAvatar Size="Size.Small" Style="@GetTeamAvatarStyle(team)" Class="pa-2">
 											@team.Abbreviation
 										</MudAvatar>
 										@team.City @team.Name
@@ -133,42 +146,45 @@ else
 						<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int?" @bind-Value="_rosterSize" Min="8" />
 
 						<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int?"
-														 @bind-Value="_practiceSquadSize" Min="8" />
+														@bind-Value="_practiceSquadSize" Min="8" />
 
 						<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Value="_injuriesEnabled" />
 
 						<MudCheckBox Label="Can be Fired" T="bool" @bind-Value="_canBeFired" />
 
 						<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="_salaryCap"
-														 Min="0" />
+														Min="0" />
 
-						<MudSelect Label="Number of Playoff Teams" T="int" @bind-Value="_numberOfPlayoffTeams">
-							@for (int numOfTeams = 6; numOfTeams <= 16; numOfTeams += 2)
+						<MudSelect Variant="Variant.Outlined" Label="Number of Playoff Teams" T="int" @bind-Value="_numberOfPlayoffTeams">
+							@foreach (var numOfTeams in numberOfPlayoffOptions)
 							{
 								<MudSelectItem T="int" Value="@numOfTeams">@numOfTeams</MudSelectItem>
 							}
 						</MudSelect>
 					</MudStack>
-				</MudStep>
-			</ChildContent>
+				}
+			</MudStep>
+		</ChildContent>
 
-			<CompletedContent>
-				<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
-					<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
-					<MudText Typo="Typo.h5">League Created!</MudText>
-					<MudText>Your league "<strong>@_leagueName</strong>" has been created.</MudText>
-					<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToLeague">
-						Go to League
-					</MudButton>
-				</MudStack>
-			</CompletedContent>
-		</MudStepper>
-	</MudContainer>
-}
+		<CompletedContent>
+			<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
+				<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+				<MudText Typo="Typo.h5">League Created!</MudText>
+				<MudText>Your league "<strong>@_leagueName</strong>" has been created.</MudText>
+				<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToLeague">
+					Go to League
+				</MudButton>
+			</MudStack>
+		</CompletedContent>
+	</MudStepper>
+
+
 
 @code {
+	private MudStepper _stepper = null!;
 	private int _activeStep;
 	private bool _isLoading;
+	private bool _advancingProgrammatically;
 	private string? _errorMessage;
 
 	// Step 1 fields
@@ -183,11 +199,27 @@ else
 	private int? _practiceSquadSize = 8;
 	private bool _injuriesEnabled = true;
 	private bool _canBeFired = false;
-	private double? _salaryCap = 301;
+	private double? _salaryCap = 300;
 	private int _numberOfPlayoffTeams = 14;
 
-	private async Task OnPreviewInteraction(StepperInteractionEventArgs args)
+	// Options
+	private int[] numberOfPlayoffOptions = new[] { 6, 8, 10, 12, 14, 16 };
+
+	private Task OnPreviewInteraction(StepperInteractionEventArgs args)
 	{
+		// Allow programmatic advancement to pass through without re-validation
+		if (_advancingProgrammatically)
+		{
+			return Task.CompletedTask;
+		}
+
+		// Prevent navigating back to a previous step
+		if (args.Action == StepAction.Activate && args.StepIndex < _activeStep)
+		{
+			args.Cancel = true;
+			return Task.CompletedTask;
+		}
+
 		if (args.Action == StepAction.Complete)
 		{
 			switch (args.StepIndex)
@@ -196,29 +228,27 @@ else
 					if (!ValidateStep1())
 					{
 						args.Cancel = true;
-						return;
+						return Task.CompletedTask;
 					}
-					// Seed the database before advancing to step 2
+					// Cancel stepper advancement so the handler returns immediately,
+					// then fire-and-forget the async work to allow the spinner to render.
 					args.Cancel = true;
-					await SeedLeagueData();
+					_ = SeedLeagueDataAndAdvance();
 					break;
 
 				case 1:
 					if (!ValidateStep2())
 					{
 						args.Cancel = true;
-						return;
+						return Task.CompletedTask;
 					}
 					args.Cancel = true;
-					await CreateLeagueAsync();
-
-					
-
-					NavigationService.NavigateTo($"/home/{_leagueName}");
-
+					_ = CreateLeagueAndNavigate();
 					break;
 			}
 		}
+
+		return Task.CompletedTask;
 	}
 
 	private bool ValidateStep1()
@@ -267,17 +297,22 @@ else
 		return true;
 	}
 
-	private async Task SeedLeagueData()
+	private async Task SeedLeagueDataAndAdvance()
 	{
 		_errorMessage = null;
 		_isLoading = true;
-		StateHasChanged();
+		await InvokeAsync(StateHasChanged);
 
 		try
 		{
-			await LeagueWizardService.CreateDefaultLeagueAsync(_leagueName, _startYear);
-			_teams = await LeagueWizardService.GetDefaultTeams();
-			_activeStep = 1;
+			var leagueName = _leagueName;
+			var startYear = _startYear;
+			var wizardService = LeagueWizardService;
+			await Task.Run(async () =>
+			{
+				await wizardService.CreateDefaultLeagueAsync(leagueName, startYear);
+			});
+			_teams = await Task.Run(async () => await wizardService.GetDefaultTeams());
 		}
 		catch (Exception ex)
 		{
@@ -286,15 +321,22 @@ else
 		finally
 		{
 			_isLoading = false;
-			StateHasChanged();
+			await InvokeAsync(StateHasChanged);
+		}
+
+		if (string.IsNullOrEmpty(_errorMessage))
+		{
+			_advancingProgrammatically = true;
+			await _stepper.NextStepAsync();
+			_advancingProgrammatically = false;
 		}
 	}
 
-	private async Task CreateLeagueAsync()
+	private async Task CreateLeagueAndNavigate()
 	{
 		_errorMessage = null;
 		_isLoading = true;
-		StateHasChanged();
+		await InvokeAsync(StateHasChanged);
 
 		try
 		{
@@ -313,8 +355,13 @@ else
 				SalaryCap = _salaryCap!.Value * 1_000_000
 			};
 
-			await LeagueWizardService.CreateLeagueAsync(leagueSettings, _selectedTeam?.ID);
-			_activeStep = 2; // Advance to CompletedContent
+			var teamId = _selectedTeam?.ID;
+			var wizardService = LeagueWizardService;
+			await Task.Run(async () =>
+			{
+				await wizardService.CreateLeagueAsync(leagueSettings, teamId);
+			});
+			NavigationService.NavigateTo($"/home/{_leagueName}");
 		}
 		catch (Exception ex)
 		{
@@ -323,7 +370,7 @@ else
 		finally
 		{
 			_isLoading = false;
-			StateHasChanged();
+			await InvokeAsync(StateHasChanged);
 		}
 	}
 

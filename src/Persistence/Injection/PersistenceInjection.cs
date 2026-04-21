@@ -26,5 +26,6 @@ public static class PersistenceInjection
 		services.AddScoped<IBaseRepository<TeamSeason>, BaseRepository<TeamSeason>>();
 		services.AddScoped<IBaseRepository<Contract>, BaseRepository<Contract>>();
 		services.AddScoped<IBaseRepository<ContractYear>, BaseRepository<ContractYear>>();
+		services.AddScoped<IBaseRepository<DraftPick>, BaseRepository<DraftPick>>();
 	}
 }

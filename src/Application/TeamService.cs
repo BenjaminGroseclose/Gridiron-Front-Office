@@ -51,6 +51,12 @@ public class TeamService : ITeamService
 		return this.CalculateStandings(teamSeason.Where(ts => ts.SeasonID == seasonID && ts.Team.Conference == conference && ts.Team.Division == division));
 	}
 
+	public async Task UpdateTeam(Team team)
+	{
+		team.UpdateDate = DateTimeOffset.UtcNow;
+		await _teamRepository.UpdateAsync(team);
+	}
+
 	private List<Standing> CalculateStandings(IEnumerable<TeamSeason> teamSeasons)
 	{
 		var standings = teamSeasons.Select(ts => new Standing

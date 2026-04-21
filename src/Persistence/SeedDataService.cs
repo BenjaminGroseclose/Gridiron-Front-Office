@@ -22,6 +22,7 @@ public class SeedDataService : ISeedDataService
 	private readonly IBaseRepository<Team> _teamRepository;
 	private readonly IBaseRepository<Stadium> _stadiumRepository;
 	private readonly IBaseRepository<Season> _seasonRepository;
+	private readonly IBaseRepository<DraftPick> _draftPickRepository;
 
 	public SeedDataService(IBaseRepository<Team> teamRepository, IBaseRepository<Stadium> stadiumRepository, IBaseRepository<Season> seasonRepository)
 	{
@@ -161,6 +162,29 @@ public class SeedDataService : ISeedDataService
 		}
 
 		return seasons;
+	}
+
+	private async Task SeedDraftPicks(int startYear)
+	{
+		var teams = await _teamRepository.GetAllAsync();
+		var draftPicks = new List<DraftPick>();
+
+		for (int i = startYear; i < startYear + 10; i++)
+		{
+			for (int round = 1; round <= 7; round++)
+			{
+				foreach (var team in teams)
+				{
+					draftPicks.Add(new DraftPick
+					{
+						SeasonID = i,
+						Round = round,
+						DraftPickType = DraftPickType.Regular,
+						TeamID = team.TeamID,
+					});
+				}
+			}
+		}
 	}
 
 	/// <summary>

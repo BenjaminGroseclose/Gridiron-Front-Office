@@ -27,6 +27,11 @@ public class DraftPick : BaseEntity
 	public int Round { get; set; }
 
 	/// <summary>
+	/// The pick number within the round. This indicates the order of selection within the round.
+	/// </summary>
+	public int PickInRound { get; set; }
+
+	/// <summary>
 	/// The overall pick number of this draft pick in the draft. This is a unique identifier 
 	/// for the pick within the draft and is used to determine the order of selection.
 	/// 
