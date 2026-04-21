@@ -32,6 +32,13 @@ public class Team : BaseEntity
 	public string SecondaryColor { get; set; }
 
 	/// <summary>
+	/// Dictates if this team is user controlled or AI controlled. T
+	/// his can be used to determine which teams the user can make roster moves for,
+	///  as well as other team management actions. 
+	/// </summary>
+	public bool IsUserControlled { get; set; }
+
+	/// <summary>
 	/// The path to the team's logo image file.
 	/// Should be local to the application's base directory.
 	/// </summary>

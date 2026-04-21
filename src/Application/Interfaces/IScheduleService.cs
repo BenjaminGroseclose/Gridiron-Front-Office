@@ -5,6 +5,7 @@ namespace GridironFrontOffice.Application.Interfaces;
 
 public interface IScheduleService
 {
+	Task<Season> GetCurrentSeason();
 	Task<IEnumerable<Game>> GetSchedule(int seasonID);
 	Task<IEnumerable<Game>> GetScheduleForWeek(int seasonID, int week);
 	Task<IEnumerable<Game>> GetScheduleForTeam(int seasonID, int teamID);

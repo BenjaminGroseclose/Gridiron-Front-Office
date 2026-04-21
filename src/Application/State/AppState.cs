@@ -10,25 +10,25 @@ public class AppState
 	private readonly object _sync = new();
 
 	public record StateSnapshot(
-		LeagueSetting? CurrentLeagueSettings,
+		int? UserTeamID,
 		Season? CurrentSeason,
 		string? CurrentSavePath,
 		string? CurrentRoute,
 		Stack<string> RouteHistory,
 		bool IsLoading,
 		string? Error,
-		DateTime? CurrentTime
+		DateTime? CurrentDateTime
 	);
 
 	public StateSnapshot CurrentState { get; private set; } = new StateSnapshot(
-		CurrentLeagueSettings: null,
+		UserTeamID: null,
 		CurrentSeason: null,
 		CurrentSavePath: null,
 		CurrentRoute: null,
 		RouteHistory: new Stack<string>(),
 		IsLoading: false,
 		Error: null,
-		CurrentTime: null
+		CurrentDateTime: null
 	);
 
 	public event Action<StateSnapshot>? OnStateChanged;
@@ -63,9 +63,6 @@ public class AppState
 		OnStateChanged?.Invoke(CurrentState);
 	}
 
-	// Convenience methods for common state updates can be added here
-	public void SetSavePath(string? savePath) =>
-		UpdateState(s => s with { CurrentSavePath = savePath });
 	public void PushRoute(string route)
 	{
 		UpdateState(s =>
@@ -92,8 +89,10 @@ public class AppState
 			return s with { CurrentRoute = previousRoute, RouteHistory = new Stack<string>(newHistory.Reverse()) };
 		});
 	}
-	public void SetLeagueSettings(LeagueSetting? leagueSettings) =>
-		UpdateState(s => s with { CurrentLeagueSettings = leagueSettings });
+
+	// Convenience methods for common state updates can be added here
+	public void SetSavePath(string? savePath) =>
+		UpdateState(s => s with { CurrentSavePath = savePath });
 	public void SetSeason(Season? season) =>
 		UpdateState(s => s with { CurrentSeason = season });
 	public void SetLoading(bool IsLoading) =>
@@ -101,5 +100,5 @@ public class AppState
 	public void SetError(string? error) =>
 		UpdateState(s => s with { Error = error });
 	public void SetCurrentTime(DateTime? currentTime) =>
-		UpdateState(s => s with { CurrentTime = currentTime });
+		UpdateState(s => s with { CurrentDateTime = currentTime });
 }

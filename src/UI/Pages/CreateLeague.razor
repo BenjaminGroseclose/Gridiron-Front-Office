@@ -211,6 +211,11 @@ else
 					}
 					args.Cancel = true;
 					await CreateLeagueAsync();
+
+					
+
+					NavigationService.NavigateTo($"/home/{_leagueName}");
+
 					break;
 			}
 		}

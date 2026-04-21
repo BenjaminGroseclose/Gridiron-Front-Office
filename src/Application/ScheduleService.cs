@@ -33,6 +33,21 @@ public class ScheduleService : IScheduleService
 		_logger = logger;
 	}
 
+
+	public async Task<Season> GetCurrentSeason()
+	{
+		var seasons = await _seasonRepository.GetAllAsync();
+
+		var currentSeason = seasons.FirstOrDefault(s => s.IsCurrentSeason);
+
+		if (currentSeason == null)
+		{
+			throw new DomainException("No curren season set, data may be corrupted", "NO_CURRENT_SEASON");
+		}
+
+		return currentSeason;
+	}
+
 	public async Task<bool> StartSeason(int seasonID, int numberOfWeeks)
 	{
 		var season = await _seasonRepository.GetByIDAsync(seasonID);
