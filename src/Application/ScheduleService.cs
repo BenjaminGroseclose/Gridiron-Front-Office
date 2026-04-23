@@ -363,6 +363,7 @@ public class ScheduleService : IScheduleService
 		var seasonStartDate = season.RegularSeasonStartDate;
 
 		// --- Greedy first-fit assignment ---
+		int assignedCount = 0;
 		foreach (var game in shuffled)
 		{
 			bool assigned = false;
@@ -389,10 +390,39 @@ public class ScheduleService : IScheduleService
 
 			if (!assigned)
 			{
+				_logger.LogError(
+					"Failed to assign week for game HomeTeam={HomeTeamID} AwayTeam={AwayTeamID} in season {SeasonID}. " +
+					"Assigned {AssignedCount}/{TotalGames} games so far across {WeekCount} weeks.",
+					game.HomeTeamID, game.AwayTeamID, game.SeasonID, assignedCount, shuffled.Count, weeks.Count);
+
+				// Log per-week rejection reasons for this game
+				foreach (var week in weeks)
+				{
+					bool homeOnBye = byeWeek.TryGetValue(game.HomeTeamID, out int homeBye) && homeBye == week.WeekID;
+					bool awayOnBye = byeWeek.TryGetValue(game.AwayTeamID, out int awayBye) && awayBye == week.WeekID;
+					bool homeAlreadyPlaying = scheduledTeamsPerWeek[week.WeekID].Contains(game.HomeTeamID);
+					bool awayAlreadyPlaying = scheduledTeamsPerWeek[week.WeekID].Contains(game.AwayTeamID);
+
+					_logger.LogError(
+						"  Week {WeekID}: HomeOnBye={HomeOnBye}, AwayOnBye={AwayOnBye}, HomeAlreadyPlaying={HomeAlreadyPlaying}, AwayAlreadyPlaying={AwayAlreadyPlaying}, GamesInWeek={GamesInWeek}",
+						week.WeekID, homeOnBye, awayOnBye, homeAlreadyPlaying, awayAlreadyPlaying, scheduledTeamsPerWeek[week.WeekID].Count / 2);
+				}
+
+				// Log how many games each team already has scheduled
+				int homeGames = shuffled.Count(g => g.WeekID != 0 && (g.HomeTeamID == game.HomeTeamID || g.AwayTeamID == game.HomeTeamID));
+				int awayGames = shuffled.Count(g => g.WeekID != 0 && (g.HomeTeamID == game.AwayTeamID || g.AwayTeamID == game.AwayTeamID));
+				_logger.LogError(
+					"  HomeTeam {HomeTeamID} has {HomeGames} games assigned, AwayTeam {AwayTeamID} has {AwayGames} games assigned. " +
+					"HomeTeam bye=week {HomeBye}, AwayTeam bye=week {AwayBye}",
+					game.HomeTeamID, homeGames, game.AwayTeamID, awayGames,
+					byeWeek.GetValueOrDefault(game.HomeTeamID, -1), byeWeek.GetValueOrDefault(game.AwayTeamID, -1));
+
 				throw new DomainException(
 						$"Could not assign a week slot for game HomeTeam={game.HomeTeamID} AwayTeam={game.AwayTeamID} in season {game.SeasonID}. " +
-						$"Game scheduled to week 1 as fallback.", "SCHEDULING_ERROR");
+						$"Assigned {assignedCount}/{shuffled.Count} games across {weeks.Count} weeks before failure.", "SCHEDULING_ERROR");
 			}
+
+			assignedCount++;
 		}
 
 		return shuffled;
