@@ -22,7 +22,6 @@ public class SeedDataService : ISeedDataService
 	private readonly IBaseRepository<Team> _teamRepository;
 	private readonly IBaseRepository<Stadium> _stadiumRepository;
 	private readonly IBaseRepository<Season> _seasonRepository;
-	private readonly IBaseRepository<DraftPick> _draftPickRepository;
 
 	public SeedDataService(IBaseRepository<Team> teamRepository, IBaseRepository<Stadium> stadiumRepository, IBaseRepository<Season> seasonRepository)
 	{

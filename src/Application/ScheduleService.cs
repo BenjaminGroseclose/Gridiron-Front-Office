@@ -117,8 +117,9 @@ public class ScheduleService : IScheduleService
 		var divisionalRankings = await BuildDivisionalRankings(teams, previousSeasonID, seasonID);
 		var divisionTeamsByRank = BuildDivisionTeamsByRank(teams, divisionalRankings);
 
-		// Generate every team's matchup list and deduplicate into unique games
-		var seen = new HashSet<(int, int)>();
+		// Generate every team's matchup list and deduplicate into unique games.
+		// Divisional opponents play twice (home + away), all others play once.
+		var pairCount = new Dictionary<(int, int), int>();
 		var rawGames = new List<Game>();
 
 		foreach (var team in teams)
@@ -132,10 +133,20 @@ public class ScheduleService : IScheduleService
 				int homeID = matchup.IsHome ? team.TeamID : matchup.OpponentID;
 				int awayID = matchup.IsHome ? matchup.OpponentID : team.TeamID;
 
-				if (seen.Contains((homeID, awayID)) || seen.Contains((awayID, homeID)))
-					continue;
+				// Normalize key so (A,B) and (B,A) share the same counter
+				var key = (Math.Min(homeID, awayID), Math.Max(homeID, awayID));
+				int count = pairCount.GetValueOrDefault(key, 0);
 
-				seen.Add((homeID, awayID));
+				// Divisional opponents play twice per season; all others play once
+				var opponent = teams.First(t => t.TeamID == matchup.OpponentID);
+				int maxGames = (team.Conference == opponent.Conference && team.Division == opponent.Division) ? 2 : 1;
+
+				if (count >= maxGames)
+				{
+					continue;
+				}
+
+				pairCount[key] = count + 1;
 				rawGames.Add(new Game
 				{
 					SeasonID = seasonID,

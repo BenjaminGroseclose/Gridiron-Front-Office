@@ -202,8 +202,8 @@
             "Abbreviation": "ARI",
             "PrimaryColor": "#97233F",
             "SecondaryColor": "#000000",
-            "ConferenceID": 2,
-            "DivisionID": 8,
+            "Conference": 1,
+            "Division": 3,
             "StadiumID": 1
         },
         {
@@ -213,8 +213,8 @@
             "Abbreviation": "ATL",
             "PrimaryColor": "#A71930",
             "SecondaryColor": "#000000",
-            "ConferenceID": 2,
-            "DivisionID": 7,
+            "Conference": 1,
+            "Division": 1,
             "StadiumID": 2
         },
         {
@@ -224,8 +224,8 @@
             "Abbreviation": "BAL",
             "PrimaryColor": "#241773",
             "SecondaryColor": "#000000",
-            "ConferenceID": 1,
-            "DivisionID": 2,
+            "Conference": 0,
+            "Division": 0,
             "StadiumID": 3
         },
         {
@@ -235,8 +235,8 @@
             "Abbreviation": "BUF",
             "PrimaryColor": "#00338D",
             "SecondaryColor": "#C60C30",
-            "ConferenceID": 1,
-            "DivisionID": 1,
+            "Conference": 0,
+            "Division": 2,
             "StadiumID": 4
         },
         {
@@ -246,8 +246,8 @@
             "Abbreviation": "CAR",
             "PrimaryColor": "#0085CA",
             "SecondaryColor": "#101820",
-            "ConferenceID": 2,
-            "DivisionID": 7,
+            "Conference": 1,
+            "Division": 1,
             "StadiumID": 5
         },
         {
@@ -257,8 +257,8 @@
             "Abbreviation": "CHI",
             "PrimaryColor": "#0B162A",
             "SecondaryColor": "#C83803",
-            "ConferenceID": 2,
-            "DivisionID": 6,
+            "Conference": 1,
+            "Division": 0,
             "StadiumID": 6
         },
         {
@@ -268,8 +268,8 @@
             "Abbreviation": "CIN",
             "PrimaryColor": "#FB4F14",
             "SecondaryColor": "#000000",
-            "ConferenceID": 1,
-            "DivisionID": 2,
+            "Conference": 0,
+            "Division": 0,
             "StadiumID": 7
         },
         {
@@ -279,8 +279,8 @@
             "Abbreviation": "CLE",
             "PrimaryColor": "#311D00",
             "SecondaryColor": "#FF3C00",
-            "ConferenceID": 1,
-            "DivisionID": 2,
+            "Conference": 0,
+            "Division": 0,
             "StadiumID": 8
         },
         {
@@ -290,8 +290,8 @@
             "Abbreviation": "DAL",
             "PrimaryColor": "#003594",
             "SecondaryColor": "#869397",
-            "ConferenceID": 2,
-            "DivisionID": 5,
+            "Conference": 1,
+            "Division": 2,
             "StadiumID": 9
         },
         {
@@ -301,8 +301,8 @@
             "Abbreviation": "DEN",
             "PrimaryColor": "#FB4F14",
             "SecondaryColor": "#002244",
-            "ConferenceID": 1,
-            "DivisionID": 4,
+            "Conference": 0,
+            "Division": 3,
             "StadiumID": 10
         },
         {
@@ -312,8 +312,8 @@
             "Abbreviation": "DET",
             "PrimaryColor": "#0076B6",
             "SecondaryColor": "#B0B7BC",
-            "ConferenceID": 2,
-            "DivisionID": 6,
+            "Conference": 1,
+            "Division": 0,
             "StadiumID": 11
         },
         {
@@ -323,8 +323,8 @@
             "Abbreviation": "GB",
             "PrimaryColor": "#203731",
             "SecondaryColor": "#FFB612",
-            "ConferenceID": 2,
-            "DivisionID": 6,
+            "Conference": 1,
+            "Division": 0,
             "StadiumID": 12
         },
         {
@@ -334,8 +334,8 @@
             "Abbreviation": "HOU",
             "PrimaryColor": "#03202F",
             "SecondaryColor": "#A71930",
-            "ConferenceID": 1,
-            "DivisionID": 3,
+            "Conference": 0,
+            "Division": 1,
             "StadiumID": 13
         },
         {
@@ -345,8 +345,8 @@
             "Abbreviation": "IND",
             "PrimaryColor": "#002C5F",
             "SecondaryColor": "#A2AAAD",
-            "ConferenceID": 1,
-            "DivisionID": 3,
+            "Conference": 0,
+            "Division": 1,
             "StadiumID": 14
         },
         {
@@ -356,8 +356,8 @@
             "Abbreviation": "JAX",
             "PrimaryColor": "#006778",
             "SecondaryColor": "#9F792C",
-            "ConferenceID": 1,
-            "DivisionID": 3,
+            "Conference": 0,
+            "Division": 1,
             "StadiumID": 15
         },
         {
@@ -367,8 +367,8 @@
             "Abbreviation": "KC",
             "PrimaryColor": "#E31837",
             "SecondaryColor": "#FFB81C",
-            "ConferenceID": 1,
-            "DivisionID": 4,
+            "Conference": 0,
+            "Division": 3,
             "StadiumID": 16
         },
         {
@@ -378,8 +378,8 @@
             "Abbreviation": "LV",
             "PrimaryColor": "#000000",
             "SecondaryColor": "#A5ACAF",
-            "ConferenceID": 1,
-            "DivisionID": 4,
+            "Conference": 0,
+            "Division": 3,
             "StadiumID": 17
         },
         {
@@ -389,8 +389,8 @@
             "Abbreviation": "LAC",
             "PrimaryColor": "#0080C6",
             "SecondaryColor": "#FFC20E",
-            "ConferenceID": 1,
-            "DivisionID": 4,
+            "Conference": 0,
+            "Division": 3,
             "StadiumID": 18
         },
         {
@@ -400,8 +400,8 @@
             "Abbreviation": "LAR",
             "PrimaryColor": "#003594",
             "SecondaryColor": "#FFA300",
-            "ConferenceID": 2,
-            "DivisionID": 8,
+            "Conference": 1,
+            "Division": 3,
             "StadiumID": 19
         },
         {
@@ -411,8 +411,8 @@
             "Abbreviation": "MIA",
             "PrimaryColor": "#008E97",
             "SecondaryColor": "#FC4C02",
-            "ConferenceID": 1,
-            "DivisionID": 1,
+            "Conference": 0,
+            "Division": 2,
             "StadiumID": 20
         },
         {
@@ -422,8 +422,8 @@
             "Abbreviation": "MIN",
             "PrimaryColor": "#4F2683",
             "SecondaryColor": "#FFC62F",
-            "ConferenceID": 2,
-            "DivisionID": 6,
+            "Conference": 1,
+            "Division": 0,
             "StadiumID": 21
         },
         {
@@ -433,8 +433,8 @@
             "Abbreviation": "NE",
             "PrimaryColor": "#002244",
             "SecondaryColor": "#C60C30",
-            "ConferenceID": 1,
-            "DivisionID": 1,
+            "Conference": 0,
+            "Division": 2,
             "StadiumID": 22
         },
         {
@@ -444,8 +444,8 @@
             "Abbreviation": "NO",
             "PrimaryColor": "#D3BC8D",
             "SecondaryColor": "#101820",
-            "ConferenceID": 2,
-            "DivisionID": 7,
+            "Conference": 1,
+            "Division": 1,
             "StadiumID": 23
         },
         {
@@ -455,8 +455,8 @@
             "Abbreviation": "NYG",
             "PrimaryColor": "#0B2265",
             "SecondaryColor": "#A71930",
-            "ConferenceID": 2,
-            "DivisionID": 5,
+            "Conference": 1,
+            "Division": 2,
             "StadiumID": 24
         },
         {
@@ -466,8 +466,8 @@
             "Abbreviation": "NYJ",
             "PrimaryColor": "#125740",
             "SecondaryColor": "#FFFFFF",
-            "ConferenceID": 1,
-            "DivisionID": 1,
+            "Conference": 0,
+            "Division": 2,
             "StadiumID": 25
         },
         {
@@ -477,8 +477,8 @@
             "Abbreviation": "PHI",
             "PrimaryColor": "#004C54",
             "SecondaryColor": "#A5ACAF",
-            "ConferenceID": 2,
-            "DivisionID": 5,
+            "Conference": 1,
+            "Division": 2,
             "StadiumID": 26
         },
         {
@@ -488,8 +488,8 @@
             "Abbreviation": "PIT",
             "PrimaryColor": "#101820",
             "SecondaryColor": "#FFB612",
-            "ConferenceID": 1,
-            "DivisionID": 2,
+            "Conference": 0,
+            "Division": 0,
             "StadiumID": 27
         },
         {
@@ -499,8 +499,8 @@
             "Abbreviation": "SF",
             "PrimaryColor": "#AA0000",
             "SecondaryColor": "#B3995D",
-            "ConferenceID": 2,
-            "DivisionID": 8,
+            "Conference": 1,
+            "Division": 3,
             "StadiumID": 28
         },
         {
@@ -510,8 +510,8 @@
             "Abbreviation": "SEA",
             "PrimaryColor": "#002244",
             "SecondaryColor": "#69BE28",
-            "ConferenceID": 2,
-            "DivisionID": 8,
+            "Conference": 1,
+            "Division": 3,
             "StadiumID": 29
         },
         {
@@ -521,8 +521,8 @@
             "Abbreviation": "TB",
             "PrimaryColor": "#D50A0A",
             "SecondaryColor": "#FF7900",
-            "ConferenceID": 2,
-            "DivisionID": 7,
+            "Conference": 1,
+            "Division": 1,
             "StadiumID": 30
         },
         {
@@ -532,8 +532,8 @@
             "Abbreviation": "TEN",
             "PrimaryColor": "#0C2340",
             "SecondaryColor": "#4B92DB",
-            "ConferenceID": 1,
-            "DivisionID": 3,
+            "Conference": 0,
+            "Division": 1,
             "StadiumID": 31
         },
         {
@@ -543,8 +543,8 @@
             "Abbreviation": "WAS",
             "PrimaryColor": "#5A1414",
             "SecondaryColor": "#FFB612",
-            "ConferenceID": 2,
-            "DivisionID": 5,
+            "Conference": 1,
+            "Division": 2,
             "StadiumID": 32
         }
     ]
