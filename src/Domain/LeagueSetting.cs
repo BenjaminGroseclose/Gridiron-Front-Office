@@ -43,6 +43,11 @@ public class LeagueSetting : BaseEntity
 	public int NumOfRegularSeasonWeeks { get; set; }
 
 	/// <summary>
+	/// The number of bye weeks in the league. This should be set before creating the schedule for the season.
+	/// </summary>
+	public int NumOfByeWeeks { get; set; }
+
+	/// <summary>
 	/// The roster size for teams in the league.
 	/// </summary>
 	public int RosterSize { get; set; }

@@ -91,7 +91,7 @@ public class LeagueSetupService : ILeagueWizardService
 			_logger.LogInformation("Created league settings for league {LeagueName} with season {SeasonID}", league.Name, league.SeasonID);
 
 			// Step 2: Create Season and Weeks
-			await _scheduleService.StartSeason(league.SeasonID, league.NumOfRegularSeasonWeeks);
+			await _scheduleService.StartSeason(league.SeasonID, league.NumOfRegularSeasonWeeks + league.NumOfByeWeeks);
 
 			_logger.LogInformation("Started season and weeks for season {SeasonID}", league.SeasonID);
 
