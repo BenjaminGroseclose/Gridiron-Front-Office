@@ -33,7 +33,6 @@ public class ScheduleService : IScheduleService
 		_logger = logger;
 	}
 
-
 	public async Task<Season> GetCurrentSeason()
 	{
 		var seasons = await _seasonRepository.GetAllAsync();
@@ -42,7 +41,7 @@ public class ScheduleService : IScheduleService
 
 		if (currentSeason == null)
 		{
-			throw new DomainException("No curren season set, data may be corrupted", "NO_CURRENT_SEASON");
+			throw new DomainException("No current season set, data may be corrupted", "NO_CURRENT_SEASON");
 		}
 
 		return currentSeason;
@@ -74,7 +73,7 @@ public class ScheduleService : IScheduleService
 		}
 		else
 		{
-			_logger.LogInformation($"No previous season found for seasonID {seasonID - 1}. This may be the first season.");
+			_logger.LogInformation("No previous season found for seasonID {PreviousSeasonID}. This may be the first season.", seasonID - 1);
 		}
 
 		for (int weekNum = 1; weekNum <= numberOfWeeks; weekNum++)
@@ -117,29 +116,26 @@ public class ScheduleService : IScheduleService
 		var divisionalRankings = await BuildDivisionalRankings(teams, previousSeasonID, seasonID);
 		var divisionTeamsByRank = BuildDivisionTeamsByRank(teams, divisionalRankings);
 
-		// Generate every team's matchup list and deduplicate into unique games.
-		// Divisional opponents play twice (home + away), all others play once.
+		// Generate every team's matchup list, deduplicate into unique pairs,
+		// then assign home/away to balance each team's home game count.
 		var pairCount = new Dictionary<(int, int), int>();
-		var rawGames = new List<Game>();
+		var uniquePairs = new List<(int TeamA, int TeamB, bool IsDivisional)>();
+		int totalMatchups = 0;
 
 		foreach (var team in teams)
 		{
 			var matchups = GenerateOpponents(team, teams, seasonID, divisionalRankings, divisionTeamsByRank);
 
 			_logger.LogInformation("Generated {NumMatchups} matchups for team {TeamID} in season {SeasonID}", matchups.Count, team.TeamID, seasonID);
+			totalMatchups += matchups.Count;
 
 			foreach (var matchup in matchups)
 			{
-				int homeID = matchup.IsHome ? team.TeamID : matchup.OpponentID;
-				int awayID = matchup.IsHome ? matchup.OpponentID : team.TeamID;
-
-				// Normalize key so (A,B) and (B,A) share the same counter
-				var key = (Math.Min(homeID, awayID), Math.Max(homeID, awayID));
+				// Normalize key so {A,B} and {B,A} share the same counter
+				var ids = matchup.TeamsInvolved.OrderBy(id => id).ToArray();
+				var key = (ids[0], ids[1]);
 				int count = pairCount.GetValueOrDefault(key, 0);
-
-				// Divisional opponents play twice per season; all others play once
-				var opponent = teams.First(t => t.TeamID == matchup.OpponentID);
-				int maxGames = (team.Conference == opponent.Conference && team.Division == opponent.Division) ? 2 : 1;
+				int maxGames = matchup.Type == MatchupType.Divisional ? 2 : 1;
 
 				if (count >= maxGames)
 				{
@@ -147,19 +143,59 @@ public class ScheduleService : IScheduleService
 				}
 
 				pairCount[key] = count + 1;
-				rawGames.Add(new Game
-				{
-					SeasonID = seasonID,
-					HomeTeamID = homeID,
-					AwayTeamID = awayID
-				});
+				uniquePairs.Add((key.Item1, key.Item2, matchup.Type == MatchupType.Divisional));
 			}
 		}
+
+		// Assign home/away to balance each team's home game count
+		var homeCount = new Dictionary<int, int>();
+		foreach (var team in teams)
+		{
+			homeCount[team.TeamID] = 0;
+		}
+
+		var rawGames = new List<Game>();
+		var rng = new Random(seasonID);
+
+		// Shuffle pairs so the balancing doesn't always favor the same teams
+		var shuffledPairs = uniquePairs.OrderBy(_ => rng.Next()).ToList();
+
+		foreach (var (teamA, teamB, isDivisional) in shuffledPairs)
+		{
+			if (isDivisional)
+			{
+				// Divisional: one game home, one away — each team hosts once
+				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = teamA, AwayTeamID = teamB });
+				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = teamB, AwayTeamID = teamA });
+				homeCount[teamA]++;
+				homeCount[teamB]++;
+			}
+			else
+			{
+				// Non-divisional: assign home to the team with fewer home games so far
+				int homeID, awayID;
+				if (homeCount[teamA] <= homeCount[teamB])
+				{
+					homeID = teamA;
+					awayID = teamB;
+				}
+				else
+				{
+					homeID = teamB;
+					awayID = teamA;
+				}
+
+				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = homeID, AwayTeamID = awayID });
+				homeCount[homeID]++;
+			}
+		}
+
+		_logger.LogInformation("Generated a total of {TotalMatchups} matchups for season {SeasonID}, resulting in {GameCount} unique games after deduplication.", totalMatchups, seasonID, rawGames.Count);
 
 		// Assign games to weeks and set dates
 		var games = AssignGamesToWeeks(rawGames, teams, weeks, currentSeason);
 
-		_logger.LogInformation($"Created {games.Count} games for season {seasonID}");
+		_logger.LogInformation("Created {GameCount} games for season {SeasonID}", games.Count, seasonID);
 
 		await _gameRepository.BulkInsertAsync(games);
 		return true;
@@ -262,18 +298,17 @@ public class ScheduleService : IScheduleService
 		var matchups = new List<Matchup>();
 		int myRank = divisionalRankings.GetValueOrDefault(team.TeamID, 1);
 
-		// 1. Divisional matchups — 3 opponents × 2 (home + away) = 6 games
+		// 1. Divisional matchups — 3 opponents, each played twice (home + away) = 6 games
 		var divisionalOpponents = allTeams
 			.Where(t => t.Division == team.Division && t.Conference == team.Conference && t.TeamID != team.TeamID)
 			.ToList();
 
 		foreach (var opponent in divisionalOpponents)
 		{
-			matchups.Add(new Matchup { OpponentID = opponent.TeamID, IsHome = true });
-			matchups.Add(new Matchup { OpponentID = opponent.TeamID, IsHome = false });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.Divisional });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumDivisional} divisional matchups for team {TeamID} in season {SeasonID}", divisionalOpponents.Count * 2, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumDivisional} divisional matchups for team {TeamID} in season {SeasonID}", divisionalOpponents.Count, team.TeamID, season);
 
 		// 2. Intra-conference rotation — all 4 teams from one same-conf division = 4 games
 		Division intraRotation = GetIntraRotation(team.Division, season);
@@ -281,14 +316,12 @@ public class ScheduleService : IScheduleService
 			.Where(t => t.Division == intraRotation && t.Conference == team.Conference)
 			.ToList();
 
-		for (int i = 0; i < intraConferenceOpponents.Count; i++)
+		foreach (var opponent in intraConferenceOpponents)
 		{
-			// Alternate home/away within the group so half the matchups are home
-			bool isHome = i % 2 == 0;
-			matchups.Add(new Matchup { OpponentID = intraConferenceOpponents[i].TeamID, IsHome = isHome });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.IntraConference });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumIntraConference} intra-conference matchups for team {TeamID} in season {SeasonID}", intraConferenceOpponents.Count * 2, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumIntraConference} intra-conference matchups for team {TeamID} in season {SeasonID}", intraConferenceOpponents.Count, team.TeamID, season);
 
 		// 3. Inter-conference rotation — all 4 teams from one opposite-conf division = 4 games
 		Division interRotation = GetInterRotation(team.Division, season);
@@ -296,22 +329,18 @@ public class ScheduleService : IScheduleService
 			.Where(t => t.Division == interRotation && t.Conference != team.Conference)
 			.ToList();
 
-		for (int i = 0; i < interConferenceOpponents.Count; i++)
+		foreach (var opponent in interConferenceOpponents)
 		{
-			bool isHome = i % 2 == 0;
-			matchups.Add(new Matchup { OpponentID = interConferenceOpponents[i].TeamID, IsHome = isHome });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.InterConference });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumInterConference} inter-conference matchups for team {TeamID} in season {SeasonID}", interConferenceOpponents.Count * 2, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumInterConference} inter-conference matchups for team {TeamID} in season {SeasonID}", interConferenceOpponents.Count, team.TeamID, season);
 
 		// 4. Same-rank intra-conference — 1 game each from the 2 remaining same-conf divisions = 2 games
 		var allDivisions = new[] { Division.North, Division.South, Division.East, Division.West };
 		var remainingIntraDivisions = allDivisions
 			.Where(d => d != team.Division && d != intraRotation)
 			.ToList();
-
-		// Flip home/away assignment each season so teams alternate hosting
-		bool firstIsHome = season % 2 == 0;
 
 		for (int i = 0; i < remainingIntraDivisions.Count; i++)
 		{
@@ -323,22 +352,21 @@ public class ScheduleService : IScheduleService
 			int rankIndex = Math.Min(myRank - 1, rankList.Count - 1);
 			var opponent = rankList[rankIndex];
 
-			bool isHome = i == 0 ? firstIsHome : !firstIsHome;
-			matchups.Add(new Matchup { OpponentID = opponent.TeamID, IsHome = isHome });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.IntraConference });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumSameRankIntraConference} same-rank intra-conference matchups for team {TeamID} in season {SeasonID}", remainingIntraDivisions.Count * 2, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumSameRankIntraConference} same-rank intra-conference matchups for team {TeamID} in season {SeasonID}", remainingIntraDivisions.Count, team.TeamID, season);
 
-		// 5. 17th game — same rank, opposite conference, from the inter-conference rotation division
-		var interKey = (team.Conference == Conference.AFC ? Conference.NFC : Conference.AFC, interRotation);
-		if (divisionTeamsByRank.TryGetValue(interKey, out var interRankList))
+		// 5. 17th game — same rank, opposite conference, using explicit symmetric rotation
+		Division seventeenthDiv = GetSeventeenthGameRotation(team.Division, season);
+		var oppositeConference = team.Conference == Conference.AFC ? Conference.NFC : Conference.AFC;
+		var seventeenthKey = (oppositeConference, seventeenthDiv);
+		if (divisionTeamsByRank.TryGetValue(seventeenthKey, out var seventeenthRankList))
 		{
-			int rankIndex = Math.Min(myRank - 1, interRankList.Count - 1);
-			var seventeenth = interRankList[rankIndex];
+			int rankIndex = Math.Min(myRank - 1, seventeenthRankList.Count - 1);
+			var seventeenth = seventeenthRankList[rankIndex];
 
-			// Home/away alternates by season parity
-			bool isHome = season % 2 == 0;
-			matchups.Add(new Matchup { OpponentID = seventeenth.TeamID, IsHome = isHome });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, seventeenth.TeamID }, Type = MatchupType.SameRankInterConference });
 		}
 
 		_logger.LogInformation("Matchup Count: Added 17th game (same-rank, opposite conference) for team {TeamID} in season {SeasonID}", team.TeamID, season);
@@ -374,14 +402,6 @@ public class ScheduleService : IScheduleService
 		{
 			int week = BYE_WEEKS[i % BYE_WEEKS.Length];
 			byeWeek[teamsInByeOrder[i].TeamID] = week;
-		}
-
-		// --- Track which teams are already scheduled each week ---
-		// Index 0 = week 1, index totalWeeks-1 = last week
-		var scheduledTeamsPerWeek = new HashSet<int>[weeks.Count + 1];
-		for (int w = 1; w <= weeks.Count; w++)
-		{
-			scheduledTeamsPerWeek[w] = new HashSet<int>();
 		}
 
 		// --- Shuffle for variety (seeded for determinism per season) ---
@@ -496,13 +516,55 @@ public class ScheduleService : IScheduleService
 		};
 	}
 
+	/// <summary>
+	/// Returns the opposite-conference division for the 17th game.
+	/// The mapping is always symmetric (if North→South then South→North)
+	/// and never overlaps with the inter-conference rotation.
+	/// </summary>
+	private Division GetSeventeenthGameRotation(Division division, int season)
+	{
+		return (division, season % 4) switch
+		{
+			// s%4=0: N↔S, E↔W  (inter is identity — no overlap)
+			(Division.North, 0) => Division.South,
+			(Division.South, 0) => Division.North,
+			(Division.East, 0) => Division.West,
+			(Division.West, 0) => Division.East,
+			// s%4=1: N↔E, S↔W  (inter is N→S,S→E,E→W,W→N — no overlap)
+			(Division.North, 1) => Division.East,
+			(Division.South, 1) => Division.West,
+			(Division.East, 1) => Division.North,
+			(Division.West, 1) => Division.South,
+			// s%4=2: N↔S, E↔W  (inter is N→E,S→W,E→N,W→S — no overlap)
+			(Division.North, 2) => Division.South,
+			(Division.South, 2) => Division.North,
+			(Division.East, 2) => Division.West,
+			(Division.West, 2) => Division.East,
+			// s%4=3: N↔E, S↔W  (inter is N→W,S→N,E→S,W→E — no overlap)
+			(Division.North, 3) => Division.East,
+			(Division.South, 3) => Division.West,
+			(Division.East, 3) => Division.North,
+			(Division.West, 3) => Division.South,
+			_ => throw new Exception($"No 17th-game rotation defined for division {division} and season {season}")
+		};
+	}
+
 	// ---------------------------------------------------------------------------
 	// Inner types
 	// ---------------------------------------------------------------------------
 
+	private enum MatchupType
+	{
+		Divisional,
+		IntraConference,
+		InterConference,
+		SameRankIntraConference,
+		SameRankInterConference
+	}
+
 	private class Matchup
 	{
-		public int OpponentID { get; set; }
-		public bool IsHome { get; set; }
+		public HashSet<int> TeamsInvolved { get; set; } = new HashSet<int>();
+		public MatchupType Type { get; set; }
 	}
 }
