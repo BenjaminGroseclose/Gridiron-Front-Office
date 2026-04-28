@@ -1,0 +1,101 @@
+@using GridironFrontOffice.Persistence
+@inject GameManager GameManager
+@inject ILeagueWizardService LeagueWizardService
+@inject INavigationService NavigationService
+
+<MudDialog Style="min-width: 450px;">
+	<TitleContent>
+		<MudText Typo="Typo.h6">Load League</MudText>
+	</TitleContent>
+	<DialogContent>
+		@if (_saveFiles.Count == 0)
+		{
+			<MudText Typo="Typo.body1" Class="pa-4">No save files found.</MudText>
+		}
+		else
+		{
+			<MudTable Items="_saveFiles" Hover="true" Dense="true" T="SaveFileInfo" SelectedItem="_selectedSave"
+								SelectedItemChanged="OnSaveSelected" Style="min-width: 400px;">
+				<HeaderContent>
+					<MudTh></MudTh>
+					<MudTh>Name</MudTh>
+					<MudTh>Last Saved</MudTh>
+				</HeaderContent>
+				<RowTemplate>
+					<MudTd DataLabel="Selected">
+						<MudRadio T="SaveFileInfo" Color="Color.Primary" Checked="@(_selectedSave == context)" />
+					</MudTd>
+					<MudTd DataLabel="Name">@context.Name</MudTd>
+					<MudTd DataLabel="Last Saved">@context.LastModified.ToString("MMM dd, yyyy h:mm tt")</MudTd>
+				</RowTemplate>
+			</MudTable>
+		}
+
+		@if (!string.IsNullOrEmpty(_error))
+		{
+			<MudAlert Severity="Severity.Error" Class="mt-3">@_error</MudAlert>
+		}
+	</DialogContent>
+	<DialogActions>
+		<MudButton OnClick="Cancel">Cancel</MudButton>
+		<MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(_selectedSave == null || _loading)"
+							 OnClick="LoadSelected">
+			@if (_loading)
+			{
+				<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+			}
+			Load
+		</MudButton>
+	</DialogActions>
+</MudDialog>
+
+@code {
+	[CascadingParameter]
+	private IMudDialogInstance MudDialog { get; set; } = default!;
+
+	private List<SaveFileInfo> _saveFiles = new();
+	private SaveFileInfo? _selectedSave;
+	private bool _loading;
+	private string? _error;
+
+	protected override void OnInitialized()
+	{
+		_saveFiles = GameManager.GetSaveFiles()
+			.Select(f => new SaveFileInfo(f.Name, f.LastModified))
+			.ToList();
+	}
+
+	private void OnSaveSelected(SaveFileInfo item)
+	{
+		_selectedSave = item;
+		_error = null;
+	}
+
+	private async Task LoadSelected()
+	{
+		if (_selectedSave == null) return;
+
+		try
+		{
+			_loading = true;
+			_error = null;
+
+			await LeagueWizardService.LoadLeagueAsync(_selectedSave.Name);
+
+			MudDialog.Close(DialogResult.Ok(true));
+			NavigationService.NavigateTo("/home");
+		}
+		catch (Exception ex)
+		{
+			_error = ex.Message;
+		}
+		finally
+		{
+			_loading = false;
+		}
+	}
+
+	private void Cancel() => MudDialog.Cancel();
+
+	private record SaveFileInfo(string Name, DateTime LastModified);
+}

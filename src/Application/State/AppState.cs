@@ -1,3 +1,4 @@
+using GridironFrontOffice.Application.Interfaces;
 using GridironFrontOffice.Domain;
 
 namespace GridironFrontOffice.Application.State;
@@ -8,6 +9,12 @@ namespace GridironFrontOffice.Application.State;
 public class AppState
 {
 	private readonly object _sync = new();
+	private readonly ITeamService _teamService;
+
+	public AppState(ITeamService teamService)
+	{
+		_teamService = teamService;
+	}
 
 	public record StateSnapshot(
 		int? UserTeamID,

@@ -1,0 +1,27 @@
+@inject AppState AppState
+@inject ITeamService TeamService
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
+					Style="@($"height: 64px; padding: 0 16px; background-color:{Theme.PaletteDark.Primary}; color: {Theme.PaletteDark.PrimaryContrastText};")">
+	<MudText Typo="Typo.h6">@_currentTeam?.FullName</MudText>
+
+	<MudSpacer />
+
+	<MudChip Color="Color.Secondary" T="int">@_currentSeason</MudChip>
+	<MudText Typo="Typo.body2">@AppState.CurrentState.CurrentDateTime?.ToString("MMMM dd, yyyy")</MudText>
+</MudStack>
+
+
+@code {
+	private MudTheme Theme = new MudTheme();
+	private Team? _currentTeam;
+	private int _currentSeason => AppState.CurrentState.CurrentSeason?.Year ?? 0;
+
+	override protected async Task OnInitializedAsync()
+	{
+		if (AppState.CurrentState.UserTeamID.HasValue)
+		{
+			_currentTeam = await TeamService.GetTeam(AppState.CurrentState.UserTeamID.Value);
+		}
+	}
+}

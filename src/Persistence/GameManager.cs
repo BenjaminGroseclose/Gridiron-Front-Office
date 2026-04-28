@@ -28,6 +28,21 @@ public class GameManager
 	public string SaveDirectory => _baseSavePath;
 
 	/// <summary>
+	/// Returns a list of save files in the save directory with their name and last modified date.
+	/// </summary>
+	public IReadOnlyList<(string Name, DateTime LastModified)> GetSaveFiles()
+	{
+		if (!Directory.Exists(_baseSavePath))
+			return [];
+
+		return Directory.GetFiles(_baseSavePath, "*.db")
+			.Select(f => new FileInfo(f))
+			.OrderByDescending(f => f.LastWriteTime)
+			.Select(f => (Path.GetFileNameWithoutExtension(f.Name), f.LastWriteTime))
+			.ToList();
+	}
+
+	/// <summary>
 	/// Creates a new game save with the specified name.
 	/// </summary>
 	/// <param name="saveName">The file name for the new game save.</param>

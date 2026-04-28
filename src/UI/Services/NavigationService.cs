@@ -26,7 +26,6 @@ public class NavigationService : INavigationService
 
 		if (this.CanNavigateBack)
 		{
-			// Track the route in AppState
 			_appState.PopRoute();
 
 			var route = _appState.CurrentState.CurrentRoute;
@@ -36,7 +35,6 @@ public class NavigationService : INavigationService
 				return;
 			}
 
-			// Perform the actual navigation
 			_navigationManager.NavigateTo(route);
 		}
 		else
@@ -49,7 +47,6 @@ public class NavigationService : INavigationService
 	{
 		_logger.LogInformation("Navigating to {Route}", route);
 
-		// Track the route in AppState
 		_appState.PushRoute(route);
 
 		// Construct the full URL with query parameters if provided

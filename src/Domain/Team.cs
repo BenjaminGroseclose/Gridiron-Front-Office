@@ -12,6 +12,11 @@ public class Team : BaseEntity
 	public string Name { get; set; }
 
 	/// <summary>
+	/// The full name of the team, combining city and name. eg "Detroit Lions"
+	/// </summary>
+	public string FullName => $"{City} {Name}";
+
+	/// <summary>
 	/// The city the team is based in. eg "Detroit"
 	/// </summary>
 	public string City { get; set; }

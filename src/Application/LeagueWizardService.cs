@@ -136,4 +136,42 @@ public class LeagueSetupService : ILeagueWizardService
 
 
 	public async Task<IEnumerable<Team>> GetDefaultTeams() => await _teamService.GetAllTeamsAsync();
+
+	public async Task LoadLeagueAsync(string saveName)
+	{
+		try
+		{
+			_appState.SetLoading(true);
+
+			_gameManager.LoadGame(saveName);
+
+			var leagueSettings = (await _leagueSettingRepository.GetAllAsync()).FirstOrDefault();
+			if (leagueSettings == null)
+			{
+				throw new DomainException("No league settings found in save file.");
+			}
+
+			var season = await _scheduleService.GetCurrentSeason();
+			var allTeams = await _teamService.GetAllTeamsAsync();
+			var userTeam = allTeams.FirstOrDefault(t => t.IsUserControlled);
+
+			_appState.UpdateState(state => state with
+			{
+				UserTeamID = userTeam?.TeamID,
+				CurrentSeason = season,
+				CurrentSavePath = _gameManager.CurrentDatabasePath,
+				CurrentRoute = "/home",
+				RouteHistory = new Stack<string>(),
+				IsLoading = false,
+				Error = null,
+				CurrentDateTime = leagueSettings.CurrentDate
+			});
+		}
+		catch (Exception ex)
+		{
+			_appState.SetLoading(false);
+			_logger.LogError(ex, "Error loading league save {SaveName}", saveName);
+			throw;
+		}
+	}
 }

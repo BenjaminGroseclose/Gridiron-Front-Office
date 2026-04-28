@@ -21,4 +21,9 @@ public interface ILeagueWizardService
 	/// Creates a new league with settings
 	/// </summary>
 	Task CreateLeagueAsync(LeagueSetting league, int? userTeamId);
+
+	/// <summary>
+	/// Loads an existing league save by name and hydrates app state.
+	/// </summary>
+	Task LoadLeagueAsync(string saveName);
 }

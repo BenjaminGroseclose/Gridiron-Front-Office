@@ -363,7 +363,7 @@
 			{
 				await wizardService.CreateLeagueAsync(leagueSettings, teamId);
 			});
-			NavigationService.NavigateTo($"/home/{_leagueName}");
+			NavigationService.NavigateTo($"/home");
 		}
 		catch (Exception ex)
 		{

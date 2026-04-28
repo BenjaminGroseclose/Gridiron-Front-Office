@@ -1,5 +1,6 @@
 @page "/"
 @inject INavigationService NavigationService
+@inject IDialogService DialogService
 
 
 
@@ -24,8 +25,7 @@
 							 Style="width: 200px;">
 			Create
 		</MudButton>
-		<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => NavigateTo("/load-league"))"
-							 Style="width: 200px;">
+		<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OpenLoadDialog" Style="width: 200px;">
 			Load
 		</MudButton>
 		<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => NavigateTo("/settings"))"
@@ -42,5 +42,10 @@
 	void NavigateTo(string route)
 	{
 		NavigationService.NavigateTo(route);
+	}
+
+	async Task OpenLoadDialog()
+	{
+		await DialogService.ShowAsync<LoadLeagueDialog>("Load League");
 	}
 }
