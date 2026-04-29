@@ -12,11 +12,6 @@ public class Team : BaseEntity
 	public string Name { get; set; }
 
 	/// <summary>
-	/// The full name of the team, combining city and name. eg "Detroit Lions"
-	/// </summary>
-	public string FullName => $"{City} {Name}";
-
-	/// <summary>
 	/// The city the team is based in. eg "Detroit"
 	/// </summary>
 	public string City { get; set; }
@@ -84,17 +79,8 @@ public class Team : BaseEntity
 	/// </summary>
 	public TeamStatus Status { get; set; }
 
+	// Computed properties
 	public override int ID => TeamID;
-
-	public IEnumerable<ContractYear> GetContractsForSeason(int seasonID)
-	{
-		if (ContractYears == null)
-		{
-			throw new Exception($"Team {Name} has no contract years defined.");
-		}
-
-		return ContractYears.Where(cy => cy.SeasonID == seasonID);
-	}
 
 	public string DisplayName => $"{City} {Name}";
 	public string ConferenceAndDivision
@@ -106,5 +92,23 @@ public class Team : BaseEntity
 
 			return $"{conferenceName} {divisionName}";
 		}
+	}
+
+	// Methods
+	public IEnumerable<ContractYear> GetContractsForSeason(int seasonID)
+	{
+		if (ContractYears == null)
+		{
+			throw new Exception($"Team {Name} has no contract years defined.");
+		}
+
+		return ContractYears.Where(cy => cy.SeasonID == seasonID);
+	}
+
+	public string GetTeamAvatarStyle()
+	{
+		var backgroundColor = string.IsNullOrWhiteSpace(PrimaryColor) ? "#1f2937" : PrimaryColor;
+		var textColor = string.IsNullOrWhiteSpace(SecondaryColor) ? "#f9fafb" : SecondaryColor;
+		return $"background:{backgroundColor};color:{textColor};font-weight:700;";
 	}
 }

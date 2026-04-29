@@ -23,7 +23,8 @@
 				</HeaderContent>
 				<RowTemplate>
 					<MudTd DataLabel="Selected">
-						<MudRadio T="SaveFileInfo" Color="Color.Primary" Checked="@(_selectedSave == context)" />
+						<MudCheckBox T="bool" Checked="@(_selectedSave == context)"
+												 ValueChanged="@(value => OnSaveSelected(context))" />
 					</MudTd>
 					<MudTd DataLabel="Name">@context.Name</MudTd>
 					<MudTd DataLabel="Last Saved">@context.LastModified.ToString("MMM dd, yyyy h:mm tt")</MudTd>

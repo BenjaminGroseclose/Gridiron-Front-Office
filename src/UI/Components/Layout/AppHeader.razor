@@ -1,9 +1,11 @@
 @inject AppState AppState
 @inject ITeamService TeamService
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2"
-					Style="@($"height: 64px; padding: 0 16px; background-color:{Theme.PaletteDark.Primary}; color: {Theme.PaletteDark.PrimaryContrastText};")">
-	<MudText Typo="Typo.h6">@_currentTeam?.FullName</MudText>
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="px-4"
+					Style="@($"height: 64px; border-bottom: 1px solid {Theme.PaletteDark.Divider};")">
+	<MudAvatar Size="Size.Small" Style="@_currentTeam?.GetTeamAvatarStyle()" Class="pa-2">
+		@_currentTeam?.Abbreviation
+	</MudAvatar>
 
 	<MudSpacer />
 

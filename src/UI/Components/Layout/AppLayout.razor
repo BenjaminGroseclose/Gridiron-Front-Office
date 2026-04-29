@@ -8,31 +8,29 @@
 	
 	<AppHeader />
 
-	<MudMainContent Class="pa-4">
 
-		<MudStack Row="true">
-			<AppSideNav />
+	<MudStack Row="true">
+		<AppSideNav />
 
-			<div id="app-content">
+		<div id="app-content" class="pa-4">
 
-				@if (!string.IsNullOrEmpty(_state.Error))
-				{
-					<MudAlert Severity="Severity.Error" ShowCloseIcon="true" CloseIconClicked="DismissError" Class="mb-4">
-						@_state.Error
-					</MudAlert>
-				}
+			@if (!string.IsNullOrEmpty(_state.Error))
+			{
+				<MudAlert Severity="Severity.Error" ShowCloseIcon="true" CloseIconClicked="DismissError" Class="mb-4">
+					@_state.Error
+				</MudAlert>
+			}
 
-				@if (_state.IsLoading)
-				{
-					<LoadingSpinner />
-				}
-				else
-				{
-					@Body
-				}
-			</div>
-		</MudStack>
-	</MudMainContent>
+			@if (_state.IsLoading)
+			{
+				<LoadingSpinner />
+			}
+			else
+			{
+				@Body
+			}
+		</div>
+	</MudStack>
 </MudLayout>
 
 @code {
