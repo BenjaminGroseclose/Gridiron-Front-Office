@@ -1,28 +1,27 @@
 @inject NavigationManager NavigationService
 
-<MudStack AlignItems="AlignItems.Center" Class="px-2"
-					Style="@($"width: {width}px; transition: width 0.3s; border-right: 1px solid {Theme.PaletteDark.Divider}; height: calc(100vh - 64px);")">
 
-	<MudNavMenu Rounded="true" Color="Color.Info">
-		<MudNavLink OnClick="() => Navigate(NavItem.Home)" Icon="@Icons.Material.Filled.Home">@(IsExpanded ? "Home" : "")
-		</MudNavLink>
-
-	</MudNavMenu>
+<MudNavMenu Rounded="true" Color="Color.Tertiary" Bordered="true">
+	<MudNavLink Href="home">Home</MudNavLink>
+	<MudNavLink Href="roster">Roster</MudNavLink>
 
 	<MudSpacer />
-	<MudIconButton Icon="@Icons.Material.Filled.Expand" Color="Color.Default" OnClick="ToggleWidth" />
+	<MudNavLink Href="settings">Settings</MudNavLink>
+	<MudNavLink OnClick="ToggleExpanded"
+							Icon="@(IsExpanded ? Icons.Material.Filled.MenuOpen : Icons.Material.Filled.Menu)">
+	</MudNavLink>
 
-</MudStack>
+</MudNavMenu>
+
 
 @code {
 
 	private MudTheme Theme = new MudTheme();
-	private int width = 80;
-	public bool IsExpanded => width > 80;
+	private bool IsExpanded { get; set; } = false;
 
-	private void ToggleWidth()
+	private void ToggleExpanded()
 	{
-		width = width == 80 ? 200 : 80;
+		IsExpanded = !IsExpanded;
 	}
 
 	private void Navigate(NavItem item)
@@ -32,8 +31,8 @@
 			case NavItem.Home:
 				NavigationService.NavigateTo("/home");
 				break;
-			case NavItem.League:
-				NavigationService.NavigateTo("/league");
+			case NavItem.Roster:
+				NavigationService.NavigateTo("/roster");
 				break;
 			case NavItem.Team:
 				NavigationService.NavigateTo("/team");
@@ -50,7 +49,7 @@
 	private enum NavItem
 	{
 		Home,
-		League,
+		Roster,
 		Team,
 		Schedule,
 		Settings

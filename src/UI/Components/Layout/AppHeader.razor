@@ -3,13 +3,13 @@
 
 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="px-4"
 					Style="@($"height: 64px; border-bottom: 1px solid {Theme.PaletteDark.Divider};")">
-	<MudAvatar Size="Size.Small" Style="@_currentTeam?.GetTeamAvatarStyle()" Class="pa-2">
+	<MudAvatar Size="Size.Medium" Style="@_currentTeam?.GetTeamAvatarStyle()" Class="pa-2">
 		@_currentTeam?.Abbreviation
 	</MudAvatar>
 
 	<MudSpacer />
 
-	<MudChip Color="Color.Secondary" T="int">@_currentSeason</MudChip>
+	<MudChip Color="Color.Info" T="int">@_currentSeason</MudChip>
 	<MudText Typo="Typo.body2">@AppState.CurrentState.CurrentDateTime?.ToString("MMMM dd, yyyy")</MudText>
 </MudStack>
 
