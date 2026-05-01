@@ -22,12 +22,14 @@ public class SeedDataService : ISeedDataService
 	private readonly IBaseRepository<Team> _teamRepository;
 	private readonly IBaseRepository<Stadium> _stadiumRepository;
 	private readonly IBaseRepository<Season> _seasonRepository;
+	private readonly IBaseRepository<DraftPick> _draftPickRepository;
 
-	public SeedDataService(IBaseRepository<Team> teamRepository, IBaseRepository<Stadium> stadiumRepository, IBaseRepository<Season> seasonRepository)
+	public SeedDataService(IBaseRepository<Team> teamRepository, IBaseRepository<Stadium> stadiumRepository, IBaseRepository<Season> seasonRepository, IBaseRepository<DraftPick> draftPickRepository)
 	{
 		_teamRepository = teamRepository;
 		_stadiumRepository = stadiumRepository;
 		_seasonRepository = seasonRepository;
+		_draftPickRepository = draftPickRepository;
 	}
 
 	/// <inheritdoc/>
@@ -52,9 +54,12 @@ public class SeedDataService : ISeedDataService
 					await _stadiumRepository.BulkInsertAsync(data.Stadiums);
 					await _teamRepository.BulkInsertAsync(data.Teams);
 
-					var season = this.GenerateInitialSeasons(startYear);
 
+					var season = this.GenerateInitialSeasons(startYear);
 					await _seasonRepository.BulkInsertAsync(season);
+
+					var draftPicks = GenerateDraftPicks(data.Teams, startYear);
+					await _draftPickRepository.BulkInsertAsync(draftPicks);
 
 					return true;
 				}
@@ -144,7 +149,7 @@ public class SeedDataService : ISeedDataService
 	{
 		var seasons = new List<Season>();
 
-		for (int i = -ARCHIVED_SEASON_LOOKBACK; i < 10; i++)
+		for (int i = -ARCHIVED_SEASON_LOOKBACK; i <= 10; i++)
 		{
 			int seasonID = startYear + i;
 			var isArchived = i < 0;
@@ -163,12 +168,13 @@ public class SeedDataService : ISeedDataService
 		return seasons;
 	}
 
-	private async Task SeedDraftPicks(int startYear)
+	private const int DRAFT_PICK_SEASON_COUNT = 5;
+
+	private List<DraftPick> GenerateDraftPicks(List<Team> teams, int startYear)
 	{
-		var teams = await _teamRepository.GetAllAsync();
 		var draftPicks = new List<DraftPick>();
 
-		for (int i = startYear; i < startYear + 10; i++)
+		for (int i = startYear; i < startYear + DRAFT_PICK_SEASON_COUNT; i++)
 		{
 			for (int round = 1; round <= 7; round++)
 			{
@@ -184,6 +190,8 @@ public class SeedDataService : ISeedDataService
 				}
 			}
 		}
+
+		return draftPicks;
 	}
 
 	/// <summary>

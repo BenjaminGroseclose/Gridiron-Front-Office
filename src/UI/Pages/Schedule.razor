@@ -1,0 +1,40 @@
+@page "/schedule"
+@using GridironFrontOffice.Framework
+
+@inject AppState AppState
+@inject ITeamService TeamService
+@inject IScheduleService ScheduleService
+
+<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+	<MudText Typo="Typo.h4">Schedule</MudText>
+
+	<MudSelect T="int" Value="selectedTeamID" ValueChanged="OnTeamChanged" Label="Select Team" Variant="Variant.Outlined">
+		@foreach (var team in teams)
+		{
+			<MudSelectItem Value="team.TeamID">@team.DisplayName</MudSelectItem>
+		}
+	</MudSelect>
+</MudStack>
+
+
+
+    @code {
+
+    private int selectedTeamID;
+    private IEnumerable<Team> teams;
+    private IEnumerable<Game> schedule;
+    private Season currentSeason;
+
+    protected override async Task OnInitializedAsync()
+    {
+        teams = await TeamService.GetAllTeamsAsync();
+        currentSeason = AppState.CurrentState.CurrentSeason ?? throw new DomainException("Current season is not set in AppState.");
+    }
+
+    private async Task OnTeamChanged(int teamID)
+    {
+		selectedTeamID = teamID;
+		schedule = await ScheduleService.GetScheduleForTeam(currentSeason.SeasonID, selectedTeamID);
+
+	}
+}

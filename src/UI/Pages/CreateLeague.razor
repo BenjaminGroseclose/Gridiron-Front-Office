@@ -205,6 +205,8 @@
 	private bool _canBeFired = false;
 	private double? _salaryCap = 300;
 	private int _numberOfPlayoffTeams = 14;
+	private int? _numOfRegularSeasonWeeks = 17;
+	private int? _numOfByeWeeks = 1;
 
 	// Options
 	private int[] numberOfPlayoffOptions = new[] { 6, 8, 10, 12, 14, 16 };
@@ -298,6 +300,24 @@
 			return false;
 		}
 
+		if (_selectedTeam is null)
+		{
+			_errorMessage = "Please select a team.";
+			return false;
+		}
+
+		if (!_numOfRegularSeasonWeeks.HasValue || _numOfRegularSeasonWeeks.Value <= 0)
+		{
+			_errorMessage = "Please set a number of regular season weeks.";
+			return false;
+		}
+
+		if (!_numOfByeWeeks.HasValue || _numOfByeWeeks.Value < 0)
+		{
+			_errorMessage = "Please set a valid number of bye weeks.";
+			return false;
+		}
+
 		return true;
 	}
 
@@ -353,8 +373,8 @@
 				InjuriesEnabled = _injuriesEnabled,
 				NumOfPlayoffsTeams = _numberOfPlayoffTeams,
 				CanBeFired = _canBeFired,
-				NumOfRegularSeasonWeeks = 17, // TODO: Make this configurable in the UI if we want to support different season lengths
-				NumOfByeWeeks = 1, // TODO: Make this configurable in the UI if we want to support different season structures
+				NumOfRegularSeasonWeeks = _numOfRegularSeasonWeeks!.Value,
+				NumOfByeWeeks = _numOfByeWeeks!.Value,
 				RosterSize = _rosterSize!.Value,
 				PracticeSquadSize = _practiceSquadSize!.Value,
 				SalaryCap = _salaryCap!.Value * 1_000_000

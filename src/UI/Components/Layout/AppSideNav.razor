@@ -4,12 +4,8 @@
 <MudNavMenu Rounded="true" Color="Color.Tertiary" Bordered="true">
 	<MudNavLink Href="home">Home</MudNavLink>
 	<MudNavLink Href="roster">Roster</MudNavLink>
+	<MudNavLink Href="schedule">Schedule</MudNavLink>
 
-	<MudSpacer />
-	<MudNavLink Href="settings">Settings</MudNavLink>
-	<MudNavLink OnClick="ToggleExpanded"
-							Icon="@(IsExpanded ? Icons.Material.Filled.MenuOpen : Icons.Material.Filled.Menu)">
-	</MudNavLink>
 
 </MudNavMenu>
 
@@ -17,12 +13,6 @@
 @code {
 
 	private MudTheme Theme = new MudTheme();
-	private bool IsExpanded { get; set; } = false;
-
-	private void ToggleExpanded()
-	{
-		IsExpanded = !IsExpanded;
-	}
 
 	private void Navigate(NavItem item)
 	{

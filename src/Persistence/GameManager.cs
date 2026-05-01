@@ -49,6 +49,14 @@ public class GameManager
 	/// <exception cref="DomainException">When a save with the specified name already exists.</exception>
 	public void CreateNewGame(string saveName)
 	{
+		var savedFiles = GetSaveFiles();
+		if (savedFiles.Any(f => f.Name.Equals(saveName, StringComparison.OrdinalIgnoreCase)))
+		{
+			var ex = new DomainException("A save with this name already exists.", "SAVE_ALREADY_EXISTS");
+			ex.Details.Add("SaveName", saveName);
+			throw ex;
+		}
+
 		string fullPath = Path.Combine(_baseSavePath, $"{saveName}.db");
 
 		if (File.Exists(fullPath))

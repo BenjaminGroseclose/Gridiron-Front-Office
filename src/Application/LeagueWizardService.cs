@@ -111,9 +111,9 @@ public class LeagueSetupService : ILeagueWizardService
 			userTeam.IsUserControlled = true;
 			await _teamService.UpdateTeam(userTeam);
 
-			_logger.LogInformation("Set user team with ID {UserTeamID} as user controlled", userTeamID.Value);
+			// Step 5: Create initial Free Agent Pool for the league
 
-			// Step 5: Update App State with new league information
+			// Step 6: Update App State with new league information
 			var season = await _scheduleService.GetCurrentSeason();
 			_appState.UpdateState(state => state with
 			{
@@ -126,6 +126,9 @@ public class LeagueSetupService : ILeagueWizardService
 				Error = null,
 				CurrentDateTime = league.CurrentDate
 			});
+
+
+			_logger.LogInformation("Set user team with ID {UserTeamID} as user controlled", userTeamID.Value);
 		}
 		catch (Exception ex)
 		{

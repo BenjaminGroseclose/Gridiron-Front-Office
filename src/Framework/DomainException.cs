@@ -4,7 +4,7 @@ public class DomainException : Exception
 {
 	private readonly string _message;
 	private readonly string _code;
-	public Dictionary<string, object> Details;
+	public Dictionary<string, object> Details { get; } = new Dictionary<string, object>();
 	public string Code => _code;
 	public override string Message => _message;
 
