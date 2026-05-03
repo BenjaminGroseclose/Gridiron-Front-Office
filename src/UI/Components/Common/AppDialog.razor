@@ -1,0 +1,62 @@
+@if (Visible)
+{
+	<div class="fixed inset-0 z-50 flex items-center justify-center">
+		@* Backdrop *@
+		<div class="fixed inset-0 bg-black/60 backdrop-blur-sm" @onclick="HandleBackdropClick"></div>
+
+		@* Dialog *@
+		<div class="relative bg-surface rounded-lg shadow-2xl z-10 border border-divider" style="@($"min-width: {MinWidth}; {Style}")">
+			@if (TitleContent != null)
+			{
+				<div class="px-6 py-4 border-b border-divider">
+					@TitleContent
+				</div>
+			}
+			else if (!string.IsNullOrEmpty(Title))
+			{
+				<div class="px-6 py-4 border-b border-divider">
+					<h3 class="text-lg font-semibold text-frost">@Title</h3>
+				</div>
+			}
+
+			<div class="px-6 py-4">
+				@ChildContent
+			</div>
+
+			@if (FooterContent != null)
+			{
+				<div class="px-6 py-3 border-t border-divider flex justify-end gap-2">
+					@FooterContent
+				</div>
+			}
+		</div>
+	</div>
+}
+
+@code {
+	[Parameter] public bool Visible { get; set; }
+	[Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+	[Parameter] public string? Title { get; set; }
+	[Parameter] public RenderFragment? TitleContent { get; set; }
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+	[Parameter] public RenderFragment? FooterContent { get; set; }
+	[Parameter] public string MinWidth { get; set; } = "450px";
+	[Parameter] public string? Style { get; set; }
+	[Parameter] public bool CloseOnBackdropClick { get; set; } = true;
+	[Parameter] public EventCallback OnClose { get; set; }
+
+	public async Task CloseAsync()
+	{
+		Visible = false;
+		await VisibleChanged.InvokeAsync(false);
+		await OnClose.InvokeAsync();
+	}
+
+	private async Task HandleBackdropClick()
+	{
+		if (CloseOnBackdropClick)
+		{
+			await CloseAsync();
+		}
+	}
+}

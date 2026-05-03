@@ -1,21 +1,18 @@
 @inject AppState AppState
 @inject ITeamService TeamService
 
-<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="px-4"
-					Style="@($"height: 64px; border-bottom: 1px solid {Theme.PaletteDark.Divider};")">
-	<MudAvatar Size="Size.Medium" Style="@_currentTeam?.GetTeamAvatarStyle()" Class="pa-2">
+<header class="flex items-center gap-2 px-4 h-16 border-b border-divider shrink-0">
+	<AppAvatar Size="md" Style="@_currentTeam?.GetTeamAvatarStyle()" Bordered="true">
 		@_currentTeam?.Abbreviation
-	</MudAvatar>
+	</AppAvatar>
 
-	<MudSpacer />
+	<div class="flex-1"></div>
 
-	<MudChip Color="Color.Info" T="int">@_currentSeason</MudChip>
-	<MudText Typo="Typo.body2">@AppState.CurrentState.CurrentDateTime?.ToString("MMMM dd, yyyy")</MudText>
-</MudStack>
-
+	<AppChip Color="info">@_currentSeason</AppChip>
+	<span class="text-sm text-muted">@AppState.CurrentState.CurrentDateTime?.ToString("MMMM dd, yyyy")</span>
+</header>
 
 @code {
-	private MudTheme Theme = new MudTheme();
 	private Team? _currentTeam;
 	private int _currentSeason => AppState.CurrentState.CurrentSeason?.Year ?? 0;
 

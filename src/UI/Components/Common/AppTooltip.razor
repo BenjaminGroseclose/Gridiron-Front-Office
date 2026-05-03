@@ -1,0 +1,22 @@
+<div class="relative inline-flex group">
+	@ChildContent
+	<div class="absolute z-50 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200
+				bg-gray-900 text-frost text-xs rounded-md px-2 py-1 whitespace-nowrap shadow-lg
+				@PlacementClasses">
+		@Text
+	</div>
+</div>
+
+@code {
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+	[Parameter] public string Text { get; set; } = string.Empty;
+	[Parameter] public string Placement { get; set; } = "top";
+
+	private string PlacementClasses => Placement switch
+	{
+		"bottom" => "top-full left-1/2 -translate-x-1/2 mt-2",
+		"left" => "right-full top-1/2 -translate-y-1/2 mr-2",
+		"right" => "left-full top-1/2 -translate-y-1/2 ml-2",
+		_ => "bottom-full left-1/2 -translate-x-1/2 mb-2"
+	};
+}

@@ -1,2 +1,78 @@
-@import url("./utilities.css");
-@import url("./colors.css");
+/* ===================================
+   Design Tokens (CSS Custom Properties)
+   Mirror the Tailwind config for use in <style> blocks
+   =================================== */
+:root {
+    /* Primary */
+    --color-primary: #2563eb;
+    --color-primary-light: #3b82f6;
+    --color-primary-dark: #1d4ed8;
+    --color-primary-muted: #1e3a5f;
+
+    /* Secondary */
+    --color-secondary: #475569;
+    --color-secondary-light: #64748b;
+    --color-secondary-dark: #334155;
+
+    /* Surfaces & Backgrounds */
+    --color-canvas: #0a0e27;
+    --color-surface: #1a1f3a;
+    --color-surface-elevated: #242b4a;
+    --color-surface-hover: #2a3254;
+
+    /* Text */
+    --color-frost: #f1f5f9;
+    --color-muted: #94a3b8;
+    --color-muted-dark: #64748b;
+    --color-disabled: #4b5563;
+
+    /* Borders */
+    --color-divider: #475569;
+    --color-divider-light: #5a6a7e;
+    --color-ring: #2563eb;
+
+    /* Status */
+    --color-success: #38b000;
+    --color-success-light: #4ade80;
+    --color-success-dark: #2d8f00;
+
+    --color-warning: #ffb703;
+    --color-warning-light: #fbbf24;
+    --color-warning-dark: #d97706;
+
+    --color-error: #c1121f;
+    --color-error-light: #ef4444;
+    --color-error-dark: #991b1b;
+
+    --color-info: #00b4d8;
+    --color-info-light: #22d3ee;
+    --color-info-dark: #0891b2;
+}
+
+/* Base application styles */
+body {
+    min-height: 100vh;
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-canvas);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-divider);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Focus visible outline offset for dark backgrounds */
+:focus-visible {
+    outline-offset: 2px;
+}

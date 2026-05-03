@@ -4,192 +4,197 @@
 @inject INavigationService NavigationService
 @inject ILeagueWizardService LeagueWizardService
 
-<div class="pa-4">
-	<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-		<MudText Typo="Typo.h4" Class="mb-4">Create a New League</MudText>
-		<MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="() => NavigateToStart()" />
-	</MudStack>
+<div class="p-6 max-w-4xl mx-auto">
+	<div class="flex items-center justify-between mb-6">
+		<h2 class="text-2xl font-bold text-frost">Create a New League</h2>
+		<button class="text-muted hover:text-frost transition-colors p-1 rounded hover:bg-surface cursor-pointer"
+				@onclick="NavigateToStart">
+			<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+			</svg>
+		</button>
+	</div>
 
 	@if (!string.IsNullOrEmpty(_errorMessage))
 	{
-		<MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
+		<AppAlert Severity="error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _errorMessage = null">
 			@_errorMessage
-		</MudAlert>
+		</AppAlert>
 	}
 
-	<MudStepper @ref="_stepper" @bind-ActiveIndex="_activeStep" OnPreviewInteraction="OnPreviewInteraction">
+	<AppStepper @ref="_stepper" Steps="@_stepTitles" @bind-ActiveIndex="_activeStep"
+				@bind-IsCompleted="_isCompleted" OnBeforeNext="HandleBeforeNext" HideNavigation="@_isLoading">
+
 		<ChildContent>
-			@* Step 1: League Info & Data Source *@
-			<MudStep Title="League Info">
+			@if (_activeStep == 0)
+			{
+				@* Step 1: League Info & Data Source *@
 				@if (_isLoading)
 				{
-					<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
-						<MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
-						<MudText>Initializing league data...</MudText>
-					</MudStack>
+					<div class="flex flex-col items-center py-12 gap-4">
+						<AppSpinner Size="lg" />
+						<p class="text-muted">Initializing league data...</p>
+					</div>
 				}
 				else
 				{
-					<MudStack Spacing="3" Class="pa-4">
-						<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center">
-							<MudTextField Label="League Name" Variant="Variant.Outlined" T="string" @bind-Value="_leagueName"
-														FullWidth="true" />
-							<MudTextField Label="Start Year" Variant="Variant.Outlined" T="int" @bind-Value="_startYear"
-														FullWidth="true" />
-						</MudStack>
+					<div class="flex flex-col gap-6 p-4">
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							<AppTextField Label="League Name" @bind-Value="_leagueName" />
+							<AppNumericField TValue="int" Label="Start Year" @bind-Value="_startYear" />
+						</div>
 
-						<MudText Typo="Typo.h6" Class="mt-2">Data Source</MudText>
+						<h3 class="text-lg font-semibold text-frost mt-2">Data Source</h3>
 
-						<MudGrid Spacing="3">
-							<MudItem xs="12" sm="6">
-								<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.Default)">
-									<MudCardHeader Class="pb-2">
-										<CardHeaderContent>
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-												<MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Large" Color="Color.Primary" />
-												<MudText Typo="Typo.h6" Class="mb-0">Use Default Data</MudText>
-											</MudStack>
-										</CardHeaderContent>
-									</MudCardHeader>
-									<MudCardContent>
-										<MudText Class="mb-3">Start with pre-configured teams, conferences, and rosters.</MudText>
-										<MudStack Spacing="1">
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
-												<MudText>Ready-to-use league structure</MudText>
-											</MudStack>
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
-												<MudText>Standard team and conference setup</MudText>
-											</MudStack>
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Success" />
-												<MudText>Predefined player rosters</MudText>
-											</MudStack>
-										</MudStack>
-									</MudCardContent>
-									<MudCardActions>
-										<MudButton Variant="Variant.Outlined" Color="Color.Primary"
-															 OnClick="() => _dataSource = LeagueDataSource.Default">
-											Select Default
-										</MudButton>
-									</MudCardActions>
-								</MudCard>
-							</MudItem>
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+							@* Default Data Card *@
+							<AppCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.Default)">
+								<AppCardHeader>
+									<div class="flex items-center gap-2">
+										<svg class="w-7 h-7 text-primary" fill="currentColor" viewBox="0 0 24 24">
+											<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 2l5 5h-5V4zm-3 9h4v2h-4v-2zm0 4h4v2h-4v-2zm-2-4h1v2H8v-2zm0 4h1v2H8v-2z" />
+										</svg>
+										<span class="text-lg font-semibold">Use Default Data</span>
+									</div>
+								</AppCardHeader>
+								<AppCardContent>
+									<p class="text-muted mb-3">Start with pre-configured teams, conferences, and rosters.</p>
+									<div class="flex flex-col gap-2">
+										<div class="flex items-start gap-2">
+											<svg class="w-4 h-4 text-success mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+											</svg>
+											<span class="text-sm">Ready-to-use league structure</span>
+										</div>
+										<div class="flex items-start gap-2">
+											<svg class="w-4 h-4 text-success mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+											</svg>
+											<span class="text-sm">Standard team and conference setup</span>
+										</div>
+										<div class="flex items-start gap-2">
+											<svg class="w-4 h-4 text-success mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+											</svg>
+											<span class="text-sm">Predefined player rosters</span>
+										</div>
+									</div>
+								</AppCardContent>
+								<AppCardActions>
+									<AppButton Variant="outlined" Color="primary" OnClick="() => _dataSource = LeagueDataSource.Default">
+										Select Default
+									</AppButton>
+								</AppCardActions>
+							</AppCard>
 
-							<MudItem xs="12" sm="6">
-								<MudCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.JSON)">
-									<MudCardHeader Class="pb-2">
-										<CardHeaderContent>
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-												<MudIcon Icon="@Icons.Material.Filled.CloudUpload" Size="Size.Large" Color="Color.Info" />
-												<MudText Typo="Typo.h6" Class="mb-0">Upload Custom JSON</MudText>
-											</MudStack>
-										</CardHeaderContent>
-									</MudCardHeader>
-									<MudCardContent>
-										<MudText Class="mb-3">Import your own league configuration via a JSON file.</MudText>
-										<MudStack Spacing="1">
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
-												<MudText>Complete customization of league data</MudText>
-											</MudStack>
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
-												<MudText>Support for custom teams and divisions</MudText>
-											</MudStack>
-											<MudStack Row="true" Spacing="2" AlignItems="AlignItems.Start">
-												<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Color="Color.Info" />
-												<MudText>Full control over initial data</MudText>
-											</MudStack>
-										</MudStack>
-									</MudCardContent>
-									<MudCardActions>
-										<MudButton Variant="Variant.Outlined" Color="Color.Info"
-															 OnClick="() => _dataSource = LeagueDataSource.JSON">
-											Select JSON
-										</MudButton>
-									</MudCardActions>
-								</MudCard>
-							</MudItem>
-						</MudGrid>
-					</MudStack>
+							@* JSON Upload Card *@
+							<AppCard Outlined="true" Style="@GetSelectedStyle(LeagueDataSource.JSON)">
+								<AppCardHeader>
+									<div class="flex items-center gap-2">
+										<svg class="w-7 h-7 text-info" fill="currentColor" viewBox="0 0 24 24">
+											<path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+										</svg>
+										<span class="text-lg font-semibold">Upload Custom JSON</span>
+									</div>
+								</AppCardHeader>
+								<AppCardContent>
+									<p class="text-muted mb-3">Import your own league configuration via a JSON file.</p>
+									<div class="flex flex-col gap-2">
+										<div class="flex items-start gap-2">
+											<svg class="w-4 h-4 text-info mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+											</svg>
+											<span class="text-sm">Complete customization of league data</span>
+										</div>
+										<div class="flex items-start gap-2">
+											<svg class="w-4 h-4 text-info mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+											</svg>
+											<span class="text-sm">Support for custom teams and divisions</span>
+										</div>
+										<div class="flex items-start gap-2">
+											<svg class="w-4 h-4 text-info mt-0.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+												<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+											</svg>
+											<span class="text-sm">Full control over initial data</span>
+										</div>
+									</div>
+								</AppCardContent>
+								<AppCardActions>
+									<AppButton Variant="outlined" Color="info" OnClick="() => _dataSource = LeagueDataSource.JSON">
+										Select JSON
+									</AppButton>
+								</AppCardActions>
+							</AppCard>
+						</div>
+					</div>
 				}
-			</MudStep>
-
-			@* Step 2: League Settings *@
-			<MudStep Title="League Settings">
+			}
+			else if (_activeStep == 1)
+			{
+				@* Step 2: League Settings *@
 				@if (_isLoading)
 				{
-					<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
-						<MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
-						<MudText>Creating league...</MudText>
-					</MudStack>
+					<div class="flex flex-col items-center py-12 gap-4">
+						<AppSpinner Size="lg" />
+						<p class="text-muted">Creating league...</p>
+					</div>
 				}
 				else
 				{
-					<MudStack Spacing="3" Class="pa-4">
-						<MudSelect T="Team" Label="Favorite Team" Variant="Variant.Outlined" Dense="true" @bind-Value="_selectedTeam"
-											 ToStringFunc="team => team?.DisplayName">
+					<div class="flex flex-col gap-4 p-4">
+						<AppSelect TValue="int" Label="Favorite Team" @bind-Value="_selectedTeamId">
+							<option value="0" disabled>-- Select a team --</option>
 							@foreach (var team in _teams)
 							{
-								<MudSelectItem T="Team" Value="@team">
-									<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-										<MudAvatar Size="Size.Small" Style="@team.GetTeamAvatarStyle()" Class="pa-2">
-											@team.Abbreviation
-										</MudAvatar>
-										@team.City @team.Name
-									</MudStack>
-								</MudSelectItem>
+								<option value="@team.ID">@team.DisplayName</option>
 							}
-						</MudSelect>
+						</AppSelect>
 
-						<MudDivider />
+						<AppDivider />
 
-						<MudNumericField Label="Roster Size" Variant="Variant.Outlined" T="int?" @bind-Value="_rosterSize" Min="8" />
+						<AppNumericField TValue="int?" Label="Roster Size" @bind-Value="_rosterSize" Min="8" />
+						<AppNumericField TValue="int?" Label="Practice Squad Size" @bind-Value="_practiceSquadSize" Min="8" />
 
-						<MudNumericField Label="Practice Squad Size" Variant="Variant.Outlined" T="int?"
-														 @bind-Value="_practiceSquadSize" Min="8" />
+						<AppCheckbox Label="Injuries Enabled" @bind-Value="_injuriesEnabled" />
+						<AppCheckbox Label="Can be Fired" @bind-Value="_canBeFired" />
 
-						<MudCheckBox Label="Injuries Enabled" T="bool" @bind-Value="_injuriesEnabled" />
+						<AppNumericField TValue="double?" Label="Salary Cap (Millions)" @bind-Value="_salaryCap" Min="0" />
 
-						<MudCheckBox Label="Can be Fired" T="bool" @bind-Value="_canBeFired" />
-
-						<MudNumericField T="double?" Label="Salary Cap (Millions)" Variant="Variant.Outlined" @bind-Value="_salaryCap"
-														 Min="0" />
-
-						<MudSelect Variant="Variant.Outlined" Label="Number of Playoff Teams" T="int"
-											 @bind-Value="_numberOfPlayoffTeams">
+						<AppSelect TValue="int" Label="Number of Playoff Teams" @bind-Value="_numberOfPlayoffTeams">
 							@foreach (var numOfTeams in numberOfPlayoffOptions)
 							{
-								<MudSelectItem T="int" Value="@numOfTeams">@numOfTeams</MudSelectItem>
+								<option value="@numOfTeams">@numOfTeams</option>
 							}
-						</MudSelect>
-					</MudStack>
+						</AppSelect>
+					</div>
 				}
-			</MudStep>
+			}
 		</ChildContent>
 
 		<CompletedContent>
-			<MudStack AlignItems="AlignItems.Center" Class="pa-8" Spacing="4">
-				<MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
-				<MudText Typo="Typo.h5">League Created!</MudText>
-				<MudText>Your league "<strong>@_leagueName</strong>" has been created.</MudText>
-				<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="NavigateToLeague">
-					Go to League
-				</MudButton>
-			</MudStack>
+			<div class="flex flex-col items-center py-12 gap-4">
+				<svg class="w-16 h-16 text-success" fill="currentColor" viewBox="0 0 20 20">
+					<path fill-rule="evenodd"
+						  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+						  clip-rule="evenodd" />
+				</svg>
+				<h3 class="text-xl font-bold text-frost">League Created!</h3>
+				<p class="text-muted">Your league "<strong class="text-frost">@_leagueName</strong>" has been created.</p>
+				<AppButton Color="primary" OnClick="NavigateToLeague">Go to League</AppButton>
+			</div>
 		</CompletedContent>
-	</MudStepper>
-
+	</AppStepper>
 </div>
 
 @code {
-	private MudStepper _stepper = null!;
+	private AppStepper _stepper = null!;
 	private int _activeStep;
+	private bool _isCompleted;
 	private bool _isLoading;
-	private bool _advancingProgrammatically;
 	private string? _errorMessage;
+
+	private List<string> _stepTitles = new() { "League Info", "League Settings" };
 
 	// Step 1 fields
 	private string _leagueName = "My League";
@@ -198,7 +203,8 @@
 
 	// Step 2 fields
 	private IEnumerable<Team> _teams = [];
-	private Team? _selectedTeam;
+	private int _selectedTeamId;
+	private Team? _selectedTeam => _teams.FirstOrDefault(t => t.ID == _selectedTeamId);
 	private int? _rosterSize = 53;
 	private int? _practiceSquadSize = 8;
 	private bool _injuriesEnabled = true;
@@ -211,47 +217,29 @@
 	// Options
 	private int[] numberOfPlayoffOptions = new[] { 6, 8, 10, 12, 14, 16 };
 
-	private Task OnPreviewInteraction(StepperInteractionEventArgs args)
+	private Task HandleBeforeNext(AppStepper.StepChangeEventArgs args)
 	{
-		// Allow programmatic advancement to pass through without re-validation
-		if (_advancingProgrammatically)
+		switch (args.StepIndex)
 		{
-			return Task.CompletedTask;
-		}
-
-		// Prevent navigating back to a previous step
-		if (args.Action == StepAction.Activate && args.StepIndex < _activeStep)
-		{
-			args.Cancel = true;
-			return Task.CompletedTask;
-		}
-
-		if (args.Action == StepAction.Complete)
-		{
-			switch (args.StepIndex)
-			{
-				case 0:
-					if (!ValidateStep1())
-					{
-						args.Cancel = true;
-						return Task.CompletedTask;
-					}
-					// Cancel stepper advancement so the handler returns immediately,
-					// then fire-and-forget the async work to allow the spinner to render.
+			case 0:
+				if (!ValidateStep1())
+				{
 					args.Cancel = true;
-					_ = SeedLeagueDataAndAdvance();
-					break;
+					return Task.CompletedTask;
+				}
+				args.Cancel = true;
+				_ = SeedLeagueDataAndAdvance();
+				break;
 
-				case 1:
-					if (!ValidateStep2())
-					{
-						args.Cancel = true;
-						return Task.CompletedTask;
-					}
+			case 1:
+				if (!ValidateStep2())
+				{
 					args.Cancel = true;
-					_ = CreateLeagueAndNavigate();
-					break;
-			}
+					return Task.CompletedTask;
+				}
+				args.Cancel = true;
+				_ = CreateLeagueAndNavigate();
+				break;
 		}
 
 		return Task.CompletedTask;
@@ -350,9 +338,7 @@
 
 		if (string.IsNullOrEmpty(_errorMessage))
 		{
-			_advancingProgrammatically = true;
 			await _stepper.NextStepAsync();
-			_advancingProgrammatically = false;
 		}
 	}
 
@@ -411,6 +397,6 @@
 
 	private string GetSelectedStyle(LeagueDataSource option)
 	{
-		return _dataSource == option ? "border: 2px solid var(--mud-palette-primary);" : string.Empty;
+		return _dataSource == option ? "border-color: #2563EB; border-width: 2px;" : string.Empty;
 	}
 }

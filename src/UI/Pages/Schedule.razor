@@ -1,21 +1,54 @@
 @page "/schedule"
+@layout AppLayout
 @using GridironFrontOffice.Framework
 
 @inject AppState AppState
 @inject ITeamService TeamService
 @inject IScheduleService ScheduleService
 
-<MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
-	<MudText Typo="Typo.h4">Schedule</MudText>
+<div class="flex items-center justify-between mb-6">
+	<h2 class="text-2xl font-bold text-frost">Schedule</h2>
 
-	<MudSelect T="int" Value="selectedTeamID" ValueChanged="OnTeamChanged" Label="Select Team" Variant="Variant.Outlined">
+	<AppSelect TValue="int" Value="selectedTeamID" ValueChanged="OnTeamChanged" Label="Select Team" Class="w-64">
 		@foreach (var team in teams)
 		{
-			<MudSelectItem Value="team.TeamID">@team.DisplayName</MudSelectItem>
+			<option value="@team.TeamID">@team.DisplayName</option>
 		}
-	</MudSelect>
-</MudStack>
+	</AppSelect>
+</div>
 
+<div class="flex flex-col gap-4">
+
+	@if (schedule == null || !schedule.Any()) 
+	{
+			<p class="text-muted">No schedule available for the selected team.</p>
+	}
+	else
+	{
+		<div>
+			<div class="grid grid-cols-5 gap-4 font-semibold text-sm text-muted border-b border-divider pb-2">
+				<div>Date</div>
+				<div>Opponent</div>
+				<div>Location</div>
+				<div>Result</div>
+				<div>Score</div>
+			</div>
+
+			@foreach (var game in schedule)
+			{
+				var isHome = game.HomeTeamID == selectedTeamID;
+				var opponent = isHome ? game.AwayTeam : game.HomeTeam;
+				var location = isHome ? "Home" : "Away";
+
+				<div class="grid grid-cols-5 gap-4 items-center py-2 border-b border-divider">
+					<div>@game.GameDateTime.ToString("MMMM dd, yyyy")</div>
+					<div>@opponent.DisplayName</div>
+					<div>@location</div>
+				</div>
+			}
+		</div>
+	}
+</div>
 
 
     @code {
@@ -29,6 +62,12 @@
     {
         teams = await TeamService.GetAllTeamsAsync();
         currentSeason = AppState.CurrentState.CurrentSeason ?? throw new DomainException("Current season is not set in AppState.");
+				selectedTeamID = AppState.CurrentState.UserTeamID ?? teams.FirstOrDefault()?.TeamID ?? 0;
+
+				if (selectedTeamID != 0)
+				{
+						schedule = await ScheduleService.GetScheduleForTeam(currentSeason.SeasonID, selectedTeamID);
+				}
     }
 
     private async Task OnTeamChanged(int teamID)

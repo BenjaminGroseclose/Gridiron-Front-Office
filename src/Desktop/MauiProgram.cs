@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using MudBlazor.Services;
 using GridironFrontOffice.Persistence.Injection;
 using GridironFrontOffice.Application.Injection;
 using GridironFrontOffice.UI.Injection;
@@ -34,7 +33,6 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddMauiBlazorWebView();
-		builder.Services.AddMudServices();
 
 		builder.Logging.ClearProviders();
 		builder.Logging.AddSerilog(dispose: true);

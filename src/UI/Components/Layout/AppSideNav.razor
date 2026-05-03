@@ -1,47 +1,36 @@
 @inject NavigationManager NavigationService
 
+<nav class="w-56 border-r border-divider bg-surface/30 p-3 flex flex-col gap-1 shrink-0">
+	<NavLink href="home" class="nav-link" ActiveClass="active" Match="NavLinkMatch.Prefix">
+		<span>Home</span>
+	</NavLink>
+	<NavLink href="roster" class="nav-link" ActiveClass="active" Match="NavLinkMatch.Prefix">
+		<span>Roster</span>
+	</NavLink>
+	<NavLink href="schedule" class="nav-link" ActiveClass="active" Match="NavLinkMatch.Prefix">
+		<span>Schedule</span>
+	</NavLink>
+</nav>
 
-<MudNavMenu Rounded="true" Color="Color.Tertiary" Bordered="true">
-	<MudNavLink Href="home">Home</MudNavLink>
-	<MudNavLink Href="roster">Roster</MudNavLink>
-	<MudNavLink Href="schedule">Schedule</MudNavLink>
-
-
-</MudNavMenu>
-
-
-@code {
-
-	private MudTheme Theme = new MudTheme();
-
-	private void Navigate(NavItem item)
-	{
-		switch (item)
-		{
-			case NavItem.Home:
-				NavigationService.NavigateTo("/home");
-				break;
-			case NavItem.Roster:
-				NavigationService.NavigateTo("/roster");
-				break;
-			case NavItem.Team:
-				NavigationService.NavigateTo("/team");
-				break;
-			case NavItem.Schedule:
-				NavigationService.NavigateTo("/schedule");
-				break;
-			case NavItem.Settings:
-				NavigationService.NavigateTo("/settings");
-				break;
-		}
+<style>
+	.nav-link {
+		display: block;
+		padding: 0.5rem 0.75rem;
+		border-radius: 0.375rem;
+		color: var(--color-muted);
+		font-size: 0.875rem;
+		font-weight: 500;
+		text-decoration: none;
+		transition: all 150ms;
 	}
 
-	private enum NavItem
-	{
-		Home,
-		Roster,
-		Team,
-		Schedule,
-		Settings
+	.nav-link:hover {
+		background-color: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-frost);
 	}
-}
+
+	.nav-link.active {
+		background-color: color-mix(in srgb, var(--color-primary) 15%, transparent);
+		color: var(--color-primary);
+	}
+</style>

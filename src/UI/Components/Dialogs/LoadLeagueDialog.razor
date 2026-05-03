@@ -3,56 +3,51 @@
 @inject ILeagueWizardService LeagueWizardService
 @inject INavigationService NavigationService
 
-<MudDialog Style="min-width: 450px;">
-	<TitleContent>
-		<MudText Typo="Typo.h6">Load League</MudText>
-	</TitleContent>
-	<DialogContent>
+<AppDialog Visible="true" Title="Load League" OnClose="Cancel">
+	<ChildContent>
 		@if (_saveFiles.Count == 0)
 		{
-			<MudText Typo="Typo.body1" Class="pa-4">No save files found.</MudText>
+			<p class="text-muted py-4">No save files found.</p>
 		}
 		else
 		{
-			<MudTable Items="_saveFiles" Hover="true" Dense="true" T="SaveFileInfo" SelectedItem="_selectedSave"
-								SelectedItemChanged="OnSaveSelected" Style="min-width: 400px;">
+			<AppTable TItem="SaveFileInfo" Items="_saveFiles" @bind-SelectedItem="_selectedSave">
 				<HeaderContent>
-					<MudTh></MudTh>
-					<MudTh>Name</MudTh>
-					<MudTh>Last Saved</MudTh>
+					<th class="px-4 py-2 text-left w-8"></th>
+					<th class="px-4 py-2 text-left">Name</th>
+					<th class="px-4 py-2 text-left">Last Saved</th>
 				</HeaderContent>
 				<RowTemplate>
-					<MudTd DataLabel="Selected">
-						<MudCheckBox T="bool" Checked="@(_selectedSave == context)"
-												 ValueChanged="@(value => OnSaveSelected(context))" />
-					</MudTd>
-					<MudTd DataLabel="Name">@context.Name</MudTd>
-					<MudTd DataLabel="Last Saved">@context.LastModified.ToString("MMM dd, yyyy h:mm tt")</MudTd>
+					<td class="px-4 py-2">
+						<input type="radio" checked="@(_selectedSave == context)"
+							   @onchange="() => OnSaveSelected(context)"
+							   class="accent-primary cursor-pointer" />
+					</td>
+					<td class="px-4 py-2">@context.Name</td>
+					<td class="px-4 py-2 text-muted">@context.LastModified.ToString("MMM dd, yyyy h:mm tt")</td>
 				</RowTemplate>
-			</MudTable>
+			</AppTable>
 		}
 
 		@if (!string.IsNullOrEmpty(_error))
 		{
-			<MudAlert Severity="Severity.Error" Class="mt-3">@_error</MudAlert>
+			<AppAlert Severity="error" Class="mt-3">@_error</AppAlert>
 		}
-	</DialogContent>
-	<DialogActions>
-		<MudButton OnClick="Cancel">Cancel</MudButton>
-		<MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(_selectedSave == null || _loading)"
-							 OnClick="LoadSelected">
+	</ChildContent>
+	<FooterContent>
+		<AppButton Variant="text" Color="secondary" OnClick="Cancel">Cancel</AppButton>
+		<AppButton Color="primary" Disabled="@(_selectedSave == null || _loading)" OnClick="LoadSelected">
 			@if (_loading)
 			{
-				<MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+				<AppSpinner Size="sm" Color="frost" Class="mr-2" />
 			}
 			Load
-		</MudButton>
-	</DialogActions>
-</MudDialog>
+		</AppButton>
+	</FooterContent>
+</AppDialog>
 
 @code {
-	[CascadingParameter]
-	private IMudDialogInstance MudDialog { get; set; } = default!;
+	[Parameter] public EventCallback OnClose { get; set; }
 
 	private List<SaveFileInfo> _saveFiles = new();
 	private SaveFileInfo? _selectedSave;
@@ -83,7 +78,7 @@
 
 			await LeagueWizardService.LoadLeagueAsync(_selectedSave.Name);
 
-			MudDialog.Close(DialogResult.Ok(true));
+			await OnClose.InvokeAsync();
 			NavigationService.NavigateTo("/home");
 		}
 		catch (Exception ex)
@@ -96,7 +91,7 @@
 		}
 	}
 
-	private void Cancel() => MudDialog.Cancel();
+	private async Task Cancel() => await OnClose.InvokeAsync();
 
 	private record SaveFileInfo(string Name, DateTime LastModified);
 }

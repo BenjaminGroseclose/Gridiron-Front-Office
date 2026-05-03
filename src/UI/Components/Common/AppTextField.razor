@@ -1,0 +1,22 @@
+<div class="@($"flex flex-col gap-1 {Class}")">
+	@if (!string.IsNullOrEmpty(Label))
+	{
+		<label class="text-sm font-medium text-muted">@Label</label>
+	}
+	<input type="text" value="@Value" @oninput="HandleInput" placeholder="@Placeholder"
+		   class="bg-surface border border-divider rounded-md px-3 py-2 text-frost text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-muted/50 w-full" />
+</div>
+
+@code {
+	[Parameter] public string? Value { get; set; }
+	[Parameter] public EventCallback<string?> ValueChanged { get; set; }
+	[Parameter] public string? Label { get; set; }
+	[Parameter] public string? Placeholder { get; set; }
+	[Parameter] public string? Class { get; set; }
+
+	private async Task HandleInput(ChangeEventArgs e)
+	{
+		Value = e.Value?.ToString();
+		await ValueChanged.InvokeAsync(Value);
+	}
+}

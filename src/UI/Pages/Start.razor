@@ -1,51 +1,47 @@
 @page "/"
 @inject INavigationService NavigationService
-@inject IDialogService DialogService
 
+<div class="flex flex-col items-center justify-center min-h-screen p-6">
+	<div class="flex items-center gap-4 mb-6">
+		<img src="img/logo.svg" alt="Gridiron Front Office" class="w-24 h-24" />
+		<h1 class="text-4xl font-bold text-primary">Gridiron Front Office</h1>
+	</div>
 
+	<p class="text-xl text-muted text-center max-w-[650px] mb-8">
+		Command your franchise with precision analytics and high-stakes executive decision-making.
+	</p>
 
-<div class="pa-3 ma-auto" style="width: fit-content;">
-	<MudStack Row="true" Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.Center">
-		<div class="d-flex justify-center mb-4">
-			<img src="img/logo.svg" alt="Gridiron Front Office" style="width: 100px; height: 100px;" />
-		</div>
-
-		<MudText Typo="Typo.h3" Color="Color.Primary" Align="Align.Center">Gridiron Front Office
-		</MudText>
-	</MudStack>
-
-
-
-	<MudText Typo="Typo.h5" Style="max-width: 650px;" Align="Align.Center">Command your franchise with precision analytics
-		and high-stakes executive decision-making.
-	</MudText>
-
-	<MudStack Spacing="3" Class="mt-6" AlignItems="AlignItems.Center" Justify="Justify.Center">
-		<MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => NavigateTo("/create-league"))"
-							 Style="width: 200px;">
+	<div class="flex flex-col gap-3 items-center">
+		<AppButton Variant="outlined" Color="primary" OnClick="@(() => NavigateTo("/create-league"))" Style="width: 200px;">
 			Create
-		</MudButton>
-		<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="OpenLoadDialog" Style="width: 200px;">
+		</AppButton>
+		<AppButton Variant="outlined" Color="secondary" OnClick="OpenLoadDialog" Style="width: 200px;">
 			Load
-		</MudButton>
-		<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => NavigateTo("/settings"))"
-							 Style="width: 200px;">
+		</AppButton>
+		<AppButton Variant="outlined" Color="secondary" OnClick="@(() => NavigateTo("/settings"))" Style="width: 200px;">
 			Settings
-		</MudButton>
-		<MudButton Variant="Variant.Outlined" Color="Color.Error" Style="width: 200px;">
+		</AppButton>
+		<AppButton Variant="outlined" Color="error" Style="width: 200px;">
 			Quit
-		</MudButton>
-	</MudStack>
+		</AppButton>
+	</div>
 </div>
 
+@if (_showLoadDialog)
+{
+	<LoadLeagueDialog OnClose="() => _showLoadDialog = false" />
+}
+
 @code {
+	private bool _showLoadDialog;
+
 	void NavigateTo(string route)
 	{
 		NavigationService.NavigateTo(route);
 	}
 
-	async Task OpenLoadDialog()
+	void OpenLoadDialog()
 	{
-		await DialogService.ShowAsync<LoadLeagueDialog>("Load League");
+		_showLoadDialog = true;
 	}
 }

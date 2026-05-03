@@ -1,14 +1,14 @@
 ---
-description: 'Blazor component and application patterns with MudBlazor integration'
-applyTo: '**/*.razor, **/*.razor.cs, **/*.razor.css'
+description: "Blazor component and application patterns with Tailwind CSS"
+applyTo: "**/*.razor, **/*.razor.cs, **/*.razor.css"
 ---
 
-## Blazor & MudBlazor Code Style and Structure
+## Blazor & Tailwind CSS Code Style and Structure
 
 - Write idiomatic and efficient Blazor and C# code.
-- Follow .NET, Blazor, and **MudBlazor** library conventions.
+- Follow .NET and Blazor conventions.
+- Follow tailwind CSS best practices for utility-first styling.
 - Use Razor Components appropriately for component-based UI development.
-- **MudBlazor Pattern:** Use the backing `ParameterState` (`.Value` / `.SetValueAsync`) for property updates rather than overwriting parameters directly to ensure lifecycle consistency.
 - Prefer inline functions for smaller components but separate complex logic into code-behind or service classes.
 - Async/await should be used where applicable to ensure non-blocking UI operations.
 
@@ -26,58 +26,74 @@ applyTo: '**/*.razor, **/*.razor.cs, **/*.razor.css'
 - Structure Blazor components and services following Separation of Concerns.
 - Always use the latest version C#, currently C# 13 features like record types, pattern matching, and global usings.
 
-## MudBlazor Component Usage
+## Styling & Colors — CRITICAL
 
-- **Layout:** Always use `<MudGrid>` and `<MudItem>` for responsive layouts instead of raw HTML/CSS grids. Utilize `xs`, `sm`, `md`, `lg` attributes for breakpoint control.
-- **Icons:** Use the static classes `Icons.Material.Filled`, `Icons.Material.Outlined`, or `Icons.Material.Rounded` for the `Icon` parameter.
-- **Styling:** Use `MudBlazor.Utilities.CssBuilder` for dynamic classes. Prefer MudBlazor CSS variables (e.g., `var(--mud-palette-primary)`) over hard-coded HEX/RGB values to maintain theme consistency.
-- **Dialogs & SnackBar:** Inject `IDialogService` and `ISnackbar`. Invoke dialogs using `DialogService.ShowAsync<T>()` and notifications via `Snackbar.Add()`.
-- **References:** Never set component parameters via `@ref` (violates BL0005). Use declarative data binding.
+- **NEVER use raw hex codes or RGB values in Razor files.** Always use either:
+    - Tailwind utility classes with theme tokens (e.g., `text-primary`, `bg-surface`, `border-divider`)
+    - CSS custom properties in `<style>` blocks (e.g., `var(--color-primary)`, `var(--color-frost)`)
+- All design tokens are defined in `src/UI/wwwroot/styles/app.css` under `:root`.
+- For opacity/transparency, use `color-mix(in srgb, var(--color-primary) 10%, transparent)` in `<style>` blocks, or Tailwind's opacity modifier (`bg-primary/10`) in class attributes.
+- Available CSS variable tokens:
+    - `--color-primary`, `--color-primary-light`, `--color-primary-dark`, `--color-primary-muted`
+    - `--color-secondary`, `--color-secondary-light`, `--color-secondary-dark`
+    - `--color-canvas`, `--color-surface`, `--color-surface-elevated`, `--color-surface-hover`
+    - `--color-frost`, `--color-muted`, `--color-muted-dark`, `--color-disabled`
+    - `--color-divider`, `--color-divider-light`, `--color-ring`
+    - `--color-success`, `--color-success-light`, `--color-success-dark`
+    - `--color-warning`, `--color-warning-light`, `--color-warning-dark`
+    - `--color-error`, `--color-error-light`, `--color-error-dark`
+    - `--color-info`, `--color-info-light`, `--color-info-dark`
+
+## Custom Component Usage
+
+- **Layout:** Use Tailwind's `flex`, `grid`, and responsive prefixes (`sm:`, `md:`, `lg:`) for layouts.
+- **Icons:** Use inline SVGs. Do not use icon fonts or external icon libraries.
+- **Reusable Components:** Use the shared components in `src/UI/Components/Common/`:
+    - `AppButton` — buttons (Variant: filled/outlined/text, Color: primary/secondary/error/success/warning/info)
+    - `AppChip` — badges/tags
+    - `AppAlert` — notifications (Severity: error/warning/success/info)
+    - `AppCard`, `AppCardHeader`, `AppCardContent`, `AppCardActions` — content cards
+    - `AppTextField` — text inputs
+    - `AppNumericField<T>` — numeric inputs
+    - `AppSelect<T>` — dropdowns (uses `<option>` children)
+    - `AppCheckbox` — toggle inputs
+    - `AppAvatar` — identity circles
+    - `AppTooltip` — hover hints
+    - `AppDialog` — modal overlays
+    - `AppTable<T>` — data tables
+    - `AppStepper` — multi-step wizards
+    - `AppDivider` — horizontal separators
+    - `AppSpinner` — loading indicators
+- **Dialogs:** Use `AppDialog` with `Visible` binding and `OnClose` callback. Do not use service-based dialog patterns.
 
 ## Error Handling and Validation
 
 - Implement proper error handling for Blazor pages and API calls.
-- Use logging for error tracking in the backend and consider capturing UI-level errors in Blazor with tools like `ErrorBoundary`.
-- **MudBlazor Validation:** Prefer `<MudForm>` integrated with **FluentValidation**. Use `@bind-Value` on input components to ensure validation state is tracked correctly.
+- Use logging for error tracking in the backend and consider capturing UI-level errors in Blazor with `ErrorBoundary`.
+- Use component-level validation logic (no external validation library required for now).
 
-## Blazor API and Performance Optimization
+## Performance Optimization
 
-- Utilize Blazor server-side or WebAssembly optimally based on the project requirements.
-- **MudTable Optimization:** For large datasets, always use the `ServerData` property in `<MudTable>` to handle pagination, filtering, and sorting on the backend rather than loading all items into memory.
 - Use asynchronous methods (async/await) for API calls or UI actions that could block the main thread.
 - Optimize Razor components by reducing unnecessary renders and using `StateHasChanged()` efficiently.
 - Minimize the component render tree by avoiding re-renders unless necessary, using `ShouldRender()` where appropriate.
 
 ## Caching Strategies
 
-- Implement in-memory caching for frequently used data, especially for Blazor Server apps. Use `IMemoryCache` for lightweight caching solutions.
-- For Blazor WebAssembly, utilize `localStorage` or `sessionStorage` to cache application state between user sessions.
-- Consider Distributed Cache strategies (like Redis) for larger applications.
+- Implement in-memory caching for frequently used data. Use `IMemoryCache` for lightweight caching solutions.
+- For WebView, utilize `localStorage` or `sessionStorage` to cache application state between user sessions.
 
-## State Management Libraries
+## State Management
 
 - Use Blazor's built-in Cascading Parameters and EventCallbacks for basic state sharing.
-- Implement advanced state management solutions using libraries like **Fluxor** when complexity grows.
-- For server-side Blazor, use Scoped Services and the StateContainer pattern to manage state within user sessions.
-
-## API Design and Integration
-
-- Use `HttpClient` or other appropriate services to communicate with external APIs.
-- Implement error handling for API calls using try-catch and provide proper user feedback in the UI using `MudSnackbar` or `MudMessageBox`.
+- Use Scoped Services and the StateContainer pattern (AppState) to manage state within user sessions.
 
 ## Testing and Debugging
 
-- All unit testing and integration testing should be done in Visual Studio Enterprise.
-- **Component Testing:** Use **bUnit** for testing MudBlazor components.
-- Test logic and services using xUnit, NUnit, or MSTest with Moq/NSubstitute for dependencies.
+- Test logic and services using xUnit with Moq/NSubstitute for dependencies.
 - Use browser developer tools and Visual Studio's diagnostics for performance profiling.
 
 ## Security and Authentication
 
 - Implement Authentication and Authorization using ASP.NET Identity or JWT tokens.
 - Use HTTPS for all web communication and ensure proper CORS policies are implemented.
-
-## API Documentation and Swagger
-
-- Use Swagger/OpenAPI for API documentation for backend services.
-- Ensure XML documentation for models and API methods to enhance Swagger output.

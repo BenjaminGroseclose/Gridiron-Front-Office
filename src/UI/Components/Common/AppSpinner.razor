@@ -1,0 +1,23 @@
+<div class="@($"inline-block animate-spin rounded-full border-2 border-current border-t-transparent {SizeClass} {ColorClass} {Class}")"
+	 role="status" aria-label="Loading">
+</div>
+
+@code {
+	[Parameter] public string Size { get; set; } = "md";
+	[Parameter] public string Color { get; set; } = "primary";
+	[Parameter] public string? Class { get; set; }
+
+	private string SizeClass => Size switch
+	{
+		"sm" => "w-5 h-5",
+		"lg" => "w-12 h-12",
+		_ => "w-8 h-8"
+	};
+
+	private string ColorClass => Color switch
+	{
+		"primary" => "text-primary",
+		"frost" => "text-frost",
+		_ => "text-primary"
+	};
+}

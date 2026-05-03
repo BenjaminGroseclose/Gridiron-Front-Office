@@ -1,0 +1,42 @@
+@typeparam TItem
+
+<div class="overflow-x-auto rounded-lg border border-divider">
+	<table class="w-full text-sm text-frost">
+		<thead class="text-xs uppercase text-muted bg-surface/80 border-b border-divider">
+			<tr>
+				@HeaderContent
+			</tr>
+		</thead>
+		<tbody>
+			@if (Items != null)
+			{
+				@foreach (var item in Items)
+				{
+					<tr class="border-b border-divider/50 hover:bg-surface/50 transition-colors cursor-pointer
+							   @(SelectedItem != null && SelectedItem.Equals(item) ? "bg-primary/10" : "")"
+						@onclick="() => HandleItemClick(item)">
+						@if (RowTemplate != null)
+						{
+							@RowTemplate(item)
+						}
+					</tr>
+				}
+			}
+		</tbody>
+	</table>
+</div>
+
+@code {
+	[Parameter] public IEnumerable<TItem>? Items { get; set; }
+	[Parameter] public RenderFragment? HeaderContent { get; set; }
+	[Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
+	[Parameter] public TItem? SelectedItem { get; set; }
+	[Parameter] public EventCallback<TItem> SelectedItemChanged { get; set; }
+	[Parameter] public string? Class { get; set; }
+
+	private async Task HandleItemClick(TItem item)
+	{
+		SelectedItem = item;
+		await SelectedItemChanged.InvokeAsync(item);
+	}
+}

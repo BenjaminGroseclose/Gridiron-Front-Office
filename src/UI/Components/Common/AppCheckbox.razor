@@ -1,0 +1,23 @@
+<label class="@($"inline-flex items-center gap-2 cursor-pointer select-none {Class}")">
+	<input type="checkbox" checked="@Value" @onchange="HandleChange"
+		   class="w-4 h-4 rounded border-divider bg-surface text-primary focus:ring-primary focus:ring-2 accent-primary cursor-pointer" />
+	@if (!string.IsNullOrEmpty(Label))
+	{
+		<span class="text-sm text-frost">@Label</span>
+	}
+	@ChildContent
+</label>
+
+@code {
+	[Parameter] public bool Value { get; set; }
+	[Parameter] public EventCallback<bool> ValueChanged { get; set; }
+	[Parameter] public string? Label { get; set; }
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+	[Parameter] public string? Class { get; set; }
+
+	private async Task HandleChange(ChangeEventArgs e)
+	{
+		Value = (bool)(e.Value ?? false);
+		await ValueChanged.InvokeAsync(Value);
+	}
+}

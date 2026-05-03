@@ -1,0 +1,59 @@
+@if (Visible)
+{
+	<div class="@ComputedClass" role="alert">
+		<div class="flex items-center gap-2 flex-1">
+			<span class="@IconClass">@IconText</span>
+			<span class="flex-1">@ChildContent</span>
+		</div>
+		@if (ShowCloseIcon)
+		{
+			<button class="ml-2 opacity-70 hover:opacity-100 transition-opacity cursor-pointer"
+					@onclick="HandleClose" aria-label="Close">
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+				</svg>
+			</button>
+		}
+	</div>
+}
+
+@code {
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+	[Parameter] public string Severity { get; set; } = "info";
+	[Parameter] public bool ShowCloseIcon { get; set; }
+	[Parameter] public EventCallback CloseIconClicked { get; set; }
+	[Parameter] public string? Class { get; set; }
+	[Parameter] public bool Visible { get; set; } = true;
+
+	private string ComputedClass
+	{
+		get
+		{
+			var colorClasses = Severity switch
+			{
+				"error" => "bg-error/15 text-error border-error/30",
+				"warning" => "bg-warning/15 text-warning border-warning/30",
+				"success" => "bg-success/15 text-success border-success/30",
+				_ => "bg-info/15 text-info border-info/30"
+			};
+
+			return $"flex items-center px-4 py-3 rounded-md border text-sm {colorClasses} {Class}".Trim();
+		}
+	}
+
+	private string IconClass => "text-lg";
+
+	private string IconText => Severity switch
+	{
+		"error" => "✕",
+		"warning" => "⚠",
+		"success" => "✓",
+		_ => "ℹ"
+	};
+
+	private async Task HandleClose()
+	{
+		Visible = false;
+		await CloseIconClicked.InvokeAsync();
+	}
+}

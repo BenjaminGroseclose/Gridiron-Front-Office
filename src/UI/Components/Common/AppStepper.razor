@@ -1,0 +1,124 @@
+<div class="w-full">
+	@* Step indicators *@
+	<nav class="flex items-center mb-8">
+		@for (int i = 0; i < Steps.Count; i++)
+		{
+			var idx = i;
+			<div class="flex items-center @(i < Steps.Count - 1 ? "flex-1" : "")">
+				<div class="flex items-center gap-2">
+					<div class="flex items-center justify-center w-10 h-10 rounded-full border-2 text-sm font-bold transition-all duration-200
+								@(idx < ActiveIndex || IsCompleted
+									? "bg-primary border-primary text-white"
+									: idx == ActiveIndex
+										? "border-primary text-primary"
+										: "border-divider text-muted")">
+						@if (idx < ActiveIndex || IsCompleted)
+						{
+							<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+								<path fill-rule="evenodd"
+									  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+									  clip-rule="evenodd" />
+							</svg>
+						}
+						else
+						{
+							@(idx + 1)
+						}
+					</div>
+					<span class="text-sm font-medium @(idx <= ActiveIndex || IsCompleted ? "text-frost" : "text-muted")">
+						@Steps[idx]
+					</span>
+				</div>
+				@if (i < Steps.Count - 1)
+				{
+					<div class="flex-1 h-0.5 mx-4 transition-colors duration-200 @(idx < ActiveIndex ? "bg-primary" : "bg-divider")">
+					</div>
+				}
+			</div>
+		}
+	</nav>
+
+	@* Content *@
+	<div class="min-h-[200px]">
+		@if (IsCompleted)
+		{
+			@CompletedContent
+		}
+		else
+		{
+			@ChildContent
+		}
+	</div>
+
+	@* Navigation buttons *@
+	@if (!IsCompleted && !HideNavigation)
+	{
+		<div class="flex justify-end gap-3 mt-6 pt-4 border-t border-divider">
+			@if (ActiveIndex > 0)
+			{
+				<AppButton Variant="text" Color="secondary" OnClick="HandlePrevious">Back</AppButton>
+			}
+			<AppButton Color="primary" OnClick="HandleNext">
+				@(ActiveIndex == Steps.Count - 1 ? "Complete" : "Continue")
+			</AppButton>
+		</div>
+	}
+</div>
+
+@code {
+	[Parameter] public List<string> Steps { get; set; } = new();
+	[Parameter] public int ActiveIndex { get; set; }
+	[Parameter] public EventCallback<int> ActiveIndexChanged { get; set; }
+	[Parameter] public bool IsCompleted { get; set; }
+	[Parameter] public EventCallback<bool> IsCompletedChanged { get; set; }
+	[Parameter] public EventCallback<StepChangeEventArgs> OnBeforeNext { get; set; }
+	[Parameter] public RenderFragment? ChildContent { get; set; }
+	[Parameter] public RenderFragment? CompletedContent { get; set; }
+	[Parameter] public bool HideNavigation { get; set; }
+
+	public async Task NextStepAsync()
+	{
+		if (ActiveIndex < Steps.Count - 1)
+		{
+			ActiveIndex++;
+			await ActiveIndexChanged.InvokeAsync(ActiveIndex);
+		}
+		else
+		{
+			IsCompleted = true;
+			await IsCompletedChanged.InvokeAsync(IsCompleted);
+		}
+	}
+
+	private async Task HandleNext()
+	{
+		var args = new StepChangeEventArgs
+		{
+			StepIndex = ActiveIndex,
+			IsComplete = ActiveIndex == Steps.Count - 1
+		};
+
+		await OnBeforeNext.InvokeAsync(args);
+
+		if (!args.Cancel)
+		{
+			await NextStepAsync();
+		}
+	}
+
+	private async Task HandlePrevious()
+	{
+		if (ActiveIndex > 0)
+		{
+			ActiveIndex--;
+			await ActiveIndexChanged.InvokeAsync(ActiveIndex);
+		}
+	}
+
+	public class StepChangeEventArgs
+	{
+		public int StepIndex { get; set; }
+		public bool IsComplete { get; set; }
+		public bool Cancel { get; set; }
+	}
+}
