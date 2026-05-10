@@ -1,4 +1,3 @@
-using System.Reflection.Metadata;
 using GridironFrontOffice.Domain;
 
 namespace GridironFrontOffice.Application.Interfaces;
@@ -6,6 +5,7 @@ namespace GridironFrontOffice.Application.Interfaces;
 public interface IScheduleService
 {
 	Task<Season> GetCurrentSeason();
+	Task<IEnumerable<Week>> GetWeeksForSeason(int seasonID, bool includeGame = false);
 	Task<IEnumerable<Game>> GetSchedule(int seasonID);
 	Task<IEnumerable<Game>> GetScheduleForWeek(int seasonID, int week);
 	Task<IEnumerable<Game>> GetScheduleForTeam(int seasonID, int teamID);

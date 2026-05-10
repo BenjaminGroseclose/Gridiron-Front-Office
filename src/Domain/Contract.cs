@@ -12,8 +12,6 @@ namespace GridironFrontOffice.Domain;
 /// </summary>
 public class Contract : BaseEntity
 {
-	public int ContractID { get; set; }
-
 	/// <summary>
 	/// The ID of the player associated with this contract. This is a foreign key that links to the Player entity, allowing us to identify which player is under this contract.
 	/// </summary>
@@ -78,5 +76,4 @@ public class Contract : BaseEntity
 		return contractYear;
 	}
 
-	public override int ID => ContractID;
 }

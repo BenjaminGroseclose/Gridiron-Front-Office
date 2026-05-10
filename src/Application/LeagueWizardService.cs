@@ -65,7 +65,7 @@ public class LeagueSetupService : ILeagueWizardService
 
 			foreach (var team in allTeams)
 			{
-				var playersToGenerate = await _playerGeneratorService.GeneratePlayersForTeamAsync(team.TeamID, startYear);
+				var playersToGenerate = await _playerGeneratorService.GeneratePlayersForTeamAsync(team.ID, startYear);
 				await _playerRepository.BulkInsertAsync(playersToGenerate);
 			}
 		}
@@ -160,7 +160,7 @@ public class LeagueSetupService : ILeagueWizardService
 
 			_appState.UpdateState(state => state with
 			{
-				UserTeamID = userTeam?.TeamID,
+				UserTeamID = userTeam?.ID,
 				CurrentSeason = season,
 				CurrentSavePath = _gameManager.CurrentDatabasePath,
 				CurrentRoute = "/home",

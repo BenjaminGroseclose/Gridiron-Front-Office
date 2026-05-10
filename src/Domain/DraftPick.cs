@@ -4,8 +4,6 @@ namespace GridironFrontOffice.Domain;
 
 public class DraftPick : BaseEntity
 {
-	public int DraftPickID { get; set; }
-
 	/// <summary>
 	/// The team ID of the team that owns this draft pick.
 	///  This is a foreign key that links to the Team entity, 
@@ -47,5 +45,4 @@ public class DraftPick : BaseEntity
 	/// </summary>
 	public DraftPickType DraftPickType { get; set; }
 
-	public override int ID => this.DraftPickID;
 }

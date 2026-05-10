@@ -3,11 +3,6 @@ namespace GridironFrontOffice.Domain;
 public class TeamSeason : BaseEntity
 {
 	/// <summary>
-	/// The unique identifier for the TeamSeason.
-	/// </summary>
-	public int TeamSeasonID { get; set; }
-
-	/// <summary>
 	/// The ID of the team.
 	/// </summary>
 	public int TeamID { get; set; }
@@ -34,8 +29,4 @@ public class TeamSeason : BaseEntity
 	/// </summary>
 	public int Ties { get; set; }
 
-	public override int ID
-	{
-		get => TeamSeasonID;
-	}
 }

@@ -2,8 +2,6 @@ namespace GridironFrontOffice.Domain;
 
 public class Game : BaseEntity
 {
-	public int GameID { get; set; }
-
 	public int SeasonID { get; set; }
 
 	public int WeekID { get; set; }
@@ -21,9 +19,9 @@ public class Game : BaseEntity
 
 	public DateTime GameDateTime { get; set; }
 
-	public override int ID
-	{
-		get => GameID;
-	}
-
+	// Computed
+	public bool IsCompleted => HomeTeamScore.HasValue && AwayTeamScore.HasValue;
+	public int? WinningTeamID => IsCompleted ? (HomeTeamScore > AwayTeamScore ? HomeTeamID : AwayTeamID) : null;
+	public int? PointDifferential => IsCompleted ? Math.Abs(HomeTeamScore.Value - AwayTeamScore.Value) : null;
+	public Team WinningTeam => IsCompleted ? (HomeTeamScore > AwayTeamScore ? HomeTeam : AwayTeam) : null;
 }

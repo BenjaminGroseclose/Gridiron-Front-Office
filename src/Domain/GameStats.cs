@@ -4,8 +4,6 @@ namespace GridironFrontOffice.Domain;
 
 public class GameStats : BaseEntity
 {
-	public int GameStatsID { get; set; }
-
 	public int GameID { get; set; }
 	public Game Game { get; set; }
 
@@ -31,5 +29,4 @@ public class GameStats : BaseEntity
 	public int Tackles { get; set; }
 	public int FieldGoalsMade { get; set; }
 	public int FieldGoalsAttempted { get; set; }
-	public override int ID => GameStatsID;
 }

@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GridironFrontOffice.Domain;
 using GridironFrontOffice.Framework;
 using GridironFrontOffice.Persistence.Interfaces;
@@ -64,16 +65,32 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 		}
 	}
 
-	public async Task<IEnumerable<T>> GetAllAsync()
+	public async Task<IEnumerable<T>> GetAllAsync(params Expression<Func<T, object>>[] includes)
 	{
 		await using var context = GetDbContext();
-		return await context.Set<T>().AsNoTracking().ToListAsync();
+		IQueryable<T> query = context.Set<T>().AsNoTracking();
+		foreach (var include in includes)
+		{
+			query = query.Include(GetIncludePath(include.Body));
+		}
+		return await query.ToListAsync();
 	}
 
-	public async Task<T?> GetByIDAsync(int entityId)
+	public async Task<T?> GetByIDAsync(int entityId, params Expression<Func<T, object>>[] includes)
 	{
 		await using var context = GetDbContext();
-		return await context.FindAsync<T>(entityId);
+
+		if (includes.Length == 0)
+		{
+			return await context.Set<T>().FindAsync(entityId);
+		}
+
+		IQueryable<T> query = context.Set<T>();
+		foreach (var include in includes)
+		{
+			query = query.Include(GetIncludePath(include.Body));
+		}
+		return await query.FirstOrDefaultAsync(e => e.ID == entityId);
 	}
 
 	public async Task<int> InsertAsync(T entity)
@@ -122,5 +139,19 @@ public class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
 		}
 
 		return _databaseConnectionFactory.CreateDbContext();
+	}
+
+	private static string GetIncludePath(Expression expression)
+	{
+		if (expression is UnaryExpression unary && unary.NodeType == ExpressionType.Convert)
+			expression = unary.Operand;
+
+		if (expression is MemberExpression member)
+		{
+			var parent = member.Expression is ParameterExpression ? null : GetIncludePath(member.Expression!);
+			return parent != null ? $"{parent}.{member.Member.Name}" : member.Member.Name;
+		}
+
+		throw new InvalidOperationException($"Expression does not represent a valid property access for Include. {expression}");
 	}
 }

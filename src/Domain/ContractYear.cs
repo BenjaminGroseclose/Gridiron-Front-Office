@@ -5,8 +5,6 @@ namespace GridironFrontOffice.Domain;
 
 public class ContractYear : BaseEntity
 {
-	public int ContractYearID { get; set; }
-
 	public int ContractID { get; set; }
 	public Contract Contract { get; set; }
 
@@ -56,7 +54,7 @@ public class ContractYear : BaseEntity
 
 	public bool IsCurrent { get; set; }
 
-	public override int ID => ContractYearID;
+
 
 	public void ExerciseOption()
 	{

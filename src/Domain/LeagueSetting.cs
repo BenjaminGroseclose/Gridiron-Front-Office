@@ -4,8 +4,6 @@ namespace GridironFrontOffice.Domain;
 
 public class LeagueSetting : BaseEntity
 {
-	public int LeagueSettingID { get; set; }
-
 	/// <summary>
 	/// The name of the league. Should match the filename of the database.
 	/// This also should change year over year
@@ -69,8 +67,4 @@ public class LeagueSetting : BaseEntity
 
 	public double SalaryFloor { get { return SalaryCap * 0.75; } }
 
-	public override int ID
-	{
-		get => LeagueSettingID;
-	}
 }

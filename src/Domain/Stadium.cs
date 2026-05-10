@@ -2,7 +2,6 @@ namespace GridironFrontOffice.Domain;
 
 public class Stadium : BaseEntity
 {
-	public int StadiumID { get; set; }
 	public string? Name { get; set; }
 
 	/// <summary>
@@ -14,6 +13,4 @@ public class Stadium : BaseEntity
 	/// The location of the stadium. eg "Detroit, MI"
 	/// </summary>
 	public string? Location { get; set; }
-
-	public override int ID => StadiumID;
 }

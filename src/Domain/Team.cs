@@ -4,8 +4,6 @@ namespace GridironFrontOffice.Domain;
 
 public class Team : BaseEntity
 {
-	public int TeamID { get; set; }
-
 	/// <summary>
 	/// The name of the team. eg "Lions"
 	/// </summary>
@@ -80,8 +78,6 @@ public class Team : BaseEntity
 	public TeamStatus Status { get; set; }
 
 	// Computed properties
-	public override int ID => TeamID;
-
 	public string DisplayName => $"{City} {Name}";
 	public string ConferenceAndDivision
 	{

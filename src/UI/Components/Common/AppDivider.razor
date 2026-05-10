@@ -1,5 +1,13 @@
-<div class="@($"border-t border-divider my-4 {Class}")"></div>
+@if (Vertical)
+{
+	<div class="@($"border-l border-divider mx-4 self-stretch {Class}")"></div>
+}
+else
+{
+	<div class="@($"border-t border-divider my-4 {Class}")"></div>
+}
 
 @code {
 	[Parameter] public string? Class { get; set; }
+	[Parameter] public bool Vertical { get; set; } = false;
 }

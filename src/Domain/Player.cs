@@ -16,8 +16,6 @@ namespace GridironFrontOffice.Domain;
 /// </summary>
 public class Player : BaseEntity
 {
-	public int PlayerID { get; set; }
-
 	public string FirstName { get; set; } = string.Empty;
 	public string LastName { get; set; } = string.Empty;
 
@@ -185,8 +183,4 @@ public class Player : BaseEntity
 	[NotMapped]
 	public string FullName => $"{FirstName} {LastName}";
 
-	public override int ID
-	{
-		get => PlayerID;
-	}
 }

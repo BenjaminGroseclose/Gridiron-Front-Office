@@ -6,16 +6,10 @@ namespace GridironFrontOffice.Domain;
 public class Season : BaseEntity
 {
 	/// <summary>
-	/// The unique identifier for the season.
-	/// This should be the year of the season (e.g. 2024 for the 2024 season).
-	/// </summary>
-	public int SeasonID { get; set; }
-
-	/// <summary>
 	/// The year the season takes place in.
 	/// </summary>
 	[NotMapped]
-	public int Year => SeasonID;
+	public int Year => ID;
 
 	/// <summary>
 	/// The status of the season.
@@ -39,8 +33,4 @@ public class Season : BaseEntity
 	/// </summary>
 	public DateOnly EndDate { get; set; }
 
-	public override int ID
-	{
-		get => SeasonID;
-	}
 }

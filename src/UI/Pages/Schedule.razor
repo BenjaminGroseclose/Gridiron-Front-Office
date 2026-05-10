@@ -12,7 +12,7 @@
 	<AppSelect TValue="int" Value="selectedTeamID" ValueChanged="OnTeamChanged" Label="Select Team" Class="w-64">
 		@foreach (var team in teams)
 		{
-			<option value="@team.TeamID">@team.DisplayName</option>
+			<option value="@team.ID">@team.DisplayName</option>
 		}
 	</AppSelect>
 </div>
@@ -25,28 +25,46 @@
 	}
 	else
 	{
-		<div>
-			<div class="grid grid-cols-5 gap-4 font-semibold text-sm text-muted border-b border-divider pb-2">
-				<div>Date</div>
-				<div>Opponent</div>
-				<div>Location</div>
-				<div>Result</div>
-				<div>Score</div>
-			</div>
+		@foreach (var week in weeks)
+		{
+			var game = schedule.FirstOrDefault(g => g.WeekID == week.ID);
+			var isByeWeek = game == null;
+			var opponentTeam = game?.HomeTeamID == selectedTeamID ? game.AwayTeam : game?.HomeTeam;
 
-			@foreach (var game in schedule)
+			@if (isByeWeek)
 			{
-				var isHome = game.HomeTeamID == selectedTeamID;
-				var opponent = isHome ? game.AwayTeam : game.HomeTeam;
-				var location = isHome ? "Home" : "Away";
-
-				<div class="grid grid-cols-5 gap-4 items-center py-2 border-b border-divider">
-					<div>@game.GameDateTime.ToString("MMMM dd, yyyy")</div>
-					<div>@opponent.DisplayName</div>
-					<div>@location</div>
+				<div class="p-4 border-2 flex items-center gap-4 rounded-xl h-16">
+					<div> 
+						<span>Week</span>
+						<span class="font-bold text-lg">@week.WeekNumber.ToString("D2")</span>
+					</div>
+					<AppDivider Vertical="true" />
+					<div class="flex items-center gap-2">
+						<div class="text-sm text-muted">Bye Week</div>
+					</div>
 				</div>
 			}
-		</div>
+			else
+			{
+			<div class="pa-4 border-2 flex items-center gap-4 rounded-xl h-16">
+				<div> 
+					<span>Week</span>
+					<span class="font-bold text-lg">@week.WeekNumber.ToString("D2")</span>
+				</div>
+				<AppDivider Vertical="true" />
+				<div class="flex items-center gap-2">
+					<AppAvatar Size="md" Style="@opponentTeam?.GetTeamAvatarStyle()" Bordered="true">
+						@opponentTeam?.Abbreviation
+					</AppAvatar>
+					<div>
+						<div class="text-sm text-muted">vs @opponentTeam?.DisplayName</div>
+						<div class="font-bold">@game?.GameDateTime.ToString("dddd, h:mm tt")</div>
+					</div>
+				</div>
+			</div>
+			}
+		}
+
 	}
 </div>
 
@@ -56,24 +74,26 @@
     private int selectedTeamID;
     private IEnumerable<Team> teams;
     private IEnumerable<Game> schedule;
+		private IEnumerable<Week> weeks;
     private Season currentSeason;
 
     protected override async Task OnInitializedAsync()
     {
         teams = await TeamService.GetAllTeamsAsync();
         currentSeason = AppState.CurrentState.CurrentSeason ?? throw new DomainException("Current season is not set in AppState.");
-				selectedTeamID = AppState.CurrentState.UserTeamID ?? teams.FirstOrDefault()?.TeamID ?? 0;
+				selectedTeamID = AppState.CurrentState.UserTeamID ?? teams.FirstOrDefault()?.ID ?? 0;
+				weeks = await ScheduleService.GetWeeksForSeason(currentSeason.ID);
 
 				if (selectedTeamID != 0)
 				{
-						schedule = await ScheduleService.GetScheduleForTeam(currentSeason.SeasonID, selectedTeamID);
+						schedule = await ScheduleService.GetScheduleForTeam(currentSeason.ID, selectedTeamID);
 				}
     }
 
     private async Task OnTeamChanged(int teamID)
     {
 		selectedTeamID = teamID;
-		schedule = await ScheduleService.GetScheduleForTeam(currentSeason.SeasonID, selectedTeamID);
+		schedule = await ScheduleService.GetScheduleForTeam(currentSeason.ID, selectedTeamID);
 
 	}
 }

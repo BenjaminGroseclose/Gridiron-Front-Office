@@ -10,7 +10,6 @@ namespace GridironFrontOffice.Domain;
 /// </summary>
 public class Draft : BaseEntity
 {
-	public int DraftID { get; set; }
 	public int SeasonID { get; set; }
 	public Season Season { get; set; }
 
@@ -21,5 +20,4 @@ public class Draft : BaseEntity
 	public DateOnly DraftDate { get; set; }
 	public string Location { get; set; }
 
-	public override int ID => this.DraftID;
 }

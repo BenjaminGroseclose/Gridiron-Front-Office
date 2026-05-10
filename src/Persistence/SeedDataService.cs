@@ -156,7 +156,7 @@ public class SeedDataService : ISeedDataService
 
 			seasons.Add(new Season
 			{
-				SeasonID = seasonID,
+				ID = seasonID,
 				Status = isArchived ? SeasonStatus.Archived : SeasonStatus.NotStarted,
 				IsCurrentSeason = false,
 				StartDate = new DateOnly(seasonID, 3, 1), // March 1st of the season year
@@ -185,7 +185,7 @@ public class SeedDataService : ISeedDataService
 						SeasonID = i,
 						Round = round,
 						DraftPickType = DraftPickType.Regular,
-						TeamID = team.TeamID,
+						TeamID = team.ID,
 					});
 				}
 			}

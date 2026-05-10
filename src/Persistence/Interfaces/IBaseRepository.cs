@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using GridironFrontOffice.Domain;
 
 namespace GridironFrontOffice.Persistence.Interfaces;
@@ -11,14 +12,16 @@ public interface IBaseRepository<T> where T : BaseEntity
 	/// Gets an entity by its ID.
 	/// </summary>
 	/// <param name="entityID">The entity ID.</param>
+	/// <param name="includes">Optional navigation properties to include.</param>
 	/// <returns>The entity if found, otherwise null.</returns>
-	Task<T?> GetByIDAsync(int entityID);
+	Task<T?> GetByIDAsync(int entityID, params Expression<Func<T, object>>[] includes);
 
 	/// <summary>
 	/// Gets all entities.
 	/// </summary>
+	/// <param name="includes">Optional navigation properties to include.</param>
 	/// <returns>A collection of all entities.</returns>
-	Task<IEnumerable<T>> GetAllAsync();
+	Task<IEnumerable<T>> GetAllAsync(params Expression<Func<T, object>>[] includes);
 
 	/// <summary>
 	/// Inserts a new entity.

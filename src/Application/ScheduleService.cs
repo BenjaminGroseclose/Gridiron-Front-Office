@@ -47,6 +47,33 @@ public class ScheduleService : IScheduleService
 		return currentSeason;
 	}
 
+	public async Task<IEnumerable<Week>> GetWeeksForSeason(int seasonID, bool includeGame = false)
+	{
+		var weeks = includeGame
+			? await _weekRepository.GetAllAsync(w => w.Games)
+			: await _weekRepository.GetAllAsync();
+
+		return weeks.Where(w => w.SeasonID == seasonID).ToList();
+	}
+
+	public async Task<IEnumerable<Game>> GetSchedule(int seasonID)
+	{
+		var games = await _gameRepository.GetAllAsync(s => s.AwayTeam, s => s.HomeTeam, s => s.Week);
+		return games.Where(g => g.SeasonID == seasonID).ToList();
+	}
+
+	public async Task<IEnumerable<Game>> GetScheduleForTeam(int seasonID, int teamID)
+	{
+		var games = await _gameRepository.GetAllAsync(s => s.AwayTeam, s => s.HomeTeam, s => s.Week);
+		return games.Where(g => g.SeasonID == seasonID && (g.HomeTeamID == teamID || g.AwayTeamID == teamID)).OrderBy(g => g.GameDateTime).ToList();
+	}
+
+	public async Task<IEnumerable<Game>> GetScheduleForWeek(int seasonID, int weekID)
+	{
+		var games = await _gameRepository.GetAllAsync(s => s.AwayTeam, s => s.HomeTeam, s => s.Week);
+		return games.Where(g => g.SeasonID == seasonID && g.WeekID == weekID).OrderBy(g => g.GameDateTime).ToList();
+	}
+
 	public async Task<bool> StartSeason(int seasonID, int numberOfWeeks)
 	{
 		var season = await _seasonRepository.GetByIDAsync(seasonID);
@@ -82,6 +109,7 @@ public class ScheduleService : IScheduleService
 			{
 				SeasonID = seasonID,
 				Name = $"Week {weekNum}",
+				WeekNumber = weekNum,
 				Type = WeekType.RegularSeason
 			};
 
@@ -102,7 +130,7 @@ public class ScheduleService : IScheduleService
 
 		var weeks = (await _weekRepository.GetAllAsync())
 			.Where(w => w.SeasonID == seasonID)
-			.OrderBy(w => w.WeekID)
+			.OrderBy(w => w.ID)
 			.ToList();
 
 		var teams = (await _teamService.GetAllTeamsAsync()).ToList();
@@ -126,7 +154,7 @@ public class ScheduleService : IScheduleService
 		{
 			var matchups = GenerateOpponents(team, teams, seasonID, divisionalRankings, divisionTeamsByRank);
 
-			_logger.LogInformation("Generated {NumMatchups} matchups for team {TeamID} in season {SeasonID}", matchups.Count, team.TeamID, seasonID);
+			_logger.LogInformation("Generated {NumMatchups} matchups for team {TeamID} in season {SeasonID}", matchups.Count, team.ID, seasonID);
 			totalMatchups += matchups.Count;
 
 			foreach (var matchup in matchups)
@@ -151,7 +179,7 @@ public class ScheduleService : IScheduleService
 		var homeCount = new Dictionary<int, int>();
 		foreach (var team in teams)
 		{
-			homeCount[team.TeamID] = 0;
+			homeCount[team.ID] = 0;
 		}
 
 		var rawGames = new List<Game>();
@@ -201,24 +229,6 @@ public class ScheduleService : IScheduleService
 		return true;
 	}
 
-	public async Task<IEnumerable<Game>> GetSchedule(int seasonID)
-	{
-		var games = await _gameRepository.GetAllAsync();
-		return games.Where(g => g.SeasonID == seasonID).ToList();
-	}
-
-	public async Task<IEnumerable<Game>> GetScheduleForTeam(int seasonID, int teamID)
-	{
-		var games = await _gameRepository.GetAllAsync();
-		return games.Where(g => g.SeasonID == seasonID && (g.HomeTeamID == teamID || g.AwayTeamID == teamID)).OrderBy(g => g.GameDateTime).ToList();
-	}
-
-	public async Task<IEnumerable<Game>> GetScheduleForWeek(int seasonID, int weekID)
-	{
-		var games = await _gameRepository.GetAllAsync();
-		return games.Where(g => g.SeasonID == seasonID && g.WeekID == weekID).OrderBy(g => g.GameDateTime).ToList();
-	}
-
 	// ---------------------------------------------------------------------------
 	// Rank lookup helpers
 	// ---------------------------------------------------------------------------
@@ -246,7 +256,7 @@ public class ScheduleService : IScheduleService
 					// Standings are already ranked 1-based by CalculateStandings
 					foreach (var standing in standings)
 					{
-						rankings[standing.Team.TeamID] = standing.Ranking;
+						rankings[standing.Team.ID] = standing.Ranking;
 					}
 				}
 				else
@@ -261,7 +271,7 @@ public class ScheduleService : IScheduleService
 
 					for (int i = 0; i < shuffled.Count; i++)
 					{
-						rankings[shuffled[i].TeamID] = i + 1;
+						rankings[shuffled[i].ID] = i + 1;
 					}
 				}
 			}
@@ -280,7 +290,7 @@ public class ScheduleService : IScheduleService
 			.GroupBy(t => (t.Conference, t.Division))
 			.ToDictionary(
 				g => g.Key,
-				g => g.OrderBy(t => divisionalRankings.GetValueOrDefault(t.TeamID, int.MaxValue)).ToList()
+				g => g.OrderBy(t => divisionalRankings.GetValueOrDefault(t.ID, int.MaxValue)).ToList()
 			);
 	}
 
@@ -296,19 +306,19 @@ public class ScheduleService : IScheduleService
 		Dictionary<(Conference, Division), List<Team>> divisionTeamsByRank)
 	{
 		var matchups = new List<Matchup>();
-		int myRank = divisionalRankings.GetValueOrDefault(team.TeamID, 1);
+		int myRank = divisionalRankings.GetValueOrDefault(team.ID, 1);
 
 		// 1. Divisional matchups — 3 opponents, each played twice (home + away) = 6 games
 		var divisionalOpponents = allTeams
-			.Where(t => t.Division == team.Division && t.Conference == team.Conference && t.TeamID != team.TeamID)
+			.Where(t => t.Division == team.Division && t.Conference == team.Conference && t.ID != team.ID)
 			.ToList();
 
 		foreach (var opponent in divisionalOpponents)
 		{
-			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.Divisional });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.ID, opponent.ID }, Type = MatchupType.Divisional });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumDivisional} divisional matchups for team {TeamID} in season {SeasonID}", divisionalOpponents.Count, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumDivisional} divisional matchups for team {TeamID} in season {SeasonID}", divisionalOpponents.Count, team.ID, season);
 
 		// 2. Intra-conference rotation — all 4 teams from one same-conf division = 4 games
 		Division intraRotation = GetIntraRotation(team.Division, season);
@@ -318,10 +328,10 @@ public class ScheduleService : IScheduleService
 
 		foreach (var opponent in intraConferenceOpponents)
 		{
-			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.IntraConference });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.ID, opponent.ID }, Type = MatchupType.IntraConference });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumIntraConference} intra-conference matchups for team {TeamID} in season {SeasonID}", intraConferenceOpponents.Count, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumIntraConference} intra-conference matchups for team {TeamID} in season {SeasonID}", intraConferenceOpponents.Count, team.ID, season);
 
 		// 3. Inter-conference rotation — all 4 teams from one opposite-conf division = 4 games
 		Division interRotation = GetInterRotation(team.Division, season);
@@ -331,10 +341,10 @@ public class ScheduleService : IScheduleService
 
 		foreach (var opponent in interConferenceOpponents)
 		{
-			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.InterConference });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.ID, opponent.ID }, Type = MatchupType.InterConference });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumInterConference} inter-conference matchups for team {TeamID} in season {SeasonID}", interConferenceOpponents.Count, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumInterConference} inter-conference matchups for team {TeamID} in season {SeasonID}", interConferenceOpponents.Count, team.ID, season);
 
 		// 4. Same-rank intra-conference — 1 game each from the 2 remaining same-conf divisions = 2 games
 		var allDivisions = new[] { Division.North, Division.South, Division.East, Division.West };
@@ -352,10 +362,10 @@ public class ScheduleService : IScheduleService
 			int rankIndex = Math.Min(myRank - 1, rankList.Count - 1);
 			var opponent = rankList[rankIndex];
 
-			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, opponent.TeamID }, Type = MatchupType.IntraConference });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.ID, opponent.ID }, Type = MatchupType.IntraConference });
 		}
 
-		_logger.LogInformation("Matchup Count: Added {NumSameRankIntraConference} same-rank intra-conference matchups for team {TeamID} in season {SeasonID}", remainingIntraDivisions.Count, team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added {NumSameRankIntraConference} same-rank intra-conference matchups for team {TeamID} in season {SeasonID}", remainingIntraDivisions.Count, team.ID, season);
 
 		// 5. 17th game — same rank, opposite conference, using explicit symmetric rotation
 		Division seventeenthDiv = GetSeventeenthGameRotation(team.Division, season);
@@ -366,10 +376,10 @@ public class ScheduleService : IScheduleService
 			int rankIndex = Math.Min(myRank - 1, seventeenthRankList.Count - 1);
 			var seventeenth = seventeenthRankList[rankIndex];
 
-			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.TeamID, seventeenth.TeamID }, Type = MatchupType.SameRankInterConference });
+			matchups.Add(new Matchup { TeamsInvolved = new HashSet<int> { team.ID, seventeenth.ID }, Type = MatchupType.SameRankInterConference });
 		}
 
-		_logger.LogInformation("Matchup Count: Added 17th game (same-rank, opposite conference) for team {TeamID} in season {SeasonID}", team.TeamID, season);
+		_logger.LogInformation("Matchup Count: Added 17th game (same-rank, opposite conference) for team {TeamID} in season {SeasonID}", team.ID, season);
 
 		return matchups;
 	}
@@ -396,26 +406,26 @@ public class ScheduleService : IScheduleService
 			.ThenBy(t => t.Division)
 			.ToList();
 
-		_logger.LogInformation("Assigning total number of games {NumGames} to weeks for season {SeasonID}. Distributing byes for {NumTeams} teams across bye weeks {ByeWeeks}.", games.Count, season.SeasonID, teams.Count, string.Join(", ", BYE_WEEKS));
+		_logger.LogInformation("Assigning total number of games {NumGames} to weeks for season {SeasonID}. Distributing byes for {NumTeams} teams across bye weeks {ByeWeeks}.", games.Count, season.ID, teams.Count, string.Join(", ", BYE_WEEKS));
 
 		for (int i = 0; i < teamsInByeOrder.Count; i++)
 		{
 			int week = BYE_WEEKS[i % BYE_WEEKS.Length];
-			byeWeek[teamsInByeOrder[i].TeamID] = week;
+			byeWeek[teamsInByeOrder[i].ID] = week;
 		}
 
 		// --- Shuffle for variety (seeded for determinism per season) ---
-		var rng = new Random(season.SeasonID);
+		var rng = new Random(season.ID);
 		var shuffled = games.OrderBy(_ => rng.Next()).ToList();
 		var seasonStartDate = season.RegularSeasonStartDate;
 		var assignedGames = new List<Game>();
 
-		_logger.LogInformation("Assigning {NumGames} games to weeks for season {SeasonID} starting on {SeasonStartDate:d}", shuffled.Count, season.SeasonID, seasonStartDate);
+		_logger.LogInformation("Assigning {NumGames} games to weeks for season {SeasonID} starting on {SeasonStartDate:d}", shuffled.Count, season.ID, seasonStartDate);
 
 		// Logic: Go week by week and assign game that fits that week.
 		foreach (var week in weeks)
 		{
-			_logger.LogInformation("Assigning games for week {WeekID} of season {SeasonID}", week.WeekID, season.SeasonID);
+			_logger.LogInformation("Assigning games for week {WeekID} of season {SeasonID}", week.ID, season.ID);
 			var teamsAssignedThisWeek = new HashSet<int>();
 			var assignedGamesThisWeek = new List<Game>();
 
@@ -427,8 +437,8 @@ public class ScheduleService : IScheduleService
 					continue; // This game can't be scheduled this week since one of the teams is already playing
 				}
 
-				bool homeOnBye = byeWeek.TryGetValue(game.HomeTeamID, out int homeBye) && homeBye == week.WeekID;
-				bool awayOnBye = byeWeek.TryGetValue(game.AwayTeamID, out int awayBye) && awayBye == week.WeekID;
+				bool homeOnBye = byeWeek.TryGetValue(game.HomeTeamID, out int homeBye) && homeBye == week.ID;
+				bool awayOnBye = byeWeek.TryGetValue(game.AwayTeamID, out int awayBye) && awayBye == week.ID;
 
 				if (homeOnBye || awayOnBye)
 				{
@@ -436,11 +446,11 @@ public class ScheduleService : IScheduleService
 				}
 
 				// Assign this game to the current week
-				game.WeekID = week.WeekID;
+				game.WeekID = week.ID;
 
 				// TODO: Vary game times and days for more realism
 				// Schedule games on Sundays at 1:00 PM
-				var gameDateTime = seasonStartDate.AddDays((week.WeekID - 1) * 7).ToDateTime(new TimeOnly(13, 0));
+				var gameDateTime = seasonStartDate.AddDays((week.ID - 1) * 7).ToDateTime(new TimeOnly(13, 0));
 
 				game.GameDateTime = gameDateTime;
 				teamsAssignedThisWeek.Add(game.HomeTeamID);
@@ -448,21 +458,21 @@ public class ScheduleService : IScheduleService
 				assignedGamesThisWeek.Add(game);
 				assignedGames.Add(game);
 			}
-			_logger.LogInformation("Assigned {NumGames} games to week {WeekID} of season {SeasonID}", assignedGamesThisWeek.Count, week.WeekID, season.SeasonID);
+			_logger.LogInformation("Assigned {NumGames} games to week {WeekID} of season {SeasonID}", assignedGamesThisWeek.Count, week.ID, season.ID);
 
 			shuffled = shuffled.Except(assignedGamesThisWeek).ToList(); // Remove assigned games from the pool
 
-			_logger.LogInformation("Completed week {WeekID} assignments for season {SeasonID}", week.WeekID, season.SeasonID);
+			_logger.LogInformation("Completed week {WeekID} assignments for season {SeasonID}", week.ID, season.ID);
 		}
 
 		var unassignedGames = shuffled.Count;
 		if (unassignedGames > 0)
 		{
-			_logger.LogWarning("{UnassignedGames} games could not be assigned to weeks for season {SeasonID}. This indicates a problem with the scheduling algorithm.", unassignedGames, season.SeasonID);
+			_logger.LogWarning("{UnassignedGames} games could not be assigned to weeks for season {SeasonID}. This indicates a problem with the scheduling algorithm.", unassignedGames, season.ID);
 		}
 		else
 		{
-			_logger.LogInformation("All games successfully assigned to weeks for season {SeasonID}", season.SeasonID);
+			_logger.LogInformation("All games successfully assigned to weeks for season {SeasonID}", season.ID);
 		}
 
 		return assignedGames;

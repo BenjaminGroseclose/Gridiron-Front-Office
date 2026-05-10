@@ -364,7 +364,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 			contract = new Contract
 			{
-				PlayerID = player.PlayerID,
+				PlayerID = player.ID,
 				ContractStatus = ContractStatus.Active,
 				ContractType = ContractType.Rookie,
 				StartYear = rookieContractStartYear,
@@ -398,7 +398,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 			contract = new Contract
 			{
-				PlayerID = player.PlayerID,
+				PlayerID = player.ID,
 				ContractStatus = ContractStatus.Active,
 				ContractType = ContractType.Rookie,
 				StartYear = rookieContractStartYear,
@@ -448,7 +448,7 @@ public class PlayerGeneratorService : IPlayerGeneratorService
 
 			contract = new Contract
 			{
-				PlayerID = player.PlayerID,
+				PlayerID = player.ID,
 				ContractStatus = ContractStatus.Active,
 				ContractType = ContractType.Veteran,
 				StartYear = randomStartYear,
