@@ -9,91 +9,158 @@
 <div class="flex items-center justify-between mb-6">
 	<h2 class="text-2xl font-bold text-frost">Schedule</h2>
 
-	<AppSelect TValue="int" Value="selectedTeamID" ValueChanged="OnTeamChanged" Label="Select Team" Class="w-64">
-		@foreach (var team in teams)
-		{
-			<option value="@team.ID">@team.DisplayName</option>
-		}
-	</AppSelect>
-</div>
-
-<div class="flex flex-col gap-4">
-
-	@if (schedule == null || !schedule.Any()) 
+	@if (activeTab == "Per Team")
 	{
-			<p class="text-muted">No schedule available for the selected team.</p>
+		<AppSelect TValue="int" Value="selectedTeamID" ValueChanged="OnTeamChanged" Class="w-64">
+			@foreach (var team in teams)
+			{
+				<option value="@team.ID">@team.DisplayName</option>
+			}
+		</AppSelect>
 	}
 	else
 	{
-		@foreach (var week in weeks)
-		{
-			var game = schedule.FirstOrDefault(g => g.WeekID == week.ID);
-			var isByeWeek = game == null;
-			var opponentTeam = game?.HomeTeamID == selectedTeamID ? game.AwayTeam : game?.HomeTeam;
-
-			@if (isByeWeek)
+		<AppSelect TValue="int" Value="selectedWeekID" ValueChanged="OnWeekChanged" Class="w-64">
+			@foreach (var week in weeks)
 			{
-				<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16">
-					<div> 
-						<span>Week</span>
-						<span class="font-bold text-lg">@week.WeekNumber.ToString("D2")</span>
-					</div>
-					<AppDivider Vertical="true" />
-					<div class="flex items-center gap-2">
-						<div class="text-sm text-muted">Bye Week</div>
-					</div>
-				</div>
+				<option value="@week.ID">@week.Name</option>
 			}
-			else
-			{
-			<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16">
-				<div> 
-					<span>Week</span>
-					<span class="font-bold text-lg">@week.WeekNumber.ToString("D2")</span>
-				</div>
-				<AppDivider Vertical="true" />
-				<div class="flex items-center gap-2">
-					<AppAvatar Size="md" Style="@opponentTeam?.GetTeamAvatarStyle()" Bordered="true">
-						@opponentTeam?.Abbreviation
-					</AppAvatar>
-					<div>
-						<div class="text-sm text-muted">vs @opponentTeam?.DisplayName</div>
-						<div class="font-bold">@game?.GameDateTime.ToString("dddd, h:mm tt")</div>
-					</div>
-				</div>
-			</div>
-			}
-		}
-
+		</AppSelect>
 	}
 </div>
 
+<AppTabs Tabs="@tabs" ActiveTab="@activeTab" ActiveTabChanged="OnTabChanged" Class="mb-4" />
 
-    @code {
+@if (activeTab == "Per Team")
+{
+	<div class="flex flex-col gap-4">
+		@if (schedule == null || !schedule.Any())
+		{
+			<p class="text-muted">No schedule available for the selected team.</p>
+		}
+		else
+		{
+			@foreach (var week in weeks)
+			{
+				var game = schedule.FirstOrDefault(g => g.WeekID == week.ID);
+				var isByeWeek = game == null;
+				var opponentTeam = game?.HomeTeamID == selectedTeamID ? game.AwayTeam : game?.HomeTeam;
 
-    private int selectedTeamID;
-    private IEnumerable<Team> teams;
-    private IEnumerable<Game> schedule;
-		private IEnumerable<Week> weeks;
-    private Season currentSeason;
-
-    protected override async Task OnInitializedAsync()
-    {
-        teams = await TeamService.GetAllTeamsAsync();
-        currentSeason = AppState.CurrentState.CurrentSeason ?? throw new DomainException("Current season is not set in AppState.");
-				selectedTeamID = AppState.CurrentState.UserTeamID ?? teams.FirstOrDefault()?.ID ?? 0;
-				weeks = await ScheduleService.GetWeeksForSeason(currentSeason.ID);
-
-				if (selectedTeamID != 0)
+				@if (isByeWeek)
 				{
-						schedule = await ScheduleService.GetScheduleForTeam(currentSeason.ID, selectedTeamID);
+					<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16">
+						<div>
+							<span>Week</span>
+							<span class="font-bold text-lg">@week.WeekNumber.ToString("D2")</span>
+						</div>
+						<AppDivider Vertical="true" />
+						<div class="flex items-center gap-2">
+							<div class="text-sm text-muted">Bye Week</div>
+						</div>
+					</div>
 				}
-    }
+				else
+				{
+					<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16">
+						<div>
+							<span>Week</span>
+							<span class="font-bold text-lg">@week.WeekNumber.ToString("D2")</span>
+						</div>
+						<AppDivider Vertical="true" />
+						<div class="flex items-center gap-2">
+							<AppAvatar Size="md" Style="@opponentTeam?.GetTeamAvatarStyle()" Bordered="true">
+								@opponentTeam?.Abbreviation
+							</AppAvatar>
+							<div>
+								<div class="text-sm text-muted">vs @opponentTeam?.DisplayName</div>
+								<div class="font-bold">@game?.GameDateTime.ToString("dddd, h:mm tt")</div>
+							</div>
+						</div>
+					</div>
+				}
+			}
+		}
+	</div>
+}
+else
+{
+	<div class="flex flex-col gap-4">
+		@if (weekGames == null || !weekGames.Any())
+		{
+			<p class="text-muted">No games scheduled for this week.</p>
+		}
+		else
+		{
+			@foreach (var game in weekGames)
+			{
+				<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16">
+					<div class="flex items-center gap-2">
+						<AppAvatar Size="md" Style="@game.AwayTeam?.GetTeamAvatarStyle()" Bordered="true">
+							@game.AwayTeam?.Abbreviation
+						</AppAvatar>
+						<span class="text-sm text-muted">@game.AwayTeam?.Abbreviation</span>
+					</div>
+					<span class="text-muted text-sm">@@</span>
+					<div class="flex items-center gap-2">
+						<AppAvatar Size="md" Style="@game.HomeTeam?.GetTeamAvatarStyle()" Bordered="true">
+							@game.HomeTeam?.Abbreviation
+						</AppAvatar>
+						<span class="text-sm text-muted">@game.HomeTeam?.Abbreviation</span>
+					</div>
+					<AppDivider Vertical="true" />
+					<div class="text-sm font-bold">@game.GameDateTime.ToString("dddd, h:mm tt")</div>
+				</div>
+			}
+		}
+	</div>
+}
 
-    private async Task OnTeamChanged(int teamID)
-    {
+@code {
+
+	private readonly List<string> tabs = new() { "Per Team", "NFL" };
+	private string activeTab = "Per Team";
+
+	private int selectedTeamID;
+	private int selectedWeekID;
+	private IEnumerable<Team> teams;
+	private IEnumerable<Game> schedule;
+	private IEnumerable<Game> weekGames;
+	private IEnumerable<Week> weeks;
+	private Season currentSeason;
+
+	protected override async Task OnInitializedAsync()
+	{
+		teams = await TeamService.GetAllTeamsAsync();
+		currentSeason = AppState.CurrentState.CurrentSeason ?? throw new DomainException("Current season is not set in AppState.");
+		selectedTeamID = AppState.CurrentState.UserTeamID ?? teams.FirstOrDefault()?.ID ?? 0;
+		weeks = await ScheduleService.GetWeeksForSeason(currentSeason.ID);
+		selectedWeekID = weeks.FirstOrDefault()?.ID ?? 0;
+
+		if (selectedTeamID != 0)
+		{
+			schedule = await ScheduleService.GetScheduleForTeam(currentSeason.ID, selectedTeamID);
+		}
+	}
+
+	private async Task OnTabChanged(string tab)
+	{
+		activeTab = tab;
+
+		if (tab == "NFL" && selectedWeekID != 0)
+		{
+			weekGames = await ScheduleService.GetScheduleForWeek(currentSeason.ID, selectedWeekID);
+		}
+	}
+
+	private async Task OnTeamChanged(int teamID)
+	{
 		selectedTeamID = teamID;
 		schedule = await ScheduleService.GetScheduleForTeam(currentSeason.ID, selectedTeamID);
+	}
 
+	private async Task OnWeekChanged(int weekID)
+	{
+		selectedWeekID = weekID;
+		weekGames = await ScheduleService.GetScheduleForWeek(currentSeason.ID, selectedWeekID);
 	}
 }

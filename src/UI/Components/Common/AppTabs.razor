@@ -1,0 +1,31 @@
+<div class="@($"flex gap-1 border-b border-divider {Class}")">
+	@foreach (var tab in Tabs)
+	{
+		var isActive = tab == ActiveTab;
+		<button class="@GetTabClass(isActive)" @onclick="() => SetActiveTab(tab)">
+			@tab
+		</button>
+	}
+</div>
+
+@code {
+	[Parameter] public List<string> Tabs { get; set; } = new();
+	[Parameter] public string ActiveTab { get; set; } = "";
+	[Parameter] public EventCallback<string> ActiveTabChanged { get; set; }
+	[Parameter] public string? Class { get; set; }
+
+	private string GetTabClass(bool isActive)
+	{
+		var baseClasses = "px-4 py-2 text-sm font-medium transition-colors duration-150 cursor-pointer -mb-px";
+
+		return isActive
+			? $"{baseClasses} text-primary border-b-2 border-primary"
+			: $"{baseClasses} text-muted hover:text-frost";
+	}
+
+	private async Task SetActiveTab(string tab)
+	{
+		ActiveTab = tab;
+		await ActiveTabChanged.InvokeAsync(tab);
+	}
+}

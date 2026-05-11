@@ -163,9 +163,10 @@ public class ScheduleService : IScheduleService
 				var ids = matchup.TeamsInvolved.OrderBy(id => id).ToArray();
 				var key = (ids[0], ids[1]);
 				int count = pairCount.GetValueOrDefault(key, 0);
-				int maxGames = matchup.Type == MatchupType.Divisional ? 2 : 1;
 
-				if (count >= maxGames)
+				// maxGames is always 1 per unique pair entry; divisional pairs get their
+				// home+away doubling in the home/away assignment step below.
+				if (count >= 1)
 				{
 					continue;
 				}
@@ -422,6 +423,9 @@ public class ScheduleService : IScheduleService
 
 		_logger.LogInformation("Assigning {NumGames} games to weeks for season {SeasonID} starting on {SeasonStartDate:d}", shuffled.Count, season.ID, seasonStartDate);
 
+		// Track each team's opponent from the previous week to prevent back-to-back matchups
+		var previousWeekOpponent = new Dictionary<int, int>(); // teamID → opponentID last week
+
 		// Logic: Go week by week and assign game that fits that week.
 		foreach (var week in weeks)
 		{
@@ -429,7 +433,6 @@ public class ScheduleService : IScheduleService
 			var teamsAssignedThisWeek = new HashSet<int>();
 			var assignedGamesThisWeek = new List<Game>();
 
-			// TODO: Add logic to prevent certain division matchups from happening within 3 weeks of each other. 
 			foreach (var game in shuffled)
 			{
 				if (teamsAssignedThisWeek.Contains(game.HomeTeamID) || teamsAssignedThisWeek.Contains(game.AwayTeamID))
@@ -445,23 +448,43 @@ public class ScheduleService : IScheduleService
 					continue; // Can't schedule this game this week since one of the teams is on bye
 				}
 
+				// Prevent back-to-back games against the same opponent
+				bool homePlayedAwayLastWeek = previousWeekOpponent.TryGetValue(game.HomeTeamID, out int homePrev) && homePrev == game.AwayTeamID;
+				bool awayPlayedHomeLastWeek = previousWeekOpponent.TryGetValue(game.AwayTeamID, out int awayPrev) && awayPrev == game.HomeTeamID;
+
+				if (homePlayedAwayLastWeek || awayPlayedHomeLastWeek)
+				{
+					continue; // Skip to avoid back-to-back matchup against the same team
+				}
+
 				// Assign this game to the current week
 				game.WeekID = week.ID;
 
-				// TODO: Vary game times and days for more realism
-				// Schedule games on Sundays at 1:00 PM
-				var gameDateTime = seasonStartDate.AddDays((week.ID - 1) * 7).ToDateTime(new TimeOnly(13, 0));
-
-				game.GameDateTime = gameDateTime;
 				teamsAssignedThisWeek.Add(game.HomeTeamID);
 				teamsAssignedThisWeek.Add(game.AwayTeamID);
 				assignedGamesThisWeek.Add(game);
 				assignedGames.Add(game);
 			}
+
+			// Assign NFL-style broadcast window times to games this week
+			var weekSunday = seasonStartDate.AddDays((week.WeekNumber - 1) * 7);
+			var timeSlots = GetDateTimeSet(assignedGamesThisWeek.Count, weekSunday);
+
+			for (int i = 0; i < assignedGamesThisWeek.Count; i++)
+			{
+				assignedGamesThisWeek[i].GameDateTime = timeSlots[i];
+			}
+
 			_logger.LogInformation("Assigned {NumGames} games to week {WeekID} of season {SeasonID}", assignedGamesThisWeek.Count, week.ID, season.ID);
 
 			shuffled = shuffled.Except(assignedGamesThisWeek).ToList(); // Remove assigned games from the pool
-
+																		// Update previous-week opponent tracking for back-to-back prevention
+			previousWeekOpponent.Clear();
+			foreach (var game in assignedGamesThisWeek)
+			{
+				previousWeekOpponent[game.HomeTeamID] = game.AwayTeamID;
+				previousWeekOpponent[game.AwayTeamID] = game.HomeTeamID;
+			}
 			_logger.LogInformation("Completed week {WeekID} assignments for season {SeasonID}", week.ID, season.ID);
 		}
 
@@ -476,6 +499,64 @@ public class ScheduleService : IScheduleService
 		}
 
 		return assignedGames;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Game Time Helper
+	// ---------------------------------------------------------------------------
+
+	/// <summary>
+	/// Returns a set of game DateTimes for a given week using NFL-style broadcast windows.
+	/// Slots (when numberOfGames >= 5): 1 Thursday Night, Sunday Early (1 PM), 2 Sunday Late (4:25 PM),
+	/// 1 Sunday Night (8:20 PM), 1 Monday Night (8:15 PM). Remaining games fill Sunday Early.
+	/// For fewer games, primetime slots are omitted gracefully.
+	/// </summary>
+	private List<DateTime> GetDateTimeSet(int numberOfGames, DateOnly weekSunday)
+	{
+		var slots = new List<DateTime>();
+
+		var thursdayDate = weekSunday.AddDays(-3);
+		var mondayDate = weekSunday.AddDays(1);
+
+		int remaining = numberOfGames;
+
+		// Primetime slots — only added when there are enough games
+		if (remaining >= 5)
+		{
+			// Thursday Night Football — 8:20 PM
+			slots.Add(thursdayDate.ToDateTime(new TimeOnly(20, 20)));
+			remaining--;
+
+			// Monday Night Football — 8:15 PM
+			slots.Add(mondayDate.ToDateTime(new TimeOnly(20, 15)));
+			remaining--;
+
+			// Sunday Night Football — 8:20 PM
+			slots.Add(weekSunday.ToDateTime(new TimeOnly(20, 20)));
+			remaining--;
+
+			// Sunday Late window — 4:25 PM (up to 2 games)
+			int lateCount = Math.Min(2, remaining);
+			for (int i = 0; i < lateCount; i++)
+			{
+				slots.Add(weekSunday.ToDateTime(new TimeOnly(16, 25)));
+				remaining--;
+			}
+		}
+		else if (remaining >= 3)
+		{
+			// Enough for one late window game
+			slots.Add(weekSunday.ToDateTime(new TimeOnly(16, 25)));
+			remaining--;
+		}
+
+		// Fill remaining with Sunday Early — 1:00 PM
+		for (int i = 0; i < remaining; i++)
+		{
+			slots.Add(weekSunday.ToDateTime(new TimeOnly(13, 0)));
+		}
+
+		return slots;
 	}
 
 	// ---------------------------------------------------------------------------
