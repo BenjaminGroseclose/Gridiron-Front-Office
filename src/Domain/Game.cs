@@ -16,6 +16,8 @@ public class Game : BaseEntity
 
 	public int? HomeTeamScore { get; set; }
 	public int? AwayTeamScore { get; set; }
+	public int StadiumID { get; set; }
+	public Stadium Stadium { get; set; }
 
 	public DateTime GameDateTime { get; set; }
 

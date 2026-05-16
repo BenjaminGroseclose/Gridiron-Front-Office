@@ -48,7 +48,7 @@
 
 				@if (isByeWeek)
 				{
-					<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16">
+					<div class="p-2 border-2 border-dashed flex items-center gap-4 rounded-xl h-16">
 						<div>
 							<span>Week</span>
 							<span class="font-bold text-lg">@week.WeekNumber.ToString("D2")</span>
@@ -72,7 +72,7 @@
 								@opponentTeam?.Abbreviation
 							</AppAvatar>
 							<div>
-								<div class="text-sm text-muted">vs @opponentTeam?.DisplayName</div>
+								<div class="text-sm text-muted">vs @opponentTeam?.DisplayName (@game?.Stadium.Name)</div>
 								<div class="font-bold">@game?.GameDateTime.ToString("dddd, h:mm tt")</div>
 							</div>
 						</div>
@@ -93,7 +93,7 @@ else
 		{
 			@foreach (var game in weekGames)
 			{
-				<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16">
+				<div class="p-2 border-2 flex items-center gap-4 rounded-xl h-16 @(game.IsCompleted ? "border-info" : "")">
 					<div class="flex items-center gap-2">
 						<AppAvatar Size="md" Style="@game.AwayTeam?.GetTeamAvatarStyle()" Bordered="true">
 							@game.AwayTeam?.Abbreviation
@@ -122,11 +122,11 @@ else
 
 	private int selectedTeamID;
 	private int selectedWeekID;
-	private IEnumerable<Team> teams;
-	private IEnumerable<Game> schedule;
-	private IEnumerable<Game> weekGames;
-	private IEnumerable<Week> weeks;
-	private Season currentSeason;
+	private IEnumerable<Team> teams = new List<Team>();
+	private IEnumerable<Game> schedule = new List<Game>();
+	private IEnumerable<Game> weekGames = new List<Game>();
+	private IEnumerable<Week> weeks = new List<Week>();
+	private Season currentSeason = null!;
 
 	protected override async Task OnInitializedAsync()
 	{

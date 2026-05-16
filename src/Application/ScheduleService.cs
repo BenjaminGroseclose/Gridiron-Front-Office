@@ -64,7 +64,7 @@ public class ScheduleService : IScheduleService
 
 	public async Task<IEnumerable<Game>> GetScheduleForTeam(int seasonID, int teamID)
 	{
-		var games = await _gameRepository.GetAllAsync(s => s.AwayTeam, s => s.HomeTeam, s => s.Week);
+		var games = await _gameRepository.GetAllAsync(s => s.AwayTeam, s => s.HomeTeam, s => s.Week, s => s.Stadium);
 		return games.Where(g => g.SeasonID == seasonID && (g.HomeTeamID == teamID || g.AwayTeamID == teamID)).OrderBy(g => g.GameDateTime).ToList();
 	}
 
@@ -191,30 +191,36 @@ public class ScheduleService : IScheduleService
 
 		foreach (var (teamA, teamB, isDivisional) in shuffledPairs)
 		{
+			var stadiumException = new DomainException($"Stadium not found for team {teamA} or {teamB} when creating game for season {seasonID}", "STADIUM_NOT_FOUND");
 			if (isDivisional)
 			{
 				// Divisional: one game home, one away — each team hosts once
-				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = teamA, AwayTeamID = teamB });
-				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = teamB, AwayTeamID = teamA });
+				var stadiumA = teams.FirstOrDefault(t => t.ID == teamA)?.StadiumID;
+				var stadiumB = teams.FirstOrDefault(t => t.ID == teamB)?.StadiumID;
+				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = teamA, AwayTeamID = teamB, StadiumID = stadiumA ?? throw stadiumException });
+				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = teamB, AwayTeamID = teamA, StadiumID = stadiumB ?? throw stadiumException });
 				homeCount[teamA]++;
 				homeCount[teamB]++;
 			}
 			else
 			{
 				// Non-divisional: assign home to the team with fewer home games so far
-				int homeID, awayID;
+				int homeID, awayID, stadiumID;
+
 				if (homeCount[teamA] <= homeCount[teamB])
 				{
 					homeID = teamA;
 					awayID = teamB;
+					stadiumID = teams.FirstOrDefault(t => t.ID == teamA)?.StadiumID ?? throw stadiumException;
 				}
 				else
 				{
 					homeID = teamB;
 					awayID = teamA;
+					stadiumID = teams.FirstOrDefault(t => t.ID == teamB)?.StadiumID ?? throw stadiumException;
 				}
 
-				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = homeID, AwayTeamID = awayID });
+				rawGames.Add(new Game { SeasonID = seasonID, HomeTeamID = homeID, AwayTeamID = awayID, StadiumID = stadiumID });
 				homeCount[homeID]++;
 			}
 		}

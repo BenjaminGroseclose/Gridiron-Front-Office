@@ -79,6 +79,11 @@ public class GridironFrontOfficeDbContext : DbContext
 			.WithMany()
 			.HasForeignKey(x => x.AwayTeamID)
 			.OnDelete(DeleteBehavior.NoAction);
+		modelBuilder.Entity<Game>()
+			.HasOne(x => x.Stadium)
+			.WithMany()
+			.HasForeignKey(x => x.StadiumID)
+			.OnDelete(DeleteBehavior.NoAction);
 
 		modelBuilder.Entity<TeamSeason>().HasKey(x => x.ID);
 		modelBuilder.Entity<TeamSeason>().Property(x => x.ID).ValueGeneratedOnAdd();

@@ -160,7 +160,7 @@ public class SeedDataService : ISeedDataService
 				Status = isArchived ? SeasonStatus.Archived : SeasonStatus.NotStarted,
 				IsCurrentSeason = false,
 				StartDate = new DateOnly(seasonID, 3, 1), // March 1st of the season year
-				RegularSeasonStartDate = new DateOnly(seasonID, 9, 1), // September 1st of the season year
+				RegularSeasonStartDate = this.GetFirstSunday(seasonID, 9),
 				EndDate = new DateOnly(seasonID + 1, 2, 28) // February 28th of the following year
 			});
 		}
@@ -192,6 +192,25 @@ public class SeedDataService : ISeedDataService
 		}
 
 		return draftPicks;
+	}
+
+	/// <summary>
+	/// Helper method to find the first Sunday of a given month and year, used for setting regular season start dates in generated seasons
+	/// </summary>
+	/// <param name="year">The year to find the first Sunday in.</param>
+	/// <param name="month">The month to find the first Sunday in.</param>
+	/// <returns>The first Sunday of the specified month and year as a DateOnly.</returns>
+	private DateOnly GetFirstSunday(int year, int month)
+	{
+		DateTime firstDayOfMonth = new DateTime(year, month, 1);
+		DateTime firstSunday = firstDayOfMonth;
+
+		while (firstSunday.DayOfWeek != DayOfWeek.Sunday)
+		{
+			firstSunday = firstSunday.AddDays(1);
+		}
+
+		return new DateOnly(firstSunday.Year, firstSunday.Month, firstSunday.Day);
 	}
 
 	/// <summary>
