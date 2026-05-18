@@ -17,7 +17,7 @@
     /* Surfaces & Backgrounds */
     --color-canvas: #0a0e27;
     --color-surface: #1a1f3a;
-    --color-surface-elevated: #242b4a;
+    --color-surface-elevated: #151a36;
     --color-surface-hover: #2a3254;
 
     /* Text */
@@ -75,4 +75,26 @@ body {
 /* Focus visible outline offset for dark backgrounds */
 :focus-visible {
     outline-offset: 2px;
+}
+
+/* Common Interactive Elements */
+.surface-interactive {
+    cursor: pointer;
+    transition-property: background-color, border-color, color;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+.surface-interactive:hover {
+    background-color: var(--color-surface-hover);
+}
+
+/* Common Elevated Surface */
+.surface-elevated {
+		background-color: var(--color-surface-elevated);
+		border: 1px solid var(--color-divider);
+		border-radius: 0.5rem;
+		transition-property: background-color, border-color;
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+		transition-duration: 150ms;
 }

@@ -24,7 +24,8 @@ public class AppState
 		Stack<string> RouteHistory,
 		bool IsLoading,
 		string? Error,
-		DateTime? CurrentDateTime
+		DateTime? CurrentDateTime,
+		IEnumerable<Team> Teams
 	);
 
 	public StateSnapshot CurrentState { get; private set; } = new StateSnapshot(
@@ -35,7 +36,8 @@ public class AppState
 		RouteHistory: new Stack<string>(),
 		IsLoading: false,
 		Error: null,
-		CurrentDateTime: null
+		CurrentDateTime: null,
+		Teams: Array.Empty<Team>()
 	);
 
 	public event Action<StateSnapshot>? OnStateChanged;
@@ -108,4 +110,19 @@ public class AppState
 		UpdateState(s => s with { Error = error });
 	public void SetCurrentTime(DateTime? currentTime) =>
 		UpdateState(s => s with { CurrentDateTime = currentTime });
+
+	public void SetTeams(IEnumerable<Team> teams) =>
+		UpdateState(s => s with { Teams = teams });
+
+	/// <summary>
+	/// Fetches and caches the teams in the AppState if they are not already loaded.
+	/// </summary>
+	public async Task LoadTeamsAsync()
+	{
+		if (!CurrentState.Teams.Any())
+		{
+			var teams = await _teamService.GetAllTeamsAsync();
+			SetTeams(teams);
+		}
+	}
 }

@@ -1,0 +1,47 @@
+<AppChip Color="@_color" Size="lg" Bordered="true">
+	@_positionAbbreviation
+</AppChip>
+
+@code {
+
+	[Parameter]
+	public PlayerPosition Position { get; set; }
+
+	private string _positionAbbreviation => Position switch
+	{
+		PlayerPosition.QB => "QB",
+		PlayerPosition.RB => "RB",
+		PlayerPosition.WR => "WR",
+		PlayerPosition.TE => "TE",
+		PlayerPosition.OT => "OT",
+		PlayerPosition.OG => "OG",
+		PlayerPosition.C => "C",
+		PlayerPosition.EDGE => "EDGE",
+		PlayerPosition.DT => "DT",
+		PlayerPosition.LB => "LB",
+		PlayerPosition.CB => "CB",
+		PlayerPosition.S => "S",
+		PlayerPosition.K => "K",
+		PlayerPosition.P => "P",
+		_ => Position.ToString()
+	};
+
+	private string _color => Position switch
+	{
+		PlayerPosition.QB => "primary",
+		PlayerPosition.RB => "success",
+		PlayerPosition.WR => "violet",
+		PlayerPosition.TE => "orange",
+		PlayerPosition.OT => "secondary",
+		PlayerPosition.OG => "secondary",
+		PlayerPosition.C => "secondary",
+		PlayerPosition.EDGE => "red",
+		PlayerPosition.DT => "rose",
+		PlayerPosition.LB => "fuchsia",
+		PlayerPosition.CB => "teal",
+		PlayerPosition.S => "indigo",
+		PlayerPosition.K => "zinc",
+		PlayerPosition.P => "zinc",
+		_ => "primary"
+	};
+}

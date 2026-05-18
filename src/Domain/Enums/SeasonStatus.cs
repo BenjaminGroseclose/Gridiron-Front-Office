@@ -3,6 +3,7 @@ namespace GridironFrontOffice.Domain.Enums;
 
 /// <summary>
 /// The status of a season.
+/// Flow: NotStarted -> OffSeason -> PreSeason -> InSeason -> PostSeason -> Completed -> Archived
 /// </summary>
 public enum SeasonStatus
 {

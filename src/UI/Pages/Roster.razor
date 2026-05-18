@@ -1,0 +1,59 @@
+@page "/roster"
+@using GridironFrontOffice.Framework
+
+@layout AppLayout
+
+@inject AppState AppState
+@inject ITeamService TeamService
+@inject IPlayerService PlayerService
+
+<div class="rounded-xl p-6 mb-6 flex flex-col gap-4">
+	<div class="flex items-center gap-4">
+		<AppTextField Placeholder="Search players name" LeadingIcon="search" Class="flex-1" />
+		<span>Sort By:</span>
+	</div>
+
+</div>
+
+<div class="flex flex-col gap-4">
+	@if (players == null || !players.Any())
+	{
+		<p class="text-muted">No players available for the selected team.</p>
+	}
+
+	@foreach (var player in sortedPlayers)
+	{
+		<div class="p-2 border-2 border-divider rounded-xl h-16 flex items-center gap-4 surface-interactive">
+			<PositionChip Position="@player.Position" />
+
+			<div>
+				<div class="font-medium">@player.FullName</div>
+				<div class="text-sm text-muted">Overall: @player.OverallRating</div>
+			</div>
+		</div>
+	}
+</div>
+
+@code {
+	
+	private int selectedTeamID;
+	private IEnumerable<Team> teams = Enumerable.Empty<Team>();
+	private IEnumerable<Player> players = Enumerable.Empty<Player>();
+	
+	private IEnumerable<Player> sortedPlayers => players.OrderByDescending(p => p.OverallRating).ThenBy(p =>
+p.FullName).ThenBy(p => p.Position);
+	private Season currentSeason = null!;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await AppState.LoadTeamsAsync();
+		teams = AppState.CurrentState.Teams;
+		currentSeason = AppState.CurrentState.CurrentSeason ?? throw new DomainException("Current season is not set in AppState.");
+	}
+
+	private async Task OnTeamChanged(int teamID)
+	{
+		selectedTeamID = teamID;
+		players = await PlayerService.GetPlayersForTeam(selectedTeamID);
+	}
+}

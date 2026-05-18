@@ -16,7 +16,17 @@ public class TeamService : ITeamService
 		_teamSeasonRepository = teamSeasonRepository;
 	}
 
-	public async Task<IEnumerable<Team>> GetAllTeamsAsync() => await _teamRepository.GetAllAsync();
+	public async Task<IEnumerable<Team>> GetAllTeamsAsync(bool includeInactive = false)
+	{
+		if (includeInactive)
+		{
+			return await _teamRepository.GetAllAsync();
+		}
+		else
+		{
+			return (await _teamRepository.GetAllAsync()).Where(t => t.Status == TeamStatus.Active);
+		}
+	}
 
 	public async Task<Team> GetTeam(int teamID)
 	{

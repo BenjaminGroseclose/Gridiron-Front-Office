@@ -128,6 +128,9 @@ public class GridironFrontOfficeDbContext : DbContext
 			.WithMany(x => x.ContractYears)
 			.HasForeignKey(x => x.TeamID);
 		modelBuilder.Entity<ContractYear>()
+			.Navigation(x => x.Team)
+			.AutoInclude();
+		modelBuilder.Entity<ContractYear>()
 			.HasOne<Season>()
 			.WithMany()
 			.HasForeignKey(x => x.SeasonID);

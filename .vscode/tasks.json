@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Watch Desktop App",
+			"type": "shell",
+			"command": "dotnet watch run --project src/Desktop/GridironFrontOffice.Desktop.csproj -f net10.0-windows10.0.19041.0",
+			"isBackground": true,
+			"problemMatcher": [
+				"$msCompile"
+			]
+		}
+	]
+}

@@ -130,7 +130,8 @@ else
 
 	protected override async Task OnInitializedAsync()
 	{
-		teams = await TeamService.GetAllTeamsAsync();
+		await AppState.LoadTeamsAsync();
+		teams = AppState.CurrentState.Teams;
 		currentSeason = AppState.CurrentState.CurrentSeason ?? throw new DomainException("Current season is not set in AppState.");
 		selectedTeamID = AppState.CurrentState.UserTeamID ?? teams.FirstOrDefault()?.ID ?? 0;
 		weeks = await ScheduleService.GetWeeksForSeason(currentSeason.ID);

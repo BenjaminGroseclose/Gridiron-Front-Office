@@ -6,6 +6,7 @@
 	[Parameter] public RenderFragment? ChildContent { get; set; }
 	[Parameter] public string Color { get; set; } = "primary";
 	[Parameter] public string Size { get; set; } = "md";
+	[Parameter] public bool Bordered { get; set; } = false;
 	[Parameter] public string? Class { get; set; }
 
 	private string ComputedClass
@@ -21,13 +22,26 @@
 
 			var colorClasses = Color switch
 			{
-				"primary" => "bg-primary/20 text-primary",
-				"secondary" => "bg-secondary/20 text-frost",
-				"error" => "bg-error/20 text-error",
-				"success" => "bg-success/20 text-success",
-				"warning" => "bg-warning/20 text-warning",
-				"info" => "bg-info/20 text-info",
-				_ => "bg-primary/20 text-primary"
+				"primary" => "bg-primary/20 text-primary" + (Bordered ? " border border-primary/50" : ""),
+				"secondary" => "bg-secondary/20 text-frost" + (Bordered ? " border border-secondary/50" : ""),
+				"error" => "bg-error/20 text-error" + (Bordered ? " border border-error/50" : ""),
+				"danger" => "bg-error/20 text-error" + (Bordered ? " border border-error/50" : ""),
+				"success" => "bg-success/20 text-success" + (Bordered ? " border border-success/50" : ""),
+				"warning" => "bg-warning/20 text-warning" + (Bordered ? " border border-warning/50" : ""),
+				"info" => "bg-info/20 text-info" + (Bordered ? " border border-info/50" : ""),
+				"red" => "bg-red-500/20 text-red-400" + (Bordered ? " border border-red-500/50" : ""),
+				"blue" => "bg-blue-500/20 text-blue-400" + (Bordered ? " border border-blue-500/50" : ""),
+				"emerald" => "bg-emerald-500/20 text-emerald-400" + (Bordered ? " border border-emerald-500/50" : ""),
+				"violet" => "bg-violet-500/20 text-violet-400" + (Bordered ? " border border-violet-500/50" : ""),
+				"orange" => "bg-orange-500/20 text-orange-400" + (Bordered ? " border border-orange-500/50" : ""),
+				"rose" => "bg-rose-500/20 text-rose-400" + (Bordered ? " border border-rose-500/50" : ""),
+				"fuchsia" => "bg-fuchsia-500/20 text-fuchsia-400" + (Bordered ? " border border-fuchsia-500/50" : ""),
+				"teal" => "bg-teal-500/20 text-teal-400" + (Bordered ? " border border-teal-500/50" : ""),
+				"indigo" => "bg-indigo-500/20 text-indigo-400" + (Bordered ? " border border-indigo-500/50" : ""),
+				"zinc" => "bg-zinc-500/20 text-zinc-400" + (Bordered ? " border border-zinc-500/50" : ""),
+				"dark" => "bg-slate-800 text-slate-300" + (Bordered ? " border border-slate-700" : ""),
+				"muted" => "bg-slate-500/20 text-slate-400" + (Bordered ? " border border-slate-500/50" : ""),
+				_ => "bg-primary/20 text-primary" + (Bordered ? " border border-primary/50" : "")
 			};
 
 			return $"inline-flex items-center rounded-full font-medium {sizeClasses} {colorClasses} {Class}".Trim();

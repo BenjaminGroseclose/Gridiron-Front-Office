@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Watch Desktop App",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "dotnet",
+            "args": [
+                "watch",
+                "run",
+                "--project",
+                "${workspaceFolder}/src/Desktop/GridironFrontOffice.Desktop.csproj",
+                "-f",
+                "net10.0-windows10.0.19041.0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "requireExactSource": false,
+            "env": {
+                "DOTNET_HOST_PATH": "C:\\Program Files\\dotnet\\dotnet.exe"
+            }
+        }
+    ]
+}
