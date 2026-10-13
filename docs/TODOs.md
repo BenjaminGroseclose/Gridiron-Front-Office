@@ -1,1 +1,0 @@
-- League Wizard should have validation. (CanGoNextStep etc)
