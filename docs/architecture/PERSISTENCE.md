@@ -127,7 +127,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.1 Meta
 | Table | Key columns | Notes |
 |---|---|---|
-| `SaveInfo` (singleton) | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency` (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
+| `SaveInfo` (singleton) | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
 | `LeagueRules` (singleton) | Cap, cap growth, roster limits, practice squad size, minimum salaries table, live event toggles | Copied from defaults at creation |
 | `AdvanceJournal` | `OperationId`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
 | `LiveEventState` | `EventType`, `Status`, `StateJson`, `ClockRemainingMs`, `LastHeartbeatUtc` | See [LIVE_EVENTS.md](LIVE_EVENTS.md) |
@@ -150,16 +150,17 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 | Table | Key columns |
 |---|---|
 | `Seasons` | `Season`, `CapAmount`, `ChampionTeamId`, … |
-| `Games` | `GameId`, `Season`, `Week`, `Type` (Pre, Reg, WC, DIV, CONF, CHAMP), `HomeTeamId`, `AwayTeamId`, `Date`, `HomeScore`, `AwayScore`, `Overtime`, `Status`, `EngineVersion`, `Seed` |
+| `Games` | `GameId`, `Season`, `Week`, `Type` (Reg, WC, DIV, CONF, CHAMP; no preseason, [D-038](../DECISIONS.md#d-038-no-preseason-games-in-10)), `HomeTeamId`, `AwayTeamId`, `Date`, `HomeScore`, `AwayScore`, `Overtime`, `Status`, `EngineVersion`, `Seed` |
 | `TeamGameStats` | `GameId`, `TeamId`, ~40 stat columns |
 | `PlayerGameStats` | `GameId`, `PlayerId`, `TeamId`, ~60 stat columns (wide; SQLite stores 0 and 1 in zero payload bytes, so sparse wide rows are cheap) |
 | `PlayerSeasonStats` | `PlayerId`, `Season`, `TeamId`, `GameType`, same stat columns, upserted each week |
 | `GamePlayLogs` | `GameId (PK)`, `EngineVersion`, `Format`, `Compression`, `Data BLOB` (Brotli-compressed JSON of play events and deciding matchups) |
-| `DepthChartSlots` | `TeamId`, `Package`, `Slot`, `Order`, `PlayerId`, `IsLocked` |
+| `DepthCharts` | `TeamId`, `Position` (incl. KR/PR), `Order`, `PlayerId`, `IsLocked`. Packages are derived from this ([D-052](../DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)). |
+| `DepthChartOverrides` | `TeamId`, `Package`, `Slot`, `PlayerId` (optional per-package overrides) |
 | `GamePlans` | `TeamId`, `GameId?` (null = default), settings columns |
 
 ### 5.5 Draft, transactions, narrative
-`DraftClasses`, `DraftPicks` (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick?`, `SelectedPlayerId?`, `WasAutoPick`), `BigBoardEntries` (user), `Transactions` (append-only log), `Trades`, `TradeAssets`, `Awards`, `Records`, `HallOfFame`, `NewsItems`, `InboxMessages`.
+`Scouts` (`TeamId`, area or director, `Accuracy`, `PositionExpertise`), `ScoutAssignments` (`ScoutId`, `Kind` = Standing (region or position group) | Special (`ProspectId`), `Since`; [D-058](../DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)), `DraftClasses`, `DraftPicks` (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick?`, `SelectedPlayerId?`, `WasAutoPick`), `BigBoardEntries` (user), `Transactions` (append-only log), `Trades`, `TradeAssets`, `Awards`, `Records`, `HallOfFame`, `NewsItems`, `InboxMessages`.
 
 ### 5.6 Indexing guidelines
 - Index every foreign key used for filtering: `Players(TeamId, Status)`, `PlayerGameStats(PlayerId)`, `PlayerGameStats(GameId)`, `Games(Season, Week)`, `PlayerSeasonStats(Season, Position?)`, `Transactions(Season, TeamId)`.

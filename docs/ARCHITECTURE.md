@@ -229,7 +229,7 @@ erDiagram
 - **Player lifecycle in one table.** `Players.Status` ∈ {Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired}. Prospects are players with a draft class and no team.
 - **Ratings.** Current true ratings live on the player (hidden in the UI). `RatingHistory` keeps one snapshot per season for history and development charts. Perceived ratings live in `ScoutingReport`.
 - **Contracts.** A contract header plus one `ContractYear` row per season (base salary, prorated bonus, guarantees, cap hit). Cap math is pure functions in Core.
-- **Draft picks** are first-class assets (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick` once known). Future picks can be traded up to 3 seasons out.
+- **Draft picks** are first-class assets (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick` once known). Picks can be traded for the upcoming draft and the next two (the NFL's horizon, confirmed in the F-19 spec).
 - **The transaction log** is append-only: every signing, release, trade, claim and pick. It's the source for history and the news engine.
 
 Schema details: [architecture/PERSISTENCE.md](architecture/PERSISTENCE.md).
@@ -378,6 +378,7 @@ Measured on the reference machine: a 6-core CPU from around 2020, 16 GB of RAM, 
 | Operation | Budget | Notes |
 |---|---|---|
 | Cold start to main menu | < 3 s | WebView2 warm-up dominates |
+| Generate a new league | < 5 s (M1); < 15 s with the simulated prior season (M5) | With progress ([D-049](DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired)) |
 | Open a save (10 seasons in) | < 1.5 s | Includes `quick_check` |
 | Navigate between screens | < 150 ms | Read-model queries < 50 ms |
 | Sort or filter a 2,000-row grid | < 100 ms | Virtualized rendering |

@@ -45,7 +45,7 @@ flowchart LR
 
 **`SimGameResult`**
 - Final score and per-quarter scores, OT flag
-- `PlayEvent[]`: the ordered log. Each event: situation before, call, personnel, outcome type, yards, participants (passer, target, ball carrier, tackler(s), defender in coverage, …), penalties, injuries, clock run-off, **deciding matchup**, win probability before and after (§8)
+- `PlayEvent[]`: the ordered log. Each event: situation before, call, personnel, outcome type, yards, participants (passer, target, ball carrier, tackler(s), defender in coverage, …), penalties, injuries, clock run-off, **deciding matchup**, win probability before and after (§8; empty until the tables exist in M8)
 - Derived on demand: drives, box score, player and team stat lines (**the event log is the single source of truth**)
 
 ---
@@ -78,6 +78,8 @@ stateDiagram-v2
 4. **Clock management:** hurry-up, timeouts, intentional run-off, 2-minute and 4-minute offense.
 
 **4th-down and 2-point decisions** use a decision model driven by the Expected Points / Win Probability tables (§8), shifted by coach aggression and the game plan. This produces believable "analytics-era" behavior on average, with variety between coaches.
+
+> **Bootstrapping:** the tables are generated *from* this engine and arrive in M8 (v1.0). Until then (v0.1–v0.3), the coaching AI uses a **heuristic 4th-down and 2-point chart** (by distance, field position, score and time), shifted the same way. In M8: generate the tables → switch decisions to them → regenerate once so the tables reflect the new decisions → recalibrate.
 
 ---
 
@@ -188,7 +190,7 @@ Examples:
 
 **Consumers**
 - **Film Room** ([STANDOUT_FEATURES.md §C](../STANDOUT_FEATURES.md#c-film-room-explainable-results)): key matchups won and lost, unit grades, player grades.
-- **Player grades** (0–100 per game) feed awards voting, contract talks and fog-of-war "performance signal" updates.
+- **Player grades** (0–100 per game, M8) feed awards voting and contract talks. They **don't** update perception: other teams' players never sharpen ([D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)).
 - **The news generator**: "Toure feasted on the Wolves' right side: 3 sacks."
 
 ---
@@ -278,6 +280,6 @@ simlab calibrate --seed 42 --seasons 200 --tuning ./SimTuning.json --out ./repor
 |---|---|---|
 | v0.1 | M2 | Game state machine, simple run/pass, kicks, scoring, clock, basic play calling. Stats derived from events. |
 | v0.2 | M2 | Matchup-based pass and run pipelines, penalties (top 6 types), basic injuries, fatigue. **Deciding matchup recorded on every play** (cheap now, expensive to retrofit). SimLab calibration within bands. |
-| v0.3 | M3 | Depth chart packages, basic game plan (3 settings), OT rules, playoffs |
-| v1.0 | M8 | Full game plan, EP/WP tables, player grades, Film Room data |
+| v0.3 | M3 | Depth chart packages (derived from position depth, [D-052](../DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)), basic game plan (3 settings), OT rules, playoffs. Heuristic 4th-down chart. |
+| v1.0 | M8 | Full game plan, EP/WP tables (and the switch from the heuristic chart), player grades, Film Room data |
 | v1.x | M10+ | Weather, surface, scheme fit, coaching quality effects, halftime adjustments (maybe) |

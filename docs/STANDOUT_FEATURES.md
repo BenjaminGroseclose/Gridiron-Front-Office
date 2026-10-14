@@ -91,7 +91,7 @@ Every pick is its own committed transaction, and the remaining time on the clock
 - **Instant media grades** based on *consensus* perception, not true ratings, so they can be very wrong. That's the fun.
 - A **draft class retrospective** in your history: classes are re-graded after 3 and 5 seasons using real performance. This is how you learn whether your scouts are any good.
 - **Rookie contracts** are generated automatically from the slotted rookie scale.
-- An **undrafted free agent (UDFA) window**: a short scramble for the best undrafted players.
+- An **undrafted free agent (UDFA) window**: one turn-based round in which you and every AI team make blind offers to the best undrafted players, all resolved at once ([D-059](DECISIONS.md#d-059-the-udfa-window-is-one-turn-based-round-of-blind-offers)).
 
 ### Draft Room layout (wireframe)
 
@@ -170,7 +170,8 @@ Full system: [architecture/UI_DESIGN_SYSTEM.md](architecture/UI_DESIGN_SYSTEM.md
 
 | Information source | What it sharpens | Cost |
 |---|---|---|
-| Area scouts (in season) | All attributes, slowly | Weekly scout points (equal for every team until the owner budget arrives in M10, [D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)) |
+| Area scouts, **standing assignment** (a region or a position group, in season) | All attributes, automatically, **down to a floor** | Nothing weekly. Where you point each scout ([D-058](DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)) |
+| A scout on a **special assignment** (one specific prospect) | Past the standing floor | That scout's standing coverage slows while he's on it |
 | Combine | Physical attributes, almost exactly (measurables) | Free, but only for invited prospects |
 | Pro day | Physical attributes for non-invitees | Scout time |
 | Interviews (limited, e.g. 30 per class) | Personality: work ethic, coachability, character flags | A scarce slot |
@@ -180,7 +181,7 @@ Full system: [architecture/UI_DESIGN_SYSTEM.md](architecture/UI_DESIGN_SYSTEM.md
 - **Personality** shows as coarse descriptors on your roster from acquisition, through interviews for prospects, and only as reputation tags ("Held out in 2029") for everyone else.
 - **The reveal moment:** when you draft or acquire someone, his true current ratings appear. Draft night tells you right away whether you read current ability correctly. Potential plays out over years, which is what the 3- and 5-year retrospective grades.
 - **Stable estimates:** a team's error on a pro is deterministic and redrawn once per league year, so ranges never flicker between views.
-- **Scouts have traits**: accuracy, position expertise, and biases (e.g. "overvalues athleticism"). A bias means a scout is consistently wrong in one direction, which a smart user can learn to correct for.
+- **Scouts have visible traits**: accuracy and position expertise, so who covers which region or position matters. Every team has the same scouting capacity until the owner's staff budget arrives in M10 ([D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)). **Biases** (a scout consistently wrong in one direction, learnable through attributed reports) are parked for after 1.0 ([IDEAS.md](IDEAS.md)).
 - **AI teams don't cheat.** Each knows its own roster exactly, sees other pros with its own independent fuzz, and scouts prospects with its own staff, built the same way as yours.
 - **No difficulty scaling** ([D-042](DECISIONS.md#d-042-no-difficulty-presets-in-10)). How well you see prospects depends on your scouts and how you use them.
 
@@ -246,7 +247,9 @@ Build the real-time engine once for the draft, then use it for the other moments
 - A **job security** meter responds to results relative to expectations.
 - **End-of-season review.** If you're fired, your career continues. You interview with teams that have openings (usually bad ones) and start a new chapter.
 - **GM legacy**: career record, titles, draft hit rate, reputation. Reputation affects how agents and owners treat you.
-- A light **staff budget** for scouting, medical and coaching staff.
+- A light **staff budget** for scouting and coaching staff (no medical staff, [D-062](DECISIONS.md#d-062-coaching-staff-is-head-coach--two-coordinators-only)).
+- **AI GMs face the same owners.** They get fired and replaced too, which is where your openings come from.
+- **Whether a career can end** is a locked league setting, off by default ([D-063](DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)). You can always choose to retire.
 
 ### Why it earns its place
 - It gives **long-horizon stakes** beyond "win more".

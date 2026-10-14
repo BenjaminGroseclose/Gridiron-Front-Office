@@ -56,6 +56,21 @@
 | D-046 | Live events: FA Frenzy committed, Deadline Day conditional | **Accepted** |
 | D-047 | Sound: all off by default, no music | **Accepted** |
 | D-048 | Halftime adjustments post-1.0, engine split kept possible | **Accepted** |
+| D-049 | A new league starts at the offseason: "the previous GM was fired" | **Accepted** |
+| D-050 | Every player attribute must be read by the sim | **Accepted** |
+| D-051 | Onboarding is help pages only, authored in Markdown | **Accepted** |
+| D-052 | Depth chart: position depth drives every package, with optional overrides | **Accepted** |
+| D-053 | M3 game day: a minimal text replay | **Accepted** |
+| D-054 | Injury status is Available / Out until playing hurt (M10) | **Accepted** |
+| D-055 | M3 messaging: Briefing + news feed; the inbox arrives in M7 | **Accepted** |
+| D-056 | The offseason "Top 51" cap rule is in (amends D-040) | **Accepted** |
+| D-057 | Free agency: blind bids with signals | **Accepted** |
+| D-058 | Scouting department: standing + special assignments, no biases in 1.0 | **Accepted** |
+| D-059 | The UDFA window is one turn-based round of blind offers | **Accepted** |
+| D-060 | A paused live event allows browsing but no actions | **Accepted** |
+| D-061 | Trade feedback is qualitative, plus "what would it take?" | **Accepted** |
+| D-062 | Coaching staff is head coach + two coordinators only | **Accepted** |
+| D-063 | "Career can end" is a creation setting, off by default | **Accepted** |
 
 ---
 
@@ -293,6 +308,11 @@
 - **Decision:** the default league is 32 **hand-written** franchises in **real metro areas** (a mix of current pro football markets and plausible new ones) with **original nicknames**, colors, generated SVG crests and fictional stadium names. Every nickname is checked against a blocklist of real pro football team names, past and present (NFL, AFL, AAFC, WFL, USFL, XFL, UFL, CFL and arena leagues). The set lives in a versioned data file ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). The 32 identities are drafted in the F-02 spec for owner review.
 - **Parked:** a "randomize identities" option ([IDEAS.md](IDEAS.md)). It needs a nickname generator and color-harmony logic for a rarely used feature.
 - **Consequences:** + A real-league feel and regional rivalries. − Real city names (not trademarks, but the M11 trademark check, [Q-22](OPEN_QUESTIONS.md#q-22-name--trademark-check), covers the shipped set too; not legal advice).
+- **Amended (owner, 2026-10-14, feature review):** *"Let mirror the NFL, but again they should be able to upload their own teams. Additionally I assume we cannot use the NFL teams direct due to copyright so we will need to account for this."*
+  - **The metros mirror the NFL's footprint**, including two teams each in the New York and Los Angeles areas. This replaces "a mix of current markets and new ones".
+  - **Divisions are aligned by geography** (proposed default, reviewed in the F-02 spec), with each two-team metro split across the conferences. Conference and division names are original.
+  - **Guardrail:** no team uses the colors of the real team in its metro, and no crest resembles a real logo. Real team names, logos and distinctive color schemes are protected (mainly trademark and trade dress), so none of them ship.
+  - Real teams are the user's own business through the M11 import ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). Imported SVG logos are rendered as `<img>` (or sanitized) and never inlined, because SVG can carry script.
 
 ## D-034: Ratings display: 0–99 with ranges, letter grades for potential
 - **Status:** **Accepted** (owner, 2026-10-14). Resolves Q-03.
@@ -311,7 +331,7 @@
 - **Status:** **Accepted** (owner, 2026-10-14, chose "Fixed + no cap knobs"). Resolves Q-13 and confirms [D-014](#d-014-fixed-32-team-league-structure-for-10). Also resolves Q-14: a single user-controlled team was proposed in the same session as already implied by the one-pager's 1.0 scope, and the owner raised no objection.
 - **Decision:**
   - The league structure is fixed (D-014).
-  - Settings chosen at creation: **clock mode** ([D-022](#d-022-clock-mode-is-a-per-save-setting-live--pausable)), **Ironman** ([D-026](#d-026-ironman-mode-requires-live-clock-mode)), **draft clock preset** ([D-044](#d-044-draft-clock-presets-tiered-changeable-before-the-draft)), **live event toggles** ([D-046](#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)) and **injury frequency** ([D-037](#d-037-injury-frequency-setting-locked-at-creation)). There's no difficulty setting ([D-042](#d-042-no-difficulty-presets-in-10)).
+  - Settings chosen at creation: **clock mode** ([D-022](#d-022-clock-mode-is-a-per-save-setting-live--pausable)), **Ironman** ([D-026](#d-026-ironman-mode-requires-live-clock-mode)), **draft clock preset** ([D-044](#d-044-draft-clock-presets-tiered-changeable-before-the-draft)), **live event toggles** ([D-046](#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)) and **injury frequency** ([D-037](#d-037-injury-frequency-setting-locked-at-creation)). There's no difficulty setting ([D-042](#d-042-no-difficulty-presets-in-10)). *(Added later: "career can end", [D-063](#d-063-career-can-end-is-a-creation-setting-off-by-default).)*
   - **The cap amount and cap growth are not exposed.** They're tuning values in `LeagueRules`. Editing them belongs to commissioner mode (F-28).
   - **One user-controlled team** in 1.0. Multiple teams are revisited with F-28.
 - **Why:** the valuation model is calibrated as a percentage of the cap, so a cap-amount setting is cosmetic and a cap-growth setting can break the 30-season health gate. Every knob multiplies the configurations that health checks have to cover.
@@ -335,13 +355,14 @@
 - **Decision:**
   - **v1 (M4):** base salary, signing bonus proration (≤ 5 years), guarantees, dead money, the cap per league year with growth, rollover, minimum salaries, the rookie wage scale, the franchise tag, extensions.
   - **v2 (M9):** the **5th-year option**, **restructures**, **June 1 designations**.
-  - **Not in 1.0:** RFA tenders and offer sheets, the transition tag, void years, incentives (LTBE/NLTBE), offset language, the Top 51 rule, cash-spending floors, compensatory picks.
+  - **Not in 1.0:** RFA tenders and offer sheets, the transition tag, void years, incentives (LTBE/NLTBE), offset language, cash-spending floors, compensatory picks. *(The Top 51 rule was listed here too. It's back in v1, see [D-056](#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040).)*
   - **In place of RFA** (to be confirmed in the F-12/F-15 specs): a player whose contract expires with **fewer than 4 accrued seasons** is an **exclusive-rights** free agent. His team keeps him by making a one-year qualifying offer at the minimum salary for his experience. If it doesn't, he becomes an unrestricted free agent.
 
 ## D-041: Finances: owner-funded staff budget in M10 only
 - **Status:** **Accepted** (owner, 2026-10-14, chose "Staff budget in M10"). Resolves Q-15.
 - **Decision:** the only money besides the salary cap is an **owner-funded staff budget** (scouting, medical, coaching) arriving with F-23 in **M10**. Until then (M6–M9), **every team has equal scouting capacity** (the same weekly scout points), and scouting departments differ only in scout quality. No revenue, tickets, concessions or stadium.
 - **Fixes an inconsistency:** F-17 listed "a scouting budget" in M6, before any owner budget existed.
+- *How scouting capacity is spent (standing and special assignments rather than weekly points) is defined in [D-058](#d-058-scouting-department-standing--special-assignments-no-biases-in-10). With no medical staff ([D-062](#d-062-coaching-staff-is-head-coach--two-coordinators-only)), the staff budget covers scouting and coaching only.*
 
 ## D-042: No difficulty presets in 1.0
 - **Status:** **Accepted** (owner, 2026-10-14). Resolves Q-16. The owner asked: *"Not sure if difficult makes sense in this context, can you walk me through how this could playout. Not like the simulation should get easier or hard?"* After the walkthrough (the only honest levers are how strictly the league deals with you: trade and contract strictness, your scouting accuracy, owner patience), the owner chose "No presets in 1.0".
@@ -387,3 +408,105 @@
 ## D-048: Halftime adjustments post-1.0, engine split kept possible
 - **Status:** **Accepted** (proposed in the 2026-10-14 session; the owner raised no objection). Resolves Q-27.
 - **Decision:** halftime adjustments are **post-1.0**. From M2, the engine API keeps `Simulate(input, stopAt: Halftime)` and `Resume(state, newPlan)` possible (no UI), so the option stays cheap ([SIMULATION_ENGINE.md](architecture/SIMULATION_ENGINE.md)).
+
+## D-049: A new league starts at the offseason: "the previous GM was fired"
+- **Status:** **Accepted** (owner, 2026-10-14: *"What is the most likely starting point for a new GM, imagine the previous GM was fired. I think it is at the start of the off season"*). The two supporting defaults below were proposed in the same review and are confirmed in the F-01 spec.
+- **Decision:**
+  - From M5, when the offseason exists, a new league starts at the **Re-sign & Tag Window**. You were hired right after the owner's end-of-season review, so the prior season is complete: champion, awards and retirements.
+  - **The prior season is simulated, not invented** (proposed): at creation, the real engine plays the previous season headless with every team AI-run. Standings, results, box scores and season stats are kept, but not play-by-play. That history drives the draft order, schedule rotation, awards, contract talks ("my client had 1,200 yards") and the situation you inherit (expiring deals, cap space, needs).
+  - **Your first draft isn't blind** (proposed): your team inherits the previous regime's in-season prospect scouting, equal to an average AI team's default assignments. You add the combine, pro days and interviews yourself.
+  - The New League wizard frames the takeover ("You've been hired as GM of …") and shows each team's inherited situation in team selection: last record, cap space, expiring contracts, needs.
+  - **Before M5** (M1–M4), development builds start at Training Camp, because the offseason doesn't exist yet.
+- **Consequences:** + The hallmark (free agency, then the live draft) arrives in the first session. + A strong narrative hook. − Generation does more work (budget: < 15 s with progress, versus < 5 s for a camp start). − You draft for a team you haven't watched play. The simulated prior season and inherited scouting are the mitigation.
+- **Supersedes** the "starts at Training Camp" note in [CALENDAR_AND_PHASES.md](architecture/CALENDAR_AND_PHASES.md). A "start at Training Camp" option is parked ([IDEAS.md](IDEAS.md)).
+
+## D-050: Every player attribute must be read by the sim
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Yes: cut or fold unused"). The rating counterpart of [D-043](#d-043-limited-personality-model-only-traits-with-a-consumer).
+- **Context:** in [SIMULATION_ENGINE.md §4](architecture/SIMULATION_ENGINE.md#4-play-resolution), Agility, Jumping, Strength and Play Recognition never appear as inputs to a play resolver, while the run pipeline reads a "strip skill" that isn't an attribute. An attribute the sim ignores still inflates OVR and misleads the player page.
+- **Decision:**
+  - **Every attribute is read by at least one play resolver** in `SimTuning`. Appearing in an OVR formula doesn't count.
+  - The F-03 spec contains the **attribute → resolver matrix**. Each unused attribute is either folded into another (e.g., Jumping → Contested Catch, Agility → Elusiveness/Route Running) or wired in on purpose (e.g., Play Recognition in run defense and zone coverage). "Strip skill" resolves to an existing attribute.
+  - A test fails if any attribute has no consumer in the tuning file.
+- **Consequences:** + Every number on a player page means something on Sunday (pillar 3). + Less calibration surface in M2. − A slightly shorter attribute list than other sims.
+
+## D-051: Onboarding is help pages only, authored in Markdown
+- **Status:** **Accepted** (owner, 2026-10-14: *"Help pages only, which can work as a markdown file or something similar."*)
+- **Decision:**
+  - No scripted tutorial, no "Assistant GM" character, no first-time phase cards.
+  - **Help pages** are Markdown files shipped in `data/help/` and rendered in the app (a Markdown library such as Markdig, BSD-2, license-checked at adoption). Help content is trusted shipped content.
+  - **Glossary tooltips stay** (F-27, ongoing) and read from a runtime glossary data file.
+  - In-flow guidance comes from the Advance button's "what's next" and blocking-issue messages (F-05).
+- **Consequences:** + A much smaller M11. + Help is easy to write and keep current. − New GM-sim players get less hand-holding. Parked: phase cards and an Assistant GM ([IDEAS.md](IDEAS.md)).
+
+## D-052: Depth chart: position depth drives every package, with optional overrides
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Position depth + overrides" in the feature review).
+- **Decision:** the user orders players **by position** (QB1, QB2, RB1…, WR1–WR5, CB1–CB4, …) and sets the returners. **Every package is derived automatically** from that order (offense 11/12/21/22/10/goal line, defense base/nickel/dime/goal line, special teams coverage units). **Optional per-package overrides** exist for power users (e.g., a specific TE in goal-line sets). Locks and the auto depth chart still apply. The AI uses the same model.
+- **Why:** hand-managing about 13 packages of ordered slots is the kind of busywork pillar 2 rules out.
+
+## D-053: M3 game day: a minimal text replay
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Minimal text replay in M3").
+- **Decision:** M3 replays the user's game from its event log as a **scorebug + play-by-play feed** at 1× / 2× / 4× / instant, with other games' scores ticking in. The drive chart, win probability chart and the polished Game Center stay in M8.
+- **Why:** M3's exit criterion is "you actually want to play the next week". A box score alone is a weak weekly payoff, and a text replay is cheap because the log already exists.
+
+## D-054: Injury status is Available / Out until playing hurt (M10)
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Available / Out until M10").
+- **Decision:** from M3, injuries are measured in weeks, and a player is **Available** or **Out** (with an expected return). **Questionable and Doubtful arrive in M10** together with playing hurt, when they mean "may play at reduced effectiveness".
+- **Why:** Questionable/Doubtful have nothing behind them until playing hurt exists (the same consumer rule as [D-043](#d-043-limited-personality-model-only-traits-with-a-consumer) and [D-050](#d-050-every-player-attribute-must-be-read-by-the-sim)).
+
+## D-055: M3 messaging: Briefing + news feed; the inbox arrives in M7
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Briefing + news; inbox in M7").
+- **Decision:** M3 ships the **Front Office Briefing** (the weekly digest, including a "needs your attention" section) and the league **news feed**. The standalone **inbox arrives in M7** with the first items that expire (trade offers), followed by contract demands, owner messages and scout reports.
+- **Why:** in M3 the inbox's actionable items (injuries, roster limits) duplicate the Advance flow's blocking issues and warnings.
+
+## D-056: The offseason "Top 51" cap rule is in (amends D-040)
+- **Status:** **Accepted** (owner, 2026-10-14: *"Whatever the NFL rule is, I think it is the top 51"*). Amends [D-040](#d-040-salary-cap-realism-tiers).
+- **Context:** offseason rosters go up to 90. Without the rule, all 90 contracts count against the cap (about 37 extra near-minimum deals, roughly 12% of the cap), squeezing every team every spring and forcing pre-draft cuts.
+- **Decision:** **v1 (M4)** includes the NFL's rule: from the start of the new league year until the regular season begins, only the **51 highest cap hits count, plus all dead money**. After final cuts, every contract counts. The fine print (for example, whether bonus proration for players outside the top 51 still counts) is confirmed against a real reference in the F-12 spec. It's a single pure function in Core, and the AI uses the same function.
+- **Default for league rules:** when a rules question comes up, follow the real league's rule unless it adds complexity without adding a decision (the owner's pattern here and in [D-033](#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)).
+
+## D-057: Free agency: blind bids with signals
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Blind bids with signals").
+- **Decision:** in free agency you see **how many teams are seriously interested** in a player and his **current leaning** ("Leaning: Hawks"), never the amounts or terms of competing offers. **AI teams see exactly the same signals** about your offers. The same model drives FA Frenzy (M9).
+- **Why:** open bids let you beat the best offer by $1, which kills the tension. Fully blind bidding feels arbitrary when a player signs elsewhere with no warning.
+
+## D-058: Scouting department: standing + special assignments, no biases in 1.0
+- **Status:** **Accepted** (owner, 2026-10-14: *"Standing assignment, on region / position. Special assignment to a specific player. For example standing assignment only gets you so far"*, and "No biases in 1.0"). Replaces the weekly point allocation in the earlier F-17 text.
+- **Decision:**
+  - **Standing assignments:** each area scout covers a **region** or a **position group**, chosen by you and kept until you change it. Every prospect in that coverage sharpens automatically each week, **down to a floor and no further** ("only gets you so far").
+  - **Special assignments:** you send a scout to a **specific prospect** to sharpen him past the standing floor. While a scout is on a special assignment, his standing coverage slows, so where your best scouts go is a real trade-off. The F-17 spec sets the numbers (floor, rates, how many special assignments per scout).
+  - **No required weekly input.** Progress accrues as the calendar advances.
+  - **Scouts differ in accuracy and position expertise**, which you can see, so choosing who covers what matters. **No scout biases in 1.0** (parked with scout-specific reports, [IDEAS.md](IDEAS.md)).
+  - **AI teams use the same model.** Their default assignments are also the baseline your team inherits at a new league's offseason start ([D-049](#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired)). Capacity is equal across teams until the M10 staff budget ([D-041](#d-041-finances-owner-funded-staff-budget-in-m10-only)).
+- **Why:** weekly allocation would be a chore for 18 weeks a year, while standing plus special assignments keeps the decision without the busywork. Biases can't be learned without attributed reports, so in 1.0 they'd just be noise.
+
+## D-059: The UDFA window is one turn-based round of blind offers
+- **Status:** **Accepted** (owner, 2026-10-14, chose "One turn-based round").
+- **Decision:** the live draft event ends with the last pick. Then, as a turn-based step, you and every AI team submit **blind offers** to undrafted players (up to roster space). All offers **resolve at once**, with players choosing by offer and opportunity (where they'd sit on the depth chart). Undrafted players stay fuzzy until signed ([D-032](#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)).
+- **Why:** a real-time scramble against 31 AI teams acting in seconds would be a race the user mostly loses.
+
+## D-060: A paused live event allows browsing but no actions
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Browse, no actions"). Resolves the "decision to confirm" in [LIVE_EVENTS.md §5.1](architecture/LIVE_EVENTS.md#51-pause-pausable-clock-mode-only).
+- **Decision:** in a Pausable save, while a live event is paused you can browse everything (scouting reports, the Big Board, team needs, the cap sheet), but picks, trades and offers are disabled until you resume.
+- **Why:** Pausable is the accessibility mode. Restricting reading while paused would punish the players it exists for.
+
+## D-061: Trade feedback is qualitative, plus "what would it take?"
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Qualitative + 'what would it take'").
+- **Decision:** while you build a trade, the AI shows a **reaction scale** (Not interested / Far apart / Getting closer / Close / Deal) and answers **"What would it take?"** by naming what it wants. **No value numbers or balance bar** are shown. The draft value chart for *picks* stays visible, since pick value is public knowledge.
+- **Why:** visible valuation numbers let you tune every offer to land exactly on the acceptance line, turning trades into arithmetic and making the AI trivially exploitable.
+
+## D-062: Coaching staff is head coach + two coordinators only
+- **Status:** **Accepted** (owner, 2026-10-14: *"HC, OC, DC only"*, chosen over the recommendation that also kept a head of medical).
+- **Decision:**
+  - F-22's staff is the **head coach** (game management, development, special teams), the **offensive coordinator** and the **defensive coordinator** (scheme and play-calling). The carousel and contracts cover these three roles.
+  - **No** special teams coordinator, position coaches, strength staff or medical staff.
+  - **Consequences elsewhere:** F-11 loses "medical staff quality (shorter recoveries)" (the injury report stays, run by an implicit team doctor), and the M10 owner-funded staff budget ([D-041](#d-041-finances-owner-funded-staff-budget-in-m10-only)) covers **scouting and coaching** only.
+- **Parked:** the other staff roles ([IDEAS.md](IDEAS.md)).
+
+## D-063: "Career can end" is a creation setting, off by default
+- **Status:** **Accepted** (owner, 2026-10-14: *"Configurable option, locked at start of game"*). The default (off) was proposed in the same session.
+- **Decision:**
+  - A league-creation setting, **locked** like the others ([D-036](#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)). It arrives with F-23 in M10.
+  - **Off (default):** after a firing, your reputation decides which openings want you, but you **always get at least one offer** (the worst job available).
+  - **On:** with a bad enough reputation, no team offers you a job and the career ends with the legacy screen.
+  - Either way, you can **choose to retire**, which ends the save gracefully with a legacy screen.
+  - Independent of Ironman: an Ironman player may turn it on, but Ironman doesn't force it.

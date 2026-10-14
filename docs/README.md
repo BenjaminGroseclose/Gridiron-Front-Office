@@ -14,7 +14,7 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 |---|---|---|
 | 1 | [ONE_PAGER.md](ONE_PAGER.md) | What are we building, who is it for, and why will anyone care? |
 | 2 | [STANDOUT_FEATURES.md](STANDOUT_FEATURES.md) | What makes GFO different: the real-time draft, the modern UI, plus four proposed ideas |
-| 3 | [FEATURES.md](FEATURES.md) | The full feature catalog (F-00 … F-29): MVP vs. later, dependencies, AI counterparts |
+| 3 | [FEATURES.md](FEATURES.md) | The full feature catalog (F-00 … F-30): MVP vs. later, dependencies, AI counterparts |
 | 4 | [ROADMAP.md](ROADMAP.md) | The order we build in (M0 … M11) and the exit criteria for each milestone |
 | 5 | [VISUAL_DESIGN.md](VISUAL_DESIGN.md) | What GFO looks like: the Stadium direction, dark/light palettes, type, shape, signature elements |
 | 5b | [ARCHITECTURE.md](ARCHITECTURE.md) | Technical architecture overview: stack, solution layout, runtime model |

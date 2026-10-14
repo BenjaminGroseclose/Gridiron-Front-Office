@@ -61,7 +61,7 @@ stateDiagram-v2
     }
 ```
 
-> **New-league setup:** a new league starts at **Training Camp** with generated rosters and contracts, an already-scouted (generated) draft class for next spring, and fresh schedules. A "Start at offseason" option (begin with free agency and the draft) is a nice-to-have.
+> **New-league setup ([D-049](../DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired)):** from M5, a new league starts at the **Re-sign & Tag Window**, as if the previous GM was fired at the owner review. At creation, the engine simulates the prior season headless (AI runs every team), so standings, the draft order, awards and stats are real history. The user's team inherits the previous regime's in-season prospect scouting. Before M5, development builds start at **Training Camp** with generated rosters and contracts.
 
 ---
 
@@ -136,7 +136,7 @@ public sealed record AdvanceStep(string Name, Func<StepContext, CancellationToke
 | 2 | AI pre-game | One per team or batched | Depth charts, game plans, inactive lists |
 | 3 | Simulate games | **None** (pure, in memory, parallel) | Deterministic. Re-runnable if a later step fails. |
 | 4 | Persist results | **One** | Scores, box scores, player stats (bulk), play logs, injuries, standings |
-| 5 | Post-week processing | One | Season aggregates, injury timelines, player grades, records check |
+| 5 | Post-week processing | One | Season aggregates, injury timelines, player grades (from M8), records check (from M10) |
 | 6 | Projections | One | News items, inbox messages, awards race |
 | 7 | AI post-week | Several | Waiver claims, signings, IR moves, (trade offers to the user) |
 | 8 | Advance the date | One | `SaveInfo.CurrentDate = next stop` |
@@ -175,7 +175,7 @@ Long advances (a week, an offseason phase with 31 AI teams acting) are split int
 - **Ties** are allowed in the regular season (OT rules). Playoffs continue overtime until there's a winner.
 - **The championship** is at a neutral site, with a bye week before it.
 - **A trade deadline on a bye week** is still keyed to the calendar date, not the team's schedule.
-- **Fired mid-season (M10):** the user's career moves to a "between jobs" state. The league continues to advance through AI autoplay until a job offer arrives (an end-of-season interview).
+- **Fired (M10):** only at the **owner review in Season Wrap**, never mid-season. The user interviews with teams that have openings in the same offseason and continues with a new team, so there's no "between jobs" autoplay state.
 - **Retired player un-retires:** rare event, supported by status transitions.
 
 ---

@@ -103,7 +103,7 @@ Pause reuses the resume machinery, which is why it's cheap:
 | 3 | The runner stops ticking. The UI shows a full-width **PAUSED** state. Browsing is allowed, but picks and trades are disabled while paused. | The runner restarts. Same 3-second "get ready" countdown as a resume. |
 
 - In **Live** saves, the `PauseLiveEvent` command doesn't exist in the UI and is rejected by the Application layer (`ClockModeIsLive`) as defense in depth.
-- **Decision to confirm:** while paused, can the user still *browse* (scouting reports, the Big Board)? *Recommendation:* yes for browsing, no for picks and trades. Pausable is about interruptions, not extra free thinking time with full actions.
+- **Decided ([D-060](../DECISIONS.md#d-060-a-paused-live-event-allows-browsing-but-no-actions)):** while paused, the user can browse everything (scouting reports, the Big Board, team needs), but picks, trades and offers are disabled until resume.
 
 ---
 
@@ -145,7 +145,7 @@ FA Frenzy is committed. Deadline Day is built only if FA Frenzy proves the patte
 | Turn structure | Sequential picks | Concurrent: many players, many bidders | Concurrent: many trade conversations |
 | User clock | On your pick | Agent deadlines per player ("decides in 0:45") | Offer expirations |
 | AI actors | Pick and trade | Bid, raise, withdraw | Shop, offer, accept |
-| End condition | Last pick + UDFA | Frenzy timer (e.g., 12 min real ≈ 72 in-game hours) | Deadline timer (e.g., 8 min real) |
+| End condition | Last pick (the UDFA round follows as a turn-based step, [D-059](../DECISIONS.md#d-059-the-udfa-window-is-one-turn-based-round-of-blind-offers)) | Frenzy timer (e.g., 12 min real ≈ 72 in-game hours) | Deadline timer (e.g., 8 min real) |
 | After the event | Back to the calendar | Turn-based FA continues day by day | The trade window closes |
 
 The runner, offer book, persistence and resume logic are shared. Only the **script** differs.

@@ -103,7 +103,7 @@ flowchart TD
 - **League data files:** teams and fictional colleges (with region and tier) load from **versioned JSON files with a published schema** ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). No user import yet (that's M11).
 - **F-03:** the player model (positions, attributes, hidden traits, measurables, bio), overall formulas, archetypes, the generator with distribution targets, the name blocklist.
 - Simple **contracts** (one row per player with a cap hit) so rosters look complete. Real contract math comes in M4.
-- **F-01:** the New League wizard (name, seed, team pick, presets stubbed), generation progress.
+- **F-01:** the New League wizard **v0**: name and seed → generate (with progress) → pick a team. No rule steps yet; each arrives with its milestone. The league starts at Training Camp until M5.
 - Screens: **Home** (stub dashboard), **Team** page, **Roster** (**DataGrid v1**: virtualized, sticky header and first column, sorting, keyboard navigation), **Player** page + **PlayerPeekSheet**, **League** (all teams).
 - `RatingChip`/`RatingBar` with **range support** (σ = 0 for now) and letter-grade potential, per [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) and [D-034](DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential).
 - **Team-tinted accent** theming.
@@ -111,6 +111,8 @@ flowchart TD
 
 **Exit criteria**
 - [ ] Same seed → identical league (golden test). A different seed → a different, equally plausible league.
+- [ ] Generating a new league takes < 5 s, with progress.
+- [ ] Every attribute has a planned consumer in the attribute → resolver matrix ([D-050](DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim)). The test that enforces it lands with the engine in M2.
 - [ ] Rating distributions per position match their targets (a test).
 - [ ] Sorting and scrolling a 2,000-player grid stays under budget.
 - [ ] Every player name is a link that opens a peek sheet.
@@ -153,15 +155,15 @@ flowchart TD
 **Scope**
 - **F-05 (season phases):** the phase machine, stops, the Advance button, "sim to…", blocking issues with auto-fix, the **step journal** and resume.
 - **F-06:** schedule generation, standings, **tiebreakers**, playoffs (7 seeds).
-- **F-04:** the depth chart (packages, drag-and-drop + keyboard, auto depth chart, locks), roster limits.
+- **F-04:** the depth chart by position with derived packages and optional overrides ([D-052](DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)), drag-and-drop + keyboard, auto depth chart, locks, roster limits.
 - **F-08 (basic):** 3 game plan settings plus the Coach's plan.
-- **F-09 (basic):** box scores, play-by-play list, weekly scoreboard.
+- **F-09 (basic):** box scores, play-by-play list, weekly scoreboard, and a **minimal text replay** of your game ([D-053](DECISIONS.md#d-053-m3-game-day-a-minimal-text-replay)).
 - **F-10 (basic):** season stats, league leaders, a stats grid.
 - **F-11 (basic):** injuries with timelines, IR, auto substitution, and the injury frequency setting ([D-037](DECISIONS.md#d-037-injury-frequency-setting-locked-at-creation)).
 - **Training Camp has no preseason games** ([D-038](DECISIONS.md#d-038-no-preseason-games-in-10)).
-- **F-24 (basic):** the inbox v0 and the **Front Office Briefing**.
+- **F-24 (basic):** the **Front Office Briefing** and the news feed. The inbox waits for M7 ([D-055](DECISIONS.md#d-055-m3-messaging-briefing--news-feed-the-inbox-arrives-in-m7)).
 - AI: depth charts, inactives, IR moves, basic free agent fill-ins for injuries.
-- Weekly snapshots and the Time Machine UI.
+- Weekly snapshots and the Time Machine UI. **Export, import and duplicate** (F-01).
 
 **Exit criteria**
 - [ ] A full 18-week season + playoffs → a champion recorded, with no crash and a clean log.
@@ -178,9 +180,9 @@ flowchart TD
 **Goal:** a correct, understandable cap economy.
 
 **Scope**
-- **F-12 MVP:** multi-year contracts, proration, guarantees, dead money on release, cap per league year with growth, rollover, minimum salaries, the rookie wage scale, the franchise tag, extensions.
+- **F-12 MVP:** multi-year contracts, proration, guarantees, dead money on release, cap per league year with growth, rollover, minimum salaries, the rookie wage scale, the franchise tag, extensions, the offseason **Top 51** rule ([D-056](DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040)).
 - The **cap sheet** screen (multi-year), a "cut preview" (dead money and savings), the contract builder component.
-- **F-13 v1:** the valuation model for contracts (market average per year by position, age and rating).
+- **F-13 v1:** the valuation model for contracts (market average per year by position, age and rating), including the **expected aging curves by position** that F-20 reuses in M5.
 - Regenerate initial league contracts with the real model (realistic cap tables per team).
 
 **Exit criteria**
@@ -200,15 +202,17 @@ flowchart TD
 - **F-14 (basic):** re-signing with ask/offer/counter and the interest meter.
 - **F-15 (basic):** turn-based free agency with AI bidding.
 - **F-16:** waivers, cut-down day, practice squad.
-- **F-18 (headless draft):** draft order, AI picks, tradable future picks (owned, not yet tradable in the UI), rookie contracts, a UDFA window. The user picks from a simple list with **no clock yet**.
+- **F-18 (headless draft):** draft order, AI picks, tradable future picks (owned, not yet tradable in the UI), rookie contracts, the UDFA window (one turn-based round of blind offers, [D-059](DECISIONS.md#d-059-the-udfa-window-is-one-turn-based-round-of-blind-offers)). The user picks from a simple list with **no clock yet**.
 - **F-10:** awards, career stats, champions history, the transaction log, draft history.
 - **F-21 v1:** AI re-signs, tags, cuts, bids, drafts, claims. Cap-healthy and rule-abiding.
 - **SimLab autoplay** with the **league health gate** (nightly).
 - **Ironman mode** ([D-026](DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)): a toggle at creation (requires Live), restore and duplicate guards in `SaveManager`, automatic corruption-only recovery, and the badge. About 2 days.
+- **The offseason start** ([D-049](DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired)): new leagues start at the Re-sign & Tag Window after a simulated prior season. "You've been hired" framing and the inherited situation in team selection. (Inherited prospect scouting arrives with F-17 in M6.)
 
 **Exit criteria**
 - [ ] **30-season autoplay** passes all league health metrics ([TESTING_AND_QUALITY.md §5](architecture/TESTING_AND_QUALITY.md#5-league-health-metrics-from-m5)) across 5 seeds.
-- [ ] A human plays 3 consecutive seasons including offseasons without hitting a dead end or confusion.
+- [ ] A human plays 3 consecutive seasons including offseasons without hitting a dead end or confusion, **starting from a new league's offseason start**.
+- [ ] Generating a new league with its simulated prior season takes < 15 s, with progress.
 - [ ] Save size after 10 autoplayed seasons is within budget. If play logs exceed 25% of it, the [D-039](DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning) fallback pruning is switched on.
 - [ ] 5-season autoplay smoke runs pass on the Low and High injury settings ([D-037](DECISIONS.md#d-037-injury-frequency-setting-locked-at-creation)).
 
@@ -219,7 +223,7 @@ flowchart TD
 **Goal:** the hallmark experience, complete. **This is the Minimum Lovable Product.**
 
 **Scope**
-- **F-17:** fog-of-war perception per [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) (your roster exact, other pros slightly fuzzy by a fixed amount, prospects scouted), the scouting department (scouts with accuracy, expertise and bias), **equal weekly scouting points for every team** ([D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)), prospect scouting assignments, combine, pro days, limited interviews, media consensus boards and mocks, the **Big Board**.
+- **F-17:** fog-of-war perception per [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) (your roster exact, other pros slightly fuzzy by a fixed amount, prospects scouted), the scouting department (scouts with accuracy and position expertise; no biases), the same capacity for every team ([D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)), **standing assignments (region or position) plus special assignments to specific prospects** ([D-058](DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)), inherited scouting for a new league ([D-049](DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired)), combine, pro days, limited interviews, media consensus boards and mocks, the **Big Board**.
 - AI perceptions follow the same model (their own roster exact, their own independent error on pros, their own prospect scouting). The valuation model switched to perceived ratings everywhere, with uncertain estimates discounted.
 - **F-26 + F-18 live:** the `LiveEventRunner`, the Draft Room, the **real-time clock with presets ([D-044](DECISIONS.md#d-044-draft-clock-presets-tiered-changeable-before-the-draft), times tuned from Spike S1) and the clock mode (Live / Pausable)**, the taskbar flash when you go on the clock ([D-047](DECISIONS.md#d-047-sound-all-off-by-default-no-music)), AI deliberation and acceleration, the ticker, the **trade phone** (pick-for-pick trades during the draft), the pick queue, auto-pick, crash resume, "the pick is in" moments, the persistent ON THE CLOCK banner, media draft grades.
 - The **draft class retrospective** (3- and 5-year re-grades).
@@ -244,9 +248,10 @@ Play 3 full seasons as a player, not as the developer. Then answer honestly, in 
 ## M7 · Trades & Smarter AI
 
 **Scope**
-- **F-19:** the trade builder, legality checks, AI evaluation with "what would it take?", the trade block, AI-initiated offers, AI↔AI trades, the trade deadline. Player-for-pick trades also enabled in the Draft Room.
+- **F-19:** the trade builder, legality checks, AI evaluation with a qualitative reaction scale and "what would it take?" (no value numbers, [D-061](DECISIONS.md#d-061-trade-feedback-is-qualitative-plus-what-would-it-take)), the trade block, AI-initiated offers, AI↔AI trades, the trade deadline. Player-for-pick trades also enabled in the Draft Room.
 - **F-13 v2:** a star premium (superlinear) and GM personality modifiers.
 - **F-21 v2:** GM personalities, rival GM memory, buyer/seller logic at the deadline.
+- **F-24:** the **inbox**, starting with AI trade offers that expire.
 - An **exploit test suite**: scripted attempts to fleece the AI (quantity-for-quality, the hidden-potential arbitrage, sign-and-trade loops).
 
 **Exit criteria**
@@ -260,7 +265,7 @@ Play 3 full seasons as a player, not as the developer. Then answer honestly, in 
 **Scope**
 - **F-08 full:** all game plan settings, the opponent scouting report, presets.
 - **F-09 Game Center:** live replay with the scorebug, drive chart, play-by-play feed, WP chart, other-games ticker, speed control, the "Game final" moment.
-- **F-07 v1.0:** EP/WP tables generated by SimLab, player grades.
+- **F-07 v1.0:** EP/WP tables generated by SimLab, then the coaching AI switches its 4th-down and 2-point decisions from the heuristic chart to the tables (regenerate once and recalibrate), player grades.
 - **F-25 Film Room:** the post-game report and season analytics.
 
 **Exit criteria**
@@ -288,23 +293,24 @@ Play 3 full seasons as a player, not as the developer. Then answer honestly, in 
 ## M10 · Front Office Depth
 
 **Scope**
-- **F-22:** coaching staff, schemes and scheme fit, the coaching carousel.
-- **F-23:** owner personalities, goals, job security, the staff budget, **getting fired and the career continuing**.
+- **F-22:** head coach + offensive and defensive coordinators only ([D-062](DECISIONS.md#d-062-coaching-staff-is-head-coach--two-coordinators-only)), schemes and scheme fit, the coaching carousel.
+- **F-23:** owner personalities, goals, job security, the staff budget (scouting and coaching), **getting fired at the owner review and the career continuing**, AI GMs fired and replaced by the same logic, retiring by choice, and the "career can end" setting ([D-063](DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)).
 - **F-24:** storylines and the narrative engine.
 - **F-10:** the records book, the Hall of Fame, milestones, the GM legacy page.
-- **F-11 depth:** medical staff, re-injury, playing hurt.
+- **F-11 depth:** Questionable/Doubtful with playing hurt, re-injury ([D-054](DECISIONS.md#d-054-injury-status-is-available--out-until-playing-hurt-m10)). No medical staff ([D-062](DECISIONS.md#d-062-coaching-staff-is-head-coach--two-coordinators-only)).
 - **F-20:** coaching influence on development.
 
 **Exit criteria**
 - [ ] Autoplay health still passes with schemes and coaching effects on.
-- [ ] Getting fired → hired elsewhere works end to end.
+- [ ] Getting fired → hired elsewhere works end to end, and so does the "career can end" path.
+- [ ] Over a 30-season autoplay, AI GM turnover creates openings at a plausible rate.
 
 ---
 
 ## M11 · Polish & Ship-Ready
 
 **Scope**
-- **F-27:** onboarding ("Assistant GM"), help, glossary tooltips everywhere, an accessibility audit and fixes, shortcut cheat sheet.
+- **F-27:** help pages in Markdown ([D-051](DECISIONS.md#d-051-onboarding-is-help-pages-only-authored-in-markdown)), glossary tooltips everywhere, an accessibility **audit** and fixes (accessibility is built per screen from M1), shortcut cheat sheet.
 - **F-01 league data import:** a "League data" step in the New League wizard for custom team sets and college lists, with validation errors ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 - A performance pass against every budget. A memory soak test (a 4-hour session).
 - **Packaging:** Velopack installer and updater, versioning, release notes, a code-signing decision.

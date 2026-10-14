@@ -44,6 +44,7 @@
 | **June 1 designation** | (v2) A release timing rule that splits dead money across two league years. |
 | **Rookie wage scale** | Fixed, slotted contract values for drafted rookies, based on pick number. |
 | **5th-year option** | (v2) A team option to extend a first-round pick's rookie deal by one year. |
+| **Top 51 rule** | From the new league year until the regular season, only a team's 51 highest cap hits (plus dead money) count against the cap, so 90-man offseason rosters fit ([D-056](DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040)). |
 | **UFA / ERFA** | Unrestricted and exclusive-rights free agents, by accrued seasons. In GFO, an expiring player with fewer than 4 accrued seasons is exclusive-rights: his team keeps him with a one-year qualifying offer. There's no RFA tier in 1.0 ([D-040](DECISIONS.md#d-040-salary-cap-realism-tiers)). |
 | **League year** | The contract and cap year, which begins when free agency opens in March. |
 
@@ -78,6 +79,7 @@
 | **Pick queue** | Pre-set "take X if available" choices, applied when you're on the clock. |
 | **Auto-pick** | The pick made automatically from your Big Board when your clock reaches 0:00. |
 | **Trade phone** | Draft Room panel showing incoming AI trade offers with countdowns. |
+| **Standing / special assignment** | How scouts are directed. A *standing* assignment (a region or a position group) sharpens every covered prospect automatically, down to a floor. A *special* assignment (one prospect) goes past that floor ([D-058](DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)). |
 | **Fog of war** | Hidden true ratings. Teams see *perceived* ratings with uncertainty (σ). |
 | **Perceived rating / σ** | A team's estimate of a rating, and the uncertainty around it. |
 | **Valuation model** | The single shared service that answers "what is this player worth?" for contracts, trades, the draft and the AI. |
