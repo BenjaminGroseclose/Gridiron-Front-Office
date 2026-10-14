@@ -347,7 +347,8 @@ All paths go through `IAppPaths`, so DevHost, tests and SimLab can redirect them
 
 ### 7.4 Settings
 - **App settings** (theme, density, sound, snapshot budget, window position, developer flags) are stored in `settings.json`, loaded with `IOptionsMonitor`, and written atomically (write to temp, then replace).
-- **League settings** (difficulty, clock preset, Ironman, Live Event toggles, rules) live **inside the save**. A save file is self-contained.
+- **League settings** (clock mode, clock preset, Ironman, Live Event toggles, injury frequency, rules; [D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)) live **inside the save**. A save file is self-contained.
+- **League data files** (the default team set and the fictional college list) are versioned JSON files with a published schema, shipped with the app. The generators read them and never hard-code lists. A user-supplied set can be imported at league creation from M11 ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 
 ### 7.5 Randomness and determinism
 - One PRNG implementation, in `GridironFrontOffice.Simulation.Random`. `System.Random` is **banned** in Core, Simulation and Application (with a banned-API analyzer).
@@ -366,7 +367,7 @@ Fully offline. No telemetry. No network calls. Crash reports, if ever added, are
 
 - Name lists (first/last with frequency weights), colleges, hometowns, team identities (city, nickname, colors, mark style), stadiums and personality text templates live in `data/` as JSON and are compiled as **embedded resources**.
 - **A save is self-contained.** At league creation, any reference data the league needs (team identities, the college list in use) is copied into the save. App updates to name lists never change existing leagues.
-- **Steam-ready:** all names are fictional. Generated full names are checked against a blocklist of famous real people. College names are an open question ([Q-18](OPEN_QUESTIONS.md#q-18-real-college-names)).
+- **Steam-ready:** all names are fictional. Generated full names are checked against a blocklist of famous real people. Teams use real cities with original nicknames ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)), and colleges are fictional ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 
 ---
 
@@ -385,7 +386,7 @@ Measured on the reference machine: a 6-core CPU from around 2020, 16 GB of RAM, 
 | Advance an offseason phase (AI processing) | < 5 s | With a progress UI |
 | AI draft pick decision | < 200 ms | The "deliberation" delay is cosmetic |
 | Snapshot (`VACUUM INTO`) at 100 MB | < 2 s | Off the UI thread |
-| Save size after 10 seasons | < 150 MB | Play-by-play retention policy |
+| Save size after 10 seasons | < 150 MB | Measured in M5; play-by-play fallback pruning if logs exceed 25% ([D-039](DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning)) |
 | Memory (steady state) | < 600 MB | WebView2 accounts for ~150–300 MB |
 
 Budgets are checked with BenchmarkDotNet (engine) and timed log entries (everything else). A regression of more than 20% fails the slow gate (`build.ps1 -Full`, and nightly CI once F-30 lands).

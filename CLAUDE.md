@@ -54,7 +54,8 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
 
 - **Docs first.** Write a feature spec (`docs/features/_TEMPLATE.md` → `F-xx_NAME.md`) right before building a feature. Keep code and docs in agreement within the same change.
 - **IDs:** features `F-xx`, milestones `M-x`, decisions `D-xxx`, questions `Q-xx`. When a question is answered: add a `D-xxx` (quote the owner's exact words), replace the question body with a pointer, update every affected doc, and update **this file** if a rule changed.
-- Stay inside the current milestone's scope (`docs/ROADMAP.md`). Park new ideas instead of building them.
-- Every feature ships with its **AI counterpart** (AI teams use the same commands and validation as the user; no information cheating).
-- **Steam-ready licensing:** check a package's license before adding it. No MediatR, AutoMapper, FluentAssertions v8+ or other commercial-license packages. Fictional teams, players and names only.
+- Stay inside the current milestone's scope (`docs/ROADMAP.md`). Park new ideas in `docs/IDEAS.md` instead of building them.
+- Every feature ships with its **AI counterpart** (AI teams use the same commands and validation as the user; no information cheating). There are no difficulty presets (D-042): the AI judges the user's offers with exactly the logic it applies to other AI teams.
+- **Fog of war (D-032):** a team sees its own roster's current ratings exactly, other teams' players with a fixed derived fuzz that never sharpens, and prospects only through scouting. The sim always uses true ratings. Read models carry an estimate *and* an uncertainty everywhere a rating is shown.
+- **Steam-ready licensing:** check a package's license before adding it. No MediatR, AutoMapper, FluentAssertions v8+ or other commercial-license packages. Fictional teams, players and names only (real city names with original nicknames are fine, D-033). Team sets and college lists are data files; generators never hard-code them (D-035).
 - Definition of Done: `docs/architecture/TESTING_AND_QUALITY.md` §8.5. The data-change checklist: `DATA_ACCESS_GUIDE.md` §10.

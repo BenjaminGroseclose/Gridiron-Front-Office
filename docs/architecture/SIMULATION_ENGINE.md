@@ -125,7 +125,7 @@ All coefficients live in **`SimTuning.json`**, versioned and loaded at startup, 
 ### 4.5 Injuries
 - Each snap, each participating player gets an injury hazard: `base × positionFactor × contactIntensity × (1 + fatigue) × injuryProneness / toughness`.
 - On injury: sample body part, type and severity, which gives the expected weeks out. The player leaves the game, and the depth chart substitutes.
-- Calibrated to a believable rate of season-ending injuries per team ([Q-17](../OPEN_QUESTIONS.md#q-17-injury-frequency)).
+- Calibrated to a believable rate of season-ending injuries per team on **Realistic**. The league's injury frequency setting (Low / Realistic / High, [D-037](../DECISIONS.md#d-037-injury-frequency-setting-locked-at-creation)) scales the base rate.
 
 ### 4.6 Fatigue and substitution
 - Per-player fatigue increases with snaps (heavier for DL and RB) and recovers between series.
@@ -268,7 +268,7 @@ simlab calibrate --seed 42 --seasons 200 --tuning ./SimTuning.json --out ./repor
 - Shows the scorebug, drive chart (SVG field strip), play-by-play feed, WP chart, key stats and other games' scores.
 - Results for *other* games are hidden until they "finish" during the replay, which keeps the suspense.
 - Because the result already exists, closing the Game Center mid-replay loses nothing.
-- **Future (post-1.0):** halftime adjustments would require splitting simulation at halftime (simulate the first half → user tweak → simulate the second half). The engine API should allow `Simulate(input, stopAt: Halftime)` and `Resume(state, newPlan)` from the start, even if unused, so the option stays cheap.
+- **Future (post-1.0, [D-048](../DECISIONS.md#d-048-halftime-adjustments-post-10-engine-split-kept-possible)):** halftime adjustments would require splitting simulation at halftime (simulate the first half → user tweak → simulate the second half). The engine API should allow `Simulate(input, stopAt: Halftime)` and `Resume(state, newPlan)` from the start, even if unused, so the option stays cheap.
 
 ---
 

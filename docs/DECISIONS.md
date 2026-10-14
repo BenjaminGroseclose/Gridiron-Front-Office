@@ -21,7 +21,7 @@
 | D-011 | Personal first, Steam-ready | **Accepted** |
 | D-012 | Deterministic sim with in-house PRNG | Proposed |
 | D-013 | Statistical play-by-play sim, no physics | Accepted |
-| D-014 | Fixed 32-team structure for 1.0 | Proposed |
+| D-014 | Fixed 32-team structure for 1.0 | **Accepted** (via D-036) |
 | D-015 | Integer keys + strongly typed IDs | Proposed |
 | D-016 | Single-writer command queue | Proposed |
 | D-017 | Fictional league and players only | Accepted (follows from D-011) |
@@ -39,6 +39,23 @@
 | D-029 | `CLAUDE.md` at the repo root for AI-assisted development | **Accepted** |
 | D-030 | Source hosting and CI deferred to F-30 | **Accepted** |
 | D-031 | Visual direction: Stadium (light + dark, dark by default) | **Accepted** |
+| D-032 | Fog of war: your roster exact, other pros slightly fuzzy, prospects scouted | **Accepted** |
+| D-033 | Default teams: 32 curated franchises, real cities, original nicknames | **Accepted** |
+| D-034 | Ratings display: 0–99 with ranges, letter grades for potential | **Accepted** |
+| D-035 | Fictional colleges; teams and colleges as data files, user import in M11 | **Accepted** |
+| D-036 | League settings at creation are gameplay-only; one user team | **Accepted** |
+| D-037 | Injury frequency setting, locked at creation | **Accepted** |
+| D-038 | No preseason games in 1.0 | **Accepted** |
+| D-039 | Play-by-play is kept; measure before pruning | **Accepted** |
+| D-040 | Salary cap realism tiers | **Accepted** |
+| D-041 | Finances: owner-funded staff budget in M10 only | **Accepted** |
+| D-042 | No difficulty presets in 1.0 | **Accepted** |
+| D-043 | Limited personality model; only traits with a consumer | **Accepted** |
+| D-044 | Draft clock presets: tiered, changeable before the draft | **Accepted** |
+| D-045 | Live event close or crash: resume where it left off | **Accepted** |
+| D-046 | Live events: FA Frenzy committed, Deadline Day conditional | **Accepted** |
+| D-047 | Sound: all off by default, no music | **Accepted** |
+| D-048 | Halftime adjustments post-1.0, engine split kept possible | **Accepted** |
 
 ---
 
@@ -100,7 +117,7 @@
 - **Status:** **Accepted** (owner, 2026-10-13)
 - **Decision:** When the user is on the clock, real wall-clock time runs at 1× and never pauses. AI picks resolve after short deliberation delays (about 3–15 s), which the user can accelerate (2×/4×). **The rule: time can be accelerated, never paused.** A full draft takes about 20–40 minutes.
 - **Consequences:** + The pressure lands where it matters, and the draft fits in a session. − Requires a real-time engine with race-safe commands ([LIVE_EVENTS.md](architecture/LIVE_EVENTS.md)).
-- **Open details:** clock presets ([Q-07](OPEN_QUESTIONS.md#q-07-draft-clock-presets)), close/crash policy ([Q-08](OPEN_QUESTIONS.md#q-08-app-closed-while-on-the-clock)).
+- **Details resolved:** clock presets → [D-044](#d-044-draft-clock-presets-tiered-changeable-before-the-draft), close/crash policy → [D-045](#d-045-live-event-close-or-crash-resume-where-it-left-off).
 - **Amended by D-022:** "never paused" applies to saves in **Live** clock mode (the default). Saves created in **Pausable** mode can pause live events.
 
 ## D-011: Release posture: personal first, Steam-ready
@@ -123,7 +140,7 @@
 - **Decision:** A matchup-based statistical play-by-play engine with full game state, calibrated against real-world league distributions, recording a **deciding matchup** per play for explainability. See [SIMULATION_ENGINE.md](architecture/SIMULATION_ENGINE.md).
 
 ## D-014: Fixed 32-team league structure for 1.0
-- **Status:** Proposed
+- **Status:** **Accepted** (owner, 2026-10-14, by choosing "Fixed + no cap knobs" for Q-13; see [D-036](#d-036-league-settings-at-creation-are-gameplay-only-one-user-team))
 - **Decision:** 32 teams, 2 conferences, 4 divisions of 4, 17 games across 18 weeks, 7 playoff seeds per conference, 53-man rosters + a 16-player practice squad. Not configurable in 1.0.
 - **Why:** configurability breaks the schedule formula and tiebreakers and multiplies test cases. See [Q-13](OPEN_QUESTIONS.md#q-13-league-customization).
 
@@ -139,7 +156,7 @@
 
 ## D-017: Fictional league and players only
 - **Status:** Accepted (follows from D-011)
-- **Decision:** No real league, team, player or logo names. Generated names are checked against a blocklist of famous real people. College naming is open ([Q-18](OPEN_QUESTIONS.md#q-18-real-college-names)). Personal-use real-roster imports are a post-1.0 modding question (F-28), not shipped content.
+- **Decision:** No real league, team, player or logo names. Generated names are checked against a blocklist of famous real people. Real **city** names are used with original nicknames ([D-033](#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)). Colleges are fictional by default, and users can import their own list in M11 ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). Personal-use real-roster imports are a post-1.0 modding question (F-28), not shipped content.
 
 ## D-018: Testing stack
 - **Status:** Proposed
@@ -246,3 +263,127 @@
 - **Dark palette:** **slate** (neutral). The team-tinted and true-black variants were explored on the canvas and kept as possible future appearance options; they're token swaps, so components don't change.
 - **Fonts:** Archivo (UI + display) and JetBrains Mono (debug only), both SIL OFL and bundled locally. **Icons:** Fluent System Icons (MIT), *proposed*, to confirm in the M0 gallery.
 - **Not chosen:** A · Fluent Native (too plain for the "modern, distinctive" pillar), B · Broadcast (loud for everyday screens), C · Analyst Terminal (too austere). Explorations: the [GFO Visual Directions canvas](https://claude.ai/artifact/A3WxdQTV6LYSDV2TWaR1ba).
+
+## D-032: Fog of war: your roster exact, other pros slightly fuzzy, prospects scouted
+- **Status:** **Accepted** (owner, 2026-10-14). Resolves Q-01. The owner chose "core, own roster exact": *"In general I think you should know your own roster's current rating, other roster should slightly fuzzy but since game film is open to the public, and only players should require a scout action to review / remove the fog of war. This is a core concept so be sure to clearly break it down to make sure we are aligned."* Then, on whether other pros sharpen over time: *"Yes, prospects only, however I don't want to have it sharpen based off starts, that is too complex. Keep it simple in that other teams are slightly fuzzy and never sharpen. Prospects start very fuzzy and sharpen based off scouts."* Potential and personality visibility were chosen from the recommended options in the same session.
+- **Decision:** a team's view of a player's **current ratings** depends only on who the player is to that team:
+
+| Who you're looking at | Current ratings | Does it sharpen? |
+|---|---|---|
+| **Your roster** (active, practice squad, IR), including players **the moment** they're drafted, signed, claimed or traded for | **Exact** | n/a |
+| **Other teams' players and free agents** | **Slightly fuzzy**: a small, fixed uncertainty (target about ±3 OVR shown, e.g. `78 75–81`; tuned in the F-17 spec). Game film is public, so every team sees pros about equally well. | **Never** |
+| **College prospects** (and undrafted players until they sign) | **Very fuzzy** until scouted | **Only through scouting actions:** area scouts, the combine (physical ratings near-exact), pro days, interviews |
+
+  - **Potential** stays hidden for everyone, your roster included. It's shown as a letter grade with a confidence band ([D-034](#d-034-ratings-display-099-with-ranges-letter-grades-for-potential)). On your roster it **narrows as you watch the player develop**, but it's never exact.
+  - **Personality traits** ([D-043](#d-043-limited-personality-model-only-traits-with-a-consumer)): your roster shows them as coarse descriptors (High / Average / Low, never numbers) from the moment of acquisition. Prospects reveal them only through limited interviews. Other teams' players show only **reputation tags** earned from visible behavior (e.g., "Held out in 2029").
+  - **Stable, not flickery:** each team's error on a pro is derived from `Hash(leagueSeed, "perception", teamId, playerId, season)` and redrawn once per league year. It's never re-rolled per view, and pro fuzz needs no storage.
+  - **The sim always uses true ratings.** Stats are the deliberate leak: a "78" who keeps getting beaten will show it.
+  - **AI symmetry:** every AI team knows its own roster exactly, sees everyone else with the same fixed fuzz (with its own independent error), and scouts prospects with its own staff. Teams disagree, and that disagreement creates the market.
+  - **No pro scouting assignments.** That sub-system is removed from F-17.
+  - Difficulty doesn't touch any of this ([D-042](#d-042-no-difficulty-presets-in-10)).
+- **Consequences:**
+  - \+ Simple to build and explain. + A **reveal moment** on every acquisition, so draft night tells you right away whether you read current ability correctly. + Scope cuts: no pro scouting, no snap-based sharpening.
+  - − **"Acquire, peek, cut"** reveals exact ratings. For pros the gain is small (±3). For undrafted rookies it's bigger, which is accepted as realistic (rookie camp tryouts) and bounded by the 90-man offseason limit.
+  - − **Winner's curse:** in free agency, the team that overestimates a player most wins the bidding. The valuation model (F-13) must discount uncertain estimates, or AI teams systematically overpay. The M7 exploit suite also measures trade arbitrage (selling your own players that the AI overrates).
+  - − A 10-year veteran is exactly as uncertain as a 2nd-year player. Accepted for simplicity.
+- **Alternatives rejected:** your roster converging to the truth over a season (closes the peek exploit, but needs more machinery), pros sharpening with snaps played ("too complex"), draft-only fog, no fog.
+
+## D-033: Default teams: 32 curated franchises, real cities, original nicknames
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Real cities, original names"). Resolves Q-02.
+- **Decision:** the default league is 32 **hand-written** franchises in **real metro areas** (a mix of current pro football markets and plausible new ones) with **original nicknames**, colors, generated SVG crests and fictional stadium names. Every nickname is checked against a blocklist of real pro football team names, past and present (NFL, AFL, AAFC, WFL, USFL, XFL, UFL, CFL and arena leagues). The set lives in a versioned data file ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). The 32 identities are drafted in the F-02 spec for owner review.
+- **Parked:** a "randomize identities" option ([IDEAS.md](IDEAS.md)). It needs a nickname generator and color-harmony logic for a rarely used feature.
+- **Consequences:** + A real-league feel and regional rivalries. − Real city names (not trademarks, but the M11 trademark check, [Q-22](OPEN_QUESTIONS.md#q-22-name--trademark-check), covers the shipped set too; not legal advice).
+
+## D-034: Ratings display: 0–99 with ranges, letter grades for potential
+- **Status:** **Accepted** (owner, 2026-10-14). Resolves Q-03.
+- **Decision:** attributes and OVR are shown as **0–99 integers** with color bands and, where uncertain, a range (`78  74–83`). Exact values show no range (your roster, combine-measured physicals). **Potential and scouting summaries use letter grades** ("Ceiling: B+", "Starter by Year 2 · B") and are never shown as a number, because a number implies false precision. Internally, ratings are 0–100 floats. Color is never the only signal (WCAG; see [VISUAL_DESIGN.md](VISUAL_DESIGN.md)).
+
+## D-035: Fictional colleges; teams and colleges as data files, user import in M11
+- **Status:** **Accepted** (owner, 2026-10-14: *"Use Fictional, but I would like similar to teams a way to import a list to customize it"*, then chose "Schema in M1, import in M11"). Resolves Q-18.
+- **Decision:**
+  - **Fictional colleges by default:** about 130 major and 100 small programs (e.g., "Ridge State", "Coastal Tech"), each tagged with a **region** and **tier** for scouting, and checked against real institution names.
+  - **Teams ([D-033](#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)) and colleges are versioned JSON data files with a published schema from M1.** The defaults are just the built-in files, and the generators never hard-code lists.
+  - **User import ships in M11**: a "League data" step in the New League wizard that loads a custom team set and/or college list, with clear validation errors. This moves team packs from F-28 (post-1.0) into 1.0. In-game editing stays in F-28.
+  - Imported content is the user's own. Nothing real ships with the game.
+- **Consequences:** + A personal real-names list is possible without shipping one. − A schema to version from M1 (small).
+
+## D-036: League settings at creation are gameplay-only; one user team
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Fixed + no cap knobs"). Resolves Q-13 and confirms [D-014](#d-014-fixed-32-team-league-structure-for-10). Also resolves Q-14: a single user-controlled team was proposed in the same session as already implied by the one-pager's 1.0 scope, and the owner raised no objection.
+- **Decision:**
+  - The league structure is fixed (D-014).
+  - Settings chosen at creation: **clock mode** ([D-022](#d-022-clock-mode-is-a-per-save-setting-live--pausable)), **Ironman** ([D-026](#d-026-ironman-mode-requires-live-clock-mode)), **draft clock preset** ([D-044](#d-044-draft-clock-presets-tiered-changeable-before-the-draft)), **live event toggles** ([D-046](#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)) and **injury frequency** ([D-037](#d-037-injury-frequency-setting-locked-at-creation)). There's no difficulty setting ([D-042](#d-042-no-difficulty-presets-in-10)).
+  - **The cap amount and cap growth are not exposed.** They're tuning values in `LeagueRules`. Editing them belongs to commissioner mode (F-28).
+  - **One user-controlled team** in 1.0. Multiple teams are revisited with F-28.
+- **Why:** the valuation model is calibrated as a percentage of the cap, so a cap-amount setting is cosmetic and a cap-growth setting can break the 30-season health gate. Every knob multiplies the configurations that health checks have to cover.
+
+## D-037: Injury frequency setting, locked at creation
+- **Status:** **Accepted** (owner, 2026-10-14). Resolves Q-17.
+- **Decision:** **Low / Realistic (default) / High**, chosen at league creation and **locked** so it can't be dialed down before the playoffs. The 30-season health gate runs on Realistic. Low and High each get a short (5-season) autoplay smoke run in `build.ps1 -Full`, so they can't silently break the league.
+
+## D-038: No preseason games in 1.0
+- **Status:** **Accepted** (owner, 2026-10-14, chose "None in 1.0"). Resolves Q-20.
+- **Decision:** Training Camp is annual progression at camp open, development focus, cut-down to 53, waivers and the practice squad. **There are no preseason games**, preseason stats or preseason schedule weeks. Parked in [IDEAS.md](IDEAS.md).
+- **Why:** their main justification was feeding fog of war, which no longer applies under [D-032](#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) (your roster is exact, other pros never sharpen, prospects are already drafted). What's left is flavor, at the cost of snap-limit rules, separate stats, about 48 extra games and more calendar weeks.
+
+## D-039: Play-by-play is kept; measure before pruning
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Keep all, measure first"). Resolves Q-26.
+- **Decision:** all play logs are kept, with **no pruning job and no setting** at first. Real sizes are measured in M3 and in the M5 10-season autoplay. **Trigger:** if play logs exceed 25% of the 10-season save budget (about 37 MB of 150 MB), switch to the fallback: league-wide play-by-play for the last 3 seasons, plus **every one of the user's team's games forever**, with season aggregates and record-worthy plays extracted before pruning. Box scores, stats, records and history are kept forever regardless.
+- **Why:** [PERSISTENCE.md §6](architecture/PERSISTENCE.md#6-growth-estimates-and-retention) estimates about 1.5 MB of play logs per season. Pruning would be complexity for an unmeasured problem.
+
+## D-040: Salary cap realism tiers
+- **Status:** **Accepted** (owner, 2026-10-14, selected the 5th-year option, restructures and June 1 designations for v2). Resolves Q-12.
+- **Decision:**
+  - **v1 (M4):** base salary, signing bonus proration (≤ 5 years), guarantees, dead money, the cap per league year with growth, rollover, minimum salaries, the rookie wage scale, the franchise tag, extensions.
+  - **v2 (M9):** the **5th-year option**, **restructures**, **June 1 designations**.
+  - **Not in 1.0:** RFA tenders and offer sheets, the transition tag, void years, incentives (LTBE/NLTBE), offset language, the Top 51 rule, cash-spending floors, compensatory picks.
+  - **In place of RFA** (to be confirmed in the F-12/F-15 specs): a player whose contract expires with **fewer than 4 accrued seasons** is an **exclusive-rights** free agent. His team keeps him by making a one-year qualifying offer at the minimum salary for his experience. If it doesn't, he becomes an unrestricted free agent.
+
+## D-041: Finances: owner-funded staff budget in M10 only
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Staff budget in M10"). Resolves Q-15.
+- **Decision:** the only money besides the salary cap is an **owner-funded staff budget** (scouting, medical, coaching) arriving with F-23 in **M10**. Until then (M6–M9), **every team has equal scouting capacity** (the same weekly scout points), and scouting departments differ only in scout quality. No revenue, tickets, concessions or stadium.
+- **Fixes an inconsistency:** F-17 listed "a scouting budget" in M6, before any owner budget existed.
+
+## D-042: No difficulty presets in 1.0
+- **Status:** **Accepted** (owner, 2026-10-14). Resolves Q-16. The owner asked: *"Not sure if difficult makes sense in this context, can you walk me through how this could playout. Not like the simulation should get easier or hard?"* After the walkthrough (the only honest levers are how strictly the league deals with you: trade and contract strictness, your scouting accuracy, owner patience), the owner chose "No presets in 1.0".
+- **Decision:**
+  - **No difficulty setting.** The AI judges the user's trades and contract talks with exactly the same logic it applies to other AI teams. The simulation never changes.
+  - **Challenge comes from team choice** (the wizard shows roster strength and cap space, so a 3–14 team with no cap room is hard mode), Ironman, the clock preset and injury frequency.
+  - **Hooks kept, not exposed:** internal tuning values `UserDealMargin` (an acceptance offset in trades and negotiation) and `UserScoutingAccuracy` (a prospect σ multiplier), both neutral by default, so a setting would take about a day to add later.
+  - **Revisit at Gate 2** with playtester feedback.
+- **Consequences:** + One code path for AI evaluation, so the M7 exploit suite tests what players actually face. + Every deal meets the same standard (pillar 3). − New players can't turn the game down a notch. Team choice is the dial.
+
+## D-043: Limited personality model; only traits with a consumer
+- **Status:** **Accepted** (owner, 2026-10-14: *"Limited, trim unused traits but keep it open to add more as I see fit"*). Resolves Q-19.
+- **Decision:**
+  - Personality affects **negotiation, development and retirement only**. No locker-room chemistry, no morale-driven performance swings.
+  - **1.0 traits, each with a consumer:** Work ethic and Coachability (development; Coachability matters once coaching arrives in M10), Greed and Loyalty (negotiation), Competitiveness (free agency contender priority, retirement), Ego (role demands).
+  - **Leadership is parked** with locker-room chemistry ([IDEAS.md](IDEAS.md)).
+  - **Extensible:** traits are defined in data along with the systems that read them. Adding one later means data plus a migration that **backfills existing players deterministically** from derived seeds.
+  - Visibility follows [D-032](#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted).
+- **Note:** Potential, development curve, peak age offset and injury proneness are hidden *ratings*, not personality. They're unaffected.
+
+## D-044: Draft clock presets: tiered, changeable before the draft
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Changeable before the draft" and, for Q-10, "No, Pausable covers it"). Resolves Q-07 and Q-10.
+- **Decision:**
+  - Presets per round (Round 1 / Round 2 / Rounds 3–7): **Relaxed** 4:00 / 3:00 / 2:00, **Standard** (default) 2:00 / 1:30 / 1:00, **Pressure** 1:00 / 0:45 / 0:30. **The times are tentative until Spike S1** tunes them.
+  - Chosen at creation. **Changeable in the offseason until the draft starts**, never during it, and **never in an Ironman league**. A longer clock lengthens your clock without removing the pressure, so this isn't the pause exploit that the locked clock mode (D-022) prevents.
+  - Independent of clock mode. A Pausable save still uses a preset.
+  - **No separate accessibility preset.** Pausable mode plus Relaxed cover it.
+
+## D-045: Live event close or crash: resume where it left off
+- **Status:** **Accepted** (owner, 2026-10-14). Resolves Q-08. The owner first asked: *"Can we restart the draft? Feel like a unlikely situation unless you want to push back."* After the pushback (restarting turns Alt-F4 into a "redo my draft" button, breaks [D-004](#d-004-save-model-autosave--snapshots) and Ironman, and needs a rollback in the middle of a live event, while resuming is already required by Pausable mode), the owner chose "Resume where it left off".
+- **Decision:** committed picks and trades stand. On reopen, the event resumes at the same step with the user's remaining clock restored from the 1-second heartbeat, after a 3-second "get ready" countdown that isn't charged to the user. Applies to every live event ([LIVE_EVENTS.md §5](architecture/LIVE_EVENTS.md#5-persistence-and-resume)).
+- **Accepted loophole:** in Live mode, quitting acts as a pause. You can't see the board while the app is closed, it's single-player, and every alternative punishes crashes.
+
+## D-046: Live events: FA Frenzy committed, Deadline Day conditional
+- **Status:** **Accepted** (owner, 2026-10-14, chose "Frenzy yes, Deadline conditional"). Resolves Q-11.
+- **Decision:** the draft is always live. **FA Frenzy is committed** for M9. **Trade Deadline Day is conditional:** it's built only if FA Frenzy proves the pattern is fun a second time (decided in the middle of M9). Each is on by default, **toggleable at league creation and locked afterward**.
+
+## D-047: Sound: all off by default, no music
+- **Status:** **Accepted** (owner, 2026-10-14, chose "All sounds off by default" over the recommendation to turn live event cues on by default). Resolves Q-21.
+- **Decision:** a minimal sound set (confirm click, final-10-seconds tick, "the pick is in", incoming offer, game final), **all off by default**, with volume and mute in Settings. **No music in 1.0.** Original or CC0 assets only.
+- **Non-audio cue (proposed):** when the window isn't focused, the Windows taskbar button flashes when the user goes on the clock or a live event offer arrives, so a user who alt-tabbed during accelerated AI picks still notices.
+
+## D-048: Halftime adjustments post-1.0, engine split kept possible
+- **Status:** **Accepted** (proposed in the 2026-10-14 session; the owner raised no objection). Resolves Q-27.
+- **Decision:** halftime adjustments are **post-1.0**. From M2, the engine API keeps `Simulate(input, stopAt: Halftime)` and `Resume(state, newPlan)` possible (no UI), so the option stays cheap ([SIMULATION_ENGINE.md](architecture/SIMULATION_ENGINE.md)).

@@ -51,7 +51,7 @@ flowchart TD
 | **M6** | Scouting & real-time draft | **MLP**: the hallmark experience | **The hallmark is fun** |
 | **M7** | Trades & smarter AI | AI that can't be fleeced | Trade exploitability |
 | **M8** | Game day & Film Room | Watch games live and understand results | Engagement during the season |
-| **M9** | Negotiation & Live Events | Agents, FA Frenzy, Deadline Day | Generalizing live events |
+| **M9** | Negotiation & Live Events | Agents, FA Frenzy, Deadline Day (if Frenzy proves it) | Generalizing live events |
 | **M10** | Front office depth | Staff, owner, narrative, records, HoF | Long-term stakes |
 | **M11** | Polish & ship-ready | An installable, onboarded, accessible 1.0 | Release quality |
 
@@ -99,12 +99,13 @@ flowchart TD
 **Goal:** generate a believable fictional league and browse every team and player.
 
 **Scope**
-- **F-02:** 32 curated team identities ([Q-02](OPEN_QUESTIONS.md#q-02-default-team-set-curated-or-generated)), conferences and divisions, **generated SVG crests**, stadiums.
+- **F-02:** 32 curated team identities in real cities with original nicknames ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)), conferences and divisions, **generated SVG crests**, stadiums.
+- **League data files:** teams and fictional colleges (with region and tier) load from **versioned JSON files with a published schema** ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). No user import yet (that's M11).
 - **F-03:** the player model (positions, attributes, hidden traits, measurables, bio), overall formulas, archetypes, the generator with distribution targets, the name blocklist.
 - Simple **contracts** (one row per player with a cap hit) so rosters look complete. Real contract math comes in M4.
 - **F-01:** the New League wizard (name, seed, team pick, presets stubbed), generation progress.
 - Screens: **Home** (stub dashboard), **Team** page, **Roster** (**DataGrid v1**: virtualized, sticky header and first column, sorting, keyboard navigation), **Player** page + **PlayerPeekSheet**, **League** (all teams).
-- `RatingChip`/`RatingBar` with **range support** (σ = 0 for now) per [Q-01](OPEN_QUESTIONS.md#q-01-adopt-scouting-fog-of-war-as-a-core-system).
+- `RatingChip`/`RatingBar` with **range support** (σ = 0 for now) and letter-grade potential, per [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) and [D-034](DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential).
 - **Team-tinted accent** theming.
 - Command palette **v0** (jump to player or team by name).
 
@@ -156,7 +157,8 @@ flowchart TD
 - **F-08 (basic):** 3 game plan settings plus the Coach's plan.
 - **F-09 (basic):** box scores, play-by-play list, weekly scoreboard.
 - **F-10 (basic):** season stats, league leaders, a stats grid.
-- **F-11 (basic):** injuries with timelines, IR, auto substitution.
+- **F-11 (basic):** injuries with timelines, IR, auto substitution, and the injury frequency setting ([D-037](DECISIONS.md#d-037-injury-frequency-setting-locked-at-creation)).
+- **Training Camp has no preseason games** ([D-038](DECISIONS.md#d-038-no-preseason-games-in-10)).
 - **F-24 (basic):** the inbox v0 and the **Front Office Briefing**.
 - AI: depth charts, inactives, IR moves, basic free agent fill-ins for injuries.
 - Weekly snapshots and the Time Machine UI.
@@ -166,6 +168,7 @@ flowchart TD
 - [ ] Week sim under 3 s, including persistence.
 - [ ] Tiebreaker test suite passes (including 3-team ties).
 - [ ] Kill the app mid-advance → reopen → the advance completes with identical results.
+- [ ] Play log size per season is measured and recorded ([D-039](DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning)).
 - [ ] **You actually want to play the next week.** (Subjective, but write down why or why not.)
 
 ---
@@ -206,7 +209,8 @@ flowchart TD
 **Exit criteria**
 - [ ] **30-season autoplay** passes all league health metrics ([TESTING_AND_QUALITY.md §5](architecture/TESTING_AND_QUALITY.md#5-league-health-metrics-from-m5)) across 5 seeds.
 - [ ] A human plays 3 consecutive seasons including offseasons without hitting a dead end or confusion.
-- [ ] Save size after 10 autoplayed seasons is within budget.
+- [ ] Save size after 10 autoplayed seasons is within budget. If play logs exceed 25% of it, the [D-039](DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning) fallback pruning is switched on.
+- [ ] 5-season autoplay smoke runs pass on the Low and High injury settings ([D-037](DECISIONS.md#d-037-injury-frequency-setting-locked-at-creation)).
 
 ---
 
@@ -215,9 +219,9 @@ flowchart TD
 **Goal:** the hallmark experience, complete. **This is the Minimum Lovable Product.**
 
 **Scope**
-- **F-17:** fog-of-war perception for all non-roster players, the scouting department (scouts with accuracy, expertise and bias), budget, weekly scouting assignments, combine, pro days, limited interviews, media consensus boards and mocks, the **Big Board**.
-- AI perceptions derived from their own scouting. The valuation model switched to perceived ratings everywhere.
-- **F-26 + F-18 live:** the `LiveEventRunner`, the Draft Room, the **real-time clock with presets and the clock mode (Live / Pausable)**, AI deliberation and acceleration, the ticker, the **trade phone** (pick-for-pick trades during the draft), the pick queue, auto-pick, crash resume, "the pick is in" moments, the persistent ON THE CLOCK banner, media draft grades.
+- **F-17:** fog-of-war perception per [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) (your roster exact, other pros slightly fuzzy by a fixed amount, prospects scouted), the scouting department (scouts with accuracy, expertise and bias), **equal weekly scouting points for every team** ([D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)), prospect scouting assignments, combine, pro days, limited interviews, media consensus boards and mocks, the **Big Board**.
+- AI perceptions follow the same model (their own roster exact, their own independent error on pros, their own prospect scouting). The valuation model switched to perceived ratings everywhere, with uncertain estimates discounted.
+- **F-26 + F-18 live:** the `LiveEventRunner`, the Draft Room, the **real-time clock with presets ([D-044](DECISIONS.md#d-044-draft-clock-presets-tiered-changeable-before-the-draft), times tuned from Spike S1) and the clock mode (Live / Pausable)**, the taskbar flash when you go on the clock ([D-047](DECISIONS.md#d-047-sound-all-off-by-default-no-music)), AI deliberation and acceleration, the ticker, the **trade phone** (pick-for-pick trades during the draft), the pick queue, auto-pick, crash resume, "the pick is in" moments, the persistent ON THE CLOCK banner, media draft grades.
 - The **draft class retrospective** (3- and 5-year re-grades).
 
 **Exit criteria**
@@ -269,14 +273,15 @@ Play 3 full seasons as a player, not as the developer. Then answer honestly, in 
 
 **Scope**
 - **F-14 full:** agents as characters with memory, player priorities, holdouts, extension timing.
-- **F-15:** **FA Frenzy** live event, RFA/ERFA statuses and tenders.
-- **F-19:** **Trade Deadline Day** live event.
+- **F-15:** **FA Frenzy** live event (committed, [D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)).
+- **Mid-M9 checkpoint:** is FA Frenzy fun? Only if yes, build **F-19: Trade Deadline Day** (conditional).
 - **F-26:** generalized scripts and Live Event toggles at league creation.
-- **F-12 v2 (selected):** restructures, June 1 designations, the 5th-year option ([Q-12](OPEN_QUESTIONS.md#q-12-salary-cap-realism-depth)).
+- **F-12 v2:** restructures, June 1 designations, the 5th-year option ([D-040](DECISIONS.md#d-040-salary-cap-realism-tiers)).
 
 **Exit criteria**
 - [ ] The FA Frenzy completes in its target duration. The market clears plausibly (≥ 90% of the top 100 FAs signed by Week 1).
-- [ ] Live event resume tests pass for all three event types.
+- [ ] Live event resume tests pass for every live event type that was built.
+- [ ] The Deadline Day go/no-go is recorded in DECISIONS.
 
 ---
 
@@ -300,6 +305,7 @@ Play 3 full seasons as a player, not as the developer. Then answer honestly, in 
 
 **Scope**
 - **F-27:** onboarding ("Assistant GM"), help, glossary tooltips everywhere, an accessibility audit and fixes, shortcut cheat sheet.
+- **F-01 league data import:** a "League data" step in the New League wizard for custom team sets and college lists, with validation errors ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 - A performance pass against every budget. A memory soak test (a 4-hour session).
 - **Packaging:** Velopack installer and updater, versioning, release notes, a code-signing decision.
 - **Save migration hardening:** fixture saves for every schema since the first public build.
@@ -312,13 +318,13 @@ Is it fun for someone who isn't you? Have 3–5 external playtesters play two se
 ---
 
 ## Post-1.0 (unordered backlog)
-- F-28 Commissioner mode, editors, team packs, modding
+- F-28 Commissioner mode, editors, league rule edits, modding
 - F-29 Steam integration (achievements, cloud, Workshop)
-- Halftime adjustments ([Q-27](OPEN_QUESTIONS.md#q-27-halftime-adjustments)), a RedZone multi-game view
+- Halftime adjustments ([D-048](DECISIONS.md#d-048-halftime-adjustments-post-10-engine-split-kept-possible)), a RedZone multi-game view
 - macOS (Mac Catalyst) build ([Q-06](OPEN_QUESTIONS.md#q-06-macos-ever))
 - Multiple user-controlled teams
 - Weather and surface effects in the engine
-- Compensatory picks, full RFA system, void years
+- Everything parked in [IDEAS.md](IDEAS.md) (compensatory picks, RFA, void years, preseason games, difficulty presets, …), promoted only at a gate
 
 ---
 

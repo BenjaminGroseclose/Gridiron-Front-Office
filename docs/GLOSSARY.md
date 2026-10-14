@@ -44,7 +44,7 @@
 | **June 1 designation** | (v2) A release timing rule that splits dead money across two league years. |
 | **Rookie wage scale** | Fixed, slotted contract values for drafted rookies, based on pick number. |
 | **5th-year option** | (v2) A team option to extend a first-round pick's rookie deal by one year. |
-| **UFA / RFA / ERFA** | Unrestricted, restricted and exclusive-rights free agents, by years of experience. RFA/ERFA come in v2. |
+| **UFA / ERFA** | Unrestricted and exclusive-rights free agents, by accrued seasons. In GFO, an expiring player with fewer than 4 accrued seasons is exclusive-rights: his team keeps him with a one-year qualifying offer. There's no RFA tier in 1.0 ([D-040](DECISIONS.md#d-040-salary-cap-realism-tiers)). |
 | **League year** | The contract and cap year, which begins when free agency opens in March. |
 
 ## Analytics

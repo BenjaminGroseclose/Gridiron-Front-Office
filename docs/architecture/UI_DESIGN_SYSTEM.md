@@ -215,7 +215,7 @@ GM games live in tables, so this wrapper gets extra investment. It adds GFO beha
 **Fallback:** if `FluentDataGrid` fails a P0 item (virtualization + pinned column + sticky header together, or compact rows), keep Fluent for everything else and swap the wrapper's internals to another grid (QuickGrid or Radzen; see [UI_COMPONENT_OPTIONS.md](UI_COMPONENT_OPTIONS.md)). **Screens don't change**, because they use `DataGrid<T>`.
 
 ### 5.4 Football composites (in `GridironFrontOffice.UI`)
-`TeamMark` (generated SVG crest), `PositionPill`, **`RatingChip`/`RatingBar` (with an uncertainty range; required by fog of war ([Q-01](../OPEN_QUESTIONS.md#q-01-adopt-scouting-fog-of-war-as-a-core-system)))**, `PlayerCard`, `PlayerPeekSheet` (in a Fluent drawer), `ContractSummary`, `CapBar`, `CapSheet`, `DepthChartBoard` (drag-and-drop plus keyboard reordering), `GamePlanPanel` (Fluent sliders), `Scorebug`, `DriveChart` (SVG field strip), `PlayByPlayFeed`, `StandingsTable`, `DraftClock`, `DraftTicker`, `BigBoard`, `TradeBuilder`, `TradePhoneCard`, `NewsCard`, `InboxItem`.
+`TeamMark` (generated SVG crest), `PositionPill`, **`RatingChip`/`RatingBar` (0–99 with an uncertainty range, or a plain value when exact; potential as a letter grade; required by fog of war, [D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) and [D-034](../DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential))**, `PlayerCard`, `PlayerPeekSheet` (in a Fluent drawer), `ContractSummary`, `CapBar`, `CapSheet`, `DepthChartBoard` (drag-and-drop plus keyboard reordering), `GamePlanPanel` (Fluent sliders), `Scorebug`, `DriveChart` (SVG field strip), `PlayByPlayFeed`, `StandingsTable`, `DraftClock`, `DraftTicker`, `BigBoard`, `TradeBuilder`, `TradePhoneCard`, `NewsCard`, `InboxItem`.
 
 ---
 
@@ -329,9 +329,9 @@ Reserved, choreographed animations in GFO's own components (with a reduced-motio
 
 ---
 
-## 11. Sound (optional, off by default in 1.0?)
+## 11. Sound (all off by default)
 
-Minimal UI sounds: a click for confirm, a draft clock tick in the final 10 s, "the pick is in", the game-final horn. All original or CC0 assets. See [Q-21](../OPEN_QUESTIONS.md#q-21-sound-and-music).
+Minimal sounds: a click for confirm, a draft clock tick in the final 10 s, "the pick is in", an incoming offer, the game-final horn. **All off by default**, with volume and mute in Settings. No music in 1.0. All original or CC0 assets ([D-047](../DECISIONS.md#d-047-sound-all-off-by-default-no-music)). The non-audio "you're on the clock" cue is a taskbar flash ([LIVE_EVENTS.md §3](LIVE_EVENTS.md#3-time-handling)).
 
 ---
 

@@ -26,7 +26,7 @@ flowchart LR
       DB[("Dynasty.gfo<br/>+ -wal / -shm while open")]
     end
     subgraph Snap["Snapshots (per SaveId)"]
-      S1[("S2027-preseason.gfo")]
+      S1[("S2027-camp.gfo")]
       S2[("S2027-W08.gfo")]
       S3[("S2028-pre-draft.gfo")]
     end
@@ -40,7 +40,7 @@ flowchart LR
 | Trigger | Snapshot name | Retention |
 |---|---|---|
 | League created | `created` | Keep 1 |
-| Preseason begins | `S{yyyy}-preseason` | Last 3 seasons |
+| Training camp opens | `S{yyyy}-camp` | Last 3 seasons |
 | Before each regular-season week | `S{yyyy}-W{ww}` | Rolling last 4 weeks |
 | Before the trade deadline | `S{yyyy}-deadline` | Last 2 |
 | Playoffs begin | `S{yyyy}-playoffs` | Last 2 |
@@ -127,7 +127,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.1 Meta
 | Table | Key columns | Notes |
 |---|---|---|
-| `SaveInfo` (singleton) | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `Difficulty`, `ClockPreset`, **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
+| `SaveInfo` (singleton) | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency` (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
 | `LeagueRules` (singleton) | Cap, cap growth, roster limits, practice squad size, minimum salaries table, live event toggles | Copied from defaults at creation |
 | `AdvanceJournal` | `OperationId`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
 | `LiveEventState` | `EventType`, `Status`, `StateJson`, `ClockRemainingMs`, `LastHeartbeatUtc` | See [LIVE_EVENTS.md](LIVE_EVENTS.md) |
@@ -144,7 +144,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 | `ContractYears` | `ContractId`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
 | `DeadMoney` | `TeamId`, `Season`, `PlayerId`, `Amount`, `Reason` |
 | `Injuries` | `PlayerId`, `GameId?`, `Type`, `BodyPart`, `Severity`, `OccurredOn`, `ExpectedReturn`, `ActualReturn` |
-| `ScoutingReports` | `TeamId`, `PlayerId`, `AttributeGroup`, `Estimate`, `Sigma`, `UpdatedOn` (the user's team is persisted; AI perception may be derived, see §8) |
+| `ScoutingReports` | `TeamId`, `PlayerId`, `AttributeGroup`, `Estimate`, `Sigma`, `UpdatedOn` for **prospects only** (the user's team is persisted; AI perception may be derived, see §8). Pro perception is never stored: it's a fixed fuzz derived from `Hash(leagueSeed, "perception", teamId, playerId, season)` ([D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)). |
 
 ### 5.4 Season and games
 | Table | Key columns |
@@ -173,12 +173,12 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 |---|---|---|---|
 | Players (all statuses) | +~300 prospects/yr | ~5,000 players | Retired players kept for history |
 | `PlayerGameStats` | ~285 games × ~90 players ≈ 26k rows | ~260k | Wide rows, mostly zeros |
-| `GamePlayLogs` | ~285 × ~5 KB (Brotli) ≈ 1.5 MB | ~15 MB | Before retention pruning |
+| `GamePlayLogs` | ~285 × ~5 KB (Brotli) ≈ 1.5 MB | ~15 MB | Kept, not pruned ([D-039](../DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning)). **Estimate to verify in M3.** |
 | `ScoutingReports` (user) | ~300 prospects × ~8 groups ≈ 2.4k | Pruned after the draft | |
 | `Transactions` / `NewsItems` | ~3–5k | ~40k | |
 | **Estimated file size** | | **~60–120 MB** | Budget: < 150 MB |
 
-**Retention policy (setting):** keep full play-by-play for the **last 3 seasons** by default ([Q-26](../OPEN_QUESTIONS.md#q-26-play-by-play-retention)). Box scores, stats, records and history are kept forever. Pruning runs at season end, followed by an incremental vacuum.
+**Retention policy ([D-039](../DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning)):** keep everything, with no pruning job and no setting. Measure real play log sizes in M3 and in the M5 10-season autoplay. **If play logs exceed 25% of the 10-season budget (about 37 MB)**, switch on the fallback: league-wide play-by-play for the last 3 seasons, plus every one of the user's team's games forever, with season aggregates and record-worthy plays extracted first. Pruning would then run at season end, followed by an incremental vacuum. Box scores, stats, records and history are kept forever regardless.
 
 ---
 

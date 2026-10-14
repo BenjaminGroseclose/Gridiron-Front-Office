@@ -12,8 +12,8 @@
 |---|---|---|---|---|
 | 1 | Real-time draft | Owner | **Core**, the hallmark | M6 |
 | 2 | Modern, elegant UI | Owner | **Core**, applies to everything | M0 onward |
-| A | Scouting fog of war | Proposed | **Adopt as core.** It gives the draft clock real stakes. Decide before M1 ([Q-01](OPEN_QUESTIONS.md#q-01-adopt-scouting-fog-of-war-as-a-core-system)). | M6 (display groundwork in M1) |
-| B | Live Events (FA Frenzy, Deadline Day) | Proposed | **Adopt.** It reuses the draft engine for a second and third hallmark moment. | M9 |
+| A | Scouting fog of war | Proposed → **Accepted** | **Core.** Your roster exact, other pros slightly fuzzy, prospects scouted ([D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)). | M6 (display groundwork in M1) |
+| B | Live Events (FA Frenzy, Deadline Day) | Proposed → **Accepted** | **FA Frenzy committed; Deadline Day only if Frenzy proves the pattern** ([D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)). | M9 |
 | C | Film Room (explainable results) | Proposed | **Adopt.** It makes a non-physics sim trustworthy and feels modern. | M8 |
 | D | The Owner's Box (job security and GM career) | Proposed | Adopt in a light form. Gives long-term stakes. | M10 |
 
@@ -43,7 +43,7 @@ The clock mode is **locked after creation** (decided, so pausing doesn't become 
 - Each committed pick is permanent. Restores and duplicating the league are disabled while the draft is live (see [D-004](DECISIONS.md#d-004-save-model-autosave--snapshots)).
 
 ### Clock presets
-Chosen at league creation and **locked** afterward. Proposed defaults are below; see [Q-07](OPEN_QUESTIONS.md#q-07-draft-clock-presets).
+Chosen at league creation. **Changeable in the offseason until the draft starts**, never during it and never in an Ironman league ([D-044](DECISIONS.md#d-044-draft-clock-presets-tiered-changeable-before-the-draft)). The times below are tentative until Spike S1 tunes them.
 
 | Preset | Round 1 | Round 2 | Rounds 3–7 | Who it's for |
 |---|---|---|---|---|
@@ -79,7 +79,7 @@ Chosen at league creation and **locked** afterward. Proposed defaults are below;
 3. The pick is announced as an **auto-pick**. Media draft grades may poke fun at it. There is no other penalty.
 
 ### If the app closes or crashes mid-draft
-Every pick is its own committed transaction, and the remaining time on the clock is saved about once per second. When you reopen the league, the draft resumes at the exact pick **with the time that was left**. A crash can't cost you a pick. Proposed policy: [Q-08](OPEN_QUESTIONS.md#q-08-app-closed-while-on-the-clock).
+Every pick is its own committed transaction, and the remaining time on the clock is saved about once per second. When you reopen the league, the draft resumes at the exact pick **with the time that was left**. A crash can't cost you a pick, and closing the app can't redo one: committed picks and trades stand ([D-045](DECISIONS.md#d-045-live-event-close-or-crash-resume-where-it-left-off)).
 
 ### Before the draft (the prep that makes the clock matter)
 - **Scouting season**: assign scouts, attend the combine and pro days, use your limited interview slots (see [A. Fog of war](#a-scouting-fog-of-war)).
@@ -114,7 +114,7 @@ Every pick is its own committed transaction, and the remaining time on the clock
 ```
 
 ### Accessibility vs. "no pause"
-"No pause" can be an accessibility problem. The accommodations are the **Pausable clock mode** (per save), the **Relaxed** preset (longer clocks), the pick queue and keyboard-first controls. See [Q-10](OPEN_QUESTIONS.md#q-10-accessibility-vs-no-pause).
+"No pause" can be an accessibility problem. The accommodations are the **Pausable clock mode** (per save), the **Relaxed** preset (longer clocks), the pick queue and keyboard-first controls. No separate accessibility preset is needed ([D-044](DECISIONS.md#d-044-draft-clock-presets-tiered-changeable-before-the-draft)).
 
 ### Technical design
 See [architecture/LIVE_EVENTS.md](architecture/LIVE_EVENTS.md): the authoritative clock, single-writer commands, race handling (a pick vs. expiry at 0.05 s), persistence, and resume.
@@ -148,7 +148,7 @@ Full system: [architecture/UI_DESIGN_SYSTEM.md](architecture/UI_DESIGN_SYSTEM.md
 ## A. Scouting fog of war
 
 ### The idea
-**You never see a player's true ratings.** You see what *your* staff believes: estimates with uncertainty ranges that narrow as you invest in information. Every AI team has its own beliefs too, and they disagree with yours.
+**You never see the true ratings of anyone outside your building.** You know your own players' current ability. Everyone else you see through public film (slightly fuzzy) or, for college prospects, through your scouts' eyes (very fuzzy until you invest in information). Every AI team has its own beliefs too, and they disagree with yours. **Decided:** [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted).
 
 ### Why it earns its place
 - **It makes the draft a skill test.** Without uncertainty, drafting is sorting. With it, two minutes on the clock means weighing a safe 74–78 against a volatile 68–88.
@@ -158,28 +158,36 @@ Full system: [architecture/UI_DESIGN_SYSTEM.md](architecture/UI_DESIGN_SYSTEM.md
 - Few modern GM sims do this well, and it is FOF's most loved feature.
 
 ### How it works
-- Every player has **true ratings** (hidden) and, for each team, a **perceived rating** with an uncertainty value (σ) for each attribute group.
-- The UI shows the estimate plus a range: `OVR 78 (74–83)`, or a range bar. Scouting summaries use letter grades.
+- Every player has **true ratings** (hidden, used by the sim). Each team sees **current ratings** according to who the player is to them:
+
+| Who you're looking at | What you see | Does it sharpen? |
+|---|---|---|
+| **Your roster** (including players the moment you draft, sign, claim or trade for them) | **Exact** current ratings: `OVR 78` | n/a |
+| **Other teams' players and free agents** | **Slightly fuzzy**, by a fixed amount (about ±3): `OVR 78 (75–81)`. Game film is public. | **Never** |
+| **College prospects** | **Very fuzzy** until scouted: `OVR 74 (64–84)` | **Only through scouting** (table below) |
+
+- **Prospect information sources:**
 
 | Information source | What it sharpens | Cost |
 |---|---|---|
-| Area scouts (in season) | All attributes, slowly | Scout time (weekly points), budget |
+| Area scouts (in season) | All attributes, slowly | Weekly scout points (equal for every team until the owner budget arrives in M10, [D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)) |
 | Combine | Physical attributes, almost exactly (measurables) | Free, but only for invited prospects |
 | Pro day | Physical attributes for non-invitees | Scout time |
 | Interviews (limited, e.g. 30 per class) | Personality: work ethic, coachability, character flags | A scarce slot |
 | College production | Noisy skill signal | Free |
-| Your own roster (practices and games) | Close to the truth after about one season | Free |
-| Film on other NFL players | Moderate | Pro scout time |
 
-- **Potential is always the most uncertain thing.** It is never shown exactly. It reveals itself through development.
+- **Potential is always the most uncertain thing.** It's a letter grade ("Ceiling: B+"), never a number, for every player including yours. On your roster it narrows as you watch the player develop, but it's never exact.
+- **Personality** shows as coarse descriptors on your roster from acquisition, through interviews for prospects, and only as reputation tags ("Held out in 2029") for everyone else.
+- **The reveal moment:** when you draft or acquire someone, his true current ratings appear. Draft night tells you right away whether you read current ability correctly. Potential plays out over years, which is what the 3- and 5-year retrospective grades.
+- **Stable estimates:** a team's error on a pro is deterministic and redrawn once per league year, so ranges never flicker between views.
 - **Scouts have traits**: accuracy, position expertise, and biases (e.g. "overvalues athleticism"). A bias means a scout is consistently wrong in one direction, which a smart user can learn to correct for.
-- **AI teams don't cheat.** Their perceptions come from their own scouting staff, built the same way as yours.
-- **Difficulty** scales how accurate scouting is, not how much information the AI gets.
+- **AI teams don't cheat.** Each knows its own roster exactly, sees other pros with its own independent fuzz, and scouts prospects with its own staff, built the same way as yours.
+- **No difficulty scaling** ([D-042](DECISIONS.md#d-042-no-difficulty-presets-in-10)). How well you see prospects depends on your scouts and how you use them.
 
 ### Cost and architectural impact
 - **Decide before M1.** Every rating display in the app has to support ranges from day one. The `RatingChip` and `RatingBar` components and the read models must carry an estimate *and* an uncertainty. Retrofitting this later means touching every screen.
-- Data: `ScoutingReport (TeamId, PlayerId, AttributeGroup, Estimate, Sigma, UpdatedOn)`. Reports are stored for the user's team. AI perception can be stored or derived deterministically from (seed, team, player, scouting investment), which saves space ([PERSISTENCE.md](architecture/PERSISTENCE.md)).
-- The valuation model (F-13) must work on perceived ratings, not true ones.
+- Data: `ScoutingReport (TeamId, PlayerId, AttributeGroup, Estimate, Sigma, UpdatedOn)` for **prospects** only, stored for the user's team. AI prospect perception can be stored or derived deterministically from (seed, team, player, scouting investment). **Pro fuzz needs no storage**: it's derived from `Hash(leagueSeed, "perception", teamId, playerId, season)` ([PERSISTENCE.md](architecture/PERSISTENCE.md)).
+- The valuation model (F-13) must work on perceived ratings, not true ones, and discount uncertain estimates (otherwise the team that overestimates a free agent most always wins the bidding and overpays).
 
 ---
 
@@ -192,7 +200,7 @@ Build the real-time engine once for the draft, then use it for the other moments
 |---|---|---|
 | **The draft** (M6) | About 20–40 min | As described above. |
 | **Free Agency Frenzy** (M9) | About 10–15 min, covering the first ~72 in-game hours of FA | Top free agents receive offers. Agents set deadlines ("Client decides in 0:45"). Other teams' signings stream in the ticker. You get outbid, or you overpay in a panic. Afterward, FA continues turn-based, day by day. |
-| **Trade Deadline Day** (M9) | About 5–10 min, covering the final in-game day before the deadline | AI teams shop players. Calls come in with expiring offers. Contenders and sellers get desperate. |
+| **Trade Deadline Day** (M9, conditional) | About 5–10 min, covering the final in-game day before the deadline | AI teams shop players. Calls come in with expiring offers. Contenders and sellers get desperate. |
 
 ### Why it earns its place
 - It turns the hallmark into a **pattern**. Three times a year, the game asks you to perform under pressure.
@@ -200,7 +208,7 @@ Build the real-time engine once for the draft, then use it for the other moments
 - It drives the **Pressure, not paperwork** pillar without adding busywork.
 
 ### Guardrails
-- The draft is always live. FA Frenzy and Deadline Day are on by default but can be **toggled at league creation** (locked afterward). See [Q-11](OPEN_QUESTIONS.md#q-11-live-events-beyond-the-draft).
+- The draft is always live. FA Frenzy and Deadline Day are on by default but can be **toggled at league creation** (locked afterward). **FA Frenzy is committed. Deadline Day is built only if FA Frenzy proves the pattern is fun** ([D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)).
 - The same rules apply everywhere: the save's **clock mode** (Live or Pausable) governs every live event. Restore and duplicate are disabled during the event in either mode.
 
 ---
@@ -261,4 +269,4 @@ Build the real-time engine once for the draft, then use it for the other moments
 | **Shareable cards**: export a PNG of your draft class, a season recap or a player card | Social sharing, free marketing if it ever ships on Steam | Low–Med | M11 |
 | **Draft class retrospective**: classes re-graded after 3 and 5 years | Payoff for fog of war | Low | M6 |
 | **Storylines**: multi-week narratives (QB controversy, holdout, rookie breakout, revenge game) | "Your league, your story" | Medium–High | M10 |
-| **Halftime adjustments**: one game plan tweak at halftime of your game | More engagement on game day, still GM-level | Medium | Post-1.0 |
+| **Halftime adjustments**: one game plan tweak at halftime of your game | More engagement on game day, still GM-level | Medium | Post-1.0 ([D-048](DECISIONS.md#d-048-halftime-adjustments-post-10-engine-split-kept-possible)) |

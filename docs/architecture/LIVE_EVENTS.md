@@ -13,7 +13,7 @@
 3. **AI deliberation delays** scale with the acceleration setting (1×/2×/4×).
 4. Every state change is a **committed command** through the single-writer queue.
 5. **Restore, duplicate, export and calendar advance are disabled** while an event is running.
-6. A crash or close **never costs the user an action they didn't take**. The event resumes where it left off ([Q-08](../OPEN_QUESTIONS.md#q-08-app-closed-while-on-the-clock)).
+6. A crash or close **never costs the user an action they didn't take**. The event resumes where it left off, and committed actions stand: closing the app never undoes or redoes anything ([D-045](../DECISIONS.md#d-045-live-event-close-or-crash-resume-where-it-left-off)).
 
 ---
 
@@ -58,7 +58,8 @@ flowchart TB
 - **The deadline model:** when the user goes on the clock, `deadline = now + clockLength`. Remaining time is `deadline - now`. There's no "decrement every tick", which avoids drift.
 - **Expiry check:** each 100 ms tick, `if (now >= deadline && !session.PickMade) → enqueue AutoPick(pickNo, version)`.
 - **UI rendering:** the server sends the deadline (as remaining milliseconds at a known instant). The `DraftClock` component animates the countdown **client-side** (`requestAnimationFrame` in a tiny JS module, or a CSS animation keyed on duration). Blazor doesn't re-render 10 times a second. The display re-syncs on every state push.
-- **Final 10 seconds:** a visual escalation and an optional tick sound. Both are client-side.
+- **Final 10 seconds:** a visual escalation and an optional tick sound (off by default, [D-047](../DECISIONS.md#d-047-sound-all-off-by-default-no-music)). Both are client-side.
+- **Window not focused:** when the user goes on the clock or an offer arrives, the host flashes the taskbar button (`FlashWindowEx`, behind `IPlatformServices`). It's the non-audio "you're up" cue for users who alt-tabbed during accelerated AI picks.
 - **System sleep or suspend:** if two consecutive ticks are more than 5 s apart, the gap is treated as a suspension. Only 1 s of the gap is charged to the clock and an Information log is written. *(This means sleeping the PC is effectively a pause. That's accepted as harmless. The alternative of auto-picking after a laptop lid closes would feel unfair.)*
 
 ---
@@ -87,10 +88,10 @@ Every mutating command carries the **expected version** of what it acts on. Vers
 
 **Resume algorithm** (on opening a save with `LiveEventState.Status = Running`):
 1. Rebuild the `LiveEventSession` from domain tables plus `StateJson`.
-2. **If the user was on the clock:** `deadline = now + ClockRemainingMs` (proposed policy, [Q-08](../OPEN_QUESTIONS.md#q-08-app-closed-while-on-the-clock)).
+2. **If the user was on the clock:** `deadline = now + ClockRemainingMs` ([D-045](../DECISIONS.md#d-045-live-event-close-or-crash-resume-where-it-left-off)).
 3. **If an AI team was on the clock:** re-decide (deterministically, from `(seed, pickNo)`) and schedule a short reveal (≤ 3 s).
 4. Pending offers: expire any offer older than its window. Otherwise restore it with its remaining time.
-5. Show "**Draft resumed** · Round 2, Pick 47 · You have 1:12" with a 3-second "get ready" countdown before the clock restarts. The countdown is a courtesy that isn't charged to the user. *(Proposed. It's a tiny grace period, not a pause, because it only happens on resume.)*
+5. Show "**Draft resumed** · Round 2, Pick 47 · You have 1:12" with a 3-second "get ready" countdown before the clock restarts. The countdown is a courtesy that isn't charged to the user. It's a tiny grace period, not a pause, because it only happens on resume (decided in D-045).
 
 ### 5.1 Pause (Pausable clock mode only)
 Pause reuses the resume machinery, which is why it's cheap:
@@ -136,6 +137,8 @@ An in-house curve (exponential decay from pick 1) used by both the AI and the "t
 ---
 
 ## 7. Generalizing: FA Frenzy and Deadline Day (M9)
+
+FA Frenzy is committed. Deadline Day is built only if FA Frenzy proves the pattern ([D-046](../DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)).
 
 | Concept | Draft | FA Frenzy | Deadline Day |
 |---|---|---|---|

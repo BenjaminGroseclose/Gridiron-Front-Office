@@ -83,20 +83,22 @@ flowchart LR
 ## 🟥 F-01: League creation & save management
 **Player value:** start a dynasty quickly, and trust that it's safe.
 - **MVP**
-  - **New League wizard:** league name → seed (random or manual) → team selection (all 32 with roster strength, cap space and needs previews) → difficulty preset → draft clock preset → **clock mode (Live / Pausable, [D-022](DECISIONS.md#d-022-clock-mode-is-a-per-save-setting-live--pausable))** → Live Event toggles → Ironman toggle (requires Live) → generate (with a progress screen).
+  - **New League wizard:** league name → seed (random or manual) → team selection (all 32 with roster strength, cap space and needs previews; **team choice is the difficulty dial**, since there are no difficulty presets, [D-042](DECISIONS.md#d-042-no-difficulty-presets-in-10)) → draft clock preset → **clock mode (Live / Pausable, [D-022](DECISIONS.md#d-022-clock-mode-is-a-per-save-setting-live--pausable))** → Live Event toggles → injury frequency → Ironman toggle (requires Live) → generate (with a progress screen). The full settings list is in [D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team).
+  - **League data import (M11):** an optional "League data" step that loads a custom team set and/or college list from JSON files, with validation errors ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
   - **Load screen:** save cards (crest, season and phase, record, last played, Ironman badge, version warning).
   - **Continue** (most recent save) on the main menu.
   - **Time Machine:** snapshot list and restore (not during live events, and never in Ironman, which only gets automatic corruption recovery ([D-026](DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode))).
   - Export, import, duplicate, and delete (to the Recycle Bin).
-- **Later:** league templates, a "start at the offseason" option, custom team packs (F-28), multiple user teams ([Q-14](OPEN_QUESTIONS.md#q-14-single-vs-multiple-user-controlled-teams)).
+- **Later:** league templates, a "start at the offseason" option, multiple user teams (F-28, [D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)).
 - **Depends on:** F-00, F-02, F-03.
 - **Spec notes:** [PERSISTENCE.md](architecture/PERSISTENCE.md).
 
 ## 🟥 F-02: League structure & team identity
 **Player value:** a league that feels like a real league, with its own identity.
 - **MVP:** 32 fictional franchises, 2 conferences × 4 divisions × 4 teams. City, nickname, abbreviation, primary/secondary/accent colors, a **generated SVG crest** (shape + monogram + stripes), and a stadium (name, capacity, roof, surface, climate zone). Division rivalries.
-- **Default team set:** a curated, hand-written set of 32 franchises ([Q-02](OPEN_QUESTIONS.md#q-02-default-team-set-curated-or-generated)), plus a "randomize identities" option.
-- **Later:** a team editor (F-28), relocation and expansion (far future).
+- **Default team set:** a curated, hand-written set of 32 franchises in **real cities with original nicknames**, checked against a blocklist of real pro football team names ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)). Drafted in the F-02 spec for owner review.
+- **Data-driven:** the team set is a versioned JSON data file with a published schema from M1. User import of a custom set ships in M11 ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
+- **Later:** a team editor (F-28), relocation and expansion (far future). "Randomize identities" is parked ([IDEAS.md](IDEAS.md)).
 - **Depends on:** F-00.
 
 ## 🟥 F-03: Players: model & generation
@@ -116,14 +118,16 @@ flowchart LR
 | Blocking | Pass Block, Run Block, Lead Block |
 | Defense | Pass Rush (Power), Pass Rush (Finesse), Block Shedding, Tackling, Pursuit, Hit Power, Man Coverage, Zone Coverage, Press, Ball Skills |
 | Special teams | Kick Power, Kick Accuracy, Punt Power, Punt Accuracy, Return, Snap Accuracy |
-| **Hidden** | Potential (ceiling), Development curve (early, normal or late bloomer; bust risk), Peak age offset, Injury proneness, Work ethic, Coachability, Leadership, Greed, Loyalty, Competitiveness, Ego |
+| **Hidden ratings** | Potential (ceiling), Development curve (early, normal or late bloomer; bust risk), Peak age offset, Injury proneness |
+| **Personality** ([D-043](DECISIONS.md#d-043-limited-personality-model-only-traits-with-a-consumer)) | Work ethic, Coachability (development) · Greed, Loyalty (negotiation) · Competitiveness (FA contender priority, retirement) · Ego (role demands). Only traits that some system reads. Defined in data, so more can be added later with a deterministic backfill. |
 
 - **Overall (OVR):** a position-specific weighted formula (weights in data). Archetypes (e.g., Pocket Passer vs. Scrambler) give a secondary label.
 - **Measurables:** height, weight, 40-yard dash (+10-yard split), bench reps, vertical, broad jump, 3-cone, shuttle, arm length, hand size. Correlated with the physical ratings plus noise.
-- **Bio:** fictional name (frequency-weighted lists, checked against a blocklist of famous real people), age and birthdate, college ([Q-18](OPEN_QUESTIONS.md#q-18-real-college-names)), hometown, experience, jersey number, draft info.
+- **Bio:** fictional name (frequency-weighted lists, checked against a blocklist of famous real people), age and birthdate, college (fictional, from the colleges data file, each with a region and tier; [D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)), hometown, experience, jersey number, draft info.
 - **Generation targets:** rating distributions per position and depth tier (starter, backup, fringe), plus age distribution. These must hold in balance with F-20 over decades.
-- **Display:** fog-of-war aware from day one: `RatingChip` shows an estimate and a range ([Q-01](OPEN_QUESTIONS.md#q-01-adopt-scouting-fog-of-war-as-a-core-system), [Q-03](OPEN_QUESTIONS.md#q-03-ratings-display-scale)).
-- **MVP (M1):** everything above except fog-of-war *data* (M6). Before M6, the user's own perception equals the truth, but the UI already renders ranges with σ = 0.
+- **Display** ([D-034](DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential)): 0–99 with color bands. `RatingChip` shows an estimate and a range when uncertain and a plain value when exact. Potential is a **letter grade** ("Ceiling: B+"), never a number.
+- **Visibility** ([D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)): your roster's current ratings are exact. Other teams' players are slightly fuzzy and never sharpen. Prospects are very fuzzy until scouted. Potential is fuzzy for everyone.
+- **MVP (M1):** everything above except fog-of-war *data* (M6). Before M6 every rating is shown exactly (σ = 0), but the UI already renders ranges, so M6 changes data, not screens.
 - **Depends on:** F-02.
 
 ## 🟥 F-04: Roster & depth chart
@@ -181,7 +185,7 @@ flowchart LR
 **Player value:** realistic adversity, and a reason to value depth.
 - **MVP (M3):** injuries come out of the sim (exposure-based). Types and body parts with severity distributions, expected return dates, game status (Questionable, Doubtful, Out), and IR (minimum games). Auto depth chart substitution.
 - **M10:** medical staff quality (shorter recoveries), re-injury risk, playing through injury (performance penalty), reduced performance after returning, an injury-prone trait shown via the medical report.
-- **Setting:** injury frequency ([Q-17](OPEN_QUESTIONS.md#q-17-injury-frequency)).
+- **Setting:** injury frequency Low / Realistic / High, chosen at creation and locked ([D-037](DECISIONS.md#d-037-injury-frequency-setting-locked-at-creation)).
 
 ## 🟥 F-12: Contracts & salary cap
 **Player value:** the GM's core puzzle: talent vs. money across years.
@@ -195,12 +199,13 @@ flowchart LR
   - **Extensions.**
   - **Cap sheet UI:** a multi-year table, cap space, dead money, top cap hits, projections, and a "what if I cut him?" preview.
   - Validation: no signing that puts the team over the cap.
-- **v2 (M9 or later):** June 1 designations, restructures (base → bonus), roster/workout bonuses, the 5th-year option, RFA tenders, the transition tag, void years, the offseason "Top 51" rule, compensatory picks. ([Q-12](OPEN_QUESTIONS.md#q-12-salary-cap-realism-depth))
+- **v2 (M9):** the 5th-year option, restructures (base → bonus), June 1 designations ([D-040](DECISIONS.md#d-040-salary-cap-realism-tiers)).
+- **Not in 1.0:** RFA tenders, the transition tag, void years, incentives, offsets, the "Top 51" rule, compensatory picks ([IDEAS.md](IDEAS.md)). Expiring players with fewer than 4 accrued seasons are **exclusive-rights** free agents instead (D-040).
 - **Depends on:** F-03.
 
 ## 🟥 F-13: Player valuation model (internal system)
 **Why it's its own feature:** contracts, free agency, trades, the draft, AI rosters and media rankings all ask "what is this player worth?". **If they answer differently, the game can be exploited.** One model, used everywhere.
-- **Inputs:** **perceived** ratings (the evaluating team's view, consistent with fog of war), age and the projected aging curve, positional value (QB ≫ RB), contract (surplus value = production value − cost), team context (need, scheme fit later), injury history.
+- **Inputs:** **perceived** ratings (the evaluating team's view, consistent with fog of war; uncertain estimates are discounted so the AI doesn't fall for the winner's curse in free agency, [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)), age and the projected aging curve, positional value (QB ≫ RB), contract (surplus value = production value − cost), team context (need, scheme fit later), injury history.
 - **Outputs:** market value (average per year and term), trade value (points), draft value (pick-equivalent), the "tier" label shown in the UI.
 - **Calibration:** the market average-per-year distribution per position matches target bands (e.g., top QB ≈ 15–20% of the cap). The **no-arbitrage** tests: no cheap loop like "sign FA → trade for a 1st".
 - **MVP (M4):** contracts and free agency. **M7:** trades, a star premium (superlinear, so two quarters are worth less than a dollar), GM personality modifiers.
@@ -213,8 +218,8 @@ flowchart LR
 
 ## 🟥 F-15: Free agency
 **Player value:** the market. Compete with 31 front offices for talent.
-- **MVP (M5):** UFA eligibility (4+ accrued seasons), the market opens at the new league year, **turn-based day by day** for about 14 days and then weekly. AI teams bid (valuation × need × cap). Players choose by offer score (money-weighted, with priorities in M9). A signing news feed.
-- **M9:** the **FA Frenzy** live event (F-26), RFA/ERFA statuses and tenders, compensatory picks (later).
+- **MVP (M5):** UFA eligibility (4+ accrued seasons; fewer = exclusive rights, retained with a one-year qualifying offer, [D-040](DECISIONS.md#d-040-salary-cap-realism-tiers)), the market opens at the new league year, **turn-based day by day** for about 14 days and then weekly. AI teams bid (valuation × need × cap). Players choose by offer score (money-weighted, with priorities in M9). A signing news feed.
+- **M9:** the **FA Frenzy** live event (F-26, committed by [D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)). No RFA tenders or compensatory picks in 1.0.
 - **Depends on:** F-12, F-13.
 
 ## 🟥 F-16: Waivers, cuts & practice squad
@@ -223,7 +228,9 @@ flowchart LR
 
 ## 🟧 F-17: Scouting (fog of war)
 **Player value:** information is an asset. Your scouts' judgment *is* your edge.
-- **MVP (M6):** perceived ratings with uncertainty for all players not on your roster. A scouting department (director plus area scouts with accuracy, expertise and biases), a scouting budget, weekly scouting points to assign to prospects or regions, the combine (exact measurables), pro days, **limited interviews** (personality reveal), media consensus boards and mock drafts, and **your Big Board** (tiers, notes, drag and drop). Pro scouting of other teams' players (lighter).
+- **The model** ([D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)): **your roster is exact** (current ratings), **other teams' players and free agents are slightly fuzzy by a fixed amount and never sharpen** (game film is public), and **prospects are very fuzzy and sharpen only through scouting**. Potential is a letter grade that stays fuzzy for everyone (on your roster it narrows as the player develops). Each team's error is deterministic and redrawn once per league year.
+- **MVP (M6):** the perception model above for every team, AI included. A scouting department (director plus area scouts with accuracy, expertise and biases), **equal weekly scouting points for every team** (the owner-funded budget arrives in M10, [D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)) to assign to prospects or regions, the combine (exact measurables), pro days, **limited interviews** (personality reveal), media consensus boards and mock drafts, and **your Big Board** (tiers, notes, drag and drop).
+- **Not in 1.0:** pro scouting assignments and snap-based sharpening of pro perception ([IDEAS.md](IDEAS.md)).
 - **Later:** scout hiring and firing, scout reputation, scout-specific reports ("Our West scout loves him").
 - **See:** [STANDOUT_FEATURES.md §A](STANDOUT_FEATURES.md#a-scouting-fog-of-war).
 - **Depends on:** F-03, F-13.
@@ -239,7 +246,7 @@ flowchart LR
 **Player value:** bold, creative roster building, and the AI must not be a pushover.
 - **MVP (M7):** a trade builder (players plus picks, current + 2 future seasons), cap and roster legality for both sides, AI evaluation through F-13 (perceived values, need, GM personality), **"what would it take?"** feedback (the AI states what it wants), a **trade block** (shop players and receive offers), **AI-initiated offers** in the inbox (with expiry), AI↔AI trades (frequency tuned), and the trade deadline.
 - **Anti-exploit rules:** the AI values on its *own* perception, star consolidation is superlinear, there's a "fleece memory" (Rival GMs), and the same player can't be traded back for 1 year.
-- **M9:** **Trade Deadline Day** live event.
+- **M9 (conditional):** **Trade Deadline Day** live event, built only if FA Frenzy proves the pattern ([D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)).
 - **Depends on:** F-12, F-13, F-21.
 
 ## 🟥 F-20: Player development, aging & retirement
@@ -281,15 +288,16 @@ flowchart LR
 
 ## 🟧 F-26: Live Events framework
 - **M6:** the runner, clock, offers, ticker, persistence and resume, built for the draft.
-- **M9:** generalized to **FA Frenzy** and **Trade Deadline Day**. Toggles at league creation ([Q-11](OPEN_QUESTIONS.md#q-11-live-events-beyond-the-draft)).
+- **M9:** generalized to **FA Frenzy** (committed) and **Trade Deadline Day** (conditional). Each is toggleable at league creation and locked afterward ([D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)). A close or crash resumes where it left off ([D-045](DECISIONS.md#d-045-live-event-close-or-crash-resume-where-it-left-off)).
 - **See:** [LIVE_EVENTS.md](architecture/LIVE_EVENTS.md).
 
 ## 🟥 F-27: Settings, onboarding & accessibility
-- **Ongoing:** settings (theme, accent: team or neutral, density, motion, sound, snapshot budget, play-by-play retention, developer: log level and sim trace), a keyboard shortcut map and cheat sheet (`?`), the command palette, glossary tooltips (hover a term → definition from [GLOSSARY.md](GLOSSARY.md)).
+- **Ongoing:** settings (theme, accent: team or neutral, density, motion, sound (all off by default, [D-047](DECISIONS.md#d-047-sound-all-off-by-default-no-music)), snapshot budget, developer: log level and sim trace), a keyboard shortcut map and cheat sheet (`?`), the command palette, glossary tooltips (hover a term → definition from [GLOSSARY.md](GLOSSARY.md)).
 - **M11:** onboarding (an optional "Assistant GM" that guides the first season, dismissible), help pages, an accessibility pass (contrast audit, screen reader labels, UI zoom 90–150%, colorblind review).
 
 ## ⬜ F-28: Commissioner mode, editing & modding
-- **Post-1.0:** edit players, teams and contracts (the save is flagged `IsEdited`, which disables achievements), import/export team packs (JSON + SVG), custom name lists, roster files, and maybe Steam Workshop later.
+- **Post-1.0:** edit players, teams and contracts (the save is flagged `IsEdited`, which disables achievements), league rule edits (cap amount and growth, [D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)), multiple user-controlled teams, custom name lists, roster files, and maybe Steam Workshop later.
+- **Moved into 1.0:** importing custom team sets and college lists at league creation ships in M11 as part of F-01 ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 
 ## ⬜ F-29: Steam integration
 - **After the M11 gate:** Steamworks.NET (MIT): achievements (Ironman-only?), Steam Cloud for snapshots and exports (not the live database), rich presence, store assets, trailer. **Research the Steam Deck before promising it** ([Q-23](OPEN_QUESTIONS.md#q-23-steam-deck)).

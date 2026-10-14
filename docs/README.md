@@ -21,6 +21,7 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 | 6 | [architecture/](architecture/) | Deep dives (listed below) |
 | 7 | [DECISIONS.md](DECISIONS.md) | Decision log: what was decided, why, and what we gave up |
 | 8 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | What is still open, with recommendations and challenges |
+| 8b | [IDEAS.md](IDEAS.md) | The parking lot: ideas deliberately kept off the roadmap, and when to revisit them |
 | 9 | [GLOSSARY.md](GLOSSARY.md) | Football, salary cap and project terminology |
 
 ### Architecture deep dives
