@@ -227,7 +227,7 @@ erDiagram
 
 **Key modeling choices**
 - **Player lifecycle in one table.** `Players.Status` ∈ {Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired}. Prospects are players with a draft class and no team.
-- **Ratings.** Current true ratings live on the player (hidden in the UI). `RatingHistory` keeps one snapshot per season for history and development charts. Perceived ratings live in `ScoutingReport`.
+- **Ratings.** Current true ratings live on the player and are used only by the sim. `RatingHistory` keeps one snapshot per season for history and development charts. **Every rating a screen or an AI sees goes through `IPerception`** for a viewing team ([F-03 §4.9](features/F-03_PLAYERS.md#49-perception-the-fog-of-war-boundary)): exact for that team's own roster, a derived fixed fuzz for other pros, and `ScoutingReport` state for prospects ([D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)).
 - **Contracts.** A contract header plus one `ContractYear` row per season (base salary, prorated bonus, guarantees, cap hit). Cap math is pure functions in Core.
 - **Draft picks** are first-class assets (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick` once known). Picks can be traded for the upcoming draft and the next two (the NFL's horizon, confirmed in the F-19 spec).
 - **The transaction log** is append-only: every signing, release, trade, claim and pick. It's the source for history and the news engine.

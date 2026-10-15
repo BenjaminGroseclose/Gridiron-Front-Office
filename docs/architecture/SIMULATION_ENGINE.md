@@ -95,21 +95,23 @@ All coefficients live in **`SimTuning.json`**, versioned and loaded at startup, 
 
 | Stage | Inputs | Output |
 |---|---|---|
-| 1. **Protection** | Each pass rusher vs. assigned blocker(s): pass rush (power/finesse) vs. pass block, plus blitz extra rushers vs. RB/TE protection | Time-to-pressure distribution; pressure, hit or sack; the *losing blocker* is recorded |
-| 2. **Coverage** | Each eligible receiver vs. assigned defender (man) or zone defender: route running, release and speed vs. man/zone coverage, press and speed | A separation score per receiver per "read window" |
-| 3. **Read and target** | QB awareness/decision-making, pocket presence under pressure, the game plan's focus target | The chosen target (or a throwaway or scramble) |
+| 1. **Protection** | Each pass rusher vs. assigned blocker(s): pass rush (power/finesse) and acceleration (get-off) vs. pass block and strength (anchor), plus blitz extra rushers vs. RB/TE protection | Time-to-pressure distribution; pressure, hit or sack; the *losing blocker* is recorded |
+| 2. **Coverage** | Each eligible receiver vs. assigned defender (man) or zone defender: route running, release, speed and agility vs. man coverage (with agility and speed) or zone coverage (with awareness), press vs. release | A separation score per receiver per "read window" |
+| 3. **Read and target** | QB awareness (finding the open man), decision making (throwaway vs. force), pocket presence under pressure, the game plan's focus target | The chosen target (or a throwaway or scramble) |
 | 4. **Throw** | Accuracy (short/medium/deep by depth), arm strength (deep), pressure penalty, throw on the run | Ball placement quality |
 | 5. **Catch point** | Placement + separation vs. hands, contested catch vs. ball skills | Complete / incomplete / **interception** / deflection; drop chance |
-| 6. **After the catch** | Elusiveness, speed, break tackle vs. tackling, pursuit and angles | YAC (a right-skewed distribution); **fumble** chance; broken-tackle events |
+| 6. **After the catch** | Elusiveness, agility, speed, break tackle vs. tackling, pursuit (and awareness for angles); ball security vs. hit power | YAC (a right-skewed distribution); **fumble** chance; broken-tackle events |
 
 ### 4.2 Run play pipeline
 
 | Stage | Inputs | Output |
 |---|---|---|
-| 1. **Point of attack** | Run blockers vs. run defenders at the called gap (inside/outside), box count vs. blockers | Gap quality: stuffed / normal / crease / hole |
-| 2. **Ball carrier** | Vision (finding the cutback), acceleration, power vs. tackling | Yards before contact + yards after contact |
-| 3. **Big play** | Speed and elusiveness vs. second-level and safety pursuit | A heavy right tail: breakaway chance |
-| 4. **Ball security** | Ball security vs. hit power and strip skill | Fumble, and the recovery roll |
+| 1. **Point of attack** | Run block and lead block (FB/TE/pulling guard) with strength vs. block shedding with strength, plus defenders' awareness (run fits) at the called gap (inside/outside), box count vs. blockers | Gap quality: stuffed / normal / crease / hole |
+| 2. **Ball carrier** | Vision (finding the cutback), acceleration, strength and break tackle vs. tackling | Yards before contact + yards after contact |
+| 3. **Big play** | Speed, elusiveness and agility vs. second-level and safety pursuit | A heavy right tail: breakaway chance |
+| 4. **Ball security** | Ball security vs. hit power | Fumble, and the recovery roll |
+
+> **Every player attribute is read somewhere in this section or in §4.3–4.6** ([D-050](../DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim)). The full attribute → stage matrix is in [F-03 §4.2](../features/F-03_PLAYERS.md#42-attributes-and-their-consumers-d-050).
 
 > Yardage is sampled from **mixture distributions** (e.g., a "normal play" component plus an "explosive" component) rather than a single normal. Real football has fat tails, and a plain normal distribution produces boring, wrong-looking games.
 

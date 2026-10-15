@@ -101,8 +101,9 @@ flowchart LR
 
 ## 🟥 F-02: League structure & team identity
 **Player value:** a league that feels like a real league, with its own identity.
+**Spec (accepted):** [features/F-02_LEAGUE_AND_TEAMS.md](features/F-02_LEAGUE_AND_TEAMS.md), including the 32 franchises.
 - **MVP:** 32 fictional franchises, 2 conferences × 4 divisions × 4 teams. City, nickname, abbreviation, primary/secondary/accent colors, a **generated SVG crest** (a small parametric set: shape + monogram + stripe pattern, chosen per team in the data file), and a stadium (name, capacity, roof, surface, climate zone).
-- **Default team set** ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames), amended): 32 hand-written franchises in metros that **mirror the NFL's footprint** (two teams each in the New York and Los Angeles areas), with **original nicknames** and original conference and division names. Divisions are aligned by geography, with each two-team metro split across conferences. Drafted in the F-02 spec for owner review.
+- **Default team set** ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames), amended): 32 hand-written franchises in metros that **mirror the NFL's footprint** (two teams each in the New York and Los Angeles areas), with **original nicknames** and original conference and division names. Divisions are aligned by geography, with each two-team metro split across conferences and sharing its city label (New York, Los Angeles). Accepted in review ([D-064](DECISIONS.md#d-064-f-02-team-set-accepted-shared-city-labels)).
 - **Guardrails (tests):** nicknames checked against a blocklist of real pro football team names, past and present. **No team uses the colors of the real team in its metro.** No crest resembles a real logo. Abbreviations are unique. Colors are distinguishable within a division. Text on every team color meets contrast.
 - **Honest flavor:** stadium roof, surface and climate have no game effect until weather arrives (post-1.0). "Division rivalries" means the schedule only, until storylines (M10).
 - **Data-driven:** the team set is a versioned JSON data file with a published schema from M1. User import of a custom set ships in M11 ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). Imported SVG logos are rendered as `<img>` (or sanitized), never inlined.
@@ -114,12 +115,14 @@ flowchart LR
 
 **Positions:** QB, RB, FB, WR, TE, OT, OG, C, EDGE, DT, LB, CB, S, K, P, LS. Scheme-specific roles (3-4 OLB, nickel CB, FS/SS) are depth chart *slots*, not separate positions.
 
-**Attributes** (internal 0–100). **Every attribute must be read by at least one play resolver** ([D-050](DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim)). The list below is the *starting* list. The F-03 spec reconciles it with [SIMULATION_ENGINE.md §4](architecture/SIMULATION_ENGINE.md#4-play-resolution) through an attribute → resolver matrix. Agility, Jumping, Strength and Play Recognition currently have no consumer, and the run pipeline's "strip skill" has no attribute.
+**Spec (accepted):** [features/F-03_PLAYERS.md](features/F-03_PLAYERS.md).
+
+**Attributes** (internal 0–100). **Every attribute must be read by at least one play resolver** ([D-050](DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim)). The F-03 spec reconciles the list with [SIMULATION_ENGINE.md §4](architecture/SIMULATION_ENGINE.md#4-play-resolution): **42 attributes**. Jumping is folded into Contested Catch and Ball Skills, Play Recognition into Awareness, and "strip skill" becomes Hit Power. The full attribute → resolver matrix is in [F-03 §4.2](features/F-03_PLAYERS.md#42-attributes-and-their-consumers-d-050).
 
 | Group | Attributes |
 |---|---|
-| Physical | Speed, Acceleration, Agility, Strength, Jumping, Stamina, Toughness |
-| Mental | Awareness (football IQ), Discipline, Play Recognition |
+| Physical | Speed, Acceleration, Agility, Strength, Stamina, Toughness |
+| Mental | Awareness (football IQ, including reading plays), Discipline |
 | Passing | Arm Strength, Short / Medium / Deep Accuracy, Throw on the Run, Pocket Presence, Decision Making |
 | Ball carrying | Ball Security, Vision, Elusiveness, Break Tackle |
 | Receiving | Hands, Route Running, Release, Contested Catch |

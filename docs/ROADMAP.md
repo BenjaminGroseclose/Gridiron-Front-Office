@@ -98,6 +98,8 @@ flowchart TD
 
 **Goal:** generate a believable fictional league and browse every team and player.
 
+**Specs (accepted):** [F-02 League & teams](features/F-02_LEAGUE_AND_TEAMS.md), [F-03 Players](features/F-03_PLAYERS.md).
+
 **Scope**
 - **F-02:** 32 curated team identities in real cities with original nicknames ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)), conferences and divisions, **generated SVG crests**, stadiums.
 - **League data files:** teams and fictional colleges (with region and tier) load from **versioned JSON files with a published schema** ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). No user import yet (that's M11).

@@ -164,7 +164,7 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 | **Draft clock** | Display XL condensed digits in on-accent on the hero band. At ≤ 10 s, the clock sits on an Urgent red pill. The client animates the countdown ([LIVE_EVENTS.md §3](architecture/LIVE_EVENTS.md#3-time-handling)). |
 | **"The pick is in"** | Scrim `rgba(4,7,12,.8)`. Dialog with Radius L: an accent-fill header band with the title in condensed uppercase, then the player name in Display M. |
 | **Scorebug** | Two team blocks (each in its own primary fill and on-color) with a condensed abbreviation and score, then a Surface 3 status block (quarter and clock). Radius M outer. |
-| **Crest** | A shield shape in the team primary with the monogram in on-accent condensed 800. This is a placeholder until F-02 defines the generated crest styles. |
+| **Crest** | A parametric `TeamMark`: shape (Shield, Roundel, Hexagon, Diamond, Banner) in the team primary, a stripe (None, Single, Double, Chevron, Sash) in the secondary, and the monogram in the accent (or on-color) in Archivo condensed 800. Defined in [F-02 §4.4](features/F-02_LEAGUE_AND_TEAMS.md#44-crest-system-teammark). |
 
 ---
 

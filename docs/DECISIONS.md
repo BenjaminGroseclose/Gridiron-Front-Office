@@ -71,6 +71,8 @@
 | D-061 | Trade feedback is qualitative, plus "what would it take?" | **Accepted** |
 | D-062 | Coaching staff is head coach + two coordinators only | **Accepted** |
 | D-063 | "Career can end" is a creation setting, off by default | **Accepted** |
+| D-064 | F-02 team set accepted; shared city labels | **Accepted** |
+| D-065 | F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages | **Accepted** |
 
 ---
 
@@ -510,3 +512,18 @@
   - **On:** with a bad enough reputation, no team offers you a job and the career ends with the legacy screen.
   - Either way, you can **choose to retire**, which ends the save gracefully with a legacy screen.
   - Independent of Ironman: an Ironman player may turn it on, but Ironman doesn't force it.
+
+## D-064: F-02 team set accepted; shared city labels
+- **Status:** **Accepted** (owner, 2026-10-15, reviewing [F-02](features/F-02_LEAGUE_AND_TEAMS.md)): *"Use New York and Los Angeles like the real league"*; on the Heritage and Frontier conference names, *"Yeah those work for the base version I think most users will import real ones"*; on changing any of the 32, *"For now no, those look good to me"*.
+- **Decision:**
+  - The two-team metros **share their city label**, as in the real league: **New York** Excelsiors (NYX) and **New York** Kings (NYK), **Los Angeles** Condors (LAC) and **Los Angeles** Navigators (LAN). Abbreviation, nickname, monogram and colors tell them apart, and the UI never shows the city alone where it would be ambiguous.
+  - Conference names are **Heritage** and **Frontier** for the base set.
+  - The 32 drafted franchises are accepted as-is. They may still change only if the automated blocklist, color or contrast tests flag them ([F-02 §4.3](features/F-02_LEAGUE_AND_TEAMS.md#43-guardrails-each-one-is-a-test-against-the-data-file)).
+- **Note:** the owner expects most players to import a real-league set. The team-set schema already covers conference and division names, so an import can rename those too ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
+
+## D-065: F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages
+- **Status:** **Accepted** (owner, 2026-10-15, reviewing [F-03](features/F-03_PLAYERS.md)): on the attribute list, *"I am good with the 42 attributes"*; after the interval was explained, chose "80% interval"; on roster composition, *"Yes but don't make them strict some team might have more or less but that should be the average"*.
+- **Decision:**
+  - **42 attributes**, each read by the sim ([F-03 §4.2](features/F-03_PLAYERS.md#42-attributes-and-their-consumers-d-050)). Jumping is folded into Contested Catch and Ball Skills, Play Recognition into Awareness.
+  - **Uncertain ratings show an 80% interval** (estimate ± 1.28σ): the truth falls outside the shown range about 1 time in 5. It's one value in data, retunable after playtesting.
+  - **Per-position roster targets are league averages**, not rules. Each team varies within a typical range, above a floor that keeps every package fieldable ([F-03 §4.1](features/F-03_PLAYERS.md#41-positions)). The only hard rule stays F-05's "required depth chart slots filled".
