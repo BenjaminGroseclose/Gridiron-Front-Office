@@ -4,15 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** The repo is currently **docs only (pre-M0)**. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
+Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is in progress:** the solution skeleton (projects, references, guardrails, architecture tests, `build.ps1`) is scaffolded, and the work packages in `docs/milestones/M0_FOUNDATIONS.md` are being built in order. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
 
-## Commands (planned in M0; they don't exist until M0 scaffolding lands)
+## Commands
 
 ```powershell
-./build.ps1                       # restore → build (warnings as errors) → fast tests (Category!=Slow), incl. transaction torture tests
-./build.ps1 -Full                 # + slow gates: SimLab calibration, 30-season autoplay, benchmarks → ./artifacts/
-dotnet test tests/Core.Tests --filter "FullyQualifiedName~ContractMath"   # a single test class or method
-dotnet run --project tools/SimLab -- calibrate --seasons 200 --seed 42     # also: autoplay | tables | bench | abtest
+./build.ps1                       # restore → build (warnings as errors) → fast tests (not Category=Slow), incl. architecture rules
+./build.ps1 -Full                 # + slow tests and a Release ReadyToRun publish of the desktop app → ./artifacts/
+dotnet test --project tests/Architecture.Tests --filter-class "*PackageRules*"   # one test class (also: --filter-method "*Name*")
+dotnet run --project src/DevHost                                                  # browser host on http://localhost:5180
+dotnet run --project tools/SimLab -- calibrate --seasons 200 --seed 42           # SimLab commands arrive in M2
 ```
 Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-30 and will just call `build.ps1`.
 
@@ -47,12 +48,15 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
 ## Gotchas already found
 
 - `Desktop` **must** target `net10.0-windows10.0.19041.0`. The .NET 10 WPF `BlazorWebView` uses WebView2's composition control and crashes at startup on plain `net10.0-windows`. Publish with `PublishReadyToRun=true` (`docs/architecture/HOST_BENCHMARK.md`).
-- Fluent UI Blazor v5 is new (5.0.0, 2026-09-25). API names marked "(v5)" in the docs are unverified until Spike S0b. Check them before relying on them.
+- Fluent UI Blazor v5 is new (5.0.0, 2026-09-25; 5.0.1 pinned). API names marked "(v5)" in the docs are unverified until Spike S0b. Check them before relying on them.
+- **Tests run on Microsoft.Testing.Platform** (`global.json` → `"test": { "runner": … }`). The .NET 10 SDK refuses the old VSTest bridge for xUnit v3, so don't add `Microsoft.NET.Test.Sdk` or `xunit.runner.visualstudio`. Filters are xUnit v3 options (`--filter-class`, `--filter-method`, `--filter-trait`, `--filter-not-trait "Category=Slow"`), not VSTest `--filter` expressions. A test project with zero tests exits with code 8, which `build.ps1` accepts.
+- **Guardrails live in the build:** banned APIs are three tiers in `build/BannedSymbols.*.txt` (transactions everywhere, purity rules for Core/Simulation/Application, raw SQLite outside Infrastructure), wired by `Directory.Build.props`. EF Core is referenced by Application with `PrivateAssets="compile"`, so UI code that touches EF types doesn't compile. Package versions live only in `Directory.Packages.props`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 
 ## Workflow
 
 - **Docs first.** Write a feature spec (`docs/features/_TEMPLATE.md` → `F-xx_NAME.md`) right before building a feature. Keep code and docs in agreement within the same change.
+- **Git (D-066):** commit messages are `(type) *module* : summary` (types `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`), never Conventional Commits. Branches are `type/short-name`. Each milestone is one branch (`feat/m0-foundations`) with commits per work package, merged unsquashed when its exit checklist passes. Spike code is deleted once its results are recorded.
 - **IDs:** features `F-xx`, milestones `M-x`, decisions `D-xxx`, questions `Q-xx`. When a question is answered: add a `D-xxx` (quote the owner's exact words), replace the question body with a pointer, update every affected doc, and update **this file** if a rule changed.
 - Stay inside the current milestone's scope (`docs/ROADMAP.md`). Park new ideas in `docs/IDEAS.md` instead of building them.
 - Every feature ships with its **AI counterpart** (AI teams use the same commands and validation as the user; no information cheating). There are no difficulty presets (D-042): the AI judges the user's offers with exactly the logic it applies to other AI teams.

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The process the "killed process leaves no partial write" torture test launches and kills mid-command
+    (DATA_ACCESS_GUIDE.md §9). Implemented in M0 WP6.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

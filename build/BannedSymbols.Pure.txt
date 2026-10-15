@@ -1,0 +1,15 @@
+# Core, Simulation and Application are pure and deterministic (ARCHITECTURE.md §7.5, CLAUDE.md "Determinism").
+T:System.Random;Use the in-house PRNG with a derived seed (D-012)
+P:System.DateTime.Now;Use the league date or TimeProvider
+P:System.DateTime.UtcNow;Use the league date or TimeProvider
+P:System.DateTime.Today;Use the league date or TimeProvider
+P:System.DateTimeOffset.Now;Use the league date or TimeProvider
+P:System.DateTimeOffset.UtcNow;Use the league date or TimeProvider
+M:System.Threading.Thread.Sleep(System.Int32);Use await Task.Delay with a TimeProvider
+M:System.Threading.Thread.Sleep(System.TimeSpan);Use await Task.Delay with a TimeProvider
+P:System.Threading.Tasks.Task`1.Result;Await instead of blocking
+M:System.Threading.Tasks.Task.Wait;Await instead of blocking
+M:System.Threading.Tasks.Task.Wait(System.Int32);Await instead of blocking
+M:System.Threading.Tasks.Task.Wait(System.TimeSpan);Await instead of blocking
+M:System.Threading.Tasks.Task.Wait(System.Threading.CancellationToken);Await instead of blocking
+T:System.Console;Use ILogger

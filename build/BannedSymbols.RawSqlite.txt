@@ -1,0 +1,3 @@
+# Only Infrastructure opens SQLite connections; everything else goes through ISaveWriter / ISaveReader (DATA_ACCESS_GUIDE.md §2 W4).
+M:Microsoft.Data.Sqlite.SqliteConnection.#ctor;Use ISaveWriter / ISaveReader
+M:Microsoft.Data.Sqlite.SqliteConnection.#ctor(System.String);Use ISaveWriter / ISaveReader

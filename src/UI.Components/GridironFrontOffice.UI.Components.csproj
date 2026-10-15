@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!--
+    The GFO layer over Fluent UI Blazor v5: GfoThemeService, extension tokens, DataGrid<T>, dialogs, toasts, Icon,
+    gap components and charts (UI_DESIGN_SYSTEM.md). App-only (D-027) and football-agnostic:
+    references no other GridironFrontOffice project.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" />
+  </ItemGroup>
+</Project>

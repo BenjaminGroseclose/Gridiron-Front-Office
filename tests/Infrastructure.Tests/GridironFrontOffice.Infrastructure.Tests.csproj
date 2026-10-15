@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Built alongside the tests so the kill-mid-write torture test can launch it (not referenced as a library). -->
+    <ProjectReference Include="..\Infrastructure.Tests.Crasher\GridironFrontOffice.Infrastructure.Tests.Crasher.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+</Project>

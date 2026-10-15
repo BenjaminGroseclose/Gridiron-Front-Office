@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Pure domain model and rules: entities, value objects, cap math, tiebreakers, overall formulas.
+    References nothing but the BCL (ARCHITECTURE.md §4.1). Banned: wall clock, System.Random, blocking waits.
+  -->
+</Project>

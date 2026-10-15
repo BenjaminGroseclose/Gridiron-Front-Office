@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Core\GridironFrontOffice.Core.csproj" />
+    <ProjectReference Include="..\..\src\Simulation\GridironFrontOffice.Simulation.csproj" />
+    <ProjectReference Include="..\..\src\Application\GridironFrontOffice.Application.csproj" />
+    <ProjectReference Include="..\..\src\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\UI.Components\GridironFrontOffice.UI.Components.csproj" />
+    <ProjectReference Include="..\..\src\UI\GridironFrontOffice.UI.csproj" />
+  </ItemGroup>
+  <!-- The hosts (Desktop, DevHost, SimLab) are checked through their .csproj files, not referenced. -->
+  <ItemGroup>
+    <PackageReference Include="NetArchTest.Rules" />
+  </ItemGroup>
+</Project>

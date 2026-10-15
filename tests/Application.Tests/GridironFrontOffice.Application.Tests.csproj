@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Application\GridironFrontOffice.Application.csproj" />
+    <ProjectReference Include="..\..\src\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
+  </ItemGroup>
+  <!-- Use cases run against real SQLite temp files through Infrastructure, never the EF in-memory provider. -->
+</Project>

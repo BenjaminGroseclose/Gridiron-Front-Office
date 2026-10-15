@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Console tool: calibration, 30-season autoplay, EP/WP table generation, benchmarks (ARCHITECTURE.md §4.2).
+    Commands arrive with the engine in M2.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Application\GridironFrontOffice.Application.csproj" />
+    <ProjectReference Include="..\..\src\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

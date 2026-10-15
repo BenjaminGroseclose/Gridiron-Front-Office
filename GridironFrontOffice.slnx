@@ -1,0 +1,36 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Core/GridironFrontOffice.Core.csproj" />
+    <Project Path="src/Simulation/GridironFrontOffice.Simulation.csproj" />
+    <Project Path="src/Application/GridironFrontOffice.Application.csproj" />
+    <Project Path="src/Infrastructure/GridironFrontOffice.Infrastructure.csproj" />
+    <Project Path="src/UI.Components/GridironFrontOffice.UI.Components.csproj" />
+    <Project Path="src/UI/GridironFrontOffice.UI.csproj" />
+    <Project Path="src/Desktop/GridironFrontOffice.Desktop.csproj" />
+    <Project Path="src/DevHost/GridironFrontOffice.DevHost.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/SimLab/GridironFrontOffice.SimLab.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Core.Tests/GridironFrontOffice.Core.Tests.csproj" />
+    <Project Path="tests/Simulation.Tests/GridironFrontOffice.Simulation.Tests.csproj" />
+    <Project Path="tests/Application.Tests/GridironFrontOffice.Application.Tests.csproj" />
+    <Project Path="tests/Infrastructure.Tests/GridironFrontOffice.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Infrastructure.Tests.Crasher/GridironFrontOffice.Infrastructure.Tests.Crasher.csproj" />
+    <Project Path="tests/UI.Components.Tests/GridironFrontOffice.UI.Components.Tests.csproj" />
+    <Project Path="tests/UI.Tests/GridironFrontOffice.UI.Tests.csproj" />
+    <Project Path="tests/Architecture.Tests/GridironFrontOffice.Architecture.Tests.csproj" />
+  </Folder>
+  <Folder Name="/build/">
+    <File Path="build.ps1" />
+    <File Path="global.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path=".editorconfig" />
+    <File Path="build/BannedSymbols.Transactions.txt" />
+    <File Path="build/BannedSymbols.Pure.txt" />
+    <File Path="build/BannedSymbols.RawSqlite.txt" />
+    <File Path="tests/Directory.Build.props" />
+  </Folder>
+</Solution>

@@ -1,0 +1,7 @@
+@* The root component both hosts render: the WPF BlazorWebView directly, the DevHost through its own router. *@
+<Router AppAssembly="@typeof(AppRoot).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+</Router>
