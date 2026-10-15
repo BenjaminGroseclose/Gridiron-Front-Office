@@ -77,9 +77,12 @@ flowchart LR
 GridironFrontOffice/
 ├─ GridironFrontOffice.slnx      # XML solution format (.NET 9 SDK+ / VS 17.13+)
 ├─ CLAUDE.md                     # Conventions for AI assistants (points into docs/)
-├─ Directory.Build.props         # Nullable, LangVersion, TreatWarningsAsErrors, analyzers
-├─ Directory.Packages.props      # Central Package Management (all versions in one place)
-├─ global.json                   # Pin the .NET 10 SDK band
+├─ build.ps1                     # The local gates (CI later calls it, F-30)
+├─ build/                        # BannedSymbols.*.txt: the three banned-API tiers
+├─ Directory.Build.props         # Nullable, LangVersion, TreatWarningsAsErrors, banned-API wiring
+├─ Directory.Packages.props      # Central Package Management (all versions in one place) + global analyzers
+├─ global.json                   # Pin the .NET 10 SDK band; tests run on Microsoft.Testing.Platform
+├─ THIRD_PARTY_NOTICES.md        # License inventory (D-011)
 ├─ .editorconfig
 ├─ docs/                         # ← you are here
 ├─ src/                          # Each folder holds GridironFrontOffice.<Folder>.csproj
@@ -98,6 +101,7 @@ GridironFrontOffice/
 │  ├─ Simulation.Tests/
 │  ├─ Application.Tests/
 │  ├─ Infrastructure.Tests/
+│  ├─ Infrastructure.Tests.Crasher/  # Console app the kill-mid-write torture test launches and kills
 │  ├─ UI.Components.Tests/       # bUnit
 │  ├─ UI.Tests/                  # bUnit
 │  └─ Architecture.Tests/        # Dependency rules enforced as tests

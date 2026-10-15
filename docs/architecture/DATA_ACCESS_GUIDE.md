@@ -519,7 +519,7 @@ Each step commits on its own and records itself in `AdvanceJournal` *in the same
 | No nested commands | `SaveWriter` throws (an `AsyncLocal` flag) |
 | No `async void` | Analyzer (e.g., VSTHRD100 from Microsoft.VisualStudio.Threading.Analyzers, MIT) |
 
-`BannedSymbols.txt` (illustrative; list each overload in documentation-ID format):
+The real lists are `build/BannedSymbols.Transactions.txt` (every project) and `build/BannedSymbols.RawSqlite.txt` (every project except Infrastructure), proven to fail the build in M0 WP1. Excerpt (each overload listed in documentation-ID format):
 ```
 M:Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.BeginTransaction;Only SaveWriter begins transactions (see DATA_ACCESS_GUIDE.md)
 M:Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.BeginTransactionAsync(System.Threading.CancellationToken);Only SaveWriter begins transactions

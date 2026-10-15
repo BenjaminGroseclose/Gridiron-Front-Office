@@ -9,12 +9,12 @@
 | ID | Decision | Status |
 |---|---|---|
 | D-001 | Fresh start, prior history ignored | Accepted |
-| D-002 | .NET 10 LTS + Blazor Hybrid, Windows-first | Accepted (Blazor/HTML/CSS) / Proposed (version) |
-| D-003 | UI in Razor Class Libraries, thin host, DevHost | Proposed |
+| D-002 | .NET 10 LTS + Blazor Hybrid, Windows-first | **Accepted** |
+| D-003 | UI in Razor Class Libraries, thin host, DevHost | **Accepted** |
 | D-004 | Autosave + snapshots save model | **Accepted** |
 | D-005 | Saves in LocalAppData, not Documents | **Accepted** |
 | D-006 | EF Core + raw ADO for bulk paths | Superseded by D-024 |
-| D-007 | Serilog to rolling `.log` files | Accepted (requirement) / Proposed (library) |
+| D-007 | Serilog to rolling `.log` files | **Accepted** |
 | D-008 | UI components and assets: permissive licenses only | Accepted (licenses). Wrapping rule amended by D-025. |
 | D-009 | Game day role: GM + game plan | **Accepted** |
 | D-010 | Draft clock: AI fast, user clock real | **Accepted** (amended by D-022) |
@@ -22,12 +22,12 @@
 | D-012 | Deterministic sim with in-house PRNG | Proposed |
 | D-013 | Statistical play-by-play sim, no physics | Accepted |
 | D-014 | Fixed 32-team structure for 1.0 | **Accepted** (via D-036) |
-| D-015 | Integer keys + strongly typed IDs | Proposed |
-| D-016 | Single-writer command queue | Proposed |
+| D-015 | Integer keys + strongly typed IDs | **Accepted** |
+| D-016 | Single-writer command queue | **Accepted** |
 | D-017 | Fictional league and players only | Accepted (follows from D-011) |
-| D-018 | Testing stack | Proposed |
+| D-018 | Testing stack | **Accepted** |
 | D-019 | Unpackaged + Velopack, Steam later | Proposed |
-| D-020 | Feature folders, no mediator/mapper libraries | Proposed |
+| D-020 | Feature folders, no mediator/mapper libraries | **Accepted** |
 | D-021 | Host: WPF + BlazorWebView (MAUI removed) | **Accepted** |
 | D-022 | Clock mode is a per-save setting (Live / Pausable), locked at creation | **Accepted** |
 | D-023 | Fonts, icons and theme deferred to a visual design document | **Accepted** |
@@ -73,6 +73,7 @@
 | D-063 | "Career can end" is a creation setting, off by default | **Accepted** |
 | D-064 | F-02 team set accepted; shared city labels | **Accepted** |
 | D-065 | F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages | **Accepted** |
+| D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** |
 
 ---
 
@@ -83,14 +84,15 @@
 - **Consequences:** A clean architecture and docs-first approach. Some re-implementation of things that existed (league wizard, schedule).
 
 ## D-002: Platform: .NET 10 LTS + Blazor Hybrid, Windows-first
-- **Status:** Blazor Hybrid (HTML/CSS UI instead of XAML) accepted by the owner. .NET 10 version proposed. The host framework is covered by D-021.
+- **Status:** **Accepted** (owner, 2026-10-15: *"D-002: .NET 10 WPF is where we landed I thought, MAUI is not need for our Blazor Hybrid"*). Earlier, Blazor Hybrid (HTML/CSS UI instead of XAML) was accepted by the owner. This decision is the **.NET 10 platform + Blazor UI**. The host framework is [D-021](#d-021-host-wpf--blazorwebview-maui-removed): **WPF**, with no MAUI.
+- **Implementation note (2026-10-15):** `global.json` pins the **10.0.402 SDK** (`rollForward: latestPatch`, so it stays on the 10.0.4xx band). Runtime 10.0.13. Bump the pin deliberately when moving to a newer feature band.
 - **Context:** The owner has shipped projects successfully with MAUI Blazor Hybrid and wants modern HTML/CSS for the UI rather than XAML. The game is a data-dense desktop app.
 - **Decision:** .NET 10 (LTS, supported until Nov 2028). The UI is Blazor rendered in a native window through **BlazorWebView** (WebView2 on Windows), targeting Windows 10/11 x64 first. Stay on .NET 10 through 1.0 unless a blocking need appears. Don't chase .NET 11 (STS).
 - **Consequences:** + Full modern HTML/CSS, Razor components, the .NET ecosystem. − A WebView memory footprint (~150–300 MB).
 - **Alternatives:** see [ARCHITECTURE.md §11](ARCHITECTURE.md#11-alternatives-considered-host-framework).
 
 ## D-003: UI lives in Razor Class Libraries; the host stays thin
-- **Status:** Proposed
+- **Status:** **Accepted** (owner, 2026-10-15: *"Accepted, UI.Components and UI should own the UI while Desktop only hosts the webview"*). Scaffolded in M0 WP1 and enforced by the architecture tests.
 - **Decision:** All UI lives in `GridironFrontOffice.UI.Components` (generic design system) and `GridironFrontOffice.UI` (game screens). `GridironFrontOffice.Desktop` only composes services and hosts the WebView. A `GridironFrontOffice.DevHost` (Blazor Web App) hosts the same UI in a browser for fast iteration, the component gallery and Playwright tests. Platform features sit behind `IPlatformServices`.
 - **Consequences:** + Switching hosts takes about a day. + Browser hot reload and DevTools. + Testable with bUnit. − One extra project to maintain. − Small behavior differences between Interactive Server (DevHost) and Hybrid, such as JS interop latency and scoped lifetimes.
 
@@ -115,7 +117,7 @@
 - **Alternatives:** Dapper everywhere (more SQL to hand-maintain, and no migrations story), EF only (too slow for weekly bulk writes).
 
 ## D-007: Logging: Serilog to rolling .log files
-- **Status:** Requirement accepted (owner: "log to a .log file"). Library proposed.
+- **Status:** **Accepted** (owner, 2026-10-15: *"Accepted format looks good and Serilog is the right choice"*). Earlier, the requirement: "log to a .log file".
 - **Decision:** `ILogger<T>` in all code. Serilog configured only in the composition root. An async rolling file sink at `%LOCALAPPDATA%\GridironFrontOffice\logs\gfo-YYYYMMDD.log` (daily, plus a new file at 10 MB, 14 retained). A separate opt-in sim trace log. Global crash capture, including JS errors from the WebView. See [LOGGING.md](architecture/LOGGING.md).
 - **Alternatives:** a custom MEL file provider (reinventing rolling and retention), NLog (equally fine; Serilog chosen for its ecosystem and familiarity).
 
@@ -162,12 +164,12 @@
 - **Why:** configurability breaks the schedule formula and tiebreakers and multiplies test cases. See [Q-13](OPEN_QUESTIONS.md#q-13-league-customization).
 
 ## D-015: Integer keys with strongly typed IDs
-- **Status:** Proposed
+- **Status:** **Accepted** (owner, 2026-10-15: *"Correct we should use Integer IDs"*). The ID convention is built in M0 WP6. The first IDs arrive in M1.
 - **Decision:** `INTEGER PRIMARY KEY` (rowid) tables with C# `readonly record struct PlayerId(int Value)` style IDs, mapped through EF value converters. The only GUID is `SaveInfo.SaveId`, which identifies a league across exports and imports.
 - **Consequences:** + Compact, fast joins, and no mixing up `PlayerId` with `TeamId` at compile time. − Converter boilerplate (minimal with a source generator or a base convention).
 
 ## D-016: Single-writer command queue
-- **Status:** Proposed
+- **Status:** **Accepted** (owner, 2026-10-15: *"A single write makes sense to me, should only ever need to save something one at a time no need to thread saving."*). Note: only *writes* are serialized. Reads still run concurrently alongside the writer (SQLite WAL), so screens never wait on a save.
 - **Decision:** Every mutation to a save goes through `ISaveWriter.ExecuteAsync` (one at a time, each in its own transaction). Domain events are published only after commit. Reads run concurrently (WAL). Commands that can race (live events) carry version tokens.
 - **Consequences:** + No write contention, no double picks, simple reasoning. − Very long commands block other writes (mitigated by step-journaled advances).
 
@@ -176,8 +178,9 @@
 - **Decision:** No real league, team, player or logo names. Generated names are checked against a blocklist of famous real people. Real **city** names are used with original nicknames ([D-033](#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)). Colleges are fictional by default, and users can import their own list in M11 ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). Personal-use real-roster imports are a post-1.0 modding question (F-28), not shipped content.
 
 ## D-018: Testing stack
-- **Status:** Proposed
+- **Status:** **Accepted** (owner, 2026-10-15: *"Whatever you recommend"*). Accepted as recommended, with the open choice resolved: **Shouldly** is the assertion library (already in use; the AwesomeAssertions alternative isn't needed). BenchmarkDotNet arrives with the engine (M2), `FakeTimeProvider` with live events (M6), and Playwright stays optional (M3+).
 - **Decision:** xUnit v3, bUnit, **Shouldly** (or the AwesomeAssertions fork, Apache 2.0, *not* FluentAssertions v8+, which requires a commercial license), Verify (snapshot tests), `Microsoft.Extensions.TimeProvider.Testing` (`FakeTimeProvider`), NetArchTest (architecture rules), BenchmarkDotNet, and optionally Playwright for .NET (E2E through DevHost). Tests use real SQLite temp files, not the EF in-memory provider.
+- **Implementation note (M0 WP1, 2026-10-15):** tests run on **Microsoft.Testing.Platform**, enabled in `global.json`. The .NET 10 SDK no longer runs xUnit v3 through the VSTest bridge, so `Microsoft.NET.Test.Sdk` and `xunit.runner.visualstudio` aren't used, and filters use xUnit's own options ([TESTING_AND_QUALITY.md §7](architecture/TESTING_AND_QUALITY.md#7-build-script-now-ci-later)).
 
 ## D-019: Distribution: unpackaged + Velopack, Steam later
 - **Status:** Proposed
@@ -185,7 +188,7 @@
 - **Open:** code signing (a cost decision, made at M11).
 
 ## D-020: Feature folders, no mediator or mapper libraries
-- **Status:** Proposed
+- **Status:** **Accepted** (owner, 2026-10-15: *"I like this idea, feature folders make sense in terms of organization"*).
 - **Decision:** `GridironFrontOffice.Application` is organized by feature (`Draft/`, `FreeAgency/`, …) with plain command and query services. No MediatR or AutoMapper (both moved to commercial licensing in 2025, and neither is needed at this scale). Mapping is hand-written projections. In-process domain events use a tiny in-house dispatcher.
 
 ## D-021: Host: WPF + BlazorWebView (MAUI removed)
@@ -527,3 +530,11 @@
   - **42 attributes**, each read by the sim ([F-03 §4.2](features/F-03_PLAYERS.md#42-attributes-and-their-consumers-d-050)). Jumping is folded into Contested Catch and Ball Skills, Play Recognition into Awareness.
   - **Uncertain ratings show an 80% interval** (estimate ± 1.28σ): the truth falls outside the shown range about 1 time in 5. It's one value in data, retunable after playtesting.
   - **Per-position roster targets are league averages**, not rules. Each team varies within a typical range, above a floor that keeps every package fieldable ([F-03 §4.1](features/F-03_PLAYERS.md#41-positions)). The only hard rule stays F-05's "required depth chart slots filled".
+
+## D-066: Git workflow: GFO commit format, one branch per milestone
+- **Status:** **Accepted** (owner, 2026-10-15, answering the M0 plan's questions: chose "Your current format" for commits, "One M0 branch" for landing work, and "Delete it" for spike code).
+- **Decision:**
+  - **Commit messages** use the owner's existing format, `(type) *module* : summary` (e.g., `(feat) *m0* : scaffold solution, projects and guardrails`), replacing the Conventional Commits rule in TESTING_AND_QUALITY.md §8.4. Types follow the commit-review skill: `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`. **Branches** are `type/short-name`, reusing the same types.
+  - **One branch per milestone** (`feat/m0-foundations` for M0), with commits per work package, merged into `main` once the exit checklist passes. Merged without squashing, so the work-package history survives.
+  - **Spike code is throwaway:** it's deleted once its results are recorded in DECISIONS. Git history keeps it.
+- **Where:** [TESTING_AND_QUALITY.md §8.4](architecture/TESTING_AND_QUALITY.md#84-git-workflow-d-066), [M0_FOUNDATIONS.md §11](milestones/M0_FOUNDATIONS.md#11-questions-for-the-owner-answered-2026-10-15).

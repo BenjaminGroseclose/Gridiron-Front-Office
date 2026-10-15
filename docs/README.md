@@ -40,6 +40,19 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 | [architecture/LIVE_EVENTS.md](architecture/LIVE_EVENTS.md) | Real-time engine behind the draft (and later FA Frenzy / Deadline Day) |
 | [architecture/TESTING_AND_QUALITY.md](architecture/TESTING_AND_QUALITY.md) | Test strategy, SimLab gates, `build.ps1` (CI later, F-30), code conventions |
 
+### Milestone plans
+
+| Document | Scope |
+|---|---|
+| [milestones/M0_FOUNDATIONS.md](milestones/M0_FOUNDATIONS.md) | M0 in detail: ten work packages, every file and package that changes, risks, the exit checklist, and progress |
+
+### Feature specs
+
+| Document | Status |
+|---|---|
+| [features/F-02_LEAGUE_AND_TEAMS.md](features/F-02_LEAGUE_AND_TEAMS.md) | Accepted (M1): structure, the 32 default franchises, crests |
+| [features/F-03_PLAYERS.md](features/F-03_PLAYERS.md) | Accepted (M1): the player model, generation, the perception boundary |
+
 ### Templates
 
 | Document | Use |

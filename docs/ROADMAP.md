@@ -61,6 +61,8 @@ flowchart TD
 
 **Goal:** the toolchain, host, logging, persistence (with transactions you can trust) and design system basics all work end to end.
 
+**Detailed plan and progress:** [milestones/M0_FOUNDATIONS.md](milestones/M0_FOUNDATIONS.md), ten work packages in build order. WP1 (the solution skeleton and guardrails) is done.
+
 **Stack decided** (2026-10-13): WPF + BlazorWebView host ([D-021](DECISIONS.md#d-021-host-wpf--blazorwebview-maui-removed)), EF Core with the GFO unit of work ([D-024](DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work)), and Fluent UI Blazor v5 ([D-025](DECISIONS.md#d-025-ui-component-library-fluent-ui-blazor-v5)).
 
 **Spikes to run first** (short, and they de-risk the decided stack):
