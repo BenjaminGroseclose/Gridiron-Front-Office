@@ -8,10 +8,18 @@
     <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css" />
     <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-fonts.css" />
     <link rel="stylesheet" href="@Assets["GridironFrontOffice.DevHost.styles.css"]" />
-    <HeadOutlet @rendermode="InteractiveServer" />
+    <HeadOutlet @rendermode="InteractiveNoPrerender" />
+    <!-- Before Blazor, so even boot-time JavaScript errors reach the log (LOGGING.md §8). -->
+    <script src="_content/GridironFrontOffice.UI/js/gfo-diagnostics.js"></script>
 </head>
 <body>
-    <Routes @rendermode="InteractiveServer" />
+    <Routes @rendermode="InteractiveNoPrerender" />
     <script src="_framework/blazor.web.js"></script>
 </body>
 </html>
+
+@code {
+    // No prerendering: the desktop WebView never prerenders, so the DevHost shouldn't either. A prerendered copy is
+    // disposed straight away, and Fluent v5 components then fault fire-and-forget tasks on the disposed scope (WP5).
+    private static readonly IComponentRenderMode InteractiveNoPrerender = new InteractiveServerRenderMode(prerender: false);
+}

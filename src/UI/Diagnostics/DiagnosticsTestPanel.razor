@@ -1,0 +1,64 @@
+@inject IJSRuntime JS
+@* Debug builds only (M0 WP5): one trigger per failure hook, so the logging and crash paths can be proven end to end.
+   Shown on Home while Enabled; never in Release. *@
+
+<section class="gfo-diag-panel" data-testid="diagnostics-test-panel">
+    <h2>Diagnostics tests <span>(Debug builds only)</span></h2>
+    <div class="gfo-diag-actions">
+        <button type="button" data-testid="diag-page-error" @onclick="ThrowPageError">Page error</button>
+        <button type="button" data-testid="diag-js-error" @onclick="ThrowJavaScriptErrorAsync">JavaScript error</button>
+        <button type="button" data-testid="diag-unobserved-task" @onclick="LoseTaskExceptionAsync">Unobserved task</button>
+        <button type="button" data-testid="diag-crash" @onclick="CrashOnBackgroundThread">Crash the app</button>
+    </div>
+    <p>@_status</p>
+</section>
+
+@code {
+    // static readonly, not const: a const false would make Home's branch unreachable code (an error in Release).
+#if DEBUG
+    public static readonly bool Enabled = true;
+#else
+    public static readonly bool Enabled = false;
+#endif
+
+    private string _status = "Each button exercises one hook. Check the log afterwards.";
+
+    /// <summary>Caught by the page's error boundary: Error in the log, recovery panel on screen.</summary>
+    private void ThrowPageError() => throw new InvalidOperationException("Test page error from the diagnostics panel");
+
+    /// <summary>Uncaught in the browser: gfo-diagnostics.js forwards it as Error (GridironFrontOffice.UI.Js).</summary>
+    private async Task ThrowJavaScriptErrorAsync()
+    {
+        await JS.InvokeVoidAsync("gfoDiagnostics.throwTestError");
+        _status = "Threw a JavaScript error.";
+    }
+
+    /// <summary>A faulted task nobody awaits: TaskScheduler.UnobservedTaskException logs it as Error once it's collected.</summary>
+    private async Task LoseTaskExceptionAsync()
+    {
+        StartAndForgetFaultedTask();
+        await Task.Delay(250);
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+        _status = "Dropped a faulted task and forced a collection.";
+    }
+
+    /// <summary>
+    /// An exception on a background thread: AppDomain.UnhandledException logs it as Fatal. The desktop host shows the
+    /// crash dialog; the DevHost process exits.
+    /// </summary>
+    private void CrashOnBackgroundThread()
+    {
+        var thread = new Thread(() => throw new InvalidOperationException("Test crash from the diagnostics panel"))
+        {
+            IsBackground = true,
+            Name = "gfo-test-crash",
+        };
+        thread.Start();
+        _status = "Crashing…";
+    }
+
+    private static void StartAndForgetFaultedTask() =>
+        _ = Task.Run(() => throw new InvalidOperationException("Test unobserved task exception from the diagnostics panel"));
+}

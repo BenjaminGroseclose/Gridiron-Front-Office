@@ -13,6 +13,7 @@ Gridiron Front Office (GFO) is a single-player pro football GM simulation for Wi
 ./build.ps1 -Full                 # + slow tests and a Release ReadyToRun publish of the desktop app → ./artifacts/
 dotnet test --project tests/Architecture.Tests --filter-class "*PackageRules*"   # one test class (also: --filter-method "*Name*")
 dotnet run --project src/DevHost                                                  # browser host on http://localhost:5180
+dotnet run --project src/Desktop -- --diag-test=crash                             # Debug: prove a failure path (page|js|task|crash|ui)
 dotnet run --project tools/SimLab -- calibrate --seasons 200 --seed 42           # SimLab commands arrive in M2
 ```
 Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-30 and will just call `build.ps1`.
@@ -66,6 +67,11 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - The app bar is the title bar: put interactive elements inside it as real buttons and inputs, or mark them `[data-no-drag]`, so they aren't drag area.
 - **Tests run on Microsoft.Testing.Platform** (`global.json` → `"test": { "runner": … }`). The .NET 10 SDK refuses the old VSTest bridge for xUnit v3, so don't add `Microsoft.NET.Test.Sdk` or `xunit.runner.visualstudio`. Filters are xUnit v3 options (`--filter-class`, `--filter-method`, `--filter-trait`, `--filter-not-trait "Category=Slow"`), not VSTest `--filter` expressions. A test project with zero tests exits with code 8, which `build.ps1` accepts.
 - **Guardrails live in the build:** banned APIs are three tiers in `build/BannedSymbols.*.txt` (transactions everywhere, purity rules for Core/Simulation/Application, raw SQLite outside Infrastructure), wired by `Directory.Build.props`. EF Core is referenced by Application with `PrivateAssets="compile"`, so UI code that touches EF types doesn't compile. Package versions live only in `Directory.Packages.props`.
+- **Logging (WP5, LOGGING.md):**
+  - Log through `ILogger<T>` with `[LoggerMessage]` methods. The analyzers require it (CA1848) and want computed arguments in a local first (CA1873).
+  - Serilog types stay in Infrastructure and the hosts (architecture test).
+  - Logs: the real app writes to `%LOCALAPPDATA%\GridironFrontOffice\logs`, the DevHost to `GridironFrontOffice-Dev\logs`.
+  - The DevHost **doesn't prerender**: a disposed prerender scope makes Fluent v5 fault background tasks, and the desktop WebView never prerenders anyway.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 

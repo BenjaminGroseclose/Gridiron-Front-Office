@@ -315,20 +315,37 @@ flowchart LR
 
 **Afterwards:** the spike code (`src/Desktop/Spike/`, `wwwroot/spike.*`, the spike wiring in `App` and `MainWindow`, and the spike host page) is deleted once it's in git history. `app.manifest` stays.
 
-### WP5 · Logging and diagnostics (M)
+### WP5 · Logging and diagnostics (M) ✅ Done 2026-10-16
 **Goal:** everything in [LOGGING.md](../architecture/LOGGING.md) that M0 needs.
-- [ ] `AppPaths` (`IAppPaths`): `%LOCALAPPDATA%\GridironFrontOffice\{Saves, Snapshots, logs, diagnostics}`. **DevHost and tests redirect** to `GridironFrontOffice-Dev` or a temp folder, so development never touches your real saves.
-- [ ] `SettingsStore`: `settings.json` with an atomic write (temp file, then replace), loaded **before** DI so the log level can come from it.
-- [ ] Serilog bootstrap in the composition roots (Desktop and DevHost): an async rolling file sink (daily + 10 MB, 14 files), the output template, `Microsoft.*` at Warning, enrichers (`AppVersion`, `SessionId`).
-- [ ] The **startup banner**, with app version + commit, OS, .NET, WebView2 version, culture, screen and DPI, and paths written as `%LOCALAPPDATA%` tokens (never your user name).
-- [ ] Global hooks: `AppDomain.UnhandledException`, `TaskScheduler.UnobservedTaskException`, `Application.DispatcherUnhandledException`.
-- [ ] A Blazor `ErrorBoundary` per page that logs and shows a recovery panel.
-- [ ] `gfo-diagnostics.js`: `window.onerror` and `unhandledrejection` forwarded to .NET as Error with `SourceContext = GridironFrontOffice.UI.Js`.
-- [ ] The **crash dialog**, a small *native WPF* window because Blazor itself may be the thing that's broken: "Something went wrong. Your league is safe up to your last action." With **Open logs folder** and **Restart** (see §11, question 4).
-- [ ] `Log.CloseAndFlush()` on exit.
-- [ ] A Debug-only "Throw test exception" action (in DevHost and in Desktop Debug builds) that proves the crash path end to end.
 
-**Exit:** the log contains the banner, lifecycle events and the forced test exception with its stack trace. A JavaScript error appears in the log.
+- [x] **`AppPaths` (`IAppPaths`):** `%LOCALAPPDATA%\GridironFrontOffice\{Saves, Snapshots, logs, diagnostics, WebView2}` plus `settings.json`. The DevHost uses `GridironFrontOffice-Dev`; tests use a temp folder.
+- [x] **`SettingsStore` (`ISettingsStore`):** `settings.json` with an atomic write (temp file, then replace), loaded **before** DI. A missing file is **created with the defaults on first launch**, so it can be edited by hand before the Settings page exists (owner's choice); its log level is honored in both hosts (tested). An unreadable one is kept as `settings.unreadable.json` and logged. Comments, trailing commas, nulls and unknown settings are tolerated.
+- [x] **Serilog bootstrap** (`GfoLogging`), shared by both hosts:
+  - an async rolling file (daily + 10 MB, 14 files);
+  - `Microsoft.*` and `System.*` at Warning;
+  - `AppVersion` and `SessionId` enrichers;
+  - **a custom line formatter** (`GfoLogFormatter`) that adds a properties line only when there are any, and **tokenizes user folders on every line**.
+- [x] **The startup banner:** version + commit (from the informational version), OS, .NET, WebView2, culture, screen, DPI and monitors, tokenized paths, settings and the session ID.
+- [x] **Global hooks:** `AppDomain.UnhandledException` and `TaskScheduler.UnobservedTaskException` (both hosts); `Application.DispatcherUnhandledException` (Desktop, always fatal).
+- [x] **`PageErrorBoundary`** around every routed page: it logs the exception and shows a recovery panel (Try again, Home), and navigating clears it.
+- [x] **`gfo-diagnostics.js`:** loaded before Blazor and buffered until `ClientDiagnostics` attaches. It forwards `window` errors and unhandled rejections as Error (`GridironFrontOffice.UI.Js`), capped at 50 per session.
+- [x] **The crash dialog**, a native WPF window: Open logs folder, Close, Restart. The choice is logged, the log is flushed, and the app exits.
+- [x] **`Log.CloseAndFlush()`** on exit (`Application.Exit`, `ProcessExit`, and the DevHost's `finally`).
+- [x] **Debug-only test actions:** the Home page's diagnostics test panel (page error, JavaScript error, unobserved task, crash), plus `--diag-test=page|js|task|crash|ui` and Ctrl+Shift+F12 in the desktop host.
+
+**Exit: met.** Every path was run in both hosts. The log shows the banner, the lifecycle events and each forced exception with its full stack trace, and the JavaScript errors appear in both the browser and the WebView ([LOGGING.md §8.1](../architecture/LOGGING.md#81-proving-it-debug-builds)).
+- **Desktop:**
+  - the background-thread crash → dialog → **Close** → exit code 1;
+  - the UI-thread crash → dialog → **Restart** → a clean new instance.
+  - A warm start logs "Host page loaded" about 1.1 s after process start.
+- **No Windows user name** appeared in either log.
+- **Tests:** 25 in Infrastructure and 8 in UI (bUnit).
+
+**Found while proving it**
+1. **`ClientDiagnostics` disposal** called JavaScript even when it had never attached. That threw when the DevHost's statically prerendered copy was disposed. Fixed: it detaches only if it attached.
+2. **Fluent v5 bug:** when a prerender scope is disposed, Fluent components fault fire-and-forget tooltip cleanups on the disposed service provider. The unobserved-task hook surfaced them as Errors. **The DevHost no longer prerenders**, which also makes it behave like the desktop WebView (which never prerenders).
+3. **Restart** carries the original arguments over, minus a Debug `--diag-test`. **WP9's single-instance guard** must let a restarted process wait for the old one to exit.
+4. **Done early for WP9:** the WebView2 profile now lives in `IAppPaths.WebView2` instead of next to the exe. The Desktop host also registers Fluent and links its CSS and the fonts; `<FluentProviders />` in the shared layout needs them.
 
 ### WP6 · Persistence core and torture tests (L)
 **Goal:** the data layer exactly as in [DATA_ACCESS_GUIDE.md §3](../architecture/DATA_ACCESS_GUIDE.md#3-the-building-blocks-the-code-youll-write-once-in-m0), proven by torture tests.
@@ -401,7 +418,7 @@ flowchart LR
   - the WPF caption buttons following the theme mode;
   - the measured maximize overhang;
   - first paint from `settings.json`: native Ground backgrounds, plus `gfo-booting` and Fluent's listener flag in `index.html`;
-  - an explicit WebView2 user data folder under `IAppPaths`.
+  - ~~an explicit WebView2 user data folder under `IAppPaths`~~ (done in WP5).
 - [ ] **Single instance:** a named mutex. A second launch brings the existing window to the front and exits.
 - [ ] Window size and position remembered in `settings.json`, and restored safely when a monitor has been removed.
 - [ ] **Main menu** (UI RCL): Continue / New League / Load / Settings.
@@ -435,7 +452,7 @@ GridironFrontOffice/
 │  │                       Saves/ (SaveManager, SaveCatalog, SnapshotService), Logging/, Settings/, Paths/
 │  ├─ UI.Components/       Theming/, DataGrid/, Dialogs/, Toasts/, Icons/, Components/ (EmptyState, Stat, Kbd…), wwwroot/ (tokens, fonts, js)
 │  ├─ UI/                  Shell/, Pages/ (MainMenu, LoadScreen, Home, Settings), wwwroot/js/gfo-diagnostics.js
-│  ├─ Desktop/             App.xaml, MainWindow.xaml, CrashWindow.xaml, PlatformServices, composition root
+│  ├─ Desktop/             App.xaml, MainWindow.xaml, Diagnostics/ (CrashWindow, CrashHandler), PlatformServices, composition root
 │  └─ DevHost/             Program.cs, gallery pages (/_gallery/...)
 ├─ tools/SimLab/           (stub)
 └─ tests/

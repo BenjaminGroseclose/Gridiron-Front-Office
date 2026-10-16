@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gridiron Front Office</title>
   <base href="/" />
+  <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css" />
+  <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-fonts.css" />
   <link href="GridironFrontOffice.Desktop.styles.css" rel="stylesheet" />
+  <!-- Before Blazor, so even boot-time JavaScript errors reach the log (LOGGING.md §8). -->
+  <script src="_content/GridironFrontOffice.UI/js/gfo-diagnostics.js"></script>
 </head>
 <body>
   <div id="app"></div>

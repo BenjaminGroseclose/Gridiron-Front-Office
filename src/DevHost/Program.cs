@@ -1,24 +1,71 @@
+using System.Diagnostics;
+using GridironFrontOffice.Application.Platform;
+using GridironFrontOffice.Application.Settings;
 using GridironFrontOffice.DevHost.Components;
+using GridironFrontOffice.Infrastructure.Logging;
+using GridironFrontOffice.Infrastructure.Paths;
+using GridironFrontOffice.Infrastructure.Settings;
 using GridironFrontOffice.UI;
 using Microsoft.FluentUI.AspNetCore.Components;
+using Serilog;
+using Serilog.Extensions.Logging;
 
-var builder = WebApplication.CreateBuilder(args);
+// The DevHost's composition root mirrors the desktop one (LOGGING.md §4), against its own data folder:
+// %LOCALAPPDATA%\GridironFrontOffice-Dev, so development never touches real saves, settings or logs.
+var paths = AppPaths.ForDevelopment().EnsureCreated();
+using var settings = SettingsStore.Load(paths);
+#if DEBUG
+var identity = AppIdentity.From(typeof(App).Assembly, "Debug");
+#else
+var identity = AppIdentity.From(typeof(App).Assembly, "Release");
+#endif
 
-// GFO services, logging and the dev save folder (AppPaths redirect) are wired in M0 WP5 and WP9.
-builder.Services.AddRazorComponents().AddInteractiveServerComponents();
-builder.Services.AddFluentUIComponents();
-
-var app = builder.Build();
-
-if (!app.Environment.IsDevelopment())
+Log.Logger = GfoLogging.CreateLogger(paths, settings.Current, identity);
+var hostLog = new SerilogLoggerFactory(Log.Logger).CreateLogger("GridironFrontOffice.DevHost");
+var banner = StartupBanner.Build(identity, new HostDescription("DevHost", WebView2Version: null, Screen: "browser"), paths, settings.Current);
+HostLog.Banner(hostLog, banner);
+if (settings.Created)
 {
-    app.UseExceptionHandler("/error", createScopeForErrors: true);
+    HostLog.SettingsCreated(hostLog, paths.SettingsFile);
 }
 
-app.UseAntiforgery();
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode()
-    .AddAdditionalAssemblies(typeof(AppRoot).Assembly);
+if (settings.LoadWarning is { } problem)
+{
+    HostLog.SettingsUnreadable(hostLog, problem);
+}
 
-await app.RunAsync();
+// No crash dialog in the DevHost: log the failure, flush, and let the process end.
+GlobalExceptionHooks.Install(hostLog, _ => Log.CloseAndFlush());
+
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+
+    // The console logger stays (dev tooling reads it); Serilog adds the rolling file.
+    builder.Logging.AddSerilog(Log.Logger);
+    builder.Services.AddSingleton<IAppPaths>(paths);
+    builder.Services.AddSingleton<ISettingsStore>(settings);
+    builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+    builder.Services.AddFluentUIComponents();
+
+    var app = builder.Build();
+
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/error", createScopeForErrors: true);
+    }
+
+    app.UseAntiforgery();
+    app.MapStaticAssets();
+    app.MapRazorComponents<App>()
+        .AddInteractiveServerRenderMode()
+        .AddAdditionalAssemblies(typeof(AppRoot).Assembly);
+
+    await app.RunAsync();
+    var minutes = (DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMinutes;
+    HostLog.Exiting(hostLog, 0, minutes);
+}
+finally
+{
+    await Log.CloseAndFlushAsync();
+}

@@ -183,9 +183,9 @@ flowchart TD
 #### `GridironFrontOffice.Desktop` (WPF host)
 - A WPF app (**`net10.0-windows10.0.19041.0`**, `<UseWPF>true</UseWPF>`, Razor SDK) with one `MainWindow` containing a `BlazorWebView`. The Windows SDK TFM is required: the .NET 10 WPF `BlazorWebView` uses WebView2's composition control and crashes at startup on plain `net10.0-windows` ([HOST_BENCHMARK.md](architecture/HOST_BENCHMARK.md#gotchas-found-while-measuring-worth-knowing-for-m0)). An `app.manifest` declares per-monitor-v2 DPI awareness. The HTML app bar doubles as the title bar, with WPF caption buttons ([D-068](DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar)).
 - `App.OnStartup`: bootstrap logging → build the `ServiceCollection` (`AddWpfBlazorWebView()` + GFO services) → configure the window (minimum size, restore size and position, title bar) → show it.
-- **Title bar options** (to validate in M0): (a) `WindowChrome` with a slim native WPF caption strip styled to match, the simplest and keeps native Snap Layouts; (b) a borderless window with the title bar drawn in HTML using WebView2 non-client region support (`IsNonClientRegionSupportEnabled` + CSS `app-region: drag`). Option (b) looks more seamless, but WebView2 docs note it doesn't give native caption-button behavior such as Snap Layouts.
+- **Title bar:** the HTML app bar is the title bar. WPF caption buttons keep Snap Layouts, and the page reports its drag regions to a `WM_NCHITTEST` hook ([D-068](DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar), [UI_DESIGN_SYSTEM.md §7](architecture/UI_DESIGN_SYSTEM.md#7-app-shell-and-navigation)).
 - Platform services: open a folder in Explorer, file pickers for import/export, single-instance mutex, window title.
-- Global exception hooks (see [LOGGING.md](architecture/LOGGING.md)).
+- Global exception hooks and the native crash dialog (`Diagnostics/`, see [LOGGING.md §8](architecture/LOGGING.md#8-capturing-failures-everywhere)).
 
 #### `GridironFrontOffice.DevHost` (browser dev host)
 - A Blazor Web App (Interactive Server) hosting `GridironFrontOffice.UI` against a dev save folder.
@@ -328,8 +328,8 @@ Details: [CALENDAR_AND_PHASES.md](architecture/CALENDAR_AND_PHASES.md), [LIVE_EV
 
 ### 7.1 Error handling
 - **Commands** validate first and return typed results (`Result<T>` with domain error codes such as `OverCap` or `RosterFull`). Exceptions are for bugs and I/O, not business rules.
-- **UI**: an `ErrorBoundary` on each routed page shows a friendly error panel with "Copy diagnostics" and "Return to dashboard". The app shell keeps working.
-- **Unhandled exceptions**: logged as Fatal and shown in a crash dialog with the log path. The save is safe because every command is a transaction.
+- **UI**: `PageErrorBoundary` wraps every routed page. On an exception it logs it and shows a recovery panel with **Try again** and **Home**, and navigating anywhere clears it. The app shell keeps working. ("Copy diagnostics" arrives in M11.)
+- **Unhandled exceptions**: logged as Fatal, then a native crash dialog (Open logs folder, Close, Restart), then the process exits. The save is safe because every command is a transaction.
 - **On open**: integrity check failure → offer to restore the most recent snapshot.
 
 ### 7.2 Logging
@@ -344,13 +344,15 @@ Serilog writes to `%LOCALAPPDATA%\GridironFrontOffice\logs\gfo-YYYYMMDD.log`. Ro
 | Logs | `%LOCALAPPDATA%\GridironFrontOffice\logs\` |
 | Settings | `%LOCALAPPDATA%\GridironFrontOffice\settings.json` |
 | Crash dumps / diagnostics zips | `%LOCALAPPDATA%\GridironFrontOffice\diagnostics\` |
+| WebView2 profile (desktop host) | `%LOCALAPPDATA%\GridironFrontOffice\WebView2\` |
+| DevHost (development only) | `%LOCALAPPDATA%\GridironFrontOffice-Dev\` with the same layout |
 
 > **Challenge: why not `Documents\My Games`?** OneDrive's Known Folder Move silently redirects `Documents` into a synced folder on many Windows machines. A **live** SQLite database with `-wal`/`-shm` side files inside a sync folder risks locking conflicts and partially synced (corrupt) copies. Saves therefore live in non-synced `LocalAppData`. For sharing and backups there's an explicit **Export** (a consistent single-file copy via `VACUUM INTO`) and an **Open saves folder** button.
 
 All paths go through `IAppPaths`, so DevHost, tests and SimLab can redirect them.
 
 ### 7.4 Settings
-- **App settings** (theme, density, sound, snapshot budget, window position, developer flags) are stored in `settings.json`, loaded with `IOptionsMonitor`, and written atomically (write to temp, then replace).
+- **App settings** (theme, density, sound, snapshot budget, window position, developer flags) are stored in `settings.json`. They're exposed through `ISettingsStore`, which is loaded synchronously **before DI** (the log level comes from it) and raises `Changed` after each save. Saves are atomic: write to a temp file, then replace. **A missing file is created with the defaults on first launch**, so it's there to find and edit by hand (each host logs that it did). An unreadable one is copied to `settings.unreadable.json` and defaults are used, with a Warning in the log. The file isn't part of .NET's `IConfiguration`: the app writes it itself and needs it before DI. `appsettings.json` exists only in the DevHost, for ASP.NET's own settings, and can't override the log level here.
 - **League settings** (clock mode, clock preset, Ironman, Live Event toggles, injury frequency, rules; [D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)) live **inside the save**. A save file is self-contained.
 - **League data files** (the default team set and the fictional college list) are versioned JSON files with a published schema, shipped with the app. The generators read them and never hard-code lists. A user-supplied set can be imported at league creation from M11 ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 
