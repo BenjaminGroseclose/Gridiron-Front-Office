@@ -478,7 +478,7 @@ Each step commits on its own and records itself in `AdvanceJournal` *in the same
 ### 5.7 Calling commands from the UI
 ```razor
 @inject FreeAgencyCommands FreeAgency
-@inject IToastService Toasts
+@inject IGfoToasts Toasts
 
 <FluentButton OnClick="SignAsync" Loading="@_busy">Sign</FluentButton>
 
@@ -489,12 +489,12 @@ Each step commits on its own and records itself in `AdvanceJournal` *in the same
         _busy = true;
         var result = await FreeAgency.SignAsync(new SignFreeAgent(/* … */));
         _busy = false;
-        if (result.IsFailure) Toasts.ShowError(result.Error.Message);   // e.g., "Over the cap by $2.1M"
+        if (result.IsFailure) await Toasts.ShowErrorAsync(result.Error.Message);   // e.g., "Over the cap by $2.1M"
         // On success, no manual refresh: the PlayerSigned event updates the stores.
     }
 }
 ```
-(The exact Fluent UI v5 parameter names are confirmed in M0.)
+(`FluentButton.Loading` was verified in Spike S0b. `IGfoToasts` is GFO's thin service over Fluent's `INotificationService.ShowToastAsync`, see [UI_DESIGN_SYSTEM.md §5.1](UI_DESIGN_SYSTEM.md#51-from-fluent-ui-blazor-v5-use-directly-in-pages).)
 
 ---
 

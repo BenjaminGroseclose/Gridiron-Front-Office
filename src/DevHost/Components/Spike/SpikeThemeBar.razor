@@ -1,0 +1,46 @@
+@implements IDisposable
+@inject SpikeTheme Theme
+
+@* Spike S0b: theme controls shown on every spike page. *@
+<nav class="spike-bar">
+    <a href="_spike/s0b">Theme</a>
+    <a href="_spike/s0b/grid">Grid</a>
+    <a href="_spike/s0b/overlays">Overlays</a>
+    <span class="spike-bar-sep"></span>
+
+    @foreach (var (name, hex) in SpikeTheme.Teams)
+    {
+        <button class="spike-swatch @(hex == Theme.Color ? "is-active" : "")" style="--swatch:@hex" title="@name"
+                aria-label="@name" @onclick="() => ApplyAsync(hex, Theme.Mode, Theme.Stadium)"></button>
+    }
+
+    <span class="spike-bar-sep"></span>
+    @foreach (var mode in Modes)
+    {
+        <FluentToggleButton Pressed="@(Theme.Mode == mode)" OnClick="() => ApplyAsync(Theme.Color, mode, Theme.Stadium)">@mode</FluentToggleButton>
+    }
+
+    <FluentSwitch Label="Stadium tokens" Value="@Theme.Stadium" ValueChanged="@((bool on) => ApplyAsync(Theme.Color, Theme.Mode, on))" />
+    <FluentSwitch Label="Exact team color" Value="@Theme.Exact" ValueChanged="@((bool on) => Theme.ApplyAsync(Theme.Color, Theme.Mode, Theme.Stadium, on))" />
+</nav>
+<p class="spike-status" data-testid="theme-status">@Theme.Status</p>
+
+@code {
+    private static readonly ThemeMode[] Modes = [ThemeMode.Dark, ThemeMode.Light, ThemeMode.System];
+
+    protected override void OnInitialized() => Theme.Changed += OnChanged;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && Theme.Status == "Not applied yet")
+        {
+            await Theme.ApplyAsync(Theme.Color, Theme.Mode, Theme.Stadium);
+        }
+    }
+
+    private Task ApplyAsync(string color, ThemeMode mode, bool stadium) => Theme.ApplyAsync(color, mode, stadium);
+
+    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Theme.Changed -= OnChanged;
+}

@@ -199,17 +199,71 @@ flowchart LR
 
 **Afterwards:** `spikes/S0a.EfProof/` is deleted once its code is in git history ([D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone)).
 
-### WP3 · Spike S0b: Fluent UI v5 fit check (M, code kept as the gallery's start)
+### WP3 · Spike S0b: Fluent UI v5 fit check (M, throwaway code) ✅ Done 2026-10-15
 **Goal:** prove the Stadium look and the grid on Fluent UI Blazor v5 before building on them.
-- [ ] Fluent v5 registered in DevHost. A test page that:
-  - sets the **brand color at runtime** from a team color, switches **Dark / Light / System**, and always passes mode + color together (issue #5351)
-  - overrides **fonts** (Archivo, bundled `woff2`), **radius** tokens (8 / 14 / 20 / pill) and **neutral surfaces** ([VISUAL_DESIGN.md §9](../VISUAL_DESIGN.md#9-mapping-to-fluent-ui-blazor-v5))
-- [ ] `FluentDataGrid` with 2,000 rows, **virtualized + pinned first column + sticky header + compact rows + Razor cell templates + keyboard navigation**, all at once, against the P0 checklist in [UI_DESIGN_SYSTEM.md §5.3](../architecture/UI_DESIGN_SYSTEM.md#53-datagridt-a-gfo-wrapper-over-fluentdatagrid).
-- [ ] A drawer (the future peek sheet), a dialog, a toast.
-- [ ] **Fluent System Icons** next to Archivo, which confirms or replaces the "proposed" icon set in D-031.
-- [ ] Every API name marked "(v5)" in the docs checked against the real v5 API.
 
-**Exit and decisions:** a grid verdict (Fluent passes, or the fallback grid is chosen behind `DataGrid<T>`) and the icon set confirmed. Doc fixes: the "(v5)" markers replaced with the verified names across UI_DESIGN_SYSTEM, VISUAL_DESIGN and DATA_ACCESS_GUIDE.
+**Verdict: Fluent passes. `FluentDataGrid` stays behind `DataGrid<T>`, and the fallback grid isn't needed** ([D-067](../DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)).
+- **Setup:** the DevHost (Interactive Server) on Fluent UI Blazor 5.0.1, with 2,000 synthetic players × 25 columns.
+- **Team colors:** seven F-02 primaries chosen to stress the accent: Fluent blue, colonial blue, safety orange, sun gold, crimson, turquoise and near-black.
+- **Checklist:** every item below passed. The ⚠️ items needed a fix, which is now in the docs.
+
+**Theme**
+
+| Check | Result |
+|---|---|
+| Stadium tokens on the typed `Theme` | ✅ Archivo loaded and applied, radii 8 / 14 / 20 / 999 px, slate surfaces and text, all through `Theme.Fonts`, `Theme.Borders.Radius` and `Theme.Colors.Neutral` |
+| Team color at runtime | ✅ Mode and color travel together, so Dark survives a color change (v5 issue #5351) |
+| Exact accent fill | ⚠️ → ✅ Fluent's ramp put `#903B19` on the primary button for `#D9541E`. `IsExact = true` keeps the exact color, and GFO computes the accent text colors. **7 colors × 2 modes:** fill exact; on-accent text ≥ 4.85:1; links and brand text ≥ 4.5:1; checked controls ≥ 3:1. |
+| Light mode | ✅ The Stadium light palette, with accent text re-corrected (`#C84D1C` for the orange) |
+| Match Windows | ⚠️ → ✅ With `ThemeMode.System`, a Windows light/dark switch made Fluent's CSS swap in its default theme (white, Segoe UI, Fluent blue). GFO now resolves System itself and re-applies on `prefers-color-scheme` (the re-apply path is verified). The browser's color-scheme emulation doesn't fire change events, so a real Windows switch is checked in S0c. |
+| Fluent's theme cache | Only the `ThemeSettings` path writes `localStorage`, and `GetThemeSettingsAsync` reads it back stale. GFO clears it at startup and never reads it. |
+
+**Grid** (2,000 rows)
+
+| Check | Result |
+|---|---|
+| Virtualized + pinned + sticky, together | ⚠️ → ✅ after two scoped CSS fixes: spacer rows span every column (rows went blank once scrolled right past column 1), and the table is sized to its columns (the pin let go after a long horizontal scroll). The grid also must not get `height: 100%` (the sticky header scrolled away). |
+| Row height | ✅ `ItemSize` sets it exactly (28 / 32 / 36 / 44 px). `RowSize` is ignored when virtualized. Row 2,000 is reachable. The scrollbar's size estimate is about 2.5% short, which is harmless. |
+| Sorting | ✅ 23–39 ms (Fluent's header) and 45–52 ms (GFO's header) from click to screen. Multi-sort mode works. |
+| Headers | ⚠️ → ✅ Fluent's default header overflows 64–72 px stat columns (an options button plus a sort button with a 75 px minimum, and `MinWidth` defaults to 100 px). A GFO compact header through `HeaderCellItemTemplate` fits and sorts in one click. |
+| Keyboard | ⚠️ Arrow keys move cell focus and follow virtualization (Down kept going past the rendered rows). There's no PageUp/PageDown/Home/End, so the wrapper adds them. |
+| Cell templates | ✅ Rating pills with ranges, money and tabular numbers. Pills fit at 28 px rows. |
+| Pinned cells | ✅ Opaque, and hover is opaque across pinned and unpinned cells. At rest Fluent paints pinned cells Surface 2, so the wrapper matches the row. |
+
+**Overlays, all ✅**
+- **Drawer:** `ShowDrawerAsync<T>` with the content inside `FluentDialogBody` (title, padding). The ✕ appears via `Header.CloseAction.Visible`, and Escape closes it.
+- **Confirm:** `ShowConfirmationAsync(message, title, primaryButton, secondaryButton)`. Escape returns `Cancelled`.
+- **Toast:** `INotificationService.ShowToastAsync`, shown bottom-right in the Stadium tokens.
+
+**Icons:** Fluent System Icons (Regular and Filled, 20 px) render cleanly next to Archivo. The package is about 22 MB. **Confirmed** by the owner, who also allowed the grid's two scoped CSS fixes ([D-067](../DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)).
+
+**Findings that change later work (all now in the docs)**
+1. **`GfoThemeService` (WP8):**
+   - builds a custom `Theme` from the exact team color;
+   - adds the Stadium tokens and GFO's accent colors;
+   - resolves Match Windows itself;
+   - clears Fluent's cache ([UI_DESIGN_SYSTEM.md §3.2–3.3](../architecture/UI_DESIGN_SYSTEM.md#32-team-tinting)).
+2. **`DataGrid<T>` (WP8):**
+   - the two scoped CSS fixes;
+   - the compact sort header;
+   - `MinWidth` = `Width`;
+   - `ItemSize` from the density setting;
+   - PageUp/PageDown/Home/End;
+   - pinned cells painted like their row;
+   - never `height: 100%` ([UI_DESIGN_SYSTEM.md §5.3](../architecture/UI_DESIGN_SYSTEM.md#53-datagridt-a-gfo-wrapper-over-fluentdatagrid)).
+3. **App shell (WP8):** paints the page Ground. Fluent paints `body` with Background1, which is Surface 1.
+4. **S0c (WP4):** a real Windows light/dark switch, plus a check for a startup flash of Fluent's default theme.
+5. **Doc corrections:**
+   - the confirm dialog's argument order;
+   - drawer content goes in `FluentDialogBody`;
+   - there's no `IToastService` or `FluentDrawer`;
+   - `FluentIcon` takes `Value`, not `Icon`;
+   - `SetDarkThemeAsync`/`SetTeamsLightThemeAsync` don't exist.
+6. **Testing gotcha:** in a hidden browser pane, `IntersectionObserver` stalls, so virtualization *looks* broken. Verify grids with the page visible.
+
+**Changed from the plan:** the heading said the code would be "kept as the gallery's start". It's throwaway instead, per [D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone). WP8 builds `GfoThemeService` and `DataGrid<T>` properly from these results. M0's real setup stays: the Fluent registration, `<FluentProviders />`, the bundled fonts and `gfo-fonts.css`.
+
+**Afterwards:** the spike pages (`src/DevHost/Components/Spike/`), `wwwroot/spike.css`/`spike.js` and the `SpikeTheme` registration are deleted once they're in git history.
 
 ### WP4 · Spike S0c: host shell (S–M)
 **Goal:** choose the title bar approach on the real host and re-measure startup.
@@ -221,6 +275,7 @@ flowchart LR
   Then compare look, Snap Layouts, double-click-to-maximize, resize edges and high-DPI behavior.
 - [ ] Minimum size 1280×720.
 - [ ] `PublishReadyToRun=true` Release publish. Measure cold and warm start to first render.
+- [ ] Theme in the real host (from S0b): a Windows light/dark switch reaches GFO's `prefers-color-scheme` listener (Match Windows), and startup shows no flash of Fluent's default theme before `GfoThemeService` applies. Add a static fallback if it does.
 
 **Exit and decision:** the title bar approach recorded as a new D-xxx. [HOST_BENCHMARK.md](../architecture/HOST_BENCHMARK.md) updated with the real shell's numbers.
 
@@ -287,13 +342,13 @@ flowchart LR
 
 | Component or service | Notes |
 |---|---|
-| `GfoThemeService` | The only code that calls Fluent's theme service. It always passes the full `ThemeSettings`. Dark (default) / Light / Match Windows, Accent: Team / Neutral. |
+| `GfoThemeService` | The only code that calls Fluent's theme service. It builds a custom `Theme` from the **exact** team color, adds the Stadium tokens and GFO's computed accent colors, resolves Match Windows itself and clears Fluent's cache ([D-067](../DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)). Dark (default) / Light / Match Windows, Accent: Team / Neutral. |
 | `gfo-tokens.css` | Rating colors, urgent, density, radii, display font. Light-mode overrides. Cascade layers. |
 | Fonts | Archivo (variable, with the width axis) and JetBrains Mono as local `woff2` files. Never loaded from the web. |
 | `Icon` | Maps GFO icon names to Fluent System Icons, so the set can be swapped cheaply |
 | `IGfoDialogs`, `IGfoToasts` | Thin services over Fluent's dialog and toast |
-| `DataGrid<T>` v0 | Wraps the S0b verdict: virtualization, pinned column, sticky header, density from tokens, sorting, keyboard map |
-| `AppShell` | Fluent nav + top bar (the title bar from S0c), primary action slot, inline progress slot |
+| `DataGrid<T>` v0 | Implements the S0b verdict ([UI_DESIGN_SYSTEM.md §5.3](../architecture/UI_DESIGN_SYSTEM.md#53-datagridt-a-gfo-wrapper-over-fluentdatagrid)): virtualization, the pinned column and sticky header with the two scoped CSS fixes, the compact sort header, `ItemSize` from the density setting, `MinWidth` = `Width`, and the keyboard map (adds PageUp/PageDown/Home/End, Enter, Space) |
+| `AppShell` | Fluent nav + top bar (the title bar from S0c), primary action slot, inline progress slot. Paints the page Ground (Fluent's `body` is Surface 1). |
 | `EmptyState`, `Stat`, `Kbd`, `SegmentedControl` (if v5 lacks one) | Small GFO pieces |
 | Settings page (Appearance) | Theme mode, accent mode, density, written to `settings.json` and applied live |
 | `/_gallery` | One page per component, in Dark and Light, with team tint on and off, using three sample team colors (dark navy, bright orange, pale) per [VISUAL_DESIGN.md §10](../VISUAL_DESIGN.md#10-qa-checklist-for-every-new-screen) |
@@ -347,7 +402,7 @@ GridironFrontOffice/
    └─ UI.Components.Tests/  UI.Tests/
 ```
 
-`spikes/S0a.EfProof/` exists only during WP2 (§11, question 3).
+`spikes/S0a.EfProof/` exists only during WP2 (§11, question 3), and S0b's pages live in `src/DevHost/Components/Spike/` only during WP3.
 
 ---
 

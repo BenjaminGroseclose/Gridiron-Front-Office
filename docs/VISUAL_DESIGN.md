@@ -27,7 +27,7 @@
 |---|---|
 | **Dark** (default on first launch) | Slate dark palette (§3.1) |
 | **Light** | Stadium light palette (§3.2) |
-| **Match Windows** | Follows the Windows app mode setting (Fluent `ThemeMode.System`) |
+| **Match Windows** | Follows the Windows app mode setting. `GfoThemeService` watches it and hands Fluent Dark or Light, never `ThemeMode.System` (D-067). |
 
 - The choice is stored in `settings.json` (app-wide, not per save) and applied by `GfoThemeService` at startup and on league open ([UI_DESIGN_SYSTEM.md §3.2](architecture/UI_DESIGN_SYSTEM.md#32-team-tinting)).
 - **Alternative dark palettes** explored on the canvas: *team-tinted* (the background blends 10–16% toward the team color) and *true black* (#000 base). Neither is adopted. Either could become an extra appearance option later without touching components, because they're token swaps.
@@ -66,7 +66,7 @@
 
 ### 3.3 Team accent (the user's franchise colors)
 
-The accent comes from the user team's **primary color** and is contrast-corrected per mode. In production, Fluent v5 generates the brand ramp from `ThemeSettings.Color`. These rules are the acceptance criteria that ramp must meet.
+The accent comes from the user team's **primary color** and is contrast-corrected per mode. In production, `GfoThemeService` applies the primary **exactly** (Fluent's `IsExact`), computes the derived colors below itself, and sets them on Fluent's brand tokens ([UI_DESIGN_SYSTEM.md §3.2](architecture/UI_DESIGN_SYSTEM.md#32-team-tinting)). Fluent's generated ramp doesn't keep the team color, and its exact mode doesn't correct text contrast. Spike S0b verified these rules on seven team colors in both modes ([D-067](DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)).
 
 | Derived color | Rule | Used for |
 |---|---|---|
@@ -168,12 +168,12 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 
 ---
 
-## 7. Iconography (proposed)
+## 7. Iconography
 
 - **Fluent System Icons** (Microsoft, MIT), which ship with Fluent UI Blazor's icons package. **Regular** weight for UI, **Filled** for the active nav item and selected states. Their rounded terminals match Stadium's geometry.
 - Through GFO's `Icon` wrapper ([UI_DESIGN_SYSTEM.md §6.1](architecture/UI_DESIGN_SYSTEM.md#61-wrap-selectively-not-everything)), so the set can still be swapped.
 - Sizes: 16 px (inline), 18 px (nav, toolbar), 20 px (buttons), 24 px (empty states).
-- **Status:** proposed. Confirm when the M0 gallery shows them next to Archivo.
+- **Status:** **confirmed** by the owner after Spike S0b showed them next to Archivo ([D-067](DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)).
 
 ---
 
@@ -192,16 +192,16 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 
 ## 9. Mapping to Fluent UI Blazor v5
 
-> Token and API names follow Fluent 2 conventions. **Confirm the exact v5 names in Spike S0b** ([UI_DESIGN_SYSTEM.md §3](architecture/UI_DESIGN_SYSTEM.md#3-theming-with-fluent-ui-blazor-v5)).
+> **Verified in Spike S0b on Fluent UI Blazor 5.0.1** ([D-067](DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)). Everything below is set on the typed `Theme` from `CreateCustomThemeAsync` before `SetThemeAsync(theme)` ([UI_DESIGN_SYSTEM.md §3.2](architecture/UI_DESIGN_SYSTEM.md#32-team-tinting)).
 
 | GFO value | Fluent v5 mechanism |
 |---|---|
-| Mode: Dark default / Light / Match Windows | `ThemeSettings.Mode` = `Dark` / `Light` / `System` (always set together with the color, see v5 issue #5351) |
-| Team accent | `ThemeSettings.Color` = team primary (or `#0F6CBD` for Neutral). Validate the generated ramp against §3.3. |
-| Ground and surfaces (§3.1–3.2) | Override the neutral background tokens (backgrounds 1–3, strokes) per mode |
-| Archivo, JetBrains Mono | Override the base and monospace font-family tokens. `--gfo-font-display` = Archivo, with `font-stretch: 72%` applied by GFO components. |
-| Radius S / M / L / pill | Override the corner radius tokens (small → 8, medium → 14, large/xLarge → 20, circular → pills) |
-| Ratings, status, urgent, density, moment | GFO extension tokens (`--gfo-rating-*`, `--gfo-status-*`, `--gfo-urgent`, `--gfo-grid-row-height`, `--gfo-dur-moment`) in `gfo-tokens.css` |
+| Mode: Dark default / Light / Match Windows | `ThemeSettings.Mode` = `Dark` / `Light`, always set together with the color (v5 issue #5351). **Match Windows is resolved by GFO**, which watches `prefers-color-scheme`. Fluent never sees `System`, because on an OS flip it would swap in its default theme. |
+| Team accent | `ThemeSettings.Color` = team primary (or `#0F6CBD` for Neutral) with `IsExact = true`. GFO's §3.3 colors go to `Colors.Neutral.ForegroundOnBrand` (on-accent), `Colors.Brand.Foreground*` / `ForegroundLink*` (Accent text), and `Colors.Brand.Stroke*` + `Colors.Compound.BrandForeground*` / `BrandStroke*` (Accent). |
+| Ground and surfaces (§3.1–3.2) | `Colors.Neutral.Background1` = Surface 1 (its `Hover` = Surface 2, `Pressed` = Surface 3), `Background2` = Surface 2, `Background3`–`5` = Ground, `CardBackground` = Surface 1. `Foreground1`–`3` = Text / Muted / Faint. `Stroke1` = Border strong, and `Stroke2`, `Stroke3` and `StrokeSubtle` = Border. **Fluent paints `body` with Background1, so the app shell paints the page Ground itself.** |
+| Archivo, JetBrains Mono | `Fonts.Family.Base` and `.Numeric` = Archivo, `.Monospace` = JetBrains Mono (bundled `woff2`, `gfo-fonts.css`). `--gfo-font-display` = Archivo, with `font-stretch: 72%` applied by GFO components. |
+| Radius S / M / L / pill | `Borders.Radius.Small` = 8 px, `.Medium` = 14 px (buttons, inputs), `.Large` and `.XLarge` = 20 px, `.Circular` = 999 px |
+| Ratings, status, urgent, density, moment | GFO extension tokens (`--gfo-rating-*`, `--gfo-status-*`, `--gfo-urgent`, `--gfo-grid-row-height`, `--gfo-dur-moment`) in `gfo-tokens.css`. Grid density is `DataGrid<T>`'s `ItemSize`, which is the exact row height (§5). |
 
 ---
 

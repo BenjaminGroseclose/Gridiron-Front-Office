@@ -74,6 +74,7 @@
 | D-064 | F-02 team set accepted; shared city labels | **Accepted** |
 | D-065 | F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages | **Accepted** |
 | D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** |
+| D-067 | Spike S0b: Fluent UI v5 fits; `DataGrid<T>` keeps `FluentDataGrid` | **Accepted** |
 
 ---
 
@@ -246,6 +247,7 @@
 - **Theming:** brand color → a generated 16-step ramp, set at runtime through `IThemeService`/`ThemeSettings` (enables the team-tinted accent), plus light/dark/system modes and design-token overrides. Details: [UI_DESIGN_SYSTEM.md §3](architecture/UI_DESIGN_SYSTEM.md#3-theming-with-fluent-ui-blazor-v5).
 - **Amends D-008's wrapping rule:** use Fluent primitives **directly** in screens. Wrap only the central or volatile pieces: `DataGrid<T>`, `GfoThemeService`, dialog and toast services, and `Icon`.
 - **Risks and mitigations:** v5 is new (expect 5.0.x fixes; pin the version). Verify that the `FluentDataGrid` pinned column + virtualization + sticky header work together (a v4 issue existed). **Spike S0b** validates both. The fallback is to keep Fluent and swap only the grid internals behind `DataGrid<T>`.
+- **Spike S0b result (2026-10-15): confirmed. The fallback grid isn't needed.** `FluentDataGrid` passes the P0 checklist with 2,000 rows once `DataGrid<T>` applies four fixes, and the Stadium theme maps onto v5's typed `Theme`. Details: [D-067](#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid).
 
 ## D-026: Ironman mode (requires Live clock mode)
 - **Status:** The rule is **Accepted** (owner, 2026-10-13: "yes, Ironman requires the Live clock mode. It's a one-line rule and keeps 'Ironman' meaning maximum stakes."). The implementation levels below are **Proposed**.
@@ -290,7 +292,7 @@
 - **Status:** **Accepted** (owner, 2026-10-14). On the visual directions canvas: "I like the curve buttons / components for Stadium Light but I want to see it in dark mode", then "Can we go with stadium light / dark based off their selection? Default to dark".
 - **Decision:** GFO uses the **Stadium** direction ([VISUAL_DESIGN.md](VISUAL_DESIGN.md)): rounded geometry (8 / 14 / 20 px corners and pills), Archivo with a condensed width for display, team-color hero bands, and pill rating chips. The **player chooses** Dark, Light or Match Windows in Settings, and **Dark is the default**.
 - **Dark palette:** **slate** (neutral). The team-tinted and true-black variants were explored on the canvas and kept as possible future appearance options; they're token swaps, so components don't change.
-- **Fonts:** Archivo (UI + display) and JetBrains Mono (debug only), both SIL OFL and bundled locally. **Icons:** Fluent System Icons (MIT), *proposed*, to confirm in the M0 gallery.
+- **Fonts:** Archivo (UI + display) and JetBrains Mono (debug only), both SIL OFL and bundled locally. **Icons:** Fluent System Icons (MIT), **confirmed** by the owner after Spike S0b showed them next to Archivo ([D-067](#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)).
 - **Not chosen:** A · Fluent Native (too plain for the "modern, distinctive" pillar), B · Broadcast (loud for everyday screens), C · Analyst Terminal (too austere). Explorations: the [GFO Visual Directions canvas](https://claude.ai/artifact/A3WxdQTV6LYSDV2TWaR1ba).
 
 ## D-032: Fog of war: your roster exact, other pros slightly fuzzy, prospects scouted
@@ -547,3 +549,27 @@
   - **One branch per milestone** (`feat/m0-foundations` for M0), with commits per work package, merged into `main` once the exit checklist passes. Merged without squashing, so the work-package history survives.
   - **Spike code is throwaway:** it's deleted once its results are recorded in DECISIONS. Git history keeps it.
 - **Where:** [TESTING_AND_QUALITY.md §8.4](architecture/TESTING_AND_QUALITY.md#84-git-workflow-d-066), [M0_FOUNDATIONS.md §11](milestones/M0_FOUNDATIONS.md#11-questions-for-the-owner-answered-2026-10-15).
+
+## D-067: Spike S0b: Fluent UI v5 fits; `DataGrid<T>` keeps `FluentDataGrid`
+- **Status:** **Accepted** (owner, 2026-10-15, after reviewing the spike: chose "Confirm them" for the icon set and "Allow it" for the scoped CSS exception). The grid verdict itself follows D-025's fallback rule, since no P0 item failed. Spike run 2026-10-15 in the DevHost on Fluent UI Blazor 5.0.1.
+- **Grid verdict: `FluentDataGrid` passes the P0 checklist with 2,000 rows, so the fallback grid isn't needed.** Virtualization (23 rows in the DOM), a pinned first column, a sticky header, 36 px rows, Razor cell templates and arrow-key navigation (which follows virtualization) all work together. A sort takes 23–52 ms from click to screen. It takes four fixes, all owned by `DataGrid<T>` ([UI_DESIGN_SYSTEM.md §5.3](architecture/UI_DESIGN_SYSTEM.md#53-datagridt-a-gfo-wrapper-over-fluentdatagrid)):
+  1. **Two scoped CSS rules, the only sanctioned reach into Fluent's markup.**
+     - Virtualize's spacer rows sit in column 1 only. Once the grid scrolls right past that column, the rows stop rendering and the grid goes blank. The rule makes the spacers span every column.
+     - The table box is only as wide as its container, so the pinned column un-pins after a long horizontal scroll. The rule sizes the table to its columns.
+     - Both rules live in `DataGrid<T>`'s scoped stylesheet and nowhere else, and the gallery page exercises them.
+  2. **GFO's own compact header** through the supported `HeaderCellItemTemplate` + `SortByColumnAsync`. One click sorts (numbers high to low first), and a second click flips it. Fluent's default header (a column-options button plus a sort button with a 75 px minimum) overflows 64–72 px stat columns. `SortBy` is always defined ascending, because Fluent reverses it for "descending".
+  3. **Column `MinWidth` = `Width`** (Fluent defaults to 100 px). The grid sits in an `overflow: auto` container with a fixed height, and is never given `height: 100%`, which breaks the sticky header.
+  4. **Row height is `ItemSize`.** With virtualization on, Fluent sets every cell's height to `ItemSize` and ignores `RowSize`. Density is therefore a C# value the wrapper reads from settings (46 px comfortable, 36 px compact).
+
+  Fluent handles only the arrow keys, so the wrapper also adds PageUp/PageDown, Home/End, Ctrl+Home/End, Enter = open and Space = select.
+- **Theme: the team color is used exactly, and GFO computes the accent colors.** `GfoThemeService` works in three steps:
+  1. It calls `CreateCustomThemeAsync` with `IsExact = true`.
+  2. It overrides the Stadium fonts, radii and surfaces, plus the brand foreground tokens.
+  3. It applies the result with `SetThemeAsync(Theme)`.
+
+  Without `IsExact`, a primary button shows a ramp step (`#903B19` for `#D9541E`) instead of the team color. With it, Fluent also uses the raw color for links and brand text, which vanish on dark surfaces when the team color is dark. So the service computes [VISUAL_DESIGN.md §3.3](VISUAL_DESIGN.md#33-team-accent-the-users-franchise-colors)'s on-accent, Accent (≥ 3:1) and Accent text (≥ 4.5:1) itself. This was verified on 7 team colors in Dark and Light.
+  - **GFO resolves Match Windows itself.** Given `ThemeMode.System`, Fluent's CSS swaps in its *default* theme when Windows changes mode, dropping the team color and the Stadium tokens. The service hands Fluent Dark or Light and re-applies the theme on a `prefers-color-scheme` change.
+  - **Fluent's `localStorage` theme cache isn't used.** Only the `ThemeSettings` path writes it, and `GetThemeSettingsAsync` reads it back, so the cache goes stale under a custom theme. The service clears it at startup, and `settings.json` stays the source of truth.
+- **Overlays work:** the drawer (the future peek sheet), the confirm dialog and the toast. The verified API names are in [UI_DESIGN_SYSTEM.md §5.1](architecture/UI_DESIGN_SYSTEM.md#51-from-fluent-ui-blazor-v5-use-directly-in-pages).
+- **Icons: Fluent System Icons are confirmed** (D-031's proposed part). They render cleanly next to Archivo: Regular weight for UI, Filled for active states, behind GFO's `Icon` wrapper. The icons package adds about 22 MB of per-style DLLs to the app.
+- **Details:** [M0_FOUNDATIONS.md WP3](milestones/M0_FOUNDATIONS.md#wp3--spike-s0b-fluent-ui-v5-fit-check-m-throwaway-code--done-2026-10-15).

@@ -1,0 +1,16 @@
+@* Spike S0b: drawer content standing in for the PlayerPeekSheet. FluentDialogBody renders the header
+   (DialogOptions.Header.Title + close action), padding and the scrolling body. *@
+<FluentDialogBody>
+<div class="spike-peek" data-testid="peek-body">
+    <p class="spike-muted">Player #@PlayerId · Age 26 · 6'4" 262 lb · Ridge State</p>
+    <div class="spike-row">
+        <span class="spike-chip" data-tier="good">84</span><span class="spike-range">81–87</span>
+        <span class="spike-muted">Ceiling: A−</span>
+    </div>
+    <FluentTextInput Label="Note" Placeholder="Scouting note" />
+</div>
+</FluentDialogBody>
+
+@code {
+    [Parameter] public int PlayerId { get; set; }
+}

@@ -39,7 +39,13 @@
 
 ## Fonts, icons and other assets
 
-*None bundled yet.* Archivo and JetBrains Mono (both SIL OFL 1.1, [VISUAL_DESIGN.md §4](docs/VISUAL_DESIGN.md#4-typography)) arrive with Spike S0b and design system v0 (M0 WP3/WP8) and get rows here when they do.
+| Asset | Version | License | Location | Notes |
+|---|---|---|---|---|
+| **Archivo** (variable: width 62–125%, weight 100–900), Latin subset | Fontsource 5.3.0 | SIL OFL 1.1 | `src/UI.Components/wwwroot/fonts/archivo-latin-wdth-normal.woff2` | UI and display face ([VISUAL_DESIGN.md §4](docs/VISUAL_DESIGN.md#4-typography)). © The Archivo Project Authors (Omnibus-Type). License text alongside: `Archivo-OFL.txt`. |
+| **JetBrains Mono** (variable: weight), Latin subset | Fontsource 5.3.0 | SIL OFL 1.1 | `src/UI.Components/wwwroot/fonts/jetbrains-mono-latin-wght-normal.woff2` | Debug overlay and log viewer only. © The JetBrains Mono Project Authors. License text alongside: `JetBrainsMono-OFL.txt`. |
+| Fluent System Icons (via Microsoft.FluentUI.AspNetCore.Components.Icons) | 5.0.1 | MIT | NuGet package | Proposed in D-031, confirmed in Spike S0b |
+
+Fonts were downloaded 2026-10-15 from `cdn.jsdelivr.net/npm/@fontsource-variable/…@5.3.0`, then checked (WOFF2 signature, exact byte size, license text) before they were added. The OFL requires its license text to travel with the fonts, which is why the `.txt` files sit next to them.
 
 ## Declared but not yet referenced
 

@@ -1,10 +1,14 @@
 using GridironFrontOffice.DevHost.Components;
+using GridironFrontOffice.DevHost.Components.Spike;
 using GridironFrontOffice.UI;
+using Microsoft.FluentUI.AspNetCore.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // GFO services, logging and the dev save folder (AppPaths redirect) are wired in M0 WP5 and WP9.
 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddFluentUIComponents();
+builder.Services.AddScoped<SpikeTheme>();   // Spike S0b only
 
 var app = builder.Build();
 

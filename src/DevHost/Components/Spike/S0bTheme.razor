@@ -1,0 +1,58 @@
+@page "/_spike/s0b"
+@* Spike S0b: do Fluent v5 components take the Stadium look (team brand, fonts, radii, slate surfaces)? *@
+
+<PageTitle>S0b · Theme</PageTitle>
+<SpikeThemeBar />
+
+<section class="spike-page">
+    <h1 class="spike-display">Roster</h1>
+    <p class="spike-muted">Archivo body text. The heading above is Archivo at 72% width, weight 800 (the condensed display style).</p>
+
+    <div class="spike-row">
+        <FluentButton Appearance="ButtonAppearance.Primary">Play Week 7</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Default">Cut preview</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Outline">Trade block</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Subtle">Subtle</FluentButton>
+        <FluentBadge Appearance="BadgeAppearance.Filled">3</FluentBadge>
+        <FluentBadge Appearance="BadgeAppearance.Tint">LIVE</FluentBadge>
+    </div>
+
+    <div class="spike-row">
+        <FluentTextInput Label="Search players" Placeholder="Name, position, college" />
+        <FluentSwitch Label="Compact density" />
+        <FluentSlider Min="0" Max="100" Value="60" Label="Run / pass balance" />
+    </div>
+
+    <div class="spike-row" data-testid="accent-row">
+        <FluentLink Href="_spike/s0b/grid" data-testid="accent-link">View depth chart</FluentLink>
+        <FluentCheckbox Label="Auto-sign rookies" Value="true" />
+        <FluentIcon Value="@(new Icons.Filled.Size20.Star())" Color="Color.Primary" />
+        <FluentTabs>
+            <FluentTab Header="Offense">Offense depth</FluentTab>
+            <FluentTab Header="Defense">Defense depth</FluentTab>
+        </FluentTabs>
+    </div>
+
+    <FluentCard Class="spike-card">
+        <h2 class="spike-title">M. Okafor · EDGE · #91</h2>
+        <div class="spike-row">
+            <span class="spike-chip" data-tier="elite">92</span><span class="spike-range">exact</span>
+            <span class="spike-chip" data-tier="good">84</span><span class="spike-range">81–87</span>
+            <span class="spike-chip" data-tier="avg">74</span><span class="spike-range">64–84</span>
+            <span class="spike-chip" data-tier="below">63</span>
+            <span class="spike-chip" data-tier="poor">55</span>
+            <span class="spike-muted">Ceiling: B+</span>
+        </div>
+        <p class="spike-num">Tabular numbers: 1,234,567 · 9,876,543 · $12.5M · 4.38s</p>
+        <p class="spike-mono">JetBrains Mono: SaveWriter committed in 0.20 ms</p>
+    </FluentCard>
+
+    <div class="spike-row spike-icons" aria-label="Fluent System Icons next to Archivo">
+        <FluentIcon Value="@(new Icons.Regular.Size20.Home())" /> Home
+        <FluentIcon Value="@(new Icons.Regular.Size20.People())" /> Roster
+        <FluentIcon Value="@(new Icons.Regular.Size20.Trophy())" /> Standings
+        <FluentIcon Value="@(new Icons.Regular.Size20.Clock())" /> Draft clock
+        <FluentIcon Value="@(new Icons.Filled.Size20.Alert())" /> Inbox
+        <FluentIcon Value="@(new Icons.Regular.Size20.Settings())" /> Settings
+    </div>
+</section>

@@ -1,0 +1,21 @@
+/*
+  GFO fonts, bundled locally because the app is offline (VISUAL_DESIGN.md §4).
+  Archivo carries both axes: width 62–125% (the condensed display style uses 72%) and weight 100–900.
+  Licenses: Archivo-OFL.txt and JetBrainsMono-OFL.txt next to the font files (SIL OFL 1.1).
+*/
+@font-face {
+  font-family: 'Archivo';
+  src: url('fonts/archivo-latin-wdth-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}

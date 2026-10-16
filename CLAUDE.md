@@ -43,12 +43,22 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
 
 **Two clocks:** the league calendar (`DateOnly` + `Phase`) moves only on Advance. Wall-clock `TimeProvider` is used only by live events (the draft). Live events honor the save's **clock mode** (Live = accelerate, never pause; Pausable). Restore, duplicate and export are disabled during live events. **Ironman** requires Live and disables restore and duplicate (D-026).
 
-**UI** (`docs/architecture/UI_DESIGN_SYSTEM.md`): use Fluent v5 primitives directly in screens. Use GFO wrappers only for `DataGrid<T>`, `GfoThemeService`, `IGfoDialogs`, `IGfoToasts` and `Icon`. Style with Fluent tokens + `--gfo-*` extension tokens only: no raw hex, no deep selectors into Fluent internals. Theme changes go through `GfoThemeService`, which always passes the **full `ThemeSettings`** (mode + color; v5 issue #5351). Blazor handlers return `Task`. Refresh UI from domain events, not manual cross-page calls. **Visual values** (Stadium direction; Dark default + Light + Match Windows; Archivo with a condensed display width; 8/14/20 px radii and pills; team-color hero bands) come from `docs/VISUAL_DESIGN.md`. Check new screens against its §10 QA checklist in both modes and with several team colors.
+**UI** (`docs/architecture/UI_DESIGN_SYSTEM.md`): use Fluent v5 primitives directly in screens. Use GFO wrappers only for `DataGrid<T>`, `GfoThemeService`, `IGfoDialogs`, `IGfoToasts` and `Icon`. Style with Fluent tokens + `--gfo-*` extension tokens only: no raw hex, no deep selectors into Fluent internals (the one exception is `DataGrid<T>`'s two scoped layout fixes, D-067). Theme changes go through `GfoThemeService`, which builds a custom `Theme` from the **exact** team color + an explicit Dark/Light mode (never `ThemeMode.System`; mode and color always together, v5 issue #5351) and computes the accent text colors itself. Blazor handlers return `Task`. Refresh UI from domain events, not manual cross-page calls. **Visual values** (Stadium direction; Dark default + Light + Match Windows; Archivo with a condensed display width; 8/14/20 px radii and pills; team-color hero bands) come from `docs/VISUAL_DESIGN.md`. Check new screens against its §10 QA checklist in both modes and with several team colors.
 
 ## Gotchas already found
 
 - `Desktop` **must** target `net10.0-windows10.0.19041.0`. The .NET 10 WPF `BlazorWebView` uses WebView2's composition control and crashes at startup on plain `net10.0-windows`. Publish with `PublishReadyToRun=true` (`docs/architecture/HOST_BENCHMARK.md`).
-- Fluent UI Blazor v5 is new (5.0.0, 2026-09-25; 5.0.1 pinned). API names marked "(v5)" in the docs are unverified until Spike S0b. Check them before relying on them.
+- **Fluent UI Blazor v5** (5.0.1 pinned) was verified in Spike S0b (D-067). The non-obvious API names:
+  - drawers are `IDialogService.ShowDrawerAsync<T>`, with the content inside `<FluentDialogBody>`;
+  - toasts use `INotificationService` (there's no `IToastService` or `FluentDrawer`);
+  - `ShowConfirmationAsync(message, title, primaryButton, secondaryButton)` takes its arguments in that order;
+  - `FluentIcon` takes `Value`, not `Icon`.
+- **`FluentDataGrid` rules** (UI_DESIGN_SYSTEM §5.3):
+  - row height is `ItemSize` (`RowSize` is ignored when virtualized);
+  - never put `height: 100%` on the grid (it breaks the sticky header);
+  - set `MinWidth` = `Width` (Fluent defaults to 100 px);
+  - define `SortBy` ascending.
+- **Verify UI in a visible browser pane.** In a hidden pane `IntersectionObserver` stalls, so virtualized grids look broken.
 - **Tests run on Microsoft.Testing.Platform** (`global.json` → `"test": { "runner": … }`). The .NET 10 SDK refuses the old VSTest bridge for xUnit v3, so don't add `Microsoft.NET.Test.Sdk` or `xunit.runner.visualstudio`. Filters are xUnit v3 options (`--filter-class`, `--filter-method`, `--filter-trait`, `--filter-not-trait "Category=Slow"`), not VSTest `--filter` expressions. A test project with zero tests exits with code 8, which `build.ps1` accepts.
 - **Guardrails live in the build:** banned APIs are three tiers in `build/BannedSymbols.*.txt` (transactions everywhere, purity rules for Core/Simulation/Application, raw SQLite outside Infrastructure), wired by `Directory.Build.props`. EF Core is referenced by Application with `PrivateAssets="compile"`, so UI code that touches EF types doesn't compile. Package versions live only in `Directory.Packages.props`.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
