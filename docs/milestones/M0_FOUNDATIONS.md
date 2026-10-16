@@ -148,19 +148,56 @@ flowchart LR
 - **`tests/Simulation.Tests`** was created now (empty) instead of in M2, so the test layout matches [ARCHITECTURE.md §4](../ARCHITECTURE.md#4-solution-structure) from the start.
 - **`-Full`** runs slow tests and the ReadyToRun publish. Cold-start timing joins with Spike S0c (WP4).
 
-### WP2 · Spike S0a: EF Core proof (S–M, throwaway code)
+### WP2 · Spike S0a: EF Core proof (S–M, throwaway code) ✅ Done 2026-10-15
 **Goal:** confirm EF Core + the unit-of-work rules hold up before the real persistence is built ([DATA_ACCESS_OPTIONS.md §5](../architecture/DATA_ACCESS_OPTIONS.md#5-recommendation-and-the-spike-that-decides-it)).
-- [ ] `spikes/S0a.EfProof/`: a console app with its own small domain-like model (players, contracts, contract years, transactions, stats, play logs) wired through the exact `SaveWriter`/`UnitOfWork` pattern from the guide.
-- [ ] The four operations:
-  - (a) sign a free agent (multi-table, with a rollback when over the cap)
-  - (b) persist a week: ~26k stat rows + 16 compressed play logs + standings, **target < 1 s**
-  - (c) a roster read-model projection
-  - (d) a migration that adds a column and backfills it on a populated file
-- [ ] Record the timings and findings.
 
-**Exit:** the bulk persist takes < 1 s, the migration works on a populated save, and nothing in the guide needs changing (or the guide is corrected). **Decision:** a results note added to [D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work), or the linq2db fallback triggered if timings disappoint.
+**Verdict: EF Core confirmed.** All 27 checks passed and every target was met, so the linq2db fallback isn't needed ([D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work)). The spike copied the guide's `SaveWriter` / `UnitOfWork` / `SaveReader`, the pragma interceptor and the typed-ID convention, and used `dotnet ef` to generate its migrations. It ran in Release on the owner's machine (Ryzen 7 5800X), SDK 10.0.402, EF Core 10.0.13.
 
-**Afterwards:** the spike folder is deleted in the same branch once the results are recorded. Git history keeps it.
+**The four operations**
+
+| Operation | Result |
+|---|---|
+| (a) Sign a free agent: player, contract, 3 contract years and a log entry, with a mid-command flush for the new ID | 18 ms. An over-the-cap signing returned `Result.Fail` and persisted nothing. |
+| (b) Persist a **week**: 16 games, 1,440 stat rows, 16 play logs, standings (EF + raw SQL, one command) | **27 ms** warm |
+| (b) Persist a **season** in one command: 285 games, 25,650 stat rows, 285 play logs, standings | **665 ms** (target < 1 s) |
+| (c) Roster read model (players + current cap hit + injury), projected to a DTO | One SQL statement. **0.45 ms** avg, 0.54 ms p95. |
+| (d) Migrate a populated "old" save: add a column and backfill it from 25,650 stat rows | **45 ms**, plus a 26 ms `VACUUM INTO` pre-upgrade snapshot (2.6 MB). 0 mismatches, and EF reads the result through the new model. |
+
+**Torture checks (all pass):**
+- An exception midway, after an EF flush *and* a raw insert, rolls both back.
+- `Result.Fail` after changes persists nothing.
+- A nested `ExecuteAsync` throws instead of deadlocking, and the gate is released.
+- 50 concurrent read-modify-write commands lose no updates.
+- A read during an open write isn't blocked (8 ms) and sees the last committed state.
+- **The transaction is IMMEDIATE:** a second writer gets `SQLITE_BUSY` before the first has written anything. This confirms [ARCHITECTURE.md §6.3](../ARCHITECTURE.md#63-reads-and-writes-the-single-writer-rule).
+- Closing (checkpoint + `ClearPool`) releases the file.
+
+**Other measurements**
+
+| Measurement | Result | What it means |
+|---|---|---|
+| EF model build, first context in a process | 519 ms (once per launch) | It happens at first save open, not at the main menu (the save catalog reads with raw read-only connections) |
+| Create a save, warm | 67 ms | |
+| Open an existing save + first query, warm | 122 ms | A cold first open is about 0.8 s, inside the < 1.5 s budget. EF compiled models could trim the 519 ms if ever needed. |
+| `PRAGMA quick_check` on a 10.8 MB save | 29 ms | About 3 ms/MB, so about 0.4 s at the 150 MB budget |
+| Smallest real command (context + IMMEDIATE transaction + generation bump + commit) | **0.20 ms** avg, 0.24 ms p95 | The live draft's 1-second clock heartbeat costs nothing |
+| Seed a league through EF change tracking (about 10,500 entities) | 1,788 ms cold, **1,125 ms warm** | About 100 µs per entity |
+| The same kind of rows through raw prepared statements | 28,000 rows in 80 ms | About 3 µs per row, **roughly 50× faster** |
+| Awaited vs. sync `ExecuteNonQuery` per row (season persist) | 665 vs. 582 ms | Within about 12%: keep the async form, no analyzer suppression |
+| Play log per game (synthetic, 170 plays): JSON → Brotli | 39.9 KB → **6.0 KB** | Close to the 5 KB estimate in [PERSISTENCE.md §6](../architecture/PERSISTENCE.md#6-growth-estimates-and-retention). About 17 MB per 10 seasons, well under the [D-039](../DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning) trigger. |
+| Save size: league + 618 games of stats and logs (about 2.2 seasons) | 10.8 MB | About 4.5 MB per season, so about 50 MB at 10 seasons (budget 150 MB) |
+
+**Findings that change WP6 (all recorded in the docs)**
+1. **Typed-ID keys don't get `AUTOINCREMENT`.** EF's SQLite convention adds it only to plain `int` keys. A converted key becomes a bare `INTEGER PRIMARY KEY`, which SQLite may reuse after the highest row is deleted, and IDs are referenced from history. `LeagueDbContext` applies `UseAutoincrement()` to every generated typed-ID key. **EF Core 10 ignores the old raw `Sqlite:Autoincrement` annotation**; it has to be the value-generation strategy API. ([DATA_ACCESS_GUIDE.md §3.3](../architecture/DATA_ACCESS_GUIDE.md#33-infrastructure-the-context-and-the-session), [D-015](../DECISIONS.md#d-015-integer-keys-with-strongly-typed-ids))
+2. **Generated migrations break the build.** The main migration file has no `<auto-generated>` header, so IDE0161 and CA1861 fail it. `.editorconfig` now marks `**/Migrations/*.cs` as generated code (already in the repo).
+3. **League generation and yearly draft classes are bulk paths.** At about 100 µs per entity, EF change tracking spends about 1 s of the < 5 s generation budget on inserts alone. Use raw prepared statements, as for stats ([DATA_ACCESS_GUIDE.md §5.4](../architecture/DATA_ACCESS_GUIDE.md#54-bulk-writes-hot-paths)).
+4. **Fixture saves at an older schema** can be created with `IMigrator.MigrateAsync("<migration>")`, the technique the spike used to simulate an old save ([PERSISTENCE.md §7](../architecture/PERSISTENCE.md#7-schema-versioning-and-migrations)).
+5. **Test-probe gotcha:** a Microsoft.Data.Sqlite `DefaultTimeout` of 0 means *wait forever*, not "fail fast". Lock probes use 1 s.
+6. **Doc correction:** "persist a week: ~26k stat rows" was a season. A week is about 1,440 rows ([DATA_ACCESS_OPTIONS.md §5](../architecture/DATA_ACCESS_OPTIONS.md#5-recommendation-and-the-spike-that-decides-it) fixed).
+
+**Changed from the plan:** the spike also measured cold vs. warm costs, command latency, `quick_check` and the raw-vs-EF insert gap, because the open-save and generation budgets depend on them.
+
+**Afterwards:** `spikes/S0a.EfProof/` is deleted once its code is in git history ([D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone)).
 
 ### WP3 · Spike S0b: Fluent UI v5 fit check (M, code kept as the gallery's start)
 **Goal:** prove the Stadium look and the grid on Fluent UI Blazor v5 before building on them.

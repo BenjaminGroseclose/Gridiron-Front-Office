@@ -165,8 +165,10 @@ Implement these four operations in **EF Core** behind the §2 unit of work (the 
 | # | Operation | Exercises |
 |---|---|---|
 | a | **Sign a free agent:** set `Player.TeamId`, insert a `Contract` + 4 `ContractYears`, append to `Transactions`, check the cap → roll back if over | Multi-table atomicity, a domain rollback |
-| b | **Persist a week:** insert ~26k `PlayerGameStats`, 16 compressed `GamePlayLogs`, update standings | Bulk performance (target < 1 s), mixed bulk + ORM |
+| b | **Persist game results:** a season in one command (~26k `PlayerGameStats`, 285 compressed `GamePlayLogs`), a week (~1.4k rows, 16 logs), plus standings | Bulk performance (target < 1 s), mixed bulk + ORM |
 | c | **Roster read model:** players + current cap hit + injury status for one team | Query ergonomics, projection speed |
 | d | **Migration:** add a column with a default and backfill it | The migration story on a populated save |
 
-Run the §3 torture tests. **Exit:** all torture tests pass, a week's bulk persist takes < 1 s, and the migration on a populated save works. Note the results in [D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work).
+Run the §3 torture tests. **Exit:** all torture tests pass, a season's bulk persist takes < 1 s, and the migration on a populated save works. Note the results in [D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work).
+
+> **Outcome (2026-10-15): passed.** Season persist 665 ms, week 27 ms, migration + backfill 45 ms, all torture checks green. EF Core stays, and linq2db isn't needed. *(The original wording said "a week: ~26k rows". That was a season. A week is about 1,440 rows.)* Full results: [M0_FOUNDATIONS.md WP2](../milestones/M0_FOUNDATIONS.md#wp2--spike-s0a-ef-core-proof-sm-throwaway-code--done-2026-10-15).

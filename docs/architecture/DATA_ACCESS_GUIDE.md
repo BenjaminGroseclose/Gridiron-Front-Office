@@ -194,6 +194,24 @@ internal sealed class LeagueSession
 
 > **No `AddDbContext` or `AddDbContextFactory` in DI.** The save file changes when the user loads a different league, so the options live on the `LeagueSession`. EF caches the *model* per context type, so building a context per command is cheap, and Microsoft.Data.Sqlite pools the connections.
 
+**Strongly typed IDs (D-015), as proven in Spike S0a.** One converter for every ID type, plus one convention the provider doesn't apply by itself:
+
+```csharp
+// In LeagueDbContext
+protected override void ConfigureConventions(ModelConfigurationBuilder b)
+{
+    foreach (var idType in IdTypes)   // every readonly record struct implementing IStronglyTypedId
+        b.Properties(idType).HaveConversion(typeof(IdConverter<>).MakeGenericType(idType));
+}
+
+// At the end of OnModelCreating: EF's SQLite convention adds AUTOINCREMENT only to plain int keys.
+// A converted (typed-ID) key gets a bare INTEGER PRIMARY KEY, and SQLite may then REUSE the highest ID after a
+// delete, while IDs are referenced from history. EF Core 10 ignores the old "Sqlite:Autoincrement" annotation,
+// so use the value-generation strategy API:
+foreach (var (entity, key) in GeneratedTypedIdKeys(modelBuilder))
+    modelBuilder.Entity(entity.ClrType).Property(key.Name).UseAutoincrement();
+```
+
 ### 3.4 Infrastructure: `SaveWriter` (the only transaction owner)
 
 ```csharp
@@ -423,6 +441,8 @@ internal static async Task InsertPlayerStatsAsync(IUnitOfWork uow, IReadOnlyList
     }
 }
 ```
+> **What counts as a bulk path (measured in Spike S0a):** EF change tracking costs about **100 µs per inserted entity** (a 10,500-entity league seed took 1.1 s warm), while raw prepared statements cost about **3 µs per row**. So stats, play logs, **league generation and yearly draft classes** all use `uow.CreateCommand`. Awaiting `ExecuteNonQueryAsync` per row costs within about 12% of the sync call, so keep the async form; no analyzer suppression is needed.
+
 > Mixing EF changes and raw SQL in one command is fine and atomic. Both use the same transaction. The only rule is to call `uow.Db.SaveChangesAsync()` *before* raw SQL that depends on rows EF hasn't flushed yet.
 
 ### 5.5 Live events: commands that can race
@@ -552,6 +572,7 @@ public sealed class TransactionTortureTests : IAsyncLifetime   // each test gets
     [Fact] public async Task Nested_execute_throws_instead_of_deadlocking() { /* inner ExecuteAsync → InvalidOperationException */ }
     [Fact] public async Task Concurrent_commands_are_serialized() { /* 50 parallel increments → final value 50 */ }
     [Fact] public async Task Racing_picks_record_exactly_one() { /* two MakePickAsync with the same version → one Ok, one PickAlreadyMade */ }
+    [Fact] public async Task Transaction_holds_the_write_lock_from_begin() { /* hold a command open without writing → a second BEGIN IMMEDIATE gets SQLITE_BUSY (S0a: confirmed) */ }
 
     [Fact] public async Task Killed_process_leaves_no_partial_write()
     {

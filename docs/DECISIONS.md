@@ -168,6 +168,8 @@
 - **Decision:** `INTEGER PRIMARY KEY` (rowid) tables with C# `readonly record struct PlayerId(int Value)` style IDs, mapped through EF value converters. The only GUID is `SaveInfo.SaveId`, which identifies a league across exports and imports.
 - **Consequences:** + Compact, fast joins, and no mixing up `PlayerId` with `TeamId` at compile time. − Converter boilerplate (minimal with a source generator or a base convention).
 
+- **Implementation note (Spike S0a, 2026-10-15):** proven with one generic `IdConverter<TId>` registered for every ID type in `ConfigureConventions`. **EF's SQLite convention doesn't add `AUTOINCREMENT` to converted keys**, so `LeagueDbContext` applies `UseAutoincrement()` (the EF Core 10 API; the old raw annotation is ignored) to every generated typed-ID key. Otherwise SQLite may reuse the highest ID after a delete ([DATA_ACCESS_GUIDE.md §3.3](architecture/DATA_ACCESS_GUIDE.md#33-infrastructure-the-context-and-the-session)).
+
 ## D-016: Single-writer command queue
 - **Status:** **Accepted** (owner, 2026-10-15: *"A single write makes sense to me, should only ever need to save something one at a time no need to thread saving."*). Note: only *writes* are serialized. Reads still run concurrently alongside the writer (SQLite WAL), so screens never wait on a save.
 - **Decision:** Every mutation to a save goes through `ISaveWriter.ExecuteAsync` (one at a time, each in its own transaction). Domain events are published only after commit. Reads run concurrently (WAL). Commands that can race (live events) carry version tokens.
@@ -230,6 +232,13 @@
   - Raw SQL only through `uow.CreateCommand` (same connection and transaction), for hot paths like weekly stat inserts.
   - Enforced by banned-API analyzers, architecture tests, a nested-command guard, and **transaction torture tests on every build from M0**.
 - **The how-to:** [DATA_ACCESS_GUIDE.md](architecture/DATA_ACCESS_GUIDE.md). Alternatives considered: [DATA_ACCESS_OPTIONS.md](architecture/DATA_ACCESS_OPTIONS.md).
+- **Spike S0a result (2026-10-15): confirmed. The linq2db fallback isn't needed.** All 27 checks passed on EF Core 10.0.13:
+  - Bulk: a full season (25,650 stat rows + 285 play logs) persists in 665 ms (target < 1 s), and a week in 27 ms.
+  - A migration with a backfill on a populated save takes 45 ms.
+  - The torture checks pass, and the transaction is IMMEDIATE.
+  - The smallest command costs 0.2 ms.
+  - Corrections it found, all now in the guide: typed-ID keys need an explicit `UseAutoincrement()`, migration files must be marked as generated code, and league generation belongs on the raw bulk path (EF change tracking costs about 100 µs per entity).
+  - Details: [M0_FOUNDATIONS.md WP2](milestones/M0_FOUNDATIONS.md#wp2--spike-s0a-ef-core-proof-sm-throwaway-code--done-2026-10-15).
 
 ## D-025: UI component library: Fluent UI Blazor v5
 - **Status:** **Accepted** (owner, 2026-10-13: "I have always liked Fluent UI so let's go with that option.")
