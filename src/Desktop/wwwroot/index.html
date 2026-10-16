@@ -1,25 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" class="gfo-booting">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gridiron Front Office</title>
   <base href="/" />
-  <!-- Spike S0c: first paint. While booting, the page is transparent, so WebView2's DefaultBackgroundColor (set natively
-       from the saved mode: no page-script race) shows through, and #app stays hidden until the theme service has applied
-       Stadium and removes the class. The class is static because AddScriptToExecuteOnDocumentCreatedAsync can lose the race
-       with Blazor's first navigation (seen in S0c). These rules only apply while booting, so they never fight the theme. -->
-  <style>
-    html.gfo-booting, html.gfo-booting body { background: transparent; }
-    html.gfo-booting #app { visibility: hidden; }
-  </style>
-  <!-- Fluent re-applies its DEFAULT theme on every prefers-color-scheme change unless its own localStorage cache holds
-       an explicit mode, which GFO doesn't use (D-067). This flag is the guard Fluent checks before adding that listener;
-       GFO's theme service owns the change instead (Spike S0c). -->
-  <script>window.__FluentUIBlazorSystemThemeChangeListener = true;</script>
-  <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css" />
-  <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-fonts.css" />
-  <link rel="stylesheet" href="spike.css" />
   <link href="GridironFrontOffice.Desktop.styles.css" rel="stylesheet" />
 </head>
 <body>
