@@ -1,5 +1,7 @@
 using System.Windows;
+using GridironFrontOffice.Desktop.Spike;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.FluentUI.AspNetCore.Components;
 
 namespace GridironFrontOffice.Desktop;
 
@@ -13,16 +15,25 @@ internal sealed partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        SpikeProbe.Mark("app-startup");
         base.OnStartup(e);
 
+        var options = SpikeOptions.Parse(e.Args);
         var services = new ServiceCollection();
         services.AddWpfBlazorWebView();
+        services.AddFluentUIComponents();
+        services.AddSingleton(options);         // Spike S0c only
+        services.AddScoped<SpikeTheme>();       // Spike S0c only
 #if DEBUG
         services.AddBlazorWebViewDeveloperTools();
 #endif
         _services = services.BuildServiceProvider();
+        SpikeProbe.Mark("services-built");
 
-        new MainWindow(_services).Show();
+        var window = new MainWindow(_services, options);
+        SpikeProbe.Mark("window-constructed");
+        window.Show();
+        SpikeProbe.Mark("window-show-returned");
     }
 
     protected override void OnExit(ExitEventArgs e)

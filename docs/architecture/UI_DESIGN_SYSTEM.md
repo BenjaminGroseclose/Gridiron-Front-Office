@@ -108,7 +108,10 @@ public sealed class GfoThemeService(IThemeService fluent, IAppSettings settings,
   - `Colors.Brand.Stroke*` and `Colors.Compound.BrandForeground*` / `BrandStroke*` to Accent.
 
   Spike S0b verified these on 7 team colors in Dark and Light.
-- **Why never `ThemeMode.System`:** given System, Fluent's CSS swaps in its *default* theme when Windows changes mode, dropping the team color and the Stadium tokens. `ISystemTheme` is a small JS module that watches `prefers-color-scheme` and re-runs `ApplyAsync` (Match Windows only).
+- **Why never `ThemeMode.System`:** given System, Fluent's CSS swaps in its *default* theme when Windows changes mode, dropping the team color and the Stadium tokens.
+- **Fluent's own system-theme listener is switched off.** Fluent's script re-applies its default theme on *every* `prefers-color-scheme` change, unless its `localStorage` cache holds an explicit mode, which GFO doesn't use. It does this even under an explicit Dark or Light choice. The host page sets `window.__FluentUIBlazorSystemThemeChangeListener = true` before Fluent loads, the guard Fluent checks before adding that listener.
+- **GFO's listener owns every switch.** `ISystemTheme` is a small JS module that watches `prefers-color-scheme` and re-runs `ApplyAsync` on every change: with the new Windows mode under Match Windows, and with the chosen mode otherwise. The re-apply is cheap, and it's a safety net in case a Fluent upgrade drops the guard.
+- **Verified in the WPF host** (S0c, [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar)): real WebView2 change events arrived within about 20 ms, and the theme followed with no Fluent-default frames in between.
 - **Settings → Appearance:** Dark (**default**) / Light / Match Windows ([VISUAL_DESIGN.md §2](../VISUAL_DESIGN.md#2-modes)).
 - Called at **app start** (neutral brand) and on **league open** (team brand). Settings change → call it again.
 - **Per-element theming** (`SetThemeToElementAsync`) can tint a region in *another* team's colors, such as the opponent's half of the Game Center or the "pick is in" card in the picking team's colors, without touching the global theme.
@@ -117,7 +120,11 @@ public sealed class GfoThemeService(IThemeService fluent, IAppSettings settings,
 ### 3.3 Source of truth and persistence
 - Fluent caches `ThemeSettings` in `localStorage` (key `fluentui-blazor:theme-settings`, inside the WebView2 profile), but **only on the `SetThemeAsync(ThemeSettings)` path**. Applying a typed `Theme` neither writes nor clears the entry, and `GetThemeSettingsAsync` just reads the cache back, so it goes stale (verified in S0b).
 - **GFO's source of truth is `settings.json`** (theme, accent mode) plus the open save (team colors). `GfoThemeService` calls `ClearStoredThemeSettingsAsync()` at startup and never reads the cache, so a stale entry can't fight `settings.json`.
-- **First paint:** until `ApplyAsync` runs (after the first render), Fluent's default theme shows. Spike S0c checks the real host for a startup flash and adds a static fallback if there is one.
+- **First paint is Stadium-colored from the first frame** (S0c, [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar)). Until `ApplyAsync` runs after the first render, Fluent's *default* theme would show. Measured without the layers below: about 220 ms of white (WebView2's default background), then a frame of Fluent's default theme, which is light on a light Windows. Three layers prevent it:
+  1. **Native, from `settings.json`:** the WPF window's background, and WebView2's `DefaultBackgroundColor` (set in `BlazorWebViewInitializing`), are both the saved mode's Ground.
+  2. **Static host page:** `<html class="gfo-booting">`, with boot-only rules that keep the page transparent (so the native color shows) and `#app` hidden. The class is static on purpose: a script registered with `AddScriptToExecuteOnDocumentCreatedAsync` can lose the race with Blazor's first navigation.
+  3. **The theme service removes `gfo-booting`** after its first `ApplyAsync`, so the themed page appears in one step.
+- **Leave WebView2's `PreferredColorScheme` at Auto.** It's persisted in the WebView2 profile, so setting it would outlive the session.
 
 ### 3.4 GFO extension tokens (what Fluent doesn't have)
 Use **Fluent's tokens directly** for surfaces, text, borders, brand, status, type, radius, spacing, shadows and motion. Don't build a parallel `--gfo-surface-*` system. Add only what a football GM needs:
@@ -308,9 +315,16 @@ The earlier plan said "screens only use GFO component names" ([D-008](../DECISIO
 ```
 
 - **The side navigation** uses Fluent's nav component, with badge counts.
-- **Custom title bar** ([D-021](../DECISIONS.md#d-021-host-wpf--blazorwebview-maui-removed)), with two options to validate in M0:
-  - **(a)** `WindowChrome` with a slim native caption strip styled to match. It keeps Windows Snap Layouts. (The .NET 10 WPF `BlazorWebView` uses WebView2's composition control, so WPF elements can overlay the web content. See [HOST_BENCHMARK.md](HOST_BENCHMARK.md).)
-  - **(b)** A borderless window where the whole top bar is HTML, using WebView2 non-client regions (`app-region: drag`). More seamless, but no native caption-button behavior.
+- **The app bar is the title bar** ([D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar), chosen in Spike S0c over a slim WPF caption strip and the native title bar). There's one 40 px bar. Its right end holds **WPF caption buttons** (46 × 40 px, Segoe Fluent Icons), drawn over the web content, which the WebView2 composition control allows. Everything a native title bar does still works: drag, double-click to maximize, the system menu, Aero Snap, Snap Layouts, resize edges. How:
+  - **Window:** `WindowChrome` with `CaptionHeight` 0, `ResizeBorderThickness` from the system, and `GlassFrameThickness` 0,0,0,1 (keeps the DWM shadow and rounded corners). DWM attributes set immersive dark mode, rounded corners and a Border-colored edge.
+  - **Drag regions:** the app bar carries `data-drag-region`. A small JS module (`ResizeObserver`) reports the bar's rectangle and its interactive holes (buttons, inputs, `[data-no-drag]`) to the host in CSS px, which equal DIPs at zoom 1. The bar reserves 138 px on the right for the caption buttons.
+  - **Hit testing:** a `WM_NCHITTEST` hook, added after `WindowChrome`'s so it runs first, answers in this order:
+    1. `HTMAXBUTTON` over the WPF maximize button, which makes Windows 11 show Snap Layouts. Because Windows then owns that button, the hook also handles `WM_NCMOUSEMOVE`/`WM_NCMOUSELEAVE` for hover and `WM_NCLBUTTONUP` for the click.
+    2. Nothing over the minimize and close buttons, so WPF handles them (`WindowChrome.IsHitTestVisibleInChrome`).
+    3. `HTCAPTION` over the bar's empty space.
+    4. Nothing in the top resize band, so `WindowChrome` answers `HTTOP`.
+  - **Maximized:** pad the content by the window's *measured* overhang past the monitor's work area (8 px at 100%; `WindowResizeBorderThickness` alone is only 4).
+  - **Theme:** the caption buttons follow the theme's mode, so the theme service tells the host when the mode changes.
 - **The primary action button** is context-aware: "Play Week 7", "Advance to Free Agency", "Enter the Draft Room". It's always in the same place, and `Ctrl+Enter` triggers it.
 - **Routing:** Blazor `Router` with deep-linkable entity routes (`/player/{id}`, `/team/{id}`, `/game/{id}`, `/draft`, …). Mouse back and forward buttons (XButton1/2) and `Alt+←/→` are wired to history.
 - **Peek sheets:** `PeekService.OpenPlayer(id)` opens the `PlayerPeekSheet` (a Fluent drawer) over any page. "Open full profile" navigates.

@@ -265,19 +265,55 @@ flowchart LR
 
 **Afterwards:** the spike pages (`src/DevHost/Components/Spike/`), `wwwroot/spike.css`/`spike.js` and the `SpikeTheme` registration are deleted once they're in git history.
 
-### WP4 · Spike S0c: host shell (S–M)
+### WP4 · Spike S0c: host shell (S–M, throwaway code) ✅ Done 2026-10-16
 **Goal:** choose the title bar approach on the real host and re-measure startup.
-- [ ] `src/Desktop`: a WPF `MainWindow` hosting `BlazorWebView` (Windows SDK TFM, per the [benchmark gotcha](../architecture/HOST_BENCHMARK.md#gotchas-found-while-measuring-worth-knowing-for-m0)).
-- [ ] Prototype both title bar options:
-  - **(a)** `WindowChrome` with a slim native caption strip. It keeps Snap Layouts, and the composition control lets WPF overlay the web content.
-  - **(b)** a borderless window whose top bar is HTML with `app-region: drag`.
 
-  Then compare look, Snap Layouts, double-click-to-maximize, resize edges and high-DPI behavior.
-- [ ] Minimum size 1280×720.
-- [ ] `PublishReadyToRun=true` Release publish. Measure cold and warm start to first render.
-- [ ] Theme in the real host (from S0b): a Windows light/dark switch reaches GFO's `prefers-color-scheme` listener (Match Windows), and startup shows no flash of Fluent's default theme before `GfoThemeService` applies. Add a static fallback if it does.
+**Decision: the app bar is the title bar** ([D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar)). The owner chose it over a slim WPF caption strip and the native title bar.
+- **Setup:** one Desktop build with a `--titlebar=native|chrome|html` switch. A measurement harness ran outside the repo and checked three things:
+  - what the window answers for `WM_NCHITTEST` at each point of interest;
+  - maximize and restore, double-click on the bar, and the minimum size;
+  - captures of the app's own window only (`PrintWindow`), never whatever else was on screen.
 
-**Exit and decision:** the title bar approach recorded as a new D-xxx. [HOST_BENCHMARK.md](../architecture/HOST_BENCHMARK.md) updated with the real shell's numbers.
+| Check | (a) WPF caption strip | (b) app bar as title bar | Native |
+|---|---|---|---|
+| Resize edges and corners | ✅ | ✅ | ✅ |
+| Drag, double-click to maximize/restore | ✅ (strip) | ✅ (the bar's empty space; search and buttons stay clickable) | ✅ |
+| Snap Layouts (`HTMAXBUTTON` on maximize) | ✅ | ✅ | ✅ |
+| Min / close buttons | ✅ | ✅ after a fix: the drag region had swallowed them | ✅ |
+| Maximized fits the work area | ✅ after a fix: measured overhang 8 px, not 4 | ✅ | ✅ |
+| Minimum 1280 × 720 | ✅ | ✅ | ✅ |
+| Chrome height | 32 + 40 px | **40 px** | 31 + 40 px |
+
+**Other results**
+- **Startup:** about 1.4–1.5 s warm to a themed screen (median 1.51 s over 8 runs), and 1.57 s on a first-ever launch. That's inside the 3 s launch budget. The breakdown is in [HOST_BENCHMARK.md](../architecture/HOST_BENCHMARK.md#real-shell-spike-s0c-2026-10-16).
+- **DPI:** WPF was only system-aware. `app.manifest` now declares PerMonitorV2, and this stays as real host setup. Hit testing converts through WPF, so it's DPI-correct. All three of the owner's monitors are at 100%, so mixed scales weren't exercised.
+- **First paint:** without fallbacks, there were about 220 ms of white, then a frame of Fluent's default theme (light on a light Windows). With the three layers, every frame is Stadium-colored:
+  1. native Ground backgrounds;
+  2. a static `gfo-booting` class on the host page;
+  3. the theme service revealing the page.
+
+  This was verified for a dark app on a light Windows and a light app on both ([UI_DESIGN_SYSTEM.md §3.3](../architecture/UI_DESIGN_SYSTEM.md#33-source-of-truth-and-persistence)).
+- **Match Windows:** real WebView2 `prefers-color-scheme` events arrive within about 20 ms (4 of 4), and the theme follows. **New:** Fluent's own listener resets to its default theme on every switch, even under an explicit Dark choice. Setting the flag it checks keeps the theme intact, so GFO owns all switches ([UI_DESIGN_SYSTEM.md §3.2](../architecture/UI_DESIGN_SYSTEM.md#32-team-tinting)). This completes D-067.
+
+**Findings that change later work**
+1. **WP8 `GfoThemeService`:**
+   - re-apply on *every* scheme change;
+   - remove `gfo-booting` after the first apply;
+   - tell the host the mode, so the WPF caption buttons and DWM frame follow it;
+   - never set WebView2's `PreferredColorScheme`, which persists in the profile.
+2. **WP8 `AppShell`:**
+   - the 40 px app bar is the title bar (`data-drag-region`);
+   - it reserves 138 px for the caption buttons;
+   - interactive elements in it are holes, and `[data-no-drag]` marks custom ones.
+3. **WP9 Desktop:**
+   - the `WindowChrome` + `WM_NCHITTEST` plumbing and the WPF caption buttons;
+   - the measured maximize overhang;
+   - the native first-paint colors from `settings.json`;
+   - the static boot class and Fluent's listener flag in `index.html`;
+   - an explicit WebView2 user data folder under `IAppPaths` (the default sits next to the exe, which an updater replaces).
+4. **Doc corrections:** the native title bar costs 31 px. `app-region: drag` needs host hit testing under the composition control, which doesn't expose WebView2's non-client region API, so the page reports its regions instead.
+
+**Afterwards:** the spike code (`src/Desktop/Spike/`, `wwwroot/spike.*`, the spike wiring in `App` and `MainWindow`, and the spike host page) is deleted once it's in git history. `app.manifest` stays.
 
 ### WP5 · Logging and diagnostics (M)
 **Goal:** everything in [LOGGING.md](../architecture/LOGGING.md) that M0 needs.
@@ -348,7 +384,7 @@ flowchart LR
 | `Icon` | Maps GFO icon names to Fluent System Icons, so the set can be swapped cheaply |
 | `IGfoDialogs`, `IGfoToasts` | Thin services over Fluent's dialog and toast |
 | `DataGrid<T>` v0 | Implements the S0b verdict ([UI_DESIGN_SYSTEM.md §5.3](../architecture/UI_DESIGN_SYSTEM.md#53-datagridt-a-gfo-wrapper-over-fluentdatagrid)): virtualization, the pinned column and sticky header with the two scoped CSS fixes, the compact sort header, `ItemSize` from the density setting, `MinWidth` = `Width`, and the keyboard map (adds PageUp/PageDown/Home/End, Enter, Space) |
-| `AppShell` | Fluent nav + top bar (the title bar from S0c), primary action slot, inline progress slot. Paints the page Ground (Fluent's `body` is Surface 1). |
+| `AppShell` | Fluent nav + the 40 px app bar, which **is the title bar** ([D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar): `data-drag-region`, 138 px reserved for the WPF caption buttons), primary action slot, inline progress slot. Paints the page Ground (Fluent's `body` is Surface 1). |
 | `EmptyState`, `Stat`, `Kbd`, `SegmentedControl` (if v5 lacks one) | Small GFO pieces |
 | Settings page (Appearance) | Theme mode, accent mode, density, written to `settings.json` and applied live |
 | `/_gallery` | One page per component, in Dark and Light, with team tint on and off, using three sample team colors (dark navy, bright orange, pale) per [VISUAL_DESIGN.md §10](../VISUAL_DESIGN.md#10-qa-checklist-for-every-new-screen) |
@@ -360,6 +396,12 @@ flowchart LR
 ### WP9 · Main menu, wiring and the M0 exit (M)
 **Goal:** put it together into the walking skeleton.
 - [ ] The Desktop composition root: settings → logging → DI (`AddWpfBlazorWebView`, `AddGfoInfrastructure`, `AddGfoApplication`, `AddGfoUi`, Fluent) → window.
+- [ ] The window per [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar):
+  - `WindowChrome` with the `WM_NCHITTEST` hook (Snap Layouts on maximize, drag from the app bar's reported regions);
+  - the WPF caption buttons following the theme mode;
+  - the measured maximize overhang;
+  - first paint from `settings.json`: native Ground backgrounds, plus `gfo-booting` and Fluent's listener flag in `index.html`;
+  - an explicit WebView2 user data folder under `IAppPaths`.
 - [ ] **Single instance:** a named mutex. A second launch brings the existing window to the front and exits.
 - [ ] Window size and position remembered in `settings.json`, and restored safely when a monitor has been removed.
 - [ ] **Main menu** (UI RCL): Continue / New League / Load / Settings.
@@ -472,7 +514,7 @@ From [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton), plus the
 - [ ] A snapshot can be taken and restored
 - [ ] `./build.ps1` is green. A forbidden reference, a stray `BeginTransaction` and an `async void` each turn it red (demonstrated, not committed).
 - [ ] The gallery shows every v0 component in both themes, with team tint on and off
-- [ ] Spike decisions recorded: S0a (EF Core), S0b (grid + icons + verified v5 names), S0c (title bar)
+- [x] Spike decisions recorded: S0a (EF Core, D-024), S0b (grid + icons + verified v5 names, D-067), S0c (title bar, D-068)
 - [ ] `THIRD_PARTY_NOTICES.md` lists every package, font and icon set in use
 - [ ] Tag `m0-complete`
 

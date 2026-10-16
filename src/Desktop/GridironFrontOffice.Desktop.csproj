@@ -9,6 +9,9 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <PublishReadyToRun>true</PublishReadyToRun>
+    <!-- Per-monitor v2 DPI awareness. Without it WPF is only system-aware, and Windows bitmap-stretches the window
+         (blurry) on a monitor with a different scale (Spike S0c). -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>

@@ -75,6 +75,7 @@
 | D-065 | F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages | **Accepted** |
 | D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** |
 | D-067 | Spike S0b: Fluent UI v5 fits; `DataGrid<T>` keeps `FluentDataGrid` | **Accepted** |
+| D-068 | Host shell: the app bar is the title bar | **Accepted** |
 
 ---
 
@@ -198,6 +199,7 @@
 - **Status:** **Accepted** (owner, 2026-10-13: "Sounds good, let's remove MAUI and go with the lighter weight WPF."). Earlier: "If MAUI is too heavyweight then I am fine removing it. I left it in so that we can leverage MAUI Blazor (modern HTML, CSS, etc.) as compared to XAML."
 - **Evidence (measured, [HOST_BENCHMARK.md](architecture/HOST_BENCHMARK.md)):** clean build 4.7× faster, edit→build 2.3× faster, publish 2× faster like-for-like, 14–28% smaller install, no MAUI workload. Runtime is roughly equal: MAUI reaches first render about 0.2 s sooner on warm starts, and memory is about the same. **The win is developer productivity and simplicity, not runtime speed.**
 - **Requirements found while measuring:** `GridironFrontOffice.Desktop` targets **`net10.0-windows10.0.19041.0`** (the .NET 10 WPF `BlazorWebView` uses WebView2's composition control and crashes at startup with plain `net10.0-windows`), and publishes with **`PublishReadyToRun=true`**.
+- **Real-shell result (Spike S0c, 2026-10-16):** the actual app reaches a themed first screen in about 1.4–1.5 s warm and 1.57 s on a first-ever launch, well inside M0's 3 s launch budget. It also needs a per-monitor-v2 DPI manifest. Details: [D-068](#d-068-host-shell-the-app-bar-is-the-title-bar), [HOST_BENCHMARK.md](architecture/HOST_BENCHMARK.md#real-shell-spike-s0c-2026-10-16).
 - **Context:** The HTML/CSS benefit comes from **Blazor + BlazorWebView**, not from MAUI. Microsoft ships the same `BlazorWebView` control for **WPF** (`Microsoft.AspNetCore.Components.WebView.Wpf`, published for .NET 10). It renders the same Razor components with the same WebView2 (Chromium) engine. On Windows, MAUI adds a large workload, the Windows App SDK/WinUI packaging layer, slower builds and more version churn, and in return mainly offers a macOS path.
 - **Decision:** `GridironFrontOffice.Desktop` is a **WPF** app hosting `BlazorWebView`. Everything else (RCLs, DevHost, services) is unchanged, because the host was already designed to be thin.
 - **Consequences:**
@@ -569,7 +571,41 @@
 
   Without `IsExact`, a primary button shows a ramp step (`#903B19` for `#D9541E`) instead of the team color. With it, Fluent also uses the raw color for links and brand text, which vanish on dark surfaces when the team color is dark. So the service computes [VISUAL_DESIGN.md §3.3](VISUAL_DESIGN.md#33-team-accent-the-users-franchise-colors)'s on-accent, Accent (≥ 3:1) and Accent text (≥ 4.5:1) itself. This was verified on 7 team colors in Dark and Light.
   - **GFO resolves Match Windows itself.** Given `ThemeMode.System`, Fluent's CSS swaps in its *default* theme when Windows changes mode, dropping the team color and the Stadium tokens. The service hands Fluent Dark or Light and re-applies the theme on a `prefers-color-scheme` change.
+  - **Completed by Spike S0c ([D-068](#d-068-host-shell-the-app-bar-is-the-title-bar)):** an explicit mode isn't enough on its own. Fluent's script re-applies its default theme on *every* real `prefers-color-scheme` change, unless its own `localStorage` cache holds an explicit mode, and GFO doesn't use that cache. The browser emulation in S0b never fired change events, so this path was invisible there. The host page now turns Fluent's listener off, and GFO handles every change.
   - **Fluent's `localStorage` theme cache isn't used.** Only the `ThemeSettings` path writes it, and `GetThemeSettingsAsync` reads it back, so the cache goes stale under a custom theme. The service clears it at startup, and `settings.json` stays the source of truth.
 - **Overlays work:** the drawer (the future peek sheet), the confirm dialog and the toast. The verified API names are in [UI_DESIGN_SYSTEM.md §5.1](architecture/UI_DESIGN_SYSTEM.md#51-from-fluent-ui-blazor-v5-use-directly-in-pages).
 - **Icons: Fluent System Icons are confirmed** (D-031's proposed part). They render cleanly next to Archivo: Regular weight for UI, Filled for active states, behind GFO's `Icon` wrapper. The icons package adds about 22 MB of per-style DLLs to the app.
 - **Details:** [M0_FOUNDATIONS.md WP3](milestones/M0_FOUNDATIONS.md#wp3--spike-s0b-fluent-ui-v5-fit-check-m-throwaway-code--done-2026-10-15).
+
+## D-068: Host shell: the app bar is the title bar
+- **Status:** **Accepted** (owner, 2026-10-16, after Spike S0c: chose "(b) App bar is title bar" over a slim WPF caption strip and the native Windows title bar).
+- **Decision:** the window has **no separate title bar**. The HTML app bar (40 px: crest, team, season line, cap pill, search, primary action) is the title bar, and WPF caption buttons (46 × 40 px, Segoe Fluent Icons) sit over its right end. Native behavior is kept: drag, double-click to maximize, the system menu, Aero Snap, Windows 11 **Snap Layouts** on the maximize button, resize edges and corners, the 1280 × 720 minimum. The composition control lets WPF draw over web content. How it works ([UI_DESIGN_SYSTEM.md §7](architecture/UI_DESIGN_SYSTEM.md#7-app-shell-and-navigation)):
+  - `WindowChrome` with `CaptionHeight` 0 keeps the resize border, the DWM shadow and rounded corners.
+  - The app bar reports its rectangle and its interactive holes (buttons, inputs) to the host through a small JS module (`ResizeObserver`).
+  - A `WM_NCHITTEST` hook answers in this order:
+    - `HTMAXBUTTON` over the WPF maximize button, which is what makes Windows show Snap Layouts;
+    - the WPF minimize and close buttons are left to WPF;
+    - `HTCAPTION` over the bar's empty space;
+    - the top resize band is left to `WindowChrome`.
+  - A maximized window is padded by its *measured* overhang: 8 px at 100% scale, not the 4 px `WindowResizeBorderThickness` suggests.
+- **Why:**
+  - It saves 32 px of height on dense screens compared with option (a), which stacks two bars (72 px of chrome).
+  - It matches the single top bar in the AppShell design.
+  - Its cost is now proven and small: about 150 lines of host code plus a 20-line JS module.
+  - The native title bar (31 px) was the zero-code baseline, but it gives the least integrated look and still means two bars.
+- **Also found by the spike** (now in the docs; numbers in [HOST_BENCHMARK.md](architecture/HOST_BENCHMARK.md#real-shell-spike-s0c-2026-10-16)):
+  - **Per-monitor-v2 DPI needs an app manifest.** Without one, WPF is only system-aware, and Windows would bitmap-stretch the window on a monitor with a different scale. `src/Desktop/app.manifest` now declares PerMonitorV2.
+  - **First paint is Stadium-colored from the first frame**, through three layers:
+    1. the WPF window background and WebView2's `DefaultBackgroundColor` are set natively from the saved mode;
+    2. the host page boots as `<html class="gfo-booting">`, transparent with `#app` hidden;
+    3. the theme service removes the class once Stadium is applied.
+
+    Without them, the window showed about 220 ms of **white**, then a frame of Fluent's default theme, which is light on a light Windows.
+  - **Fluent's system-theme listener is switched off** with the guard flag it checks (`window.__FluentUIBlazorSystemThemeChangeListener = true`, set before Fluent loads). Otherwise Fluent resets to its default theme on every Windows light/dark switch, even under an explicit Dark choice. GFO's listener re-applies the theme on each change. Real WebView2 change events were verified: 4 of 4 switches arrived within about 20 ms.
+  - **Host-page scripts can lose the race with Blazor.** A script registered with `AddScriptToExecuteOnDocumentCreatedAsync` didn't run before Blazor's first navigation, so first-paint state is static in `index.html` or set natively. WebView2 also **persists** `PreferredColorScheme` in its profile, so the host never sets it.
+  - **Startup:**
+    - Warm, about 1.4–1.5 s to a themed screen (median 1.51 s over 8 runs; first render 1.47 s); first-ever launch 1.57 s.
+    - WebView2's browser-process start (about 0.6 s) is the largest step.
+    - The title bar choice makes no difference.
+    - The self-contained ReadyToRun publish is 247 MB.
+- **Details:** [M0_FOUNDATIONS.md WP4](milestones/M0_FOUNDATIONS.md#wp4--spike-s0c-host-shell-sm-throwaway-code--done-2026-10-16).
