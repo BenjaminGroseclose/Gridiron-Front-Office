@@ -78,6 +78,11 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - A save with an unknown migration is "from a newer app" and is refused.
   - Domain-event subscribers run on the thread that finished the command (`ConfigureAwait(false)`), not the UI thread, so marshal with `InvokeAsync`.
   - The torture tests (`tests/Infrastructure.Tests/Data`) must stay green on every build. The Crasher kill test launches a separate process.
+- **Save lifecycle (WP7, PERSISTENCE.md §2, §9, §10):**
+  - Open save files read-only only through `SqliteFile.ReadOnly`. A plain read-only connection to a closed WAL save leaves `-wal`/`-shm` files behind, and SQLite can't remove them from a read-only connection.
+  - `VACUUM INTO` writes a rollback-journal file, so a snapshot that becomes the live save is switched back to WAL.
+  - Every host registers `IPlatformServices` (the Crasher too); `AddGfoInfrastructure` doesn't. Tests use `FakePlatformServices`, so a build never touches the real Recycle Bin.
+  - Restore and delete are `SaveManager` operations, and their rules (`SaveRules`) are checked there, not just in the UI.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 

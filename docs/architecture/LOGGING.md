@@ -193,10 +193,12 @@ M0 checked every path in both hosts. Each one landed in the log with its stack t
 
 ### 8.2 Event IDs in use
 - **1000–1013, App/Host (`HostLog`):** banner, settings unreadable, settings file created (1006), window shown, WebView2 ready, host page loaded, exiting, the unhandled background-thread, unobserved-task and UI-thread exceptions, and the crash dialog choice.
-- **2000–2020, Persistence (`DataLog`):**
+- **2000–2022, Persistence (`DataLog`):**
   - commands: committed (Debug), rejected, rolled back, slow (> 1 s), rollback failed;
-  - saves: created, opened, upgraded, closed, refused;
-  - a failing domain-event subscriber.
+  - saves: created, opened, upgraded, closed, refused (2014), restored (2017), deleted (2018), a restore or delete refused (2021, 2022);
+  - snapshots: taken, with its time and size (2015), and pruned (2016);
+  - the save list can't read a file (2019, Warning);
+  - a failing domain-event subscriber (2020).
 - **8000–8003, UI (`UiLog`):** page error, JavaScript error, JavaScript errors suppressed, and the diagnostics script missing.
 
 ---

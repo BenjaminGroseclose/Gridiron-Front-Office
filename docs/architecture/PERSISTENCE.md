@@ -1,6 +1,6 @@
 # Persistence: SQLite Save Files
 
-> **Status:** Proposed · 2026-10-13 · Save file core built in M0 WP6 (2026-10-16) · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
+> **Status:** Proposed · 2026-10-13 · Save file core built in M0 WP6 (2026-10-16), save lifecycle in WP7 (2026-10-18) · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
 >
 > **Data access: EF Core with the GFO unit of work** ([D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work)). **How to read and write** (transactions, patterns, troubleshooting) is in **[DATA_ACCESS_GUIDE.md](DATA_ACCESS_GUIDE.md)**. This doc covers the save file itself.
 
@@ -52,6 +52,13 @@ flowchart LR
 
 - **Total budget:** 2 GB per league by default (configurable). Rolling snapshots are pruned oldest-first until the total fits.
 - Snapshots are taken off the UI thread with `VACUUM INTO`, which produces a compact, consistent, single file without closing the live database.
+- **As built (M0 WP7):**
+  - **The table is code:** `SnapshotTrigger` builds the names (`SnapshotTrigger.Week(2027, 8)` → `S2027-W08`) and `SnapshotPolicy` holds the keep counts and the pruning rule, as pure functions in Application with unit tests. M0 takes `created` (after a save is created), `pre-upgrade-v{n}` and `pre-restore`. The phase kinds are defined, but nothing triggers them until phases exist.
+  - **Keep counts:** "last N" is the newest N of that kind; "until the next successful upgrade" is keep 1 (each new `pre-upgrade` replaces the older ones). Taking a snapshot whose name already exists replaces it.
+  - **The budget:** only the phase snapshots (camp, weeks, deadline, playoffs, end, pre-FA, pre-draft) give way, oldest first. `created`, `pre-upgrade` and `pre-restore` are safety nets that are never pruned for the budget, and neither is the snapshot just taken. The budget is `SnapshotOptions.BudgetBytes` (2 GB); a user setting can come with the Time Machine.
+  - **A snapshot's time is its file's write time.** There's no index file to get out of step with the folder. Files in the folder that don't match a snapshot name are ignored.
+  - **Between commands:** `ISnapshotService.TakeAsync` holds the writer's gate, so a snapshot is always a point between two commands, and commands queued meanwhile simply wait.
+  - **Snapshots are rollback-journal files.** `VACUUM INTO` doesn't keep WAL mode, so restore switches the file back to WAL.
 
 ### 2.2 Restore ("Time Machine" screen)
 - Lists snapshots with season, phase, record and timestamp.
@@ -59,6 +66,15 @@ flowchart LR
 - **Disabled** while a live event (draft, FA Frenzy, Deadline Day) is in progress.
 - **Disabled** in Ironman leagues ([D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)). The check lives in `SaveManager`, not just the UI.
 - **Ironman exception: corruption-only recovery.** Snapshots are still taken. If the live file fails its integrity check on open, or a schema migration fails, the app restores the **most recent good snapshot automatically**. The player never chooses the point in time.
+- **As built (M0 WP7): `ISaveManager.RestoreAsync(snapshot)`**, the engine the M3 Time Machine will call.
+  1. **Rules first:** the snapshot must belong to the open save. `SaveRules.CanRestore` refuses Ironman (`IronmanNoRestore`) and a running live event (`LiveEventRunning`, through `ILiveEventStatus`, which reports "none" until M2).
+  2. **The snapshot is checked before anything closes:** it exists, it's a GFO file, `quick_check` passes, its `SaveId` matches, and its schema isn't newer. A bad snapshot leaves the save open and untouched.
+  3. **Stage a copy:** `VACUUM INTO` from the snapshot to `{save}.restore-tmp`, switched to WAL. Staging first is what makes restoring `pre-restore` itself (undo) work, since step 5 replaces that snapshot.
+  4. **Close** the save (recording the session).
+  5. **Snapshot the current state as `pre-restore`.**
+  6. **Replace:** delete any `-wal`/`-shm` (a stale WAL must never be replayed onto another file), then move the staged copy over the save.
+  7. **Reopen** through the normal open path (an older snapshot is upgraded on the way). Then one command carries the play time over: real time played doesn't go back with the league.
+- **Not built yet:** the corruption recovery (Standard's offer and Ironman's automatic restore) builds on the same engine and arrives with the Time Machine.
 
 ### 2.3 Duplicate and export
 - **Duplicate league** (make a branch) and **Export** (a single-file copy for backup or sharing) both use `VACUUM INTO`.
@@ -215,7 +231,7 @@ sequenceDiagram
 - **As built (M0 WP6):**
   - **The schema version is the number of EF migrations.** Adding a migration bumps it; there's no constant to forget.
   - **A save is from a newer app** when it has a migration this app doesn't know, or its `user_version` is higher than this app's count. It's refused with "Update the app", naming the version that last opened it, and the file is released.
-  - **Opening an older save:** `VACUUM INTO` to `Snapshots\{SaveId}\pre-upgrade-v{n}.gfo`, then migrate, then set `user_version`. WP7's snapshot service takes over naming and retention.
+  - **Opening an older save:** a `pre-upgrade-v{n}` snapshot through the snapshot service (WP7), then migrate, then set `user_version`.
   - **Migrations are the one exception to "only `SaveWriter` begins transactions":** EF runs each migration in its own transaction, before the save becomes the open session.
   - **Opening checks run in order:**
     1. the file exists;
@@ -252,6 +268,13 @@ sequenceDiagram
 - Scan `Saves\*.gfo`. For each file, open a **read-only** connection, verify `application_id`, and read `SaveInfo` plus the user team's identity and record.
 - Show a card per save: team mark and colors, league name, season and phase, record, last played, Ironman badge, app version warning.
 - Corrupt or unrecognized files show a "Can't read this save" card with "Show in folder".
+- **As built (M0 WP7): `ISaveCatalog.ListAsync()`** returns `SaveCard`s, most recently played first, unreadable files last.
+  - **Status per card:** `Ready`, `NeedsUpgrade` (older `user_version`: opens after a `pre-upgrade` snapshot), `FromNewerVersion` (the card says to update), or `Unreadable` with a one-sentence `Problem` (not SQLite, not GFO, damaged, no league in it).
+  - **Continue** (`SaveCards.ContinueTarget`) is the most recently played card that can be opened.
+  - **Nothing is written next to the saves.** A plain read-only connection to a closed WAL save creates `-wal` and `-shm` files and can't remove them. So `SqliteFile.ReadOnly` opens a closed save (no `-wal`) as `immutable`. With a `-wal` present (the save is open, or a crash left it), the plain read-only connection reads through it. A test checks that a scan leaves the folder byte-for-byte unchanged.
+  - **The card's columns are read with raw SQL**, so saves from older and newer apps (whose `SaveInfo` has other columns) still get a card. Those columns (`SaveId`, `LeagueName`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `AppVersionLastOpened`, `IsIronman`) are never renamed or removed.
+  - **No `quick_check` in the list:** it reads the whole file, too slow for many saves. Damage that the header and `SaveInfo` don't show is caught when the save is opened.
+  - Team, season, phase and record arrive in M1 with the league.
 
 ---
 
@@ -261,8 +284,14 @@ sequenceDiagram
 |---|---|---|
 | **Export** | `VACUUM INTO <user-chosen path>` | Not available during live events |
 | **Import** | Copy into `Saves\` with a fresh file name | `application_id`, `quick_check`, schema version ≤ app, required tables present. If the `SaveId` collides with an existing save, assign a new `SaveId`. |
-| **Delete** | Send to the **Recycle Bin** (not permanent), along with its snapshot folder, after a confirmation that names the league | — |
+| **Delete** | Send to the **Recycle Bin** (not permanent), along with its snapshot folder, after a confirmation that names the league | — (as built in WP7, below) |
 | **Duplicate** | `VACUUM INTO` with a new `SaveId` and the name `"{name} (copy)"` | Not available during live events |
+
+**Delete, as built (M0 WP7):** `ISaveManager.DeleteAsync(path)` closes the save first if it's the open one. Then it hands the file (with any `-wal`/`-shm`) and `Snapshots\{SaveId}` to `IPlatformServices.SendToRecycleBin` in one call.
+- **Unreadable files can be deleted too.** Without a readable `SaveId`, only the file goes.
+- **A shared snapshot folder stays.** If another file in `Saves\` has the same `SaveId` (a copy made in Explorer), the snapshot folder is kept.
+- **Desktop:** the shell's `SHFileOperationW` with "allow undo" and the "nuke warning". If Windows can't recycle something (too big, or a drive without a Recycle Bin), it asks the player before deleting permanently. Saying no returns `DeleteCancelled`. A file another program holds returns `DeleteFailed`.
+- **DevHost:** a `.trash` folder in the dev data folder, so development never fills the real Recycle Bin.
 
 ---
 

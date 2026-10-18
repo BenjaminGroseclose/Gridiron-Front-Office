@@ -3,6 +3,7 @@
 // CrashProbe table, prints "WRITING" halfway through, then waits forever inside the still-open transaction. The test
 // kills it there and checks the save is intact with no rows added.
 using GridironFrontOffice.Application.Data;
+using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Saves;
 using GridironFrontOffice.Core.Results;
 using GridironFrontOffice.Infrastructure;
@@ -14,6 +15,7 @@ const int Rows = 100_000;
 
 var services = new ServiceCollection()
     .AddLogging()
+    .AddSingleton<IPlatformServices, NoPlatform>()   // every host registers one; the Crasher never deletes anything
     .AddGfoInfrastructure(AppPaths.ForRoot(args[0]), AppIdentity.Parse("0.0.0-crasher", "Test"));
 await using var provider = services.BuildServiceProvider();
 
@@ -48,3 +50,10 @@ await provider.GetRequiredService<ISaveWriter>().ExecuteAsync("Crasher.Insert", 
 });
 
 return 0;
+
+internal sealed class NoPlatform : IPlatformServices
+{
+    public bool SendToRecycleBin(IReadOnlyList<string> paths) => throw new NotSupportedException();
+
+    public void ShowInFolder(string path) => throw new NotSupportedException();
+}

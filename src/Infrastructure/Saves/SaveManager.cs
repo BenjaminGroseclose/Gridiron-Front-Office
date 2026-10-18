@@ -1,4 +1,5 @@
 using GridironFrontOffice.Application.Data;
+using GridironFrontOffice.Application.LiveEvents;
 using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Saves;
 using GridironFrontOffice.Core.Leagues;
@@ -12,16 +13,22 @@ using Microsoft.Extensions.Logging;
 namespace GridironFrontOffice.Infrastructure.Saves;
 
 /// <summary>
-/// Creates, opens and closes saves (PERSISTENCE.md §3, §7). The schema version is the number of EF migrations the
-/// file has; a file that has a migration this app doesn't know is from a newer app and is refused.
+/// Creates, opens, closes, restores and deletes saves (PERSISTENCE.md §2, §3, §7, §10). The schema version is the
+/// number of EF migrations the file has; a file that has a migration this app doesn't know is from a newer app and is
+/// refused. Every lifecycle change runs under one lock, and its events are dispatched after the lock is released.
 /// </summary>
 internal sealed class SaveManager(
     IAppPaths paths,
     AppIdentity app,
     LeagueSessionAccessor sessions,
     SaveWriter writer,
+    ISaveReader reader,
     DomainEventDispatcher events,
     SqlitePragmaInterceptor pragmas,
+    SnapshotService snapshots,
+    SaveCatalog catalog,
+    IPlatformServices platform,
+    ILiveEventStatus liveEvents,
     TimeProvider time,
     ILogger<SaveManager> log) : ISaveManager, IDisposable
 {
@@ -62,7 +69,7 @@ internal sealed class SaveManager(
                 SqliteFile.InitializeNew(path);
                 schema = await MigrateAsync(session, cancellationToken).ConfigureAwait(false);
                 SqliteFile.SetUserVersion(session.ConnectionString, schema);
-                await writer.RunExclusiveAsync(() => { sessions.Set(session); return Task.CompletedTask; }, cancellationToken)
+                await writer.RunExclusiveAsync("creating a save", () => { sessions.Set(session); return Task.CompletedTask; }, cancellationToken)
                     .ConfigureAwait(false);
 
                 var now = time.GetUtcNow().UtcDateTime;
@@ -80,6 +87,8 @@ internal sealed class SaveManager(
                     });
                     return Task.FromResult(Result.Ok());
                 }, cancellationToken).ConfigureAwait(false);
+
+                await snapshots.TakeAsync(SnapshotTrigger.Created, cancellationToken).ConfigureAwait(false);
             }
             catch
             {
@@ -152,6 +161,55 @@ internal sealed class SaveManager(
         events.Dispatch(dispatch);
     }
 
+    public async Task<Result<OpenSave>> RestoreAsync(SnapshotInfo snapshot, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        var dispatch = new List<IDomainEvent>();
+        Result<OpenSave> outcome;
+        await _lifecycle.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            outcome = await RestoreCoreAsync(snapshot, dispatch, cancellationToken).ConfigureAwait(false);
+            if (outcome.IsFailure)
+            {
+                DataLog.RestoreRefused(log, snapshot.Name, outcome.Error!.Message);
+            }
+        }
+        finally
+        {
+            _lifecycle.Release();
+        }
+
+        events.Dispatch(dispatch);
+        return outcome;
+    }
+
+    public async Task<Result<Unit>> DeleteAsync(string path, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var fullPath = Path.GetFullPath(path);
+        var fileName = Path.GetFileName(fullPath);
+
+        var dispatch = new List<IDomainEvent>();
+        Result<Unit> outcome;
+        await _lifecycle.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            outcome = await DeleteCoreAsync(fullPath, fileName, dispatch, cancellationToken).ConfigureAwait(false);
+            if (outcome.IsFailure)
+            {
+                DataLog.DeleteRefused(log, fileName, outcome.Error!.Message);
+            }
+        }
+        finally
+        {
+            _lifecycle.Release();
+        }
+
+        events.Dispatch(dispatch);
+        return outcome;
+    }
+
     /// <summary>
     /// The app is exiting without a CloseAsync: release the file synchronously so it isn't left locked. The session's
     /// play time isn't recorded on this path; WP9's shutdown calls CloseAsync first.
@@ -201,15 +259,14 @@ internal sealed class SaveManager(
             if (pending > 0)
             {
                 // PERSISTENCE.md §7: snapshot first, then migrate forward.
-                var saveId = ReadSaveId(session.ConnectionString);
-                var snapshot = Path.Combine(paths.Snapshots, saveId.ToString(), $"pre-upgrade-v{applied.Count}.gfo");
-                SqliteFile.VacuumInto(session.ConnectionString, snapshot);
+                var saveId = SqliteFile.ReadSaveId(session.ConnectionString);
+                var snapshot = snapshots.Take(session.ConnectionString, saveId, SnapshotTrigger.PreUpgrade(applied.Count));
                 await MigrateAsync(session, ct).ConfigureAwait(false);
                 SqliteFile.SetUserVersion(session.ConnectionString, known.Count);
-                DataLog.SaveUpgraded(log, saveId, applied.Count, known.Count, snapshot);
+                DataLog.SaveUpgraded(log, saveId, applied.Count, known.Count, snapshot.Name);
             }
 
-            await writer.RunExclusiveAsync(() => { sessions.Set(session); return Task.CompletedTask; }, ct).ConfigureAwait(false);
+            await writer.RunExclusiveAsync("opening a save", () => { sessions.Set(session); return Task.CompletedTask; }, ct).ConfigureAwait(false);
             var schema = known.Count;
             var now = time.GetUtcNow().UtcDateTime;
             var opened = await writer.ExecuteAsync("Save.Open", async (uow, token) =>
@@ -253,7 +310,7 @@ internal sealed class SaveManager(
             return Result.Ok();
         }, ct).ConfigureAwait(false);
 
-        await writer.RunExclusiveAsync(() =>
+        await writer.RunExclusiveAsync("closing a save", () =>
         {
             sessions.Set(null);
             SqliteFile.CheckpointAndRelease(session.ConnectionString);
@@ -263,6 +320,136 @@ internal sealed class SaveManager(
         Current = null;
         DataLog.SaveClosed(log, closing.SaveId, minutes);
         dispatch.Add(new SaveClosed(closing.SaveId));
+    }
+
+    /// <summary>
+    /// PERSISTENCE.md §2.2. The snapshot is checked and staged next to the save before anything is closed, so a bad
+    /// snapshot leaves the save open and untouched, and restoring <c>pre-restore</c> itself (undo) works even though a
+    /// new <c>pre-restore</c> replaces it.
+    /// </summary>
+    private async Task<Result<OpenSave>> RestoreCoreAsync(SnapshotInfo snapshot, List<IDomainEvent> dispatch, CancellationToken ct)
+    {
+        if (Current is not { } open || open.SaveId != snapshot.SaveId)
+        {
+            return Result.Fail<OpenSave>(SaveErrors.SnapshotNotForThisSave(snapshot.Name));
+        }
+
+        var isIronman = await reader.QueryAsync((db, token) => db.SaveInfo.Select(s => s.IsIronman).SingleAsync(token), ct).ConfigureAwait(false);
+        var allowed = SaveRules.CanRestore(isIronman, liveEvents.IsRunning);
+        if (allowed.IsFailure)
+        {
+            return Result.Fail<OpenSave>(allowed.Error!);
+        }
+
+        if (!File.Exists(snapshot.FilePath))
+        {
+            return Result.Fail<OpenSave>(SaveErrors.SnapshotNotFound(snapshot.Name));
+        }
+
+        var snapshotFile = Path.GetFileName(snapshot.FilePath);
+        var probe = SqliteFile.Check(snapshot.FilePath);
+        if (!probe.IsDatabase || probe.ApplicationId != SqliteFile.ApplicationId)
+        {
+            return Result.Fail<OpenSave>(SaveErrors.NotAGfoSave(snapshotFile));
+        }
+
+        if (!string.Equals(probe.QuickCheck, "ok", StringComparison.Ordinal))
+        {
+            return Result.Fail<OpenSave>(SaveErrors.Damaged(snapshotFile, probe.QuickCheck));
+        }
+
+        var card = catalog.Read(snapshot.FilePath);
+        if (card.Status == SaveCardStatus.Unreadable || card.SaveId != open.SaveId)
+        {
+            return Result.Fail<OpenSave>(SaveErrors.SnapshotNotForThisSave(snapshot.Name));
+        }
+
+        if (card.Status == SaveCardStatus.FromNewerVersion)
+        {
+            return Result.Fail<OpenSave>(SaveErrors.NewerVersion(snapshotFile, card.AppVersionLastOpened));
+        }
+
+        var savePath = open.FilePath;
+        var staged = savePath + ".restore-tmp";
+        try
+        {
+            SqliteFile.VacuumInto(SqliteFile.ReadOnly(snapshot.FilePath), staged);   // a copy; the snapshot itself is never touched
+            SqliteFile.UseWal(staged);
+
+            await CloseCoreAsync(dispatch, ct).ConfigureAwait(false);
+            var playTime = catalog.Read(savePath).PlayTimeSeconds;   // real time played doesn't go back with the league
+            snapshots.Take(SqliteFile.ReadOnly(savePath), open.SaveId, SnapshotTrigger.PreRestore);
+            foreach (var sidecar in SqliteFile.Sidecars(savePath))
+            {
+                File.Delete(sidecar);   // a stale WAL must never be replayed onto the restored file
+            }
+
+            File.Move(staged, savePath, overwrite: true);
+
+            var reopened = await OpenCoreAsync(savePath, Path.GetFileName(savePath), ct).ConfigureAwait(false);
+            if (reopened.IsFailure)
+            {
+                return reopened;
+            }
+
+            await writer.ExecuteAsync("Save.Restored", async (uow, token) =>
+            {
+                var info = await uow.Db.SaveInfo.SingleAsync(token).ConfigureAwait(false);
+                info.PlayTimeSeconds = Math.Max(info.PlayTimeSeconds, playTime);
+                return Result.Ok();
+            }, ct).ConfigureAwait(false);
+
+            DataLog.SaveRestored(log, open.SaveId, snapshot.Name);
+            dispatch.Add(new SaveOpened(reopened.Value));
+            return reopened;
+        }
+        finally
+        {
+            File.Delete(staged);   // no-op once it has been moved into place
+        }
+    }
+
+    private async Task<Result<Unit>> DeleteCoreAsync(string fullPath, string fileName, List<IDomainEvent> dispatch, CancellationToken ct)
+    {
+        if (!File.Exists(fullPath))
+        {
+            return Result.Fail<Unit>(SaveErrors.NotFound(fileName));
+        }
+
+        if (Current is { } open && string.Equals(open.FilePath, fullPath, StringComparison.OrdinalIgnoreCase))
+        {
+            await CloseCoreAsync(dispatch, ct).ConfigureAwait(false);
+        }
+
+        // The snapshot folder goes too, unless another file shares the SaveId (a copy made in Explorer).
+        var card = catalog.Read(fullPath);
+        Guid? saveId = card.Status == SaveCardStatus.Unreadable ? null : card.SaveId;
+        var targets = new List<string> { fullPath };
+        targets.AddRange(SqliteFile.Sidecars(fullPath));
+        var withSnapshots = false;
+        if (saveId is { } id && Directory.Exists(snapshots.FolderOf(id))
+            && !(await catalog.ListAsync(ct).ConfigureAwait(false))
+                .Any(c => c.SaveId == id && !string.Equals(c.FilePath, fullPath, StringComparison.OrdinalIgnoreCase)))
+        {
+            targets.Add(snapshots.FolderOf(id));
+            withSnapshots = true;
+        }
+
+        try
+        {
+            if (!platform.SendToRecycleBin(targets))
+            {
+                return Result.Fail<Unit>(SaveErrors.DeleteCancelled(fileName));
+            }
+        }
+        catch (IOException ex)
+        {
+            return Result.Fail<Unit>(SaveErrors.DeleteFailed(fileName, ex.Message));
+        }
+
+        DataLog.SaveDeleted(log, fileName, withSnapshots);
+        dispatch.Add(new SaveDeleted(fullPath, saveId));
+        return Result.Ok();
     }
 
     /// <summary>Applies every migration the file doesn't have yet. Returns the resulting schema version.</summary>
@@ -285,15 +472,6 @@ internal sealed class SaveManager(
             var applied = (await db.Database.GetAppliedMigrationsAsync(ct).ConfigureAwait(false)).ToList();
             return (known, applied);
         }
-    }
-
-    private static Guid ReadSaveId(string connectionString)
-    {
-        using var connection = new SqliteConnection(connectionString);
-        connection.Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT SaveId FROM SaveInfo LIMIT 1;";
-        return Guid.Parse((string)command.ExecuteScalar()!);
     }
 
     /// <summary>Best effort, for the "update the app" message: the newer app may have changed SaveInfo's shape.</summary>

@@ -351,7 +351,7 @@ flowchart LR
 **Goal:** the data layer exactly as in [DATA_ACCESS_GUIDE.md §3](../architecture/DATA_ACCESS_GUIDE.md#3-the-building-blocks-the-code-youll-write-once-in-m0), proven by torture tests.
 
 **Application (ports and contracts)**
-- `ILeagueDb`, `ILeagueReadDb` (in M0 they expose only `SaveInfo`), `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher`, `ISaveManager`, `ISaveCatalog`, `ISnapshotService`, `IAppPaths`, `IPlatformServices`, `ILeagueSessionAccessor`. *(As built: the accessor is Infrastructure-internal; the catalog, snapshot and platform ports land with their implementations in WP7; `IAppPaths` came in WP5.)*
+- `ILeagueDb`, `ILeagueReadDb` (in M0 they expose only `SaveInfo`), `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher`, `ISaveManager`, `ISaveCatalog`, `ISnapshotService`, `IAppPaths`, `IPlatformServices`, `ILeagueSessionAccessor`. *(As built: the accessor is Infrastructure-internal; the catalog, snapshot and platform ports landed with their implementations in WP7; `IAppPaths` came in WP5.)*
 - The strongly typed ID convention (D-015): `readonly record struct XxxId(int Value)`, plus one EF `ConfigureConventions` rule that converts them all. The first IDs arrive in M1, and the convention gets a test now.
 
 **Infrastructure**
@@ -404,15 +404,51 @@ flowchart LR
 3. **The kill test hung in a first draft.** The assertion's diagnostic message read the Crasher's stderr eagerly, but the Crasher never exits on its own. It now reads stderr only on failure and always kills the Crasher in a `finally`, so there are no orphans.
 4. **Not yet tested:** upgrading an older save. There's only one migration, so the test arrives with M1's first schema change.
 
-### WP7 · Save lifecycle: catalog, snapshots, delete (M)
+### WP7 · Save lifecycle: catalog, snapshots, delete (M) ✅ Done 2026-10-18
 **Goal:** the save-management pieces of F-01's M0 slice ([PERSISTENCE.md §2, §9, §10](../architecture/PERSISTENCE.md)).
-- [ ] `SaveCatalog`: scans `Saves\*.gfo` with **read-only** connections, checks `application_id`, reads `SaveInfo` (name, created, last played, app version), and flags unreadable files.
-- [ ] **Continue** = the most recently played save.
-- [ ] `SnapshotService`: `VACUUM INTO` off the UI thread, named per [PERSISTENCE.md §2.1](../architecture/PERSISTENCE.md#21-snapshot-policy-proposed-defaults). In M0 the triggers are `created` and `pre-upgrade-v{n}` only (phase triggers arrive with phases). The retention budget is pruned oldest-first.
-- [ ] **Restore** (the engine for the M3 Time Machine): close → snapshot `pre-restore` → replace the file → reopen. The Ironman and live-event guards are stubbed as rule checks in `SaveManager`, with tests.
-- [ ] **Delete to the Recycle Bin** through `IPlatformServices` (Desktop: the Windows shell API; DevHost: a `.trash` folder in the dev directory), together with the save's snapshot folder.
+- [x] `SaveCatalog`: scans `Saves\*.gfo` with **read-only** connections, checks `application_id`, reads `SaveInfo` (name, created, last played, app version), and flags unreadable files.
+- [x] **Continue** = the most recently played save.
+- [x] `SnapshotService`: `VACUUM INTO` off the UI thread, named per [PERSISTENCE.md §2.1](../architecture/PERSISTENCE.md#21-snapshot-policy-proposed-defaults). In M0 the triggers are `created` and `pre-upgrade-v{n}` only (phase triggers arrive with phases). The retention budget is pruned oldest-first.
+- [x] **Restore** (the engine for the M3 Time Machine): close → snapshot `pre-restore` → replace the file → reopen. The Ironman and live-event guards are stubbed as rule checks in `SaveManager`, with tests.
+- [x] **Delete to the Recycle Bin** through `IPlatformServices` (Desktop: the Windows shell API; DevHost: a `.trash` folder in the dev directory), together with the save's snapshot folder.
 
 **Exit:** a snapshot is taken and restored (tested), a deleted save lands in the Recycle Bin, and a corrupt file shows a "Can't read this save" card instead of crashing.
+
+**Result: all three exit criteria met.** Restore is tested, including undoing a restore. Delete reached the real Recycle Bin in a one-off check (below). Damaged, empty, text and foreign-SQLite files each get an Unreadable card.
+- **Application:**
+  - `ISaveCatalog` + `SaveCard` (status `Ready`/`NeedsUpgrade`/`FromNewerVersion`/`Unreadable`) and `SaveCards.ContinueTarget`;
+  - `ISnapshotService`, plus `SnapshotTrigger` and `SnapshotPolicy`: the §2.1 table as pure, unit-tested code;
+  - `SaveRules.CanRestore` (Ironman, live event);
+  - `ISaveManager.RestoreAsync`/`DeleteAsync`, the `SaveDeleted` event and the new `SaveErrors`;
+  - the `IPlatformServices` and `ILiveEventStatus` ports (`NoLiveEvents` until M2).
+- **Infrastructure:**
+  - `SaveCatalog`;
+  - `SnapshotService` (between commands under the writer's gate, then retention);
+  - `SaveManager` (the `created` snapshot, `pre-upgrade` through the service, restore, delete);
+  - `SqliteFile.ReadOnly` (a read-only connection that leaves nothing behind);
+  - log events 2015–2019 and 2021–2022.
+- **Hosts:**
+  - Desktop: `WindowsPlatformServices` (`SHFileOperationW` on an STA thread, with "allow undo" and the nuke warning; Explorer `/select`);
+  - DevHost: `DevPlatformServices` (a `.trash` folder).
+- **Tests:** 54 new tests, and 134 in the gate overall.
+  - Application.Tests has its first 27: names, keep counts, the budget, the restore rules, Continue.
+  - Infrastructure has 27 more: catalog, snapshots, restore, delete.
+  - The Infrastructure tests passed 5 runs in a row, with no orphaned processes.
+- **The real Recycle Bin, checked once by hand:** a throwaway console app compiled `WindowsPlatformServices.cs` itself and recycled a file and a folder in one call, from the thread pool. Both appeared in the Recycle Bin under their original location (and were then restored). A file held open by another process returned an `IOException` (shell error 0x20), not a dialog. Automated tests use a recording fake, so a build never touches the real Recycle Bin.
+
+**Changed from the plan**
+- **The whole §2.1 table is code now,** not just the M0 triggers. Every phase kind has its name and keep count, so the budget could be tested with week snapshots. Nothing triggers the phase kinds until phases exist.
+- **The budget never prunes the safety nets.** `created`, `pre-upgrade` and `pre-restore` are never pruned for the budget, and neither is the snapshot just taken; only phase snapshots give way ([PERSISTENCE.md §2.1](../architecture/PERSISTENCE.md#21-snapshot-policy-proposed-defaults)).
+- **Restore carries the play time over.** `PlayTimeSeconds` is real time spent, so it doesn't go back with the league.
+- **Delete keeps a shared snapshot folder.** If a copy made in Explorer has the same `SaveId`, deleting one file leaves the folder for the other.
+- **`IPlatformServices.ShowInFolder`** came with the port, since the Unreadable card's only action is Show in folder.
+- **Not in WP7:** recovering from a corrupt save (Standard's offer, Ironman's automatic restore). It builds on the restore engine and arrives with the Time Machine.
+
+**Found while building it**
+1. **A read-only connection to a closed WAL save leaves `-wal` and `-shm` files behind.** SQLite can't delete them from a read-only connection. A plain read-only scan would have littered the saves folder. `SqliteFile.ReadOnly` now uses `immutable=1` when there's no `-wal`. A test proves a scan leaves the folder unchanged, and the open-time format check uses the same connection.
+2. **`VACUUM INTO` writes a rollback-journal file**, even from a WAL source. Snapshots are rollback-journal files, so restore switches the staged copy back to WAL before it replaces the save.
+3. **Restoring `pre-restore` would overwrite itself.** The new `pre-restore` is taken before the replace, so the chosen snapshot is staged (copied next to the save) first. A test undoes a restore.
+4. **The Crasher failed to start** because hosts must now register `IPlatformServices`. Its unhandled DI exception filled the redirected stderr pipe, so the process blocked instead of exiting. The kill test's `finally` cleaned it up as designed. The Crasher now registers a stub.
 
 ### WP8 · Design system v0 and the gallery (L)
 **Goal:** the components M1 needs, in the Stadium look, documented in the gallery ([UI_DESIGN_SYSTEM.md](../architecture/UI_DESIGN_SYSTEM.md), [VISUAL_DESIGN.md](../VISUAL_DESIGN.md)).
@@ -552,7 +588,7 @@ From [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton), plus the
 - [ ] Create a save → it appears on the load screen → reopen it → close it → the file is unlocked and can be deleted
 - [ ] **All transaction torture tests pass**, including killing the process mid-transaction and reopening with no partial data
 - [ ] The log file contains the banner, the lifecycle events, a forced test exception with a stack trace, and a forwarded JavaScript error
-- [ ] A snapshot can be taken and restored
+- [x] A snapshot can be taken and restored (WP7, tested)
 - [ ] `./build.ps1` is green. A forbidden reference, a stray `BeginTransaction` and an `async void` each turn it red (demonstrated, not committed).
 - [ ] The gallery shows every v0 component in both themes, with team tint on and off
 - [x] Spike decisions recorded: S0a (EF Core, D-024), S0b (grid + icons + verified v5 names, D-067), S0c (title bar, D-068)

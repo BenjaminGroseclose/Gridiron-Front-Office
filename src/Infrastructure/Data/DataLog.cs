@@ -27,7 +27,7 @@ internal static partial class DataLog
     [LoggerMessage(EventId = 2011, Level = LogLevel.Information, Message = "Opened save \"{LeagueName}\" ({SaveId}), schema {SchemaVersion}")]
     public static partial void SaveOpened(ILogger logger, string leagueName, Guid saveId, int schemaVersion);
 
-    [LoggerMessage(EventId = 2012, Level = LogLevel.Information, Message = "Upgraded save {SaveId} from schema {From} to {To} after a snapshot at {Snapshot}")]
+    [LoggerMessage(EventId = 2012, Level = LogLevel.Information, Message = "Upgraded save {SaveId} from schema {From} to {To} after snapshot {Snapshot}")]
     public static partial void SaveUpgraded(ILogger logger, Guid saveId, int from, int to, string snapshot);
 
     [LoggerMessage(EventId = 2013, Level = LogLevel.Information, Message = "Closed save {SaveId} after {Minutes:F1} min")]
@@ -36,6 +36,27 @@ internal static partial class DataLog
     [LoggerMessage(EventId = 2014, Level = LogLevel.Warning, Message = "Didn't open {File}: {Error}")]
     public static partial void SaveRefused(ILogger logger, string file, string error);
 
+    [LoggerMessage(EventId = 2015, Level = LogLevel.Information, Message = "Took snapshot {Name} of save {SaveId} in {ElapsedMs} ms ({SizeKb} KB)")]
+    public static partial void SnapshotTaken(ILogger logger, string name, Guid saveId, long elapsedMs, long sizeKb);
+
+    [LoggerMessage(EventId = 2016, Level = LogLevel.Information, Message = "Pruned snapshot {Name} of save {SaveId}")]
+    public static partial void SnapshotPruned(ILogger logger, string name, Guid saveId);
+
+    [LoggerMessage(EventId = 2017, Level = LogLevel.Information, Message = "Restored save {SaveId} from snapshot {Name}; the state before it is snapshot pre-restore")]
+    public static partial void SaveRestored(ILogger logger, Guid saveId, string name);
+
+    [LoggerMessage(EventId = 2018, Level = LogLevel.Information, Message = "Moved {File} to the Recycle Bin (with its snapshots: {WithSnapshots})")]
+    public static partial void SaveDeleted(ILogger logger, string file, bool withSnapshots);
+
+    [LoggerMessage(EventId = 2019, Level = LogLevel.Warning, Message = "The save list can't read {File}: {Problem}")]
+    public static partial void SaveUnreadable(ILogger logger, string file, string problem);
+
     [LoggerMessage(EventId = 2020, Level = LogLevel.Error, Message = "A {EventType} subscriber failed; the other subscribers still ran")]
     public static partial void EventHandlerFailed(ILogger logger, Exception exception, string eventType);
+
+    [LoggerMessage(EventId = 2021, Level = LogLevel.Information, Message = "Didn't restore snapshot {Name}: {Error}")]
+    public static partial void RestoreRefused(ILogger logger, string name, string error);
+
+    [LoggerMessage(EventId = 2022, Level = LogLevel.Information, Message = "Didn't delete {File}: {Error}")]
+    public static partial void DeleteRefused(ILogger logger, string file, string error);
 }

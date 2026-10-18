@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Settings;
+using GridironFrontOffice.DevHost;
 using GridironFrontOffice.DevHost.Components;
 using GridironFrontOffice.Infrastructure;
 using GridironFrontOffice.Infrastructure.Logging;
@@ -45,6 +46,7 @@ try
     // The console logger stays (dev tooling reads it); Serilog adds the rolling file.
     builder.Logging.AddSerilog(Log.Logger);
     builder.Services.AddGfoInfrastructure(paths, identity);   // paths, the save manager and the data layer
+    builder.Services.AddSingleton<IPlatformServices, DevPlatformServices>();   // a .trash folder, not the real Recycle Bin
     builder.Services.AddSingleton<ISettingsStore>(settings);
     builder.Services.AddRazorComponents().AddInteractiveServerComponents();
     builder.Services.AddFluentUIComponents();

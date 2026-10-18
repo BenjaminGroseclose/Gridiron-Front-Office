@@ -1,6 +1,6 @@
 # Data Access Guide: EF Core + SQLite in GFO
 
-> **Status:** Accepted · 2026-10-13 · **Built in M0 WP6 (2026-10-16)** · Decision: [D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work) · Background and alternatives: [DATA_ACCESS_OPTIONS.md](DATA_ACCESS_OPTIONS.md)
+> **Status:** Accepted · 2026-10-13 · **Built in M0 WP6 (2026-10-16)**, save lifecycle in WP7 (2026-10-18) · Decision: [D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work) · Background and alternatives: [DATA_ACCESS_OPTIONS.md](DATA_ACCESS_OPTIONS.md)
 >
 > Owner: *"I think I implemented it wrong, let's be sure to detail and make it clear how to utilize it in this app."*
 >
@@ -106,9 +106,10 @@ In SQLite's default (rollback journal) mode, an open `DataReader` or read transa
 > | `Core/Results/Result.cs` | `Result<T>`, `Result.Ok`/`Result.Fail`, `DomainError(Code, Message)`, `Unit` |
 > | `Core/Ids/IStronglyTypedId.cs`, `Core/Leagues/SaveInfo.cs` | The typed-ID marker; the `SaveInfo` entity and the creation-setting enums |
 > | `Application/Data/DataContracts.cs` | `ILeagueDb`, `ILeagueReadDb`, `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher` |
-> | `Application/Saves/ISaveManager.cs` | `ISaveManager`, `OpenSave`, `SaveOpened`/`SaveClosed`, `SaveErrors` |
+> | `Application/Saves/` | `ISaveManager` (create, open, close, restore, delete), `OpenSave`, `SaveOpened`/`SaveClosed`/`SaveDeleted`, `SaveErrors`; and from WP7 `ISaveCatalog` + `SaveCard`, `ISnapshotService` + `SnapshotTrigger` + `SnapshotPolicy`, `SaveRules` |
+> | `Application/Platform/`, `Application/LiveEvents/` | `IAppPaths`; from WP7 `IPlatformServices` (the Recycle Bin, Explorer) and `ILiveEventStatus` |
 > | `Infrastructure/Data/` | `LeagueDbContext`, `Configurations/`, `TypedIds`, `LeagueSession` + accessor + `SqlitePragmaInterceptor`, `SaveWriter` + `UnitOfWork` + `SaveReader`, `DomainEventDispatcher`, `DataLog`, `Migrations/` |
-> | `Infrastructure/Saves/` | `SaveManager`, `SqliteFile` (the format check, creation pragmas, `VACUUM INTO`, checkpoint and release) |
+> | `Infrastructure/Saves/` | `SaveManager`, `SaveCatalog`, `SnapshotService`, `SqliteFile` (the residue-free read-only connection, the format check, creation pragmas, `VACUUM INTO`, checkpoint and release) |
 > | `Infrastructure/InfrastructureServices.cs` | `AddGfoInfrastructure(paths, app)` |
 
 ### 3.1 Projects and references
@@ -345,7 +346,9 @@ internal sealed class SaveReader(ILeagueSessionAccessor sessions) : ISaveReader
 // GridironFrontOffice.Infrastructure/InfrastructureServices.cs (as built). Both hosts call it.
 services.AddGfoInfrastructure(paths, app);   // app: the AppIdentity, stamped into SaveInfo's app versions
 // Registers: IAppPaths, AppIdentity, TimeProvider (TryAdd), SqlitePragmaInterceptor, LeagueSessionAccessor,
-// DomainEventDispatcher/IDomainEventDispatcher, SaveWriter/ISaveWriter, ISaveReader, SaveManager/ISaveManager.
+// DomainEventDispatcher/IDomainEventDispatcher, SaveWriter/ISaveWriter, ISaveReader, SaveCatalog/ISaveCatalog,
+// SnapshotOptions (TryAdd), SnapshotService/ISnapshotService, SaveManager/ISaveManager, ILiveEventStatus (TryAdd).
+// The host adds IPlatformServices (Desktop: WindowsPlatformServices; DevHost: DevPlatformServices).
 // Deliberately absent: AddDbContext<…>, AddDbContextFactory<…> (a test checks the container).
 ```
 

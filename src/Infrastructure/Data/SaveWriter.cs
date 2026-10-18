@@ -50,13 +50,13 @@ internal sealed class SaveWriter(LeagueSessionAccessor sessions, DomainEventDisp
     }
 
     /// <summary>
-    /// For SaveManager: runs <paramref name="action"/> while no command can run (waiting for the current one to
-    /// finish), e.g. to swap or release the session.
+    /// For SaveManager and SnapshotService: runs <paramref name="action"/> while no command can run (waiting for the
+    /// current one to finish), e.g. to swap or release the session, or to take a snapshot between commands.
     /// </summary>
-    public async Task RunExclusiveAsync(Func<Task> action, CancellationToken cancellationToken)
+    public async Task RunExclusiveAsync(string operation, Func<Task> action, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(action);
-        ThrowIfNested("opening or closing a save");
+        ThrowIfNested(operation);
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {

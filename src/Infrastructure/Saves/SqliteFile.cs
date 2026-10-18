@@ -4,8 +4,8 @@ using Microsoft.Data.Sqlite;
 namespace GridironFrontOffice.Infrastructure.Saves;
 
 /// <summary>
-/// File-level SQLite work that happens outside commands (PERSISTENCE.md §3, §7): the format check before a save is
-/// opened, the persistent pragmas at creation, VACUUM INTO, and releasing the file at close. Raw connections are
+/// File-level SQLite work that happens outside commands (PERSISTENCE.md §2, §3, §7): the format check before a save
+/// is opened, the persistent pragmas at creation, VACUUM INTO, and releasing the file at close. Raw connections are
 /// allowed here: this is Infrastructure, and none of it is a transaction.
 /// </summary>
 internal static class SqliteFile
@@ -18,19 +18,31 @@ internal static class SqliteFile
     /// <param name="QuickCheck">"ok", or the first problem quick_check reported.</param>
     public sealed record Probe(bool IsDatabase, int ApplicationId, int UserVersion, string QuickCheck);
 
+    /// <summary>
+    /// A read-only, unpooled connection string that leaves nothing behind. A plain read-only connection to a closed
+    /// WAL save creates <c>-wal</c> and <c>-shm</c> files and can't delete them on close, so a closed save (no
+    /// <c>-wal</c>) is read as <c>immutable</c> instead. With a <c>-wal</c> present (the save is open, or a crash left
+    /// it), the plain connection reads through it and the files were already there.
+    /// </summary>
+    public static string ReadOnly(string path)
+    {
+        var dataSource = File.Exists(path + "-wal")
+            ? path
+            : "file:" + path
+                .Replace("%", "%25", StringComparison.Ordinal)   // %, ? and # are special in a URI; escape % first
+                .Replace("?", "%3f", StringComparison.Ordinal)
+                .Replace("#", "%23", StringComparison.Ordinal)
+                .Replace('\\', '/') + "?immutable=1";
+
+        return new SqliteConnectionStringBuilder { DataSource = dataSource, Mode = SqliteOpenMode.ReadOnly, Pooling = false }.ToString();
+    }
+
     /// <summary>A read-only look at a file: is it SQLite, is it ours, which schema, is it intact. Never writes.</summary>
     public static Probe Check(string path)
     {
-        var connectionString = new SqliteConnectionStringBuilder
-        {
-            DataSource = path,
-            Mode = SqliteOpenMode.ReadOnly,
-            Pooling = false,
-        }.ToString();
-
         try
         {
-            using var connection = new SqliteConnection(connectionString);
+            using var connection = new SqliteConnection(ReadOnly(path));
             connection.Open();
             var applicationId = Convert.ToInt32(Scalar(connection, "PRAGMA application_id;"), CultureInfo.InvariantCulture);
             var userVersion = Convert.ToInt32(Scalar(connection, "PRAGMA user_version;"), CultureInfo.InvariantCulture);
@@ -67,6 +79,18 @@ internal static class SqliteFile
         Execute(connection, $"PRAGMA application_id = {ApplicationId};");
     }
 
+    /// <summary>
+    /// <c>VACUUM INTO</c> writes a rollback-journal file whatever the source uses, so a snapshot that becomes the
+    /// live save again is switched back to WAL first.
+    /// </summary>
+    public static void UseWal(string path)
+    {
+        var connectionString = new SqliteConnectionStringBuilder { DataSource = path, Mode = SqliteOpenMode.ReadWrite, Pooling = false }.ToString();
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+        Execute(connection, "PRAGMA journal_mode = WAL;");
+    }
+
     /// <summary>Mirrors the schema version in the file header, so the load screen can read it without EF.</summary>
     public static void SetUserVersion(string connectionString, int version)
     {
@@ -75,7 +99,18 @@ internal static class SqliteFile
         Execute(connection, string.Create(CultureInfo.InvariantCulture, $"PRAGMA user_version = {version};"));
     }
 
-    /// <summary>A consistent, compact single-file copy of a live save, without closing it (snapshots, the pre-upgrade backup).</summary>
+    /// <summary>The save's identity, from its SaveInfo row.</summary>
+    public static Guid ReadSaveId(string connectionString)
+    {
+        using var connection = new SqliteConnection(connectionString);
+        connection.Open();
+        return Guid.Parse((string)Scalar(connection, "SELECT SaveId FROM SaveInfo LIMIT 1;")!, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// A consistent, compact single-file copy of a database without closing it (snapshots, the pre-upgrade backup,
+    /// staging a restore). The source may be a live save or a read-only connection.
+    /// </summary>
     public static void VacuumInto(string connectionString, string destination)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
@@ -110,6 +145,10 @@ internal static class SqliteFile
         using var connection = new SqliteConnection(connectionString);
         SqliteConnection.ClearPool(connection);
     }
+
+    /// <summary>The <c>-wal</c> and <c>-shm</c> files that exist next to a save.</summary>
+    public static IEnumerable<string> Sidecars(string path) =>
+        new[] { path + "-wal", path + "-shm" }.Where(File.Exists);
 
     private static object? Scalar(SqliteConnection connection, string sql)
     {

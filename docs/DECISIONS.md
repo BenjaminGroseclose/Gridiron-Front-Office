@@ -262,6 +262,7 @@
   - **Level 1, honor system:** guards in `SaveManager.RestoreAsync`/`DuplicateAsync` (not just hidden buttons), the wizard rule, the badge, and tests.
   - **Corruption-only recovery:** keep taking snapshots in Ironman. Allow one kind of restore: **automatic**, to the **most recent good snapshot**, and only when the live file fails `quick_check`/`integrity_check` on open or a schema migration fails. The player never picks a point in time.
   - **Groundwork in M0:** a `SaveInfo.Generation` counter that `SaveWriter` increments on every commit. It costs almost nothing now and makes Level 2 possible later without a migration.
+  - **Already built in M0 (WP7):** the Level 1 restore guard. `SaveManager.RestoreAsync` refuses an Ironman league through `SaveRules.CanRestore`, with tests. The duplicate guard, the wizard rule, the badge and the corruption-only recovery remain for later.
 - **Deferred:** **Level 2 (rollback detection).** The app records the highest `Generation` seen per `SaveId` in `LocalAppData`. A reopened save with a lower generation was rolled back by a file copy, so it loses Ironman status. Build it only if Steam achievements happen (about 1–2 days). It detects rollbacks but can't prevent them.
 - **Rejected:** cryptographic signing of save state. The key would ship inside the app, so it stops nobody.
 - **Known limitation (accepted):** copying `.gfo` files in Explorer can't be prevented. Ironman protects the *meaning* of the badge for honest players, not the file from a determined one.

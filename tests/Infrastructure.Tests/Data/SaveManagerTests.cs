@@ -143,12 +143,7 @@ public sealed class SaveManagerTests
         await using var save = await TestSave.CreateAsync();
         var path = save.Save.FilePath;
         await save.Saves.CloseAsync(Ct);
-        await using (var file = new FileStream(path, FileMode.Open, FileAccess.Write))
-        {
-            // Keep page 1 (the header and schema, so it's still recognizably a GFO save) and scramble every other page.
-            file.Seek(4096, SeekOrigin.Begin);
-            await file.WriteAsync(Enumerable.Repeat((byte)0xEE, (int)file.Length - 4096).ToArray(), Ct);
-        }
+        await TestSave.ScrambleAsync(path);
 
         var result = await save.Saves.OpenAsync(path, Ct);
 
