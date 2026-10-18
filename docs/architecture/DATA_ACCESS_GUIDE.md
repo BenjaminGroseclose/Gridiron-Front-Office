@@ -360,12 +360,12 @@ services.AddGfoInfrastructure(paths, app);   // app: the AppIdentity, stamped in
 // GridironFrontOffice.Application/Rosters/RosterQueries.cs
 public sealed class RosterQueries(ISaveReader reader)
 {
-    public Task<IReadOnlyList<RosterRow>> GetRosterAsync(TeamID teamID, int season, CancellationToken ct = default) =>
-        reader.QueryAsync<IReadOnlyList<RosterRow>>(async (db, ct) =>
+    public Task<IReadOnlyList<RosterRowDto>> GetRosterAsync(TeamID teamID, int season, CancellationToken ct = default) =>
+        reader.QueryAsync<IReadOnlyList<RosterRowDto>>(async (db, ct) =>
             await db.Players
                 .Where(p => p.TeamID == teamID && p.Status == PlayerStatus.Active)
                 .OrderBy(p => p.Position).ThenByDescending(p => p.Overall)
-                .Select(p => new RosterRow(                       // project to a DTO, never return entities
+                .Select(p => new RosterRowDto(                    // project to a DTO, never return entities
                     p.ID, p.FirstName + " " + p.LastName, p.Position, p.BirthDate, p.Overall,
                     p.Contracts.Where(c => c.IsActive)
                                .SelectMany(c => c.Years)
@@ -377,6 +377,7 @@ public sealed class RosterQueries(ISaveReader reader)
 ```
 **Rules for reads**
 - Always **project to a DTO** (`Select(new …)`). The UI never sees entities.
+- **A read model is a `sealed record` named `…Dto`** (`RosterRowDto`, `TeamSummaryDto`), declared in the feature folder next to the query service that fills it ([D-070](../DECISIONS.md#d-070-read-models-are-records-named-dto)).
 - Never call `SaveChangesAsync` from a reader. The read interface doesn't even expose it.
 - Reads can run while a write is in progress (WAL). They see the last *committed* state.
 

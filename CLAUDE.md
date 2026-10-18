@@ -34,7 +34,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
 
 **Data access** (read `docs/architecture/DATA_ACCESS_GUIDE.md` before touching data):
 - Writes go **only** through `ISaveWriter.ExecuteAsync(op, (uow, ct) => …)`. One command = one `DbContext` = one connection = one transaction. `SaveWriter` is the **only** code that begins, commits or rolls back.
-- Reads go through `ISaveReader.QueryAsync` and **project to DTOs**. Entities never reach the UI.
+- Reads go through `ISaveReader.QueryAsync` and **project to DTOs**: `sealed record`s named `…Dto`, next to their query service (D-070). Entities never reach the UI.
 - **Never** `AddDbContext`/`AddDbContextFactory`, inject a context or connection, call `BeginTransaction`/`TransactionScope`, `new SqliteConnection` outside Infrastructure, or call a command from inside a command (it throws). Share logic as operations that take `IUnitOfWork`.
 - Business-rule failures return `Result.Fail(DomainError…)`, never exceptions. Never catch persistence exceptions inside a command.
 - Bulk inserts use `uow.CreateCommand(sql)` (same transaction). Long operations ("Play Week") are **many short commands** recorded in the step journal, never one giant transaction. Simulation and AI thinking run *outside* write transactions.

@@ -77,6 +77,7 @@
 | D-067 | Spike S0b: Fluent UI v5 fits; `DataGrid<T>` keeps `FluentDataGrid` | **Accepted** |
 | D-068 | Host shell: the app bar is the title bar | **Accepted** |
 | D-069 | Write `ID`, never `Id` | **Accepted** |
+| D-070 | Read models are records named `…Dto` | **Accepted** |
 
 ---
 
@@ -627,3 +628,8 @@
   - the `Id` attribute in the Windows app manifest schema.
 - **Note:** this departs from the .NET naming guideline, which spells the abbreviation `Id`. It's a deliberate house style. SQLite column names are case-insensitive, so respelling the `SaveID` column changed no existing save.
 - **Enforced by** an architecture test (`NamingRulesTests`), which scans source and docs for the mixed-case spelling. A new outside name goes on its `OutsideNames` (or `OutsideMembers`) list.
+
+## D-070: Read models are records named `…Dto`
+- **Status:** **Accepted** (owner, 2026-10-18: *"Use the DTO suffix"*, choosing between the guide's `RosterRow` and the specs' `TeamSummaryDto`).
+- **Decision:** every read model a query service returns is a `sealed record` whose name ends in `Dto`: `RosterRowDto`, `TeamSummaryDto`, `PlayerDetailDto`, `LeagueHeaderDto`. It lives in the feature folder next to the query service that fills it. The casing is `Dto`, as in the F-02 and F-03 specs.
+- **Why:** one suffix makes it obvious at a glance what a screen may hold (a read-only copy, never an entity), and it's the form the specs already used.
