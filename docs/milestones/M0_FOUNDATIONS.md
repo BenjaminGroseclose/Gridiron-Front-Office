@@ -347,11 +347,11 @@ flowchart LR
 3. **Restart** carries the original arguments over, minus a Debug `--diag-test`. **WP9's single-instance guard** must let a restarted process wait for the old one to exit.
 4. **Done early for WP9:** the WebView2 profile now lives in `IAppPaths.WebView2` instead of next to the exe. The Desktop host also registers Fluent and links its CSS and the fonts; `<FluentProviders />` in the shared layout needs them.
 
-### WP6 · Persistence core and torture tests (L)
+### WP6 · Persistence core and torture tests (L) ✅ Done 2026-10-16
 **Goal:** the data layer exactly as in [DATA_ACCESS_GUIDE.md §3](../architecture/DATA_ACCESS_GUIDE.md#3-the-building-blocks-the-code-youll-write-once-in-m0), proven by torture tests.
 
 **Application (ports and contracts)**
-- `ILeagueDb`, `ILeagueReadDb` (in M0 they expose only `SaveInfo`), `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher`, `ISaveManager`, `ISaveCatalog`, `ISnapshotService`, `IAppPaths`, `IPlatformServices`, `ILeagueSessionAccessor`.
+- `ILeagueDb`, `ILeagueReadDb` (in M0 they expose only `SaveInfo`), `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher`, `ISaveManager`, `ISaveCatalog`, `ISnapshotService`, `IAppPaths`, `IPlatformServices`, `ILeagueSessionAccessor`. *(As built: the accessor is Infrastructure-internal; the catalog, snapshot and platform ports land with their implementations in WP7; `IAppPaths` came in WP5.)*
 - The strongly typed ID convention (D-015): `readonly record struct XxxId(int Value)`, plus one EF `ConfigureConventions` rule that converts them all. The first IDs arrive in M1, and the convention gets a test now.
 
 **Infrastructure**
@@ -379,6 +379,30 @@ flowchart LR
 | Newer schema refused | Open a save with a higher `SchemaVersion` → a clear error |
 
 **Exit:** every torture test passes on every build.
+
+**Result: built, and every torture test passes on every build** (about 3.5 s in total, and stable over repeated runs).
+- **Core:** `Result<T>`, `DomainError`, `Unit`, `IStronglyTypedId`, and `SaveInfo` with the creation-setting enums.
+- **Application:** the data contracts, plus `ISaveManager`/`OpenSave`/`SaveErrors` and the `SaveOpened`/`SaveClosed` events.
+- **Infrastructure:**
+  - the context, the typed-ID convention, the pragma interceptor and the session;
+  - `SaveWriter` (IMMEDIATE transactions, the nested-command guard, the `Generation` bump, events after the gate);
+  - `UnitOfWork`, `SaveReader`, the event dispatcher;
+  - `SaveManager` (create, open, close; the format, integrity and schema checks; the pre-upgrade snapshot and migrations; release on close or `Dispose`);
+  - the `InitialCreate` migration;
+  - `AddGfoInfrastructure(paths, app)`, now registered by both hosts.
+- **Tests:** 24 persistence tests ([DATA_ACCESS_GUIDE.md §9](../architecture/DATA_ACCESS_GUIDE.md#9-proving-it-the-torture-tests-m0-run-on-every-build)), including the Crasher kill test. 80 tests in the gate overall.
+
+**Changed from the plan**
+- **The schema version is the number of EF migrations**, and a save is "newer" when it has a migration this app doesn't know ([PERSISTENCE.md §7](../architecture/PERSISTENCE.md#7-schema-versioning-and-migrations)).
+- **`ILeagueSessionAccessor` became the Infrastructure-internal `LeagueSessionAccessor`.** It holds EF types; Application reads `ISaveManager.Current` instead.
+- **`ISaveCatalog`, `ISnapshotService` and `IPlatformServices`** move to WP7, which implements them. `IAppPaths` was done in WP5.
+- **Saves are created with `CreateAsync(name)`** and the decided defaults (Live, Standard, Realistic, not Ironman). M1's wizard adds an overload that takes the settings.
+
+**Found while building it**
+1. **`user_version` was never written:** the helper existed but nothing called it. A test caught it; it's now set after every migration.
+2. **A refused "newer" save stayed locked:** the version shown in the message was read on a fresh pooled connection after the pool had been cleared. It's now read first, then released.
+3. **The kill test hung in a first draft.** The assertion's diagnostic message read the Crasher's stderr eagerly, but the Crasher never exits on its own. It now reads stderr only on failure and always kills the Crasher in a `finally`, so there are no orphans.
+4. **Not yet tested:** upgrading an older save. There's only one migration, so the test arrives with M1's first schema change.
 
 ### WP7 · Save lifecycle: catalog, snapshots, delete (M)
 **Goal:** the save-management pieces of F-01's M0 slice ([PERSISTENCE.md §2, §9, §10](../architecture/PERSISTENCE.md)).

@@ -1,6 +1,6 @@
 # Persistence: SQLite Save Files
 
-> **Status:** Proposed · 2026-10-13 · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
+> **Status:** Proposed · 2026-10-13 · Save file core built in M0 WP6 (2026-10-16) · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
 >
 > **Data access: EF Core with the GFO unit of work** ([D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work)). **How to read and write** (transactions, patterns, troubleshooting) is in **[DATA_ACCESS_GUIDE.md](DATA_ACCESS_GUIDE.md)**. This doc covers the save file itself.
 
@@ -71,10 +71,11 @@ flowchart LR
 
 ## 3. Connection and pragmas
 
-**Connection string (built by `SaveConnectionFactory`):**
+**Connection string (built by `LeagueSession.For`):**
 ```
-Data Source={path};Mode=ReadWriteCreate;Cache=Private;Pooling=True;Foreign Keys=True;Default Timeout=30
+Data Source={path};Mode=ReadWrite;Cache=Private;Pooling=True;Foreign Keys=True;Default Timeout=30
 ```
+`ReadWrite`, not `ReadWriteCreate`: a save that vanished must fail, not reappear empty. Only `SaveManager.CreateAsync` creates files (`SqliteFile.InitializeNew`).
 
 **Set once at creation (persistent in the file):**
 ```sql
@@ -83,6 +84,7 @@ PRAGMA page_size = 4096;
 PRAGMA application_id = 0x47464F31;  -- 'GFO1' magic: lets us recognize our files
 PRAGMA user_version = {schema};      -- mirrors schema version for quick checks
 ```
+(`page_size`, `journal_mode` and `application_id` are set by `SqliteFile.InitializeNew` before the first table exists. `user_version` is set after every migration, on create and on upgrade.)
 
 **Set on every connection open (an EF `DbConnectionInterceptor`, `SqlitePragmaInterceptor`, registered on the session's context options):**
 ```sql
@@ -127,7 +129,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.1 Meta
 | Table | Key columns | Notes |
 |---|---|---|
-| `SaveInfo` (singleton) | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
+| `SaveInfo` (singleton). **M0 has:** `SaveId`, `LeagueName`, `SchemaVersion`, both app versions, both timestamps, `PlayTimeSeconds`, the creation settings and `Generation`. The league position (`UserTeamId`, season, phase, date, seed) arrives with M1. Enums are stored by name. | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
 | `LeagueRules` (singleton) | Cap, cap growth, roster limits, practice squad size, minimum salaries table, live event toggles | Copied from defaults at creation |
 | `AdvanceJournal` | `OperationId`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
 | `LiveEventState` | `EventType`, `Status`, `StateJson`, `ClockRemainingMs`, `LastHeartbeatUtc` | See [LIVE_EVENTS.md](LIVE_EVENTS.md) |
@@ -208,7 +210,27 @@ sequenceDiagram
     end
 ```
 
-- **Tooling:** **EF Core migrations** in `GridironFrontOffice.Infrastructure`, applied programmatically (`Database.MigrateAsync()`) when a save is opened, never at app startup across all saves. `PRAGMA user_version` mirrors the schema version for quick checks on the load screen.
+- **Tooling:** **EF Core migrations** in `GridironFrontOffice.Infrastructure/Data/Migrations`, applied programmatically (`Database.MigrateAsync()`) when a save is opened, never at app startup across all saves. `PRAGMA user_version` mirrors the schema version for quick checks on the load screen. Add one with:
+  `dotnet ef migrations add <Name> --project src/Infrastructure --output-dir Data/Migrations`
+- **As built (M0 WP6):**
+  - **The schema version is the number of EF migrations.** Adding a migration bumps it; there's no constant to forget.
+  - **A save is from a newer app** when it has a migration this app doesn't know, or its `user_version` is higher than this app's count. It's refused with "Update the app", naming the version that last opened it, and the file is released.
+  - **Opening an older save:** `VACUUM INTO` to `Snapshots\{SaveId}\pre-upgrade-v{n}.gfo`, then migrate, then set `user_version`. WP7's snapshot service takes over naming and retention.
+  - **Migrations are the one exception to "only `SaveWriter` begins transactions":** EF runs each migration in its own transaction, before the save becomes the open session.
+  - **Opening checks run in order:**
+    1. the file exists;
+    2. it's SQLite with `application_id = GFO1` (otherwise `NotAGfoSave`);
+    3. `quick_check(1)` is `ok` (otherwise `SaveDamaged`);
+    4. the schema check.
+
+    Opening always closes the current save first.
+  - **Closing:**
+    1. one command records the session (`PlayTimeSeconds`, `LastPlayedAtUtc`);
+    2. the writer is drained;
+    3. `wal_checkpoint(TRUNCATE)`;
+    4. clear the pool.
+
+    If the app exits without `CloseAsync`, `SaveManager.Dispose` still checkpoints and releases the file (without recording play time).
 - **Data migrations** (e.g., backfilling a new rating) are allowed inside migrations. They must be **deterministic** (using derived seeds) so two copies of the same save upgrade identically.
 - **Test fixtures:** keep one real save from every *released* schema version under `tests/GridironFrontOffice.Infrastructure.Tests/Fixtures/`. A test upgrades each one to the current version and runs invariant checks.
 - **Older-schema saves for tests:** `IMigrator.MigrateAsync("<migration>")` creates a save stopped at any earlier migration, which is how Spike S0a simulated an old save. It complements the real fixture saves above.

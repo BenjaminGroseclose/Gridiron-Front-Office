@@ -1,6 +1,6 @@
 # Data Access Guide: EF Core + SQLite in GFO
 
-> **Status:** Accepted · 2026-10-13 · Decision: [D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work) · Background and alternatives: [DATA_ACCESS_OPTIONS.md](DATA_ACCESS_OPTIONS.md)
+> **Status:** Accepted · 2026-10-13 · **Built in M0 WP6 (2026-10-16)** · Decision: [D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work) · Background and alternatives: [DATA_ACCESS_OPTIONS.md](DATA_ACCESS_OPTIONS.md)
 >
 > Owner: *"I think I implemented it wrong, let's be sure to detail and make it clear how to utilize it in this app."*
 >
@@ -99,6 +99,18 @@ In SQLite's default (rollback journal) mode, an open `DataReader` or read transa
 
 ## 3. The building blocks (the code you'll write once, in M0)
 
+> **As built (M0 WP6).** The code below is the design; the shipped versions follow it closely. Where they differ, the notes in each section say so.
+>
+> | Where | What |
+> |---|---|
+> | `Core/Results/Result.cs` | `Result<T>`, `Result.Ok`/`Result.Fail`, `DomainError(Code, Message)`, `Unit` |
+> | `Core/Ids/IStronglyTypedId.cs`, `Core/Leagues/SaveInfo.cs` | The typed-ID marker; the `SaveInfo` entity and the creation-setting enums |
+> | `Application/Data/DataContracts.cs` | `ILeagueDb`, `ILeagueReadDb`, `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher` |
+> | `Application/Saves/ISaveManager.cs` | `ISaveManager`, `OpenSave`, `SaveOpened`/`SaveClosed`, `SaveErrors` |
+> | `Infrastructure/Data/` | `LeagueDbContext`, `Configurations/`, `TypedIds`, `LeagueSession` + accessor + `SqlitePragmaInterceptor`, `SaveWriter` + `UnitOfWork` + `SaveReader`, `DomainEventDispatcher`, `DataLog`, `Migrations/` |
+> | `Infrastructure/Saves/` | `SaveManager`, `SqliteFile` (the format check, creation pragmas, `VACUUM INTO`, checkpoint and release) |
+> | `Infrastructure/InfrastructureServices.cs` | `AddGfoInfrastructure(paths, app)` |
+
 ### 3.1 Projects and references
 | Project | References | Contains |
 |---|---|---|
@@ -156,7 +168,9 @@ public interface ISaveReader
 }
 ```
 
-`Result<T>` is a small in-house type: `Result.Ok(value)` or `Result.Fail(DomainError.OverCap("…"))`. **Expected business failures are results, not exceptions.**
+`Result<T>` is a small in-house type in Core: `Result.Ok(value)`, `Result.Ok()` for `Result<Unit>`, or `Result.Fail<T>(new DomainError("OverCap", "…"))`. Features keep their errors as factories (e.g. `SaveErrors.NotFound(file)`). **Expected business failures are results, not exceptions.** Reading `.Value` from a failed result throws, because that's a bug.
+
+**In M0, `ILeagueDb`/`ILeagueReadDb` expose only `SaveInfo`.** Each feature adds its own sets.
 
 ### 3.3 Infrastructure: the context and the session
 
@@ -193,6 +207,11 @@ internal sealed class LeagueSession
 ```
 
 > **No `AddDbContext` or `AddDbContextFactory` in DI.** The save file changes when the user loads a different league, so the options live on the `LeagueSession`. EF caches the *model* per context type, so building a context per command is cheap, and Microsoft.Data.Sqlite pools the connections.
+
+**As built:**
+- **The session accessor is Infrastructure-internal.** It holds EF types, so Application can't see it. `LeagueSessionAccessor` throws "No save is open" when the data layer is used at the main menu. Application code that needs to know *which* save is open reads `ISaveManager.Current`.
+- **The session's connection uses `Mode=ReadWrite`, not `ReadWriteCreate`.** A save that vanished must fail rather than reappear empty. Only `SaveManager` creates files.
+- **Enums are stored by name:** `configurationBuilder.Properties<Enum>().HaveConversion<string>()`. Reordering an enum can never change what an existing save means.
 
 **Strongly typed IDs (D-015), as proven in Spike S0a.** One converter for every ID type, plus one convention the provider doesn't apply by itself:
 
@@ -278,6 +297,17 @@ internal sealed class SaveWriter(ILeagueSessionAccessor sessions, IDomainEventDi
 
 > Commit and rollback deliberately use `CancellationToken.None`. Once the work is done, we don't want a cancellation to leave the transaction half-handled.
 
+**As built, `SaveWriter` differs from the sketch in five ways:**
+1. **Events are dispatched after the commit *and* after the gate is released.** A subscriber may start a new command, and that isn't "nested" (tested).
+2. **Logging stays quiet for routine commits, so the log stays under 1 MB/hour even during a live draft:**
+   - commits at **Debug** (2000);
+   - rejections (`Result.Fail`) at Information (2001);
+   - rollbacks after an exception at Error (2002);
+   - any command over **1 s** at Warning (2003).
+3. **A failed rollback is logged (2004) and never hides the original exception.**
+4. **`ConfigureAwait(false)` throughout Infrastructure.** Event handlers run on the thread that finished the command, not the UI thread, so a Blazor store marshals with `InvokeAsync`.
+5. **`RunExclusiveAsync`** (internal) lets `SaveManager` swap or release the session while no command can run. It waits for the running command first.
+
 ### 3.5 Infrastructure: `UnitOfWork` and `SaveReader`
 
 ```csharp
@@ -312,15 +342,11 @@ internal sealed class SaveReader(ILeagueSessionAccessor sessions) : ISaveReader
 ### 3.6 DI registration
 
 ```csharp
-// GridironFrontOffice.Infrastructure/DependencyInjection.cs
-public static IServiceCollection AddGfoInfrastructure(this IServiceCollection s, IAppPaths paths) => s
-    .AddSingleton(paths)
-    .AddSingleton<SqlitePragmaInterceptor>()
-    .AddSingleton<ILeagueSessionAccessor, LeagueSessionAccessor>()   // holds the currently open LeagueSession
-    .AddSingleton<ISaveWriter, SaveWriter>()
-    .AddSingleton<ISaveReader, SaveReader>()
-    .AddSingleton<ISaveManager, SaveManager>();                       // create/open/close/snapshot/migrate
-// Deliberately absent: AddDbContext<…>, AddDbContextFactory<…>
+// GridironFrontOffice.Infrastructure/InfrastructureServices.cs (as built). Both hosts call it.
+services.AddGfoInfrastructure(paths, app);   // app: the AppIdentity, stamped into SaveInfo's app versions
+// Registers: IAppPaths, AppIdentity, TimeProvider (TryAdd), SqlitePragmaInterceptor, LeagueSessionAccessor,
+// DomainEventDispatcher/IDomainEventDispatcher, SaveWriter/ISaveWriter, ISaveReader, SaveManager/ISaveManager.
+// Deliberately absent: AddDbContext<…>, AddDbContextFactory<…> (a test checks the container).
 ```
 
 ---
@@ -551,6 +577,33 @@ M:Microsoft.Data.Sqlite.SqliteConnection.#ctor(System.String);Use ISaveWriter / 
 ---
 
 ## 9. Proving it: the torture tests (M0, run on every build)
+
+**As built** (`tests/Infrastructure.Tests/Data/`, about 3.5 s in total, and stable over repeated runs). Each test runs against a real save created through `ISaveManager` in a temp folder, and reads the file back through its own connection rather than trusting the code under test.
+
+- **`TransactionTortureTests` (9):**
+  - an exception midway persists nothing;
+  - a domain failure persists nothing;
+  - EF + raw SQL commit together;
+  - a read during an open write isn't blocked and sees the last commit;
+  - the transaction holds the write lock from `BEGIN`;
+  - a nested command throws and releases the gate;
+  - 50 concurrent read-modify-write commands lose no update;
+  - racing versioned commands record exactly one;
+  - events arrive only after a commit, and a subscriber can start a command.
+- **`SaveManagerTests` (13):**
+  - a new save is WAL, signed `GFO1`, with `user_version` and its `SaveInfo` row;
+  - names are validated, and file names never collide;
+  - close releases the file and records the session;
+  - a closed save reopens;
+  - opening another save closes the current one first;
+  - refusals: a missing file, a file that isn't SQLite, another app's database, a damaged save, a save from a newer app (released afterwards);
+  - with no save open, the data layer says so;
+  - **no `DbContext` in DI**;
+  - **a process killed mid-command leaves the save intact and unchanged.** The `Infrastructure.Tests.Crasher` inserts 50,000 rows inside one command, is killed, and the file then passes `integrity_check`, has zero rows added, and still opens.
+- **`TypedIdConventionTests` (2):** a generated typed-ID key is an `AUTOINCREMENT` integer, and a deleted top ID is never reused.
+- **Not yet:** upgrading an older save. There's only one migration, so the test lands with the first real schema change in M1 (and the fixture saves at release time, PERSISTENCE.md §7).
+
+The original sketch:
 
 ```csharp
 public sealed class TransactionTortureTests : IAsyncLifetime   // each test gets a fresh temp .gfo

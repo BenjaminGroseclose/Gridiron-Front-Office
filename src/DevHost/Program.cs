@@ -2,6 +2,7 @@ using System.Diagnostics;
 using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Settings;
 using GridironFrontOffice.DevHost.Components;
+using GridironFrontOffice.Infrastructure;
 using GridironFrontOffice.Infrastructure.Logging;
 using GridironFrontOffice.Infrastructure.Paths;
 using GridironFrontOffice.Infrastructure.Settings;
@@ -43,7 +44,7 @@ try
 
     // The console logger stays (dev tooling reads it); Serilog adds the rolling file.
     builder.Logging.AddSerilog(Log.Logger);
-    builder.Services.AddSingleton<IAppPaths>(paths);
+    builder.Services.AddGfoInfrastructure(paths, identity);   // paths, the save manager and the data layer
     builder.Services.AddSingleton<ISettingsStore>(settings);
     builder.Services.AddRazorComponents().AddInteractiveServerComponents();
     builder.Services.AddFluentUIComponents();

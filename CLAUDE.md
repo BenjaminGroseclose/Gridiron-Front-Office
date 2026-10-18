@@ -15,6 +15,7 @@ dotnet test --project tests/Architecture.Tests --filter-class "*PackageRules*"  
 dotnet run --project src/DevHost                                                  # browser host on http://localhost:5180
 dotnet run --project src/Desktop -- --diag-test=crash                             # Debug: prove a failure path (page|js|task|crash|ui)
 dotnet run --project tools/SimLab -- calibrate --seasons 200 --seed 42           # SimLab commands arrive in M2
+dotnet ef migrations add <Name> --project src/Infrastructure --output-dir Data/Migrations   # a schema change (dotnet tool restore first)
 ```
 Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-30 and will just call `build.ps1`.
 
@@ -72,6 +73,11 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - Serilog types stay in Infrastructure and the hosts (architecture test).
   - Logs: the real app writes to `%LOCALAPPDATA%\GridironFrontOffice\logs`, the DevHost to `GridironFrontOffice-Dev\logs`.
   - The DevHost **doesn't prerender**: a disposed prerender scope makes Fluent v5 fault background tasks, and the desktop WebView never prerenders anyway.
+- **Persistence (WP6, DATA_ACCESS_GUIDE.md §3):**
+  - The schema version **is** the number of EF migrations, so adding one bumps it.
+  - A save with an unknown migration is "from a newer app" and is refused.
+  - Domain-event subscribers run on the thread that finished the command (`ConfigureAwait(false)`), not the UI thread, so marshal with `InvokeAsync`.
+  - The torture tests (`tests/Infrastructure.Tests/Data`) must stay green on every build. The Crasher kill test launches a separate process.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 

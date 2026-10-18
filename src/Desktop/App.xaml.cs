@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Settings;
 using GridironFrontOffice.Desktop.Diagnostics;
+using GridironFrontOffice.Infrastructure;
 using GridironFrontOffice.Infrastructure.Logging;
 using GridironFrontOffice.Infrastructure.Paths;
 using GridironFrontOffice.Infrastructure.Settings;
@@ -63,7 +64,7 @@ internal sealed partial class App : System.Windows.Application
 
         var services = new ServiceCollection();
         services.AddLogging(logging => logging.ClearProviders().AddSerilog(Log.Logger));
-        services.AddSingleton<IAppPaths>(paths);
+        services.AddGfoInfrastructure(paths, app);   // paths, the save manager and the data layer (DATA_ACCESS_GUIDE.md §3.6)
         services.AddSingleton<ISettingsStore>(_settings);
         services.AddWpfBlazorWebView();
         services.AddFluentUIComponents();
