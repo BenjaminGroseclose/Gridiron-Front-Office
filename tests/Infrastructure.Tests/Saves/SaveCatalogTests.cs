@@ -26,7 +26,7 @@ public sealed class SaveCatalogTests
         cards.ContinueTarget()!.LeagueName.ShouldBe("Bravo");
         var alpha = cards.Single(c => c.LeagueName == "Alpha");
         alpha.Status.ShouldBe(SaveCardStatus.Ready);
-        alpha.SaveId.ShouldBe(save.Save.SaveId);
+        alpha.SaveID.ShouldBe(save.Save.SaveID);
         alpha.FilePath.ShouldBe(save.Save.FilePath);
         alpha.AppVersionLastOpened.ShouldBe("0.0.1+test");
         alpha.SchemaVersion.ShouldBe(save.Save.SchemaVersion);

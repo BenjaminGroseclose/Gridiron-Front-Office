@@ -4,7 +4,7 @@ namespace GridironFrontOffice.Application.Saves;
 
 /// <summary>
 /// Snapshots of a save (PERSISTENCE.md §2.1): compact single-file copies made with <c>VACUUM INTO</c>, kept in
-/// <c>Snapshots\{SaveId}\{name}.gfo</c>. Restoring one is <see cref="ISaveManager.RestoreAsync"/>.
+/// <c>Snapshots\{SaveID}\{name}.gfo</c>. Restoring one is <see cref="ISaveManager.RestoreAsync"/>.
 /// </summary>
 public interface ISnapshotService
 {
@@ -15,11 +15,11 @@ public interface ISnapshotService
     Task<SnapshotInfo> TakeAsync(SnapshotTrigger trigger, CancellationToken cancellationToken = default);
 
     /// <summary>A save's snapshots, newest first. Files in its folder that aren't snapshots are ignored.</summary>
-    Task<IReadOnlyList<SnapshotInfo>> ListAsync(Guid saveId, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<SnapshotInfo>> ListAsync(Guid saveID, CancellationToken cancellationToken = default);
 }
 
 /// <param name="Name">The file name without <c>.gfo</c>, e.g. <c>S2027-W08</c>.</param>
-public sealed record SnapshotInfo(Guid SaveId, string Name, SnapshotKind Kind, string FilePath, DateTime TakenAtUtc, long SizeBytes);
+public sealed record SnapshotInfo(Guid SaveID, string Name, SnapshotKind Kind, string FilePath, DateTime TakenAtUtc, long SizeBytes);
 
 /// <summary>Why a snapshot was taken (PERSISTENCE.md §2.1). M0 takes Created, PreUpgrade and PreRestore; the phase kinds arrive with phases.</summary>
 public enum SnapshotKind

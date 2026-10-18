@@ -11,12 +11,12 @@ namespace GridironFrontOffice.Infrastructure.Saves;
 internal static class SqliteFile
 {
     /// <summary>PRAGMA application_id = 'GFO1': how GFO recognizes its own files.</summary>
-    public const int ApplicationId = 0x47464F31;
+    public const int ApplicationID = 0x47464F31;
 
     /// <summary>What the format check found.</summary>
     /// <param name="IsDatabase">False when the file isn't SQLite at all.</param>
     /// <param name="QuickCheck">"ok", or the first problem quick_check reported.</param>
-    public sealed record Probe(bool IsDatabase, int ApplicationId, int UserVersion, string QuickCheck);
+    public sealed record Probe(bool IsDatabase, int ApplicationID, int UserVersion, string QuickCheck);
 
     /// <summary>
     /// A read-only, unpooled connection string that leaves nothing behind. A plain read-only connection to a closed
@@ -44,10 +44,10 @@ internal static class SqliteFile
         {
             using var connection = new SqliteConnection(ReadOnly(path));
             connection.Open();
-            var applicationId = Convert.ToInt32(Scalar(connection, "PRAGMA application_id;"), CultureInfo.InvariantCulture);
+            var applicationID = Convert.ToInt32(Scalar(connection, "PRAGMA application_id;"), CultureInfo.InvariantCulture);
             var userVersion = Convert.ToInt32(Scalar(connection, "PRAGMA user_version;"), CultureInfo.InvariantCulture);
             var quickCheck = Convert.ToString(Scalar(connection, "PRAGMA quick_check(1);"), CultureInfo.InvariantCulture) ?? "no result";
-            return new Probe(IsDatabase: true, applicationId, userVersion, quickCheck);
+            return new Probe(IsDatabase: true, applicationID, userVersion, quickCheck);
         }
         catch (SqliteException ex) when (ex.SqliteErrorCode is 26)   // SQLITE_NOTADB
         {
@@ -55,7 +55,7 @@ internal static class SqliteFile
         }
         catch (SqliteException ex) when (ex.SqliteErrorCode is 11)   // SQLITE_CORRUPT
         {
-            return new Probe(IsDatabase: true, ApplicationId, 0, ex.Message);
+            return new Probe(IsDatabase: true, ApplicationID, 0, ex.Message);
         }
     }
 
@@ -76,7 +76,7 @@ internal static class SqliteFile
         connection.Open();
         Execute(connection, "PRAGMA page_size = 4096;");
         Execute(connection, "PRAGMA journal_mode = WAL;");
-        Execute(connection, $"PRAGMA application_id = {ApplicationId};");
+        Execute(connection, $"PRAGMA application_id = {ApplicationID};");
     }
 
     /// <summary>
@@ -100,11 +100,11 @@ internal static class SqliteFile
     }
 
     /// <summary>The save's identity, from its SaveInfo row.</summary>
-    public static Guid ReadSaveId(string connectionString)
+    public static Guid ReadSaveID(string connectionString)
     {
         using var connection = new SqliteConnection(connectionString);
         connection.Open();
-        return Guid.Parse((string)Scalar(connection, "SELECT SaveId FROM SaveInfo LIMIT 1;")!, CultureInfo.InvariantCulture);
+        return Guid.Parse((string)Scalar(connection, "SELECT SaveID FROM SaveInfo LIMIT 1;")!, CultureInfo.InvariantCulture);
     }
 
     /// <summary>

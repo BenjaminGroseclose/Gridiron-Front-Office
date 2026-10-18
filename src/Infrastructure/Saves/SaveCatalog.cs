@@ -17,7 +17,7 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
 {
     // The catalog's columns. They're read from saves made by any version, so they're never renamed or removed.
     private const string CardQuery =
-        "SELECT SaveId, LeagueName, CreatedAtUtc, LastPlayedAtUtc, PlayTimeSeconds, AppVersionLastOpened, IsIronman FROM SaveInfo LIMIT 1;";
+        "SELECT SaveID, LeagueName, CreatedAtUtc, LastPlayedAtUtc, PlayTimeSeconds, AppVersionLastOpened, IsIronman FROM SaveInfo LIMIT 1;";
 
     public Task<IReadOnlyList<SaveCard>> ListAsync(CancellationToken cancellationToken = default) =>
         Task.Run(() => List(cancellationToken), cancellationToken);
@@ -57,7 +57,7 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
             size = new FileInfo(path).Length;
             using var connection = new SqliteConnection(SqliteFile.ReadOnly(path));
             connection.Open();
-            if (Integer(connection, "PRAGMA application_id;") != SqliteFile.ApplicationId)
+            if (Integer(connection, "PRAGMA application_id;") != SqliteFile.ApplicationID)
             {
                 return Unreadable(path, size, "This file isn't a Gridiron Front Office save.");
             }
@@ -80,7 +80,7 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
 
             return new SaveCard(path, status)
             {
-                SaveId = reader.GetGuid(0),
+                SaveID = reader.GetGuid(0),
                 LeagueName = reader.GetString(1),
                 CreatedAtUtc = DateTime.SpecifyKind(reader.GetDateTime(2), DateTimeKind.Utc),
                 LastPlayedAtUtc = DateTime.SpecifyKind(reader.GetDateTime(3), DateTimeKind.Utc),

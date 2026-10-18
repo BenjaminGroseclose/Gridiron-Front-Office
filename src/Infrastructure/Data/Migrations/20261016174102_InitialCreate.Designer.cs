@@ -22,7 +22,7 @@ namespace GridironFrontOffice.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("GridironFrontOffice.Core.Leagues.SaveInfo", b =>
                 {
-                    b.Property<Guid>("SaveId")
+                    b.Property<Guid>("SaveID")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AppVersionCreated")
@@ -73,7 +73,7 @@ namespace GridironFrontOffice.Infrastructure.Data.Migrations
                     b.Property<int>("SchemaVersion")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("SaveId");
+                    b.HasKey("SaveID");
 
                     b.ToTable("SaveInfo", (string)null);
                 });

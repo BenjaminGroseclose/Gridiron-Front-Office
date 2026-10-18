@@ -40,7 +40,7 @@ public sealed class PageErrorBoundaryTests : BunitContext
         cut.FindAll("[data-testid=content]").ShouldBeEmpty();
         var entry = _logs.Entries.ShouldHaveSingleItem();
         entry.Level.ShouldBe(LogLevel.Error);
-        entry.EventId.ShouldBe(8000);
+        entry.EventID.ShouldBe(8000);
         entry.Category.ShouldBe(typeof(PageErrorBoundary).FullName);
         entry.Exception.ShouldBeOfType<InvalidOperationException>().Message.ShouldBe("Test failure while rendering");
     }

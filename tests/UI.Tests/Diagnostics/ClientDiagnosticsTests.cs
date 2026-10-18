@@ -32,7 +32,7 @@ public sealed class ClientDiagnosticsTests : BunitContext
         var entry = _logs.Entries.ShouldHaveSingleItem();
         entry.Category.ShouldBe("GridironFrontOffice.UI.Js");
         entry.Level.ShouldBe(LogLevel.Error);
-        entry.EventId.ShouldBe(8001);
+        entry.EventID.ShouldBe(8001);
         entry.Message.ShouldBe("JavaScript error: x is undefined (https://0.0.0.1/app.js:12:7)\nat f (app.js:12:7)");
     }
 
@@ -48,7 +48,7 @@ public sealed class ClientDiagnosticsTests : BunitContext
         }
 
         _logs.Entries.Count(e => e.Level == LogLevel.Error).ShouldBe(ClientDiagnostics.Limit);
-        _logs.Entries.Where(e => e.Level == LogLevel.Warning).ShouldHaveSingleItem().EventId.ShouldBe(8002);
+        _logs.Entries.Where(e => e.Level == LogLevel.Warning).ShouldHaveSingleItem().EventID.ShouldBe(8002);
     }
 
     [Fact]
@@ -58,6 +58,6 @@ public sealed class ClientDiagnosticsTests : BunitContext
 
         Render<ClientDiagnostics>();
 
-        _logs.Entries.ShouldHaveSingleItem().EventId.ShouldBe(8003);
+        _logs.Entries.ShouldHaveSingleItem().EventID.ShouldBe(8003);
     }
 }

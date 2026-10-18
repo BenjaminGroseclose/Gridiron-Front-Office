@@ -39,16 +39,16 @@ public interface ISaveManager
 }
 
 /// <param name="Upgraded">True when opening migrated the file to this app's schema.</param>
-public sealed record OpenSave(Guid SaveId, string LeagueName, string FilePath, int SchemaVersion, bool Upgraded);
+public sealed record OpenSave(Guid SaveID, string LeagueName, string FilePath, int SchemaVersion, bool Upgraded);
 
 /// <summary>Raised after a save is opened (or created, or restored). Not part of a command, so it's dispatched by SaveManager.</summary>
 public sealed record SaveOpened(OpenSave Save) : IDomainEvent;
 
 /// <summary>Raised after the open save is closed.</summary>
-public sealed record SaveClosed(Guid SaveId) : IDomainEvent;
+public sealed record SaveClosed(Guid SaveID) : IDomainEvent;
 
-/// <summary>Raised after a save file went to the Recycle Bin. <paramref name="SaveId"/> is null for an unreadable file.</summary>
-public sealed record SaveDeleted(string FilePath, Guid? SaveId) : IDomainEvent;
+/// <summary>Raised after a save file went to the Recycle Bin. <paramref name="SaveID"/> is null for an unreadable file.</summary>
+public sealed record SaveDeleted(string FilePath, Guid? SaveID) : IDomainEvent;
 
 /// <summary>The expected ways save management can fail.</summary>
 public static class SaveErrors

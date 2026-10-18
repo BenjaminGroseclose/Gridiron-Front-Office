@@ -1,4 +1,4 @@
-using GridironFrontOffice.Core.Ids;
+using GridironFrontOffice.Core.IDs;
 using GridironFrontOffice.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,9 +7,9 @@ namespace GridironFrontOffice.Infrastructure.Tests.Data;
 /// <summary>
 /// D-015 and the Spike S0a finding: typed IDs map to INTEGER through one convention, and generated typed-ID keys get
 /// AUTOINCREMENT so SQLite never reuses an ID that history may still reference. The first real IDs arrive in M1, so
-/// this uses a test-only WidgetId with the same convention LeagueDbContext applies.
+/// this uses a test-only WidgetID with the same convention LeagueDbContext applies.
 /// </summary>
-public sealed class TypedIdConventionTests
+public sealed class TypedIDConventionTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
@@ -21,7 +21,7 @@ public sealed class TypedIdConventionTests
 
         var script = db.Database.GenerateCreateScript();
 
-        script.ShouldContain("\"Id\" INTEGER NOT NULL CONSTRAINT \"PK_Widgets\" PRIMARY KEY AUTOINCREMENT");
+        script.ShouldContain("\"ID\" INTEGER NOT NULL CONSTRAINT \"PK_Widgets\" PRIMARY KEY AUTOINCREMENT");
     }
 
     [Fact]
@@ -34,23 +34,23 @@ public sealed class TypedIdConventionTests
             await db.Database.EnsureCreatedAsync(Ct);
             db.Widgets.AddRange(new Widget { Name = "a" }, new Widget { Name = "b" }, new Widget { Name = "c" });
             await db.SaveChangesAsync(Ct);
-            db.Widgets.Remove(await db.Widgets.SingleAsync(w => w.Id == new WidgetId(3), Ct));
+            db.Widgets.Remove(await db.Widgets.SingleAsync(w => w.ID == new WidgetID(3), Ct));
             await db.SaveChangesAsync(Ct);
             db.Widgets.Add(new Widget { Name = "d" });
             await db.SaveChangesAsync(Ct);
         }
 
         await using var reread = WidgetContext.At(path);
-        var widgets = await reread.Widgets.OrderBy(w => w.Id).Select(w => new { w.Id, w.Name }).ToListAsync(Ct);
-        widgets.Select(w => w.Id).ShouldBe([new WidgetId(1), new WidgetId(2), new WidgetId(4)]);
+        var widgets = await reread.Widgets.OrderBy(w => w.ID).Select(w => new { w.ID, w.Name }).ToListAsync(Ct);
+        widgets.Select(w => w.ID).ShouldBe([new WidgetID(1), new WidgetID(2), new WidgetID(4)]);
         widgets.Last().Name.ShouldBe("d");
     }
 
-    internal readonly record struct WidgetId(int Value) : IStronglyTypedId;
+    internal readonly record struct WidgetID(int Value) : IStronglyTypedID;
 
     internal sealed class Widget
     {
-        public WidgetId Id { get; set; }
+        public WidgetID ID { get; set; }
 
         public string Name { get; set; } = "";
     }
@@ -63,12 +63,12 @@ public sealed class TypedIdConventionTests
             new(new DbContextOptionsBuilder<WidgetContext>().UseSqlite($"Data Source={path};Pooling=False").Options);
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
-            TypedIds.ApplyConversions(configurationBuilder, [typeof(WidgetId)]);
+            TypedIDs.ApplyConversions(configurationBuilder, [typeof(WidgetID)]);
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Widget>().Property(w => w.Id).ValueGeneratedOnAdd();
-            TypedIds.UseAutoincrementForGeneratedKeys(modelBuilder);
+            modelBuilder.Entity<Widget>().Property(w => w.ID).ValueGeneratedOnAdd();
+            TypedIDs.UseAutoincrementForGeneratedKeys(modelBuilder);
         }
     }
 }

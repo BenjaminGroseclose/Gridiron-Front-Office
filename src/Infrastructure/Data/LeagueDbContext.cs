@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using GridironFrontOffice.Application.Data;
-using GridironFrontOffice.Core.Ids;
+using GridironFrontOffice.Core.IDs;
 using GridironFrontOffice.Core.Leagues;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -21,7 +21,7 @@ internal sealed class LeagueDbContext(DbContextOptions<LeagueDbContext> options)
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         // D-015: every strongly typed ID in Core maps to INTEGER through one converter.
-        TypedIds.ApplyConversions(configurationBuilder, TypedIds.DeclaredIn(typeof(IStronglyTypedId).Assembly));
+        TypedIDs.ApplyConversions(configurationBuilder, TypedIDs.DeclaredIn(typeof(IStronglyTypedID).Assembly));
 
         // Enums are stored as their names, so reordering an enum can never change what an existing save means.
         configurationBuilder.Properties<Enum>().HaveConversion<string>();
@@ -30,7 +30,7 @@ internal sealed class LeagueDbContext(DbContextOptions<LeagueDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LeagueDbContext).Assembly);   // Fluent API keeps Core EF-free
-        TypedIds.UseAutoincrementForGeneratedKeys(modelBuilder);
+        TypedIDs.UseAutoincrementForGeneratedKeys(modelBuilder);
     }
 }
 

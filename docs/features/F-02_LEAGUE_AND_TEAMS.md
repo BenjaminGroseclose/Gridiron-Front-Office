@@ -108,19 +108,19 @@ A small parametric SVG, so 32 crests look like one family and can be read at 16 
 ```
 
 **Save tables** (copied from the data file at creation, [PERSISTENCE.md §5.2](../architecture/PERSISTENCE.md#52-league-structure)):
-- `Conferences (ConferenceId, Key, Name)`, `Divisions (DivisionId, ConferenceId, Key, Name)`
-- `Teams (TeamId, DivisionId, Abbreviation, City, Nickname, Metro, PrimaryColor, SecondaryColor, AccentColor, CrestShape, CrestMonogram, CrestStripe, StadiumId, IsUserTeam)`
-- `Stadiums (StadiumId, Name, Capacity, Roof, Surface, ClimateZone)`
+- `Conferences (ConferenceID, Key, Name)`, `Divisions (DivisionID, ConferenceID, Key, Name)`
+- `Teams (TeamID, DivisionID, Abbreviation, City, Nickname, Metro, PrimaryColor, SecondaryColor, AccentColor, CrestShape, CrestMonogram, CrestStripe, StadiumID, IsUserTeam)`
+- `Stadiums (StadiumID, Name, Capacity, Roof, Surface, ClimateZone)`
 - `SaveInfo.TeamSetName`, `TeamSetVersion` (which data set the league came from; "Default v1" or an imported name in M11)
 
-**Read models:** `TeamIdentityDto` (id, abbreviation, city, nickname, colors, crest), `TeamSummaryDto` (+ conference, division, record later), `LeagueStructureDto` (conferences → divisions → teams).
+**Read models:** `TeamIdentityDto` (ID, abbreviation, city, nickname, colors, crest), `TeamSummaryDto` (+ conference, division, record later), `LeagueStructureDto` (conferences → divisions → teams).
 
 ## 6. Application services
 
 | Service | Commands | Queries | Domain events |
 |---|---|---|---|
 | `Leagues/LeagueGenerator` (part of `CreateLeague`) | Copies the team set into the save, inside the creation command | — | `LeagueCreated` |
-| `Leagues/LeagueStructureQueries` | — | `GetLeagueStructure()`, `GetTeamIdentity(teamId)`, `GetAllTeamIdentities()` (cached per session; identities never change in 1.0) | — |
+| `Leagues/LeagueStructureQueries` | — | `GetLeagueStructure()`, `GetTeamIdentity(teamID)`, `GetAllTeamIdentities()` (cached per session; identities never change in 1.0) | — |
 | `Leagues/TeamSetLoader` (Infrastructure port `ISeedData`) | — | Loads and validates `teams.v1.json` against the schema (the same validator M11 import uses) | — |
 
 ## 7. AI counterpart

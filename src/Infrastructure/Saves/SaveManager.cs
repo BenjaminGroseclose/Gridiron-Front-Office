@@ -62,7 +62,7 @@ internal sealed class SaveManager(
             Directory.CreateDirectory(paths.Saves);
             var path = UniquePath(paths.Saves, name);
             var session = LeagueSession.For(path, pragmas);
-            var saveId = Guid.NewGuid();
+            var saveID = Guid.NewGuid();
             int schema;
             try
             {
@@ -77,7 +77,7 @@ internal sealed class SaveManager(
                 {
                     uow.Db.SaveInfo.Add(new SaveInfo
                     {
-                        SaveId = saveId,
+                        SaveID = saveID,
                         LeagueName = name,
                         SchemaVersion = schema,
                         AppVersionCreated = app.Display,
@@ -99,10 +99,10 @@ internal sealed class SaveManager(
                 throw;
             }
 
-            created = new OpenSave(saveId, name, path, schema, Upgraded: false);
+            created = new OpenSave(saveID, name, path, schema, Upgraded: false);
             Current = created;
             _openedAt = time.GetTimestamp();
-            DataLog.SaveCreated(log, name, saveId, path);
+            DataLog.SaveCreated(log, name, saveID, path);
             dispatch.Add(new SaveOpened(created));
         }
         finally
@@ -234,7 +234,7 @@ internal sealed class SaveManager(
         }
 
         var probe = SqliteFile.Check(fullPath);
-        if (!probe.IsDatabase || probe.ApplicationId != SqliteFile.ApplicationId)
+        if (!probe.IsDatabase || probe.ApplicationID != SqliteFile.ApplicationID)
         {
             return Result.Fail<OpenSave>(SaveErrors.NotAGfoSave(fileName));
         }
@@ -259,11 +259,11 @@ internal sealed class SaveManager(
             if (pending > 0)
             {
                 // PERSISTENCE.md §7: snapshot first, then migrate forward.
-                var saveId = SqliteFile.ReadSaveId(session.ConnectionString);
-                var snapshot = snapshots.Take(session.ConnectionString, saveId, SnapshotTrigger.PreUpgrade(applied.Count));
+                var saveID = SqliteFile.ReadSaveID(session.ConnectionString);
+                var snapshot = snapshots.Take(session.ConnectionString, saveID, SnapshotTrigger.PreUpgrade(applied.Count));
                 await MigrateAsync(session, ct).ConfigureAwait(false);
                 SqliteFile.SetUserVersion(session.ConnectionString, known.Count);
-                DataLog.SaveUpgraded(log, saveId, applied.Count, known.Count, snapshot.Name);
+                DataLog.SaveUpgraded(log, saveID, applied.Count, known.Count, snapshot.Name);
             }
 
             await writer.RunExclusiveAsync("opening a save", () => { sessions.Set(session); return Task.CompletedTask; }, ct).ConfigureAwait(false);
@@ -275,12 +275,12 @@ internal sealed class SaveManager(
                 info.SchemaVersion = schema;
                 info.AppVersionLastOpened = app.Display;
                 info.LastPlayedAtUtc = now;
-                return Result.Ok(new OpenSave(info.SaveId, info.LeagueName, fullPath, schema, Upgraded: pending > 0));
+                return Result.Ok(new OpenSave(info.SaveID, info.LeagueName, fullPath, schema, Upgraded: pending > 0));
             }, ct).ConfigureAwait(false);
 
             Current = opened.Value;
             _openedAt = time.GetTimestamp();
-            DataLog.SaveOpened(log, opened.Value.LeagueName, opened.Value.SaveId, schema);
+            DataLog.SaveOpened(log, opened.Value.LeagueName, opened.Value.SaveID, schema);
             return opened;
         }
         catch
@@ -318,8 +318,8 @@ internal sealed class SaveManager(
         }, ct).ConfigureAwait(false);
 
         Current = null;
-        DataLog.SaveClosed(log, closing.SaveId, minutes);
-        dispatch.Add(new SaveClosed(closing.SaveId));
+        DataLog.SaveClosed(log, closing.SaveID, minutes);
+        dispatch.Add(new SaveClosed(closing.SaveID));
     }
 
     /// <summary>
@@ -329,7 +329,7 @@ internal sealed class SaveManager(
     /// </summary>
     private async Task<Result<OpenSave>> RestoreCoreAsync(SnapshotInfo snapshot, List<IDomainEvent> dispatch, CancellationToken ct)
     {
-        if (Current is not { } open || open.SaveId != snapshot.SaveId)
+        if (Current is not { } open || open.SaveID != snapshot.SaveID)
         {
             return Result.Fail<OpenSave>(SaveErrors.SnapshotNotForThisSave(snapshot.Name));
         }
@@ -348,7 +348,7 @@ internal sealed class SaveManager(
 
         var snapshotFile = Path.GetFileName(snapshot.FilePath);
         var probe = SqliteFile.Check(snapshot.FilePath);
-        if (!probe.IsDatabase || probe.ApplicationId != SqliteFile.ApplicationId)
+        if (!probe.IsDatabase || probe.ApplicationID != SqliteFile.ApplicationID)
         {
             return Result.Fail<OpenSave>(SaveErrors.NotAGfoSave(snapshotFile));
         }
@@ -359,7 +359,7 @@ internal sealed class SaveManager(
         }
 
         var card = catalog.Read(snapshot.FilePath);
-        if (card.Status == SaveCardStatus.Unreadable || card.SaveId != open.SaveId)
+        if (card.Status == SaveCardStatus.Unreadable || card.SaveID != open.SaveID)
         {
             return Result.Fail<OpenSave>(SaveErrors.SnapshotNotForThisSave(snapshot.Name));
         }
@@ -378,7 +378,7 @@ internal sealed class SaveManager(
 
             await CloseCoreAsync(dispatch, ct).ConfigureAwait(false);
             var playTime = catalog.Read(savePath).PlayTimeSeconds;   // real time played doesn't go back with the league
-            snapshots.Take(SqliteFile.ReadOnly(savePath), open.SaveId, SnapshotTrigger.PreRestore);
+            snapshots.Take(SqliteFile.ReadOnly(savePath), open.SaveID, SnapshotTrigger.PreRestore);
             foreach (var sidecar in SqliteFile.Sidecars(savePath))
             {
                 File.Delete(sidecar);   // a stale WAL must never be replayed onto the restored file
@@ -399,7 +399,7 @@ internal sealed class SaveManager(
                 return Result.Ok();
             }, ct).ConfigureAwait(false);
 
-            DataLog.SaveRestored(log, open.SaveId, snapshot.Name);
+            DataLog.SaveRestored(log, open.SaveID, snapshot.Name);
             dispatch.Add(new SaveOpened(reopened.Value));
             return reopened;
         }
@@ -421,15 +421,15 @@ internal sealed class SaveManager(
             await CloseCoreAsync(dispatch, ct).ConfigureAwait(false);
         }
 
-        // The snapshot folder goes too, unless another file shares the SaveId (a copy made in Explorer).
+        // The snapshot folder goes too, unless another file shares the SaveID (a copy made in Explorer).
         var card = catalog.Read(fullPath);
-        Guid? saveId = card.Status == SaveCardStatus.Unreadable ? null : card.SaveId;
+        Guid? saveID = card.Status == SaveCardStatus.Unreadable ? null : card.SaveID;
         var targets = new List<string> { fullPath };
         targets.AddRange(SqliteFile.Sidecars(fullPath));
         var withSnapshots = false;
-        if (saveId is { } id && Directory.Exists(snapshots.FolderOf(id))
+        if (saveID is { } id && Directory.Exists(snapshots.FolderOf(id))
             && !(await catalog.ListAsync(ct).ConfigureAwait(false))
-                .Any(c => c.SaveId == id && !string.Equals(c.FilePath, fullPath, StringComparison.OrdinalIgnoreCase)))
+                .Any(c => c.SaveID == id && !string.Equals(c.FilePath, fullPath, StringComparison.OrdinalIgnoreCase)))
         {
             targets.Add(snapshots.FolderOf(id));
             withSnapshots = true;
@@ -448,7 +448,7 @@ internal sealed class SaveManager(
         }
 
         DataLog.SaveDeleted(log, fileName, withSnapshots);
-        dispatch.Add(new SaveDeleted(fullPath, saveId));
+        dispatch.Add(new SaveDeleted(fullPath, saveID));
         return Result.Ok();
     }
 

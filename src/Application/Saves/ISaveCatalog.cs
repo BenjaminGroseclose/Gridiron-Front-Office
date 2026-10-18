@@ -15,7 +15,7 @@ public sealed record SaveCard(string FilePath, SaveCardStatus Status)
 {
     public string FileName => Path.GetFileName(FilePath);
 
-    public Guid SaveId { get; init; }
+    public Guid SaveID { get; init; }
 
     public string LeagueName { get; init; } = "";
 

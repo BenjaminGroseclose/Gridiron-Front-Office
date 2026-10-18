@@ -38,11 +38,11 @@
 **Line format** (`GfoLogFormatter`, a small custom formatter, because Serilog's `{Properties}` token always prints, even `{}`):
 ```
 2026-10-16 09:18:26.191 -04:00 [FTL] [GridironFrontOffice.Desktop.App] Unhandled exception on the UI thread
-    {"SaveId":7,"Phase":"Draft"}          ← only when the event carries properties its message didn't use
+    {"SaveID":7,"Phase":"Draft"}          ← only when the event carries properties its message didn't use
 System.InvalidOperationException: …       ← only when there's an exception, with its full stack trace
 ```
 - The first line is `{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj}`.
-- **`AppVersion` and `SessionId` enrich every event but are printed once, in the startup banner** (§7). That keeps lines short and the log well under the 1 MB/hour rule; any session is easy to find because each one starts with a banner. `EventId` isn't repeated either.
+- **`AppVersion` and `SessionID` enrich every event but are printed once, in the startup banner** (§7). That keeps lines short and the log well under the 1 MB/hour rule; any session is easy to find because each one starts with a banner. `EventId` isn't repeated either.
 - **Every line passes through `PathTokens`**, so `%LOCALAPPDATA%`, `%APPDATA%`, `%TEMP%` and `%USERPROFILE%` replace the real folders, even inside exception messages. The Windows user name never reaches the file (§11).
 
 ---
@@ -82,7 +82,7 @@ Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command",
         settings.Developer.LogSql ? LogEventLevel.Information : LogEventLevel.Warning)
     .Enrich.FromLogContext()
-    .Enrich.With(new AppContextEnricher(appVersion, sessionId))   // AppVersion, SessionId
+    .Enrich.With(new AppContextEnricher(appVersion, sessionID))   // AppVersion, SessionID
     .WriteTo.Async(a => a.File(
         path: Path.Combine(paths.Logs, "gfo-.log"),
         rollingInterval: RollingInterval.Day,
@@ -132,11 +132,11 @@ On shutdown: `HostLog.Exiting` (exit code and session length), then `Log.CloseAn
 
 | Property | Source | Lifetime |
 |---|---|---|
-| `AppVersion`, `SessionId` (GUID per app run) | Enricher. In the text log they're printed once, in the banner (§3) | Process |
-| `SaveId`, `LeagueName` | `LogContext.PushProperty` when a league session opens | League session |
+| `AppVersion`, `SessionID` (GUID per app run) | Enricher. In the text log they're printed once, in the banner (§3) | Process |
+| `SaveID`, `LeagueName` | `LogContext.PushProperty` when a league session opens | League session |
 | `Season`, `Phase`, `Week` | Pushed by the phase machine around each advance | Operation |
-| `Operation`, `OperationId` | `ISaveWriter.ExecuteAsync` scope | Command |
-| `ThreadId` | Only at Debug level | — |
+| `Operation`, `OperationID` | `ISaveWriter.ExecuteAsync` scope | Command |
+| `ThreadID` | Only at Debug level | — |
 
 ---
 
@@ -226,8 +226,8 @@ M0 checked every path in both hosts. Each one landed in the log with its stack t
 
 ```csharp
 // Message templates, never interpolation:
-_logger.LogInformation("Draft pick {Overall} by {TeamAbbr}: {PlayerId} {Position} (auto={WasAuto}, clockLeftMs={ClockLeftMs})",
-    pick.Overall, team.Abbr, player.Id, player.Position, wasAuto, clockLeftMs);
+_logger.LogInformation("Draft pick {Overall} by {TeamAbbr}: {PlayerID} {Position} (auto={WasAuto}, clockLeftMs={ClockLeftMs})",
+    pick.Overall, team.Abbr, player.ID, player.Position, wasAuto, clockLeftMs);
 
 // Hot paths: source-generated
 internal static partial class SimLog

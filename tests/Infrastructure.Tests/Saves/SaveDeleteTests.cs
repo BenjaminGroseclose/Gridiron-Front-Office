@@ -26,7 +26,7 @@ public sealed class SaveDeleteTests
         File.Exists(save.Save.FilePath).ShouldBeFalse();
         Directory.Exists(save.SnapshotsPath).ShouldBeFalse();
         (await save.Catalog.ListAsync(Ct)).ShouldBeEmpty();
-        events.ShouldBe([new SaveDeleted(save.Save.FilePath, save.Save.SaveId)]);
+        events.ShouldBe([new SaveDeleted(save.Save.FilePath, save.Save.SaveID)]);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class SaveDeleteTests
         await using var save = await TestSave.CreateAsync();
         await save.Saves.CloseAsync(Ct);
         var copy = Path.Combine(save.SavesPath, "Torture League - Copy.gfo");
-        File.Copy(save.Save.FilePath, copy);   // same SaveId, so the same snapshot folder
+        File.Copy(save.Save.FilePath, copy);   // same SaveID, so the same snapshot folder
 
         (await save.Saves.DeleteAsync(save.Save.FilePath, Ct)).IsSuccess.ShouldBeTrue();
 

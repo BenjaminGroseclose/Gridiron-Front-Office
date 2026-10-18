@@ -76,6 +76,7 @@
 | D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** |
 | D-067 | Spike S0b: Fluent UI v5 fits; `DataGrid<T>` keeps `FluentDataGrid` | **Accepted** |
 | D-068 | Host shell: the app bar is the title bar | **Accepted** |
+| D-069 | Write `ID`, never `Id` | **Accepted** |
 
 ---
 
@@ -167,10 +168,10 @@
 
 ## D-015: Integer keys with strongly typed IDs
 - **Status:** **Accepted** (owner, 2026-10-15: *"Correct we should use Integer IDs"*). The ID convention is built in M0 WP6. The first IDs arrive in M1.
-- **Decision:** `INTEGER PRIMARY KEY` (rowid) tables with C# `readonly record struct PlayerId(int Value)` style IDs, mapped through EF value converters. The only GUID is `SaveInfo.SaveId`, which identifies a league across exports and imports.
-- **Consequences:** + Compact, fast joins, and no mixing up `PlayerId` with `TeamId` at compile time. − Converter boilerplate (minimal with a source generator or a base convention).
+- **Decision:** `INTEGER PRIMARY KEY` (rowid) tables with C# `readonly record struct PlayerID(int Value)` style IDs, mapped through EF value converters. The only GUID is `SaveInfo.SaveID`, which identifies a league across exports and imports.
+- **Consequences:** + Compact, fast joins, and no mixing up `PlayerID` with `TeamID` at compile time. − Converter boilerplate (minimal with a source generator or a base convention).
 
-- **Implementation note (Spike S0a, 2026-10-15):** proven with one generic `IdConverter<TId>` registered for every ID type in `ConfigureConventions`. **EF's SQLite convention doesn't add `AUTOINCREMENT` to converted keys**, so `LeagueDbContext` applies `UseAutoincrement()` (the EF Core 10 API; the old raw annotation is ignored) to every generated typed-ID key. Otherwise SQLite may reuse the highest ID after a delete ([DATA_ACCESS_GUIDE.md §3.3](architecture/DATA_ACCESS_GUIDE.md#33-infrastructure-the-context-and-the-session)).
+- **Implementation note (Spike S0a, 2026-10-15):** proven with one generic `IDConverter<TID>` registered for every ID type in `ConfigureConventions`. **EF's SQLite convention doesn't add `AUTOINCREMENT` to converted keys**, so `LeagueDbContext` applies `UseAutoincrement()` (the EF Core 10 API; the old raw annotation is ignored) to every generated typed-ID key. Otherwise SQLite may reuse the highest ID after a delete ([DATA_ACCESS_GUIDE.md §3.3](architecture/DATA_ACCESS_GUIDE.md#33-infrastructure-the-context-and-the-session)).
 
 ## D-016: Single-writer command queue
 - **Status:** **Accepted** (owner, 2026-10-15: *"A single write makes sense to me, should only ever need to save something one at a time no need to thread saving."*). Note: only *writes* are serialized. Reads still run concurrently alongside the writer (SQLite WAL), so screens never wait on a save.
@@ -263,7 +264,7 @@
   - **Corruption-only recovery:** keep taking snapshots in Ironman. Allow one kind of restore: **automatic**, to the **most recent good snapshot**, and only when the live file fails `quick_check`/`integrity_check` on open or a schema migration fails. The player never picks a point in time.
   - **Groundwork in M0:** a `SaveInfo.Generation` counter that `SaveWriter` increments on every commit. It costs almost nothing now and makes Level 2 possible later without a migration.
   - **Already built in M0 (WP7):** the Level 1 restore guard. `SaveManager.RestoreAsync` refuses an Ironman league through `SaveRules.CanRestore`, with tests. The duplicate guard, the wizard rule, the badge and the corruption-only recovery remain for later.
-- **Deferred:** **Level 2 (rollback detection).** The app records the highest `Generation` seen per `SaveId` in `LocalAppData`. A reopened save with a lower generation was rolled back by a file copy, so it loses Ironman status. Build it only if Steam achievements happen (about 1–2 days). It detects rollbacks but can't prevent them.
+- **Deferred:** **Level 2 (rollback detection).** The app records the highest `Generation` seen per `SaveID` in `LocalAppData`. A reopened save with a lower generation was rolled back by a file copy, so it loses Ironman status. Build it only if Steam achievements happen (about 1–2 days). It detects rollbacks but can't prevent them.
 - **Rejected:** cryptographic signing of save state. The key would ship inside the app, so it stops nobody.
 - **Known limitation (accepted):** copying `.gfo` files in Explorer can't be prevented. Ironman protects the *meaning* of the badge for honest players, not the file from a determined one.
 
@@ -310,7 +311,7 @@
 
   - **Potential** stays hidden for everyone, your roster included. It's shown as a letter grade with a confidence band ([D-034](#d-034-ratings-display-099-with-ranges-letter-grades-for-potential)). On your roster it **narrows as you watch the player develop**, but it's never exact.
   - **Personality traits** ([D-043](#d-043-limited-personality-model-only-traits-with-a-consumer)): your roster shows them as coarse descriptors (High / Average / Low, never numbers) from the moment of acquisition. Prospects reveal them only through limited interviews. Other teams' players show only **reputation tags** earned from visible behavior (e.g., "Held out in 2029").
-  - **Stable, not flickery:** each team's error on a pro is derived from `Hash(leagueSeed, "perception", teamId, playerId, season)` and redrawn once per league year. It's never re-rolled per view, and pro fuzz needs no storage.
+  - **Stable, not flickery:** each team's error on a pro is derived from `Hash(leagueSeed, "perception", teamID, playerID, season)` and redrawn once per league year. It's never re-rolled per view, and pro fuzz needs no storage.
   - **The sim always uses true ratings.** Stats are the deliberate leak: a "78" who keeps getting beaten will show it.
   - **AI symmetry:** every AI team knows its own roster exactly, sees everyone else with the same fixed fuzz (with its own independent error), and scouts prospects with its own staff. Teams disagree, and that disagreement creates the market.
   - **No pro scouting assignments.** That sub-system is removed from F-17.
@@ -610,3 +611,19 @@
     - The title bar choice makes no difference.
     - The self-contained ReadyToRun publish is 247 MB.
 - **Details:** [M0_FOUNDATIONS.md WP4](milestones/M0_FOUNDATIONS.md#wp4--spike-s0c-host-shell-sm-throwaway-code--done-2026-10-16).
+
+## D-069: Write `ID`, never `Id`
+- **Status:** **Accepted** (owner, 2026-10-18: *"All `Id` should be written like `ID` this is my preference"*).
+- **Decision:** the abbreviation is always `ID` (plural `IDs`), wherever GFO chooses the name:
+  - types, members, parameters, locals and namespaces: `SaveID`, `PlayerID`, `IStronglyTypedID`, `TypedIDs`, `ReadSaveID`, `saveID`, `GridironFrontOffice.Core.IDs`;
+  - database columns (they come from the property names): `SaveInfo.SaveID`;
+  - log properties: `{SaveID}`, `{SessionID}`;
+  - file names and docs.
+
+  A lone camelCase local, a route parameter or HTML attribute stays lowercase: `id`, `/player/{id}`, `<div id="app">`.
+- **Exceptions:** names that belong to someone else keep their own spelling, because GFO can't rename them:
+  - Microsoft logging's `EventId` (`[LoggerMessage(EventId = …)]`, the `EventId` struct with its `Id` property, and the `eventId` parameter);
+  - EF Core's `MigrationId` history column;
+  - the `Id` attribute in the Windows app manifest schema.
+- **Note:** this departs from the .NET naming guideline, which spells the abbreviation `Id`. It's a deliberate house style. SQLite column names are case-insensitive, so respelling the `SaveID` column changed no existing save.
+- **Enforced by** an architecture test (`NamingRulesTests`), which scans source and docs for the mixed-case spelling. A new outside name goes on its `OutsideNames` (or `OutsideMembers`) list.

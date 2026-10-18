@@ -34,7 +34,7 @@ public static class GfoLogging
                 settings.Developer.LogSql ? LogEventLevel.Information : LogEventLevel.Warning)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("AppVersion", app.Display)
-            .Enrich.WithProperty("SessionId", app.SessionId)
+            .Enrich.WithProperty("SessionID", app.SessionID)
             .WriteTo.Async(sink => sink.File(
                 new GfoLogFormatter(),
                 Path.Combine(paths.Logs, "gfo-.log"),

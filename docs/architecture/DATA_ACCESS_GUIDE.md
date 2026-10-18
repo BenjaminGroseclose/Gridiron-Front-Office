@@ -44,7 +44,7 @@ These are the patterns behind nearly every "SQLite transactions don't work in my
 // WRONG: registered with AddDbContext (scoped). In Blazor Hybrid, "scoped" ≈ the whole app lifetime.
 public class RosterService(LeagueDbContext db)
 {
-    public async Task CutPlayerAsync(int playerId) { /* uses the same long-lived db */ }
+    public async Task CutPlayerAsync(int playerID) { /* uses the same long-lived db */ }
 }
 ```
 **What happens:** two async UI actions overlap, which causes `A second operation was started on this context instance...`. A failed `SaveChanges` leaves broken entities tracked, so *every later save fails too*. Stale data accumulates.
@@ -53,7 +53,7 @@ public class RosterService(LeagueDbContext db)
 ### ❌ W2: Expecting several `SaveChanges` calls to be atomic
 ```csharp
 // WRONG: each SaveChanges is its own transaction. A crash or exception between them = half-saved.
-player.TeamId = teamId;           await db.SaveChangesAsync();
+player.TeamID = teamID;           await db.SaveChangesAsync();
 db.Contracts.Add(contract);       await db.SaveChangesAsync();   // throws → player moved, no contract
 ```
 **✅ Fix:** all work for one action happens inside **one** `ExecuteAsync`. `SaveWriter` wraps it in a single transaction and commits once at the end.
@@ -104,11 +104,11 @@ In SQLite's default (rollback journal) mode, an open `DataReader` or read transa
 > | Where | What |
 > |---|---|
 > | `Core/Results/Result.cs` | `Result<T>`, `Result.Ok`/`Result.Fail`, `DomainError(Code, Message)`, `Unit` |
-> | `Core/Ids/IStronglyTypedId.cs`, `Core/Leagues/SaveInfo.cs` | The typed-ID marker; the `SaveInfo` entity and the creation-setting enums |
+> | `Core/IDs/IStronglyTypedID.cs`, `Core/Leagues/SaveInfo.cs` | The typed-ID marker; the `SaveInfo` entity and the creation-setting enums |
 > | `Application/Data/DataContracts.cs` | `ILeagueDb`, `ILeagueReadDb`, `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher` |
 > | `Application/Saves/` | `ISaveManager` (create, open, close, restore, delete), `OpenSave`, `SaveOpened`/`SaveClosed`/`SaveDeleted`, `SaveErrors`; and from WP7 `ISaveCatalog` + `SaveCard`, `ISnapshotService` + `SnapshotTrigger` + `SnapshotPolicy`, `SaveRules` |
 > | `Application/Platform/`, `Application/LiveEvents/` | `IAppPaths`; from WP7 `IPlatformServices` (the Recycle Bin, Explorer) and `ILiveEventStatus` |
-> | `Infrastructure/Data/` | `LeagueDbContext`, `Configurations/`, `TypedIds`, `LeagueSession` + accessor + `SqlitePragmaInterceptor`, `SaveWriter` + `UnitOfWork` + `SaveReader`, `DomainEventDispatcher`, `DataLog`, `Migrations/` |
+> | `Infrastructure/Data/` | `LeagueDbContext`, `Configurations/`, `TypedIDs`, `LeagueSession` + accessor + `SqlitePragmaInterceptor`, `SaveWriter` + `UnitOfWork` + `SaveReader`, `DomainEventDispatcher`, `DataLog`, `Migrations/` |
 > | `Infrastructure/Saves/` | `SaveManager`, `SaveCatalog`, `SnapshotService`, `SqliteFile` (the residue-free read-only connection, the format check, creation pragmas, `VACUUM INTO`, checkpoint and release) |
 > | `Infrastructure/InfrastructureServices.cs` | `AddGfoInfrastructure(paths, app)` |
 
@@ -220,15 +220,15 @@ internal sealed class LeagueSession
 // In LeagueDbContext
 protected override void ConfigureConventions(ModelConfigurationBuilder b)
 {
-    foreach (var idType in IdTypes)   // every readonly record struct implementing IStronglyTypedId
-        b.Properties(idType).HaveConversion(typeof(IdConverter<>).MakeGenericType(idType));
+    foreach (var idType in IDTypes)   // every readonly record struct implementing IStronglyTypedID
+        b.Properties(idType).HaveConversion(typeof(IDConverter<>).MakeGenericType(idType));
 }
 
 // At the end of OnModelCreating: EF's SQLite convention adds AUTOINCREMENT only to plain int keys.
 // A converted (typed-ID) key gets a bare INTEGER PRIMARY KEY, and SQLite may then REUSE the highest ID after a
 // delete, while IDs are referenced from history. EF Core 10 ignores the old "Sqlite:Autoincrement" annotation,
 // so use the value-generation strategy API:
-foreach (var (entity, key) in GeneratedTypedIdKeys(modelBuilder))
+foreach (var (entity, key) in GeneratedTypedIDKeys(modelBuilder))
     modelBuilder.Entity(entity.ClrType).Property(key.Name).UseAutoincrement();
 ```
 
@@ -360,13 +360,13 @@ services.AddGfoInfrastructure(paths, app);   // app: the AppIdentity, stamped in
 // GridironFrontOffice.Application/Rosters/RosterQueries.cs
 public sealed class RosterQueries(ISaveReader reader)
 {
-    public Task<IReadOnlyList<RosterRow>> GetRosterAsync(TeamId teamId, int season, CancellationToken ct = default) =>
+    public Task<IReadOnlyList<RosterRow>> GetRosterAsync(TeamID teamID, int season, CancellationToken ct = default) =>
         reader.QueryAsync<IReadOnlyList<RosterRow>>(async (db, ct) =>
             await db.Players
-                .Where(p => p.TeamId == teamId && p.Status == PlayerStatus.Active)
+                .Where(p => p.TeamID == teamID && p.Status == PlayerStatus.Active)
                 .OrderBy(p => p.Position).ThenByDescending(p => p.Overall)
                 .Select(p => new RosterRow(                       // project to a DTO, never return entities
-                    p.Id, p.FirstName + " " + p.LastName, p.Position, p.BirthDate, p.Overall,
+                    p.ID, p.FirstName + " " + p.LastName, p.Position, p.BirthDate, p.Overall,
                     p.Contracts.Where(c => c.IsActive)
                                .SelectMany(c => c.Years)
                                .Where(y => y.Season == season)
@@ -389,11 +389,11 @@ public sealed class RosterQueries(ISaveReader reader)
 // GridironFrontOffice.Application/DepthCharts/DepthChartCommands.cs
 public sealed class DepthChartCommands(ISaveWriter writer)
 {
-    public Task<Result<Unit>> SetStarterAsync(TeamId team, DepthSlot slot, PlayerId player, CancellationToken ct = default) =>
+    public Task<Result<Unit>> SetStarterAsync(TeamID team, DepthSlot slot, PlayerID player, CancellationToken ct = default) =>
         writer.ExecuteAsync("DepthChart.SetStarter", async (uow, ct) =>
         {
-            var entry = await uow.Db.DepthChartSlots.SingleAsync(s => s.TeamId == team && s.Slot == slot && s.Order == 1, ct);
-            entry.PlayerId = player;                       // tracked change; SaveWriter saves + commits
+            var entry = await uow.Db.DepthChartSlots.SingleAsync(s => s.TeamID == team && s.Slot == slot && s.Order == 1, ct);
+            entry.PlayerID = player;                       // tracked change; SaveWriter saves + commits
             uow.Raise(new DepthChartChanged(team));
             return Result.Ok(Unit.Value);
         }, ct);
@@ -403,24 +403,24 @@ public sealed class DepthChartCommands(ISaveWriter writer)
 ### 5.2 A multi-table command with a business rule (all-or-nothing)
 ```csharp
 // GridironFrontOffice.Application/FreeAgency/FreeAgencyCommands.cs
-public Task<Result<ContractId>> SignAsync(SignFreeAgent cmd, CancellationToken ct = default) =>
+public Task<Result<ContractID>> SignAsync(SignFreeAgent cmd, CancellationToken ct = default) =>
     writer.ExecuteAsync("FreeAgency.Sign", async (uow, ct) =>
     {
-        var player = await uow.Db.Players.SingleAsync(p => p.Id == cmd.PlayerId, ct);
+        var player = await uow.Db.Players.SingleAsync(p => p.ID == cmd.PlayerID, ct);
         if (player.Status != PlayerStatus.FreeAgent)
-            return Result.Fail<ContractId>(DomainError.NotAFreeAgent(player.Id));
+            return Result.Fail<ContractID>(DomainError.NotAFreeAgent(player.ID));
 
-        var capSpace = await CapOperations.CapSpaceAsync(uow, cmd.TeamId, cmd.Season, ct);
+        var capSpace = await CapOperations.CapSpaceAsync(uow, cmd.TeamID, cmd.Season, ct);
         if (cmd.Offer.CapHitFor(cmd.Season) > capSpace)
-            return Result.Fail<ContractId>(DomainError.OverCap(cmd.TeamId));   // → SaveWriter rolls back
+            return Result.Fail<ContractID>(DomainError.OverCap(cmd.TeamID));   // → SaveWriter rolls back
 
-        player.TeamId = cmd.TeamId;
+        player.TeamID = cmd.TeamID;
         player.Status = PlayerStatus.Active;
-        var contract = await ContractOperations.CreateAsync(uow, player, cmd.TeamId, cmd.Offer, ct);
-        TransactionLogOperations.Append(uow, TransactionKind.Signing, cmd.TeamId, player.Id);
+        var contract = await ContractOperations.CreateAsync(uow, player, cmd.TeamID, cmd.Offer, ct);
+        TransactionLogOperations.Append(uow, TransactionKind.Signing, cmd.TeamID, player.ID);
 
-        uow.Raise(new PlayerSigned(player.Id, cmd.TeamId, contract.Id));
-        return Result.Ok(contract.Id);
+        uow.Raise(new PlayerSigned(player.ID, cmd.TeamID, contract.ID));
+        return Result.Ok(contract.ID);
     }, ct);
 ```
 If *anything* fails (a `Fail` result or an exception), **nothing** above is persisted: not the team change, not the contract, not the log entry.
@@ -432,12 +432,12 @@ Signing a free agent, re-signing, rookie contracts and trades all create contrac
 // GridironFrontOffice.Application/Contracts/ContractOperations.cs
 internal static class ContractOperations
 {
-    public static async Task<Contract> CreateAsync(IUnitOfWork uow, Player player, TeamId team,
+    public static async Task<Contract> CreateAsync(IUnitOfWork uow, Player player, TeamID team,
                                                    ContractOffer offer, CancellationToken ct)
     {
-        var contract = Contract.From(player.Id, team, offer);        // pure Core logic builds years + cap hits
+        var contract = Contract.From(player.ID, team, offer);        // pure Core logic builds years + cap hits
         uow.Db.Contracts.Add(contract);
-        await uow.Db.SaveChangesAsync(ct);                            // OK: flush to get contract.Id; same transaction
+        await uow.Db.SaveChangesAsync(ct);                            // OK: flush to get contract.ID; same transaction
         return contract;
     }
 }
@@ -458,14 +458,14 @@ Change tracking is too slow for ~26k stat rows per week. Use the raw-SQL escape 
 internal static async Task InsertPlayerStatsAsync(IUnitOfWork uow, IReadOnlyList<PlayerGameStatLine> lines, CancellationToken ct)
 {
     await using var cmd = uow.CreateCommand(
-        "INSERT INTO PlayerGameStats (GameId, PlayerId, TeamId, PassAtt, PassCmp, PassYds /* … */) " +
+        "INSERT INTO PlayerGameStats (GameID, PlayerID, TeamID, PassAtt, PassCmp, PassYds /* … */) " +
         "VALUES ($game, $player, $team, $att, $cmp, $yds /* … */)");
     DbParameter Param(string name) { var p = cmd.CreateParameter(); p.ParameterName = name; cmd.Parameters.Add(p); return p; }
     var pGame = Param("$game"); var pPlayer = Param("$player"); /* … */
     cmd.Prepare();                                         // compile once, execute many
     foreach (var l in lines)
     {
-        pGame.Value = l.GameId; pPlayer.Value = l.PlayerId; /* … */
+        pGame.Value = l.GameID; pPlayer.Value = l.PlayerID; /* … */
         await cmd.ExecuteNonQueryAsync(ct);
     }
 }
@@ -478,7 +478,7 @@ internal static async Task InsertPlayerStatsAsync(IUnitOfWork uow, IReadOnlyList
 Real-time commands carry the **version** they expect, and the check happens **inside** the transaction:
 
 ```csharp
-public Task<Result<Unit>> MakePickAsync(int pickNo, long expectedVersion, PlayerId playerId, bool isAuto, CancellationToken ct = default) =>
+public Task<Result<Unit>> MakePickAsync(int pickNo, long expectedVersion, PlayerID playerID, bool isAuto, CancellationToken ct = default) =>
     writer.ExecuteAsync("Draft.MakePick", async (uow, ct) =>
     {
         var state = await uow.Db.DraftState.SingleAsync(ct);
@@ -603,7 +603,7 @@ M:Microsoft.Data.Sqlite.SqliteConnection.#ctor(System.String);Use ISaveWriter / 
   - with no save open, the data layer says so;
   - **no `DbContext` in DI**;
   - **a process killed mid-command leaves the save intact and unchanged.** The `Infrastructure.Tests.Crasher` inserts 50,000 rows inside one command, is killed, and the file then passes `integrity_check`, has zero rows added, and still opens.
-- **`TypedIdConventionTests` (2):** a generated typed-ID key is an `AUTOINCREMENT` integer, and a deleted top ID is never reused.
+- **`TypedIDConventionTests` (2):** a generated typed-ID key is an `AUTOINCREMENT` integer, and a deleted top ID is never reused.
 - **Not yet:** upgrading an older save. There's only one migration, so the test lands with the first real schema change in M1 (and the fixture saves at release time, PERSISTENCE.md §7).
 
 The original sketch:

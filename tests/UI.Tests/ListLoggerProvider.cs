@@ -25,4 +25,4 @@ internal sealed class ListLoggerProvider : ILoggerProvider
     }
 }
 
-internal sealed record LogEntry(string Category, LogLevel Level, int EventId, string Message, Exception? Exception);
+internal sealed record LogEntry(string Category, LogLevel Level, int EventID, string Message, Exception? Exception);

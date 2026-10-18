@@ -30,7 +30,7 @@ public static class StartupBanner
             $"Culture: {CultureInfo.CurrentCulture.Name} | Screen: {host.Screen} | Process: {(Environment.Is64BitProcess ? "64" : "32")}-bit",
             $"Paths: data={PathTokens.Tokenize(paths.Root)}",
             Invariant($"Settings: theme={appearance.Theme} accent={appearance.Accent} density={appearance.Density} logLevel={developer.LogLevel} logSql={OnOff(developer.LogSql)} simTrace={OnOff(developer.SimTrace)}"),
-            $"Session: {app.SessionId}",
+            $"Session: {app.SessionID}",
         ];
         return string.Join(Environment.NewLine, lines);
     }

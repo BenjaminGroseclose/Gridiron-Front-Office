@@ -6,7 +6,7 @@ namespace GridironFrontOffice.Infrastructure.Logging;
 /// Which build is running, and which run this is. The version and commit come from the entry assembly's informational
 /// version, which the .NET SDK stamps as <c>0.0.1+&lt;commit sha&gt;</c> when building from git.
 /// </summary>
-public sealed record AppIdentity(string Version, string? Commit, string Configuration, Guid SessionId)
+public sealed record AppIdentity(string Version, string? Commit, string Configuration, Guid SessionID)
 {
     /// <summary>"0.0.1+ce3e6f6", or just the version when no commit was stamped.</summary>
     public string Display => Commit is null ? Version : $"{Version}+{Commit}";

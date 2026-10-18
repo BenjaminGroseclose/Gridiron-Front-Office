@@ -164,7 +164,7 @@ Implement these four operations in **EF Core** behind the §2 unit of work (the 
 
 | # | Operation | Exercises |
 |---|---|---|
-| a | **Sign a free agent:** set `Player.TeamId`, insert a `Contract` + 4 `ContractYears`, append to `Transactions`, check the cap → roll back if over | Multi-table atomicity, a domain rollback |
+| a | **Sign a free agent:** set `Player.TeamID`, insert a `Contract` + 4 `ContractYears`, append to `Transactions`, check the cap → roll back if over | Multi-table atomicity, a domain rollback |
 | b | **Persist game results:** a season in one command (~26k `PlayerGameStats`, 285 compressed `GamePlayLogs`), a week (~1.4k rows, 16 logs), plus standings | Bulk performance (target < 1 s), mixed bulk + ORM |
 | c | **Roster read model:** players + current cap hit + injury status for one team | Query ergonomics, projection speed |
 | d | **Migration:** add a column with a default and backfill it | The migration story on a populated save |

@@ -11,10 +11,10 @@ namespace GridironFrontOffice.Infrastructure.Logging;
 /// The main log's line format (LOGGING.md §3):
 /// <code>
 /// 2026-10-16 14:03:07.412 -04:00 [INF] [GridironFrontOffice.Desktop.App] Window shown
-///     {"SaveId":7,"Phase":"Draft"}          ← only when the event carries properties the message didn't use
+///     {"SaveID":7,"Phase":"Draft"}          ← only when the event carries properties the message didn't use
 /// System.InvalidOperationException: …       ← only when there's an exception
 /// </code>
-/// AppVersion and SessionId enrich every event but are printed once, in the startup banner. Every line passes
+/// AppVersion and SessionID enrich every event but are printed once, in the startup banner. Every line passes
 /// through <see cref="PathTokens"/>, so user folders never reach the file.
 /// </summary>
 public sealed class GfoLogFormatter : ITextFormatter
@@ -22,7 +22,7 @@ public sealed class GfoLogFormatter : ITextFormatter
     /// <summary>Properties that are already on the line, or printed once in the banner.</summary>
     private static readonly HashSet<string> NotRepeated = new(StringComparer.Ordinal)
     {
-        "SourceContext", "AppVersion", "SessionId", "EventId",
+        "SourceContext", "AppVersion", "SessionID", "EventId",
     };
 
     private static readonly MessageTemplateTextFormatter Line = new(

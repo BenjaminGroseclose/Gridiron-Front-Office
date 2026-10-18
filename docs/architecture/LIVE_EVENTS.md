@@ -47,7 +47,7 @@ flowchart TB
 | `LiveEventSession` | The authoritative in-memory state: current step (e.g., pick #), whose turn it is, the **deadline** (monotonic timestamp), pending AI reveals, offers. It's rebuilt from the database on resume. |
 | `IEventScript` | Event-specific rules. `DraftScript`: on-the-clock rotation, expiry → auto-pick, trade handling. |
 | AI actors | Decide immediately (< 200 ms) on a background task, then **schedule the reveal** at `now + deliberationDelay / acceleration`. |
-| Offer book | Expiring offers with an `OfferId` and a `Version`. Accept and expire race through the writer. |
+| Offer book | Expiring offers with an `OfferID` and a `Version`. Accept and expire race through the writer. |
 | `LiveEventStore` (UI) | Holds a UI-friendly projection. It pushes changes to components on events only, never on every tick. |
 
 ---
@@ -71,9 +71,9 @@ Every mutating command carries the **expected version** of what it acts on. Vers
 | Race | Resolution |
 |---|---|
 | User sends in the pick at 0:00.05; the expiry auto-pick fires at 0:00.00 | Both commands carry `PickNo = 15`, `Version = v`. Whichever is dequeued first commits and bumps the version. The second fails with `PickAlreadyMade`. The UI shows the actual result ("Auto-pick: R. Mensah"). |
-| User accepts a trade offer as it expires | `AcceptOffer(offerId, version)` vs. `ExpireOffer(offerId, version)`: first committed wins. |
+| User accepts a trade offer as it expires | `AcceptOffer(offerID, version)` vs. `ExpireOffer(offerID, version)`: first committed wins. |
 | User trades down while on the clock | The trade commit transfers pick ownership. **The deadline carries over** (no reset). The session switches the on-the-clock team. |
-| An AI reveal is scheduled for pick 15, but the user traded into pick 15 | The scheduled reveal carries `(pickNo, ownerTeamId, version)`. It's discarded if stale at execution. |
+| An AI reveal is scheduled for pick 15, but the user traded into pick 15 | The scheduled reveal carries `(pickNo, ownerTeamID, version)`. It's discarded if stale at execution. |
 | The user's queued pick target was just taken | The pick queue resolves at your turn with the next available entry. At expiry, the Big Board → BPA fallback applies. |
 
 ---

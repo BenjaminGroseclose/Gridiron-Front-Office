@@ -187,7 +187,7 @@ Full system: [architecture/UI_DESIGN_SYSTEM.md](architecture/UI_DESIGN_SYSTEM.md
 
 ### Cost and architectural impact
 - **Decide before M1.** Every rating display in the app has to support ranges from day one. The `RatingChip` and `RatingBar` components and the read models must carry an estimate *and* an uncertainty. Retrofitting this later means touching every screen.
-- Data: `ScoutingReport (TeamId, PlayerId, AttributeGroup, Estimate, Sigma, UpdatedOn)` for **prospects** only, stored for the user's team. AI prospect perception can be stored or derived deterministically from (seed, team, player, scouting investment). **Pro fuzz needs no storage**: it's derived from `Hash(leagueSeed, "perception", teamId, playerId, season)` ([PERSISTENCE.md](architecture/PERSISTENCE.md)).
+- Data: `ScoutingReport (TeamID, PlayerID, AttributeGroup, Estimate, Sigma, UpdatedOn)` for **prospects** only, stored for the user's team. AI prospect perception can be stored or derived deterministically from (seed, team, player, scouting investment). **Pro fuzz needs no storage**: it's derived from `Hash(leagueSeed, "perception", teamID, playerID, season)` ([PERSISTENCE.md](architecture/PERSISTENCE.md)).
 - The valuation model (F-13) must work on perceived ratings, not true ones, and discount uncertain estimates (otherwise the team that overestimates a free agent most always wins the bidding and overpays).
 
 ---

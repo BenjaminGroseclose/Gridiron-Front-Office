@@ -323,7 +323,7 @@ flowchart LR
 - [x] **Serilog bootstrap** (`GfoLogging`), shared by both hosts:
   - an async rolling file (daily + 10 MB, 14 files);
   - `Microsoft.*` and `System.*` at Warning;
-  - `AppVersion` and `SessionId` enrichers;
+  - `AppVersion` and `SessionID` enrichers;
   - **a custom line formatter** (`GfoLogFormatter`) that adds a properties line only when there are any, and **tokenizes user folders on every line**.
 - [x] **The startup banner:** version + commit (from the informational version), OS, .NET, WebView2, culture, screen, DPI and monitors, tokenized paths, settings and the session ID.
 - [x] **Global hooks:** `AppDomain.UnhandledException` and `TaskScheduler.UnobservedTaskException` (both hosts); `Application.DispatcherUnhandledException` (Desktop, always fatal).
@@ -352,10 +352,10 @@ flowchart LR
 
 **Application (ports and contracts)**
 - `ILeagueDb`, `ILeagueReadDb` (in M0 they expose only `SaveInfo`), `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher`, `ISaveManager`, `ISaveCatalog`, `ISnapshotService`, `IAppPaths`, `IPlatformServices`, `ILeagueSessionAccessor`. *(As built: the accessor is Infrastructure-internal; the catalog, snapshot and platform ports landed with their implementations in WP7; `IAppPaths` came in WP5.)*
-- The strongly typed ID convention (D-015): `readonly record struct XxxId(int Value)`, plus one EF `ConfigureConventions` rule that converts them all. The first IDs arrive in M1, and the convention gets a test now.
+- The strongly typed ID convention (D-015): `readonly record struct XxxID(int Value)`, plus one EF `ConfigureConventions` rule that converts them all. The first IDs arrive in M1, and the convention gets a test now.
 
 **Infrastructure**
-- `LeagueDbContext` (internal, Fluent API configuration only) with **one table in M0: `SaveInfo`** ([PERSISTENCE.md §5.1](../architecture/PERSISTENCE.md#51-meta)): `SaveId`, `LeagueName`, `SchemaVersion`, app versions, timestamps, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd`, `IsEdited`, **`Generation`**. Columns for later features exist with defaults, so M1+ doesn't migrate `SaveInfo` for settings already decided.
+- `LeagueDbContext` (internal, Fluent API configuration only) with **one table in M0: `SaveInfo`** ([PERSISTENCE.md §5.1](../architecture/PERSISTENCE.md#51-meta)): `SaveID`, `LeagueName`, `SchemaVersion`, app versions, timestamps, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd`, `IsEdited`, **`Generation`**. Columns for later features exist with defaults, so M1+ doesn't migrate `SaveInfo` for settings already decided.
 - The `InitialCreate` migration. Migrations run **on open**, after a pre-upgrade snapshot. A save from a newer app is refused with a clear message.
 - `SqlitePragmaInterceptor` (`synchronous=NORMAL`, `temp_store=MEMORY`, `cache_size`, `busy_timeout`). At creation: `journal_mode=WAL`, `page_size`, `application_id = 'GFO1'`, `user_version`.
 - `LeagueSession`, `LeagueSessionAccessor`, **`SaveWriter`** (the only transaction owner, the nested-command guard, the `Generation` bump, post-commit events), `UnitOfWork` (`CreateCommand` on the same transaction), `SaveReader` (no-tracking), and a minimal in-house `DomainEventDispatcher` (D-020).
@@ -381,7 +381,7 @@ flowchart LR
 **Exit:** every torture test passes on every build.
 
 **Result: built, and every torture test passes on every build** (about 3.5 s in total, and stable over repeated runs).
-- **Core:** `Result<T>`, `DomainError`, `Unit`, `IStronglyTypedId`, and `SaveInfo` with the creation-setting enums.
+- **Core:** `Result<T>`, `DomainError`, `Unit`, `IStronglyTypedID`, and `SaveInfo` with the creation-setting enums.
 - **Application:** the data contracts, plus `ISaveManager`/`OpenSave`/`SaveErrors` and the `SaveOpened`/`SaveClosed` events.
 - **Infrastructure:**
   - the context, the typed-ID convention, the pragma interceptor and the session;
@@ -440,7 +440,7 @@ flowchart LR
 - **The whole §2.1 table is code now,** not just the M0 triggers. Every phase kind has its name and keep count, so the budget could be tested with week snapshots. Nothing triggers the phase kinds until phases exist.
 - **The budget never prunes the safety nets.** `created`, `pre-upgrade` and `pre-restore` are never pruned for the budget, and neither is the snapshot just taken; only phase snapshots give way ([PERSISTENCE.md §2.1](../architecture/PERSISTENCE.md#21-snapshot-policy-proposed-defaults)).
 - **Restore carries the play time over.** `PlayTimeSeconds` is real time spent, so it doesn't go back with the league.
-- **Delete keeps a shared snapshot folder.** If a copy made in Explorer has the same `SaveId`, deleting one file leaves the folder for the other.
+- **Delete keeps a shared snapshot folder.** If a copy made in Explorer has the same `SaveID`, deleting one file leaves the folder for the other.
 - **`IPlatformServices.ShowInFolder`** came with the port, since the Unreadable card's only action is Show in folder.
 - **Not in WP7:** recovering from a corrupt save (Standard's offer, Ironman's automatic restore). It builds on the restore engine and arrives with the Time Machine.
 

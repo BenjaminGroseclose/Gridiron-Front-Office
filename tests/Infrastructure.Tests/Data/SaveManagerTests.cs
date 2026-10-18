@@ -22,11 +22,11 @@ public sealed class SaveManagerTests
         Path.GetFileName(save.Save.FilePath).ShouldBe("Wolves Dynasty.gfo");
         save.Save.SchemaVersion.ShouldBeGreaterThan(0);
         save.ScalarText("PRAGMA journal_mode").ShouldBe("wal");
-        save.Scalar("PRAGMA application_id").ShouldBe(SqliteFile.ApplicationId);
+        save.Scalar("PRAGMA application_id").ShouldBe(SqliteFile.ApplicationID);
         save.Scalar("PRAGMA user_version").ShouldBe(save.Save.SchemaVersion);
 
         var info = await save.Reader.QueryAsync((db, ct) => db.SaveInfo.SingleAsync(ct), Ct);
-        info.SaveId.ShouldBe(save.Save.SaveId);
+        info.SaveID.ShouldBe(save.Save.SaveID);
         info.LeagueName.ShouldBe("Wolves Dynasty");
         info.SchemaVersion.ShouldBe(save.Save.SchemaVersion);
         info.AppVersionCreated.ShouldBe("0.0.1+test");
@@ -60,7 +60,7 @@ public sealed class SaveManagerTests
         await save.Saves.CloseAsync(Ct);
 
         save.Saves.Current.ShouldBeNull();
-        events.ShouldBe([new SaveClosed(save.Save.SaveId)]);
+        events.ShouldBe([new SaveClosed(save.Save.SaveID)]);
         File.Exists(path + "-wal").ShouldBeFalse("The WAL is checkpointed into the file.");
         save.Scalar("SELECT Generation FROM SaveInfo").ShouldBe(2);   // create + the close that records play time
         File.Delete(path);                                              // throws if anything still holds the file

@@ -188,7 +188,7 @@ Every rating a screen shows passes through one Application service:
 public interface IPerception
 {
     // The viewer is always a team: the user's team for screens, each AI team for its own decisions.
-    PerceivedPlayer Perceive(TeamId viewer, PlayerSnapshot player);
+    PerceivedPlayer Perceive(TeamID viewer, PlayerSnapshot player);
 }
 
 public readonly record struct PerceivedRating(float Estimate, float Sigma);  // Sigma = 0 means exact
@@ -223,19 +223,19 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ## 5. Data model
 
-- `Players`: `PlayerId`, `TeamId?`, `Status` (Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired), `Position`, names, `BirthDate`, `CollegeId`, `Hometown`, `ExperienceSeasons`, draft info, `JerseyNumber`; **measurables** (wide columns); **42 true attribute columns** (wide; floats); **hidden ratings** (`Potential`, `DevCurve`, `BustRisk`, `PeakAgeOffset`, `InjuryProneness`).
-- `PlayerTraits (PlayerId, Trait, Value)`: personality, extensible without schema changes (§4.7).
-- `RatingHistory (PlayerId, Season, Ovr, key attributes)`: one row per season.
-- `Colleges (CollegeId, Name, Region, Tier)`: copied from the data file at creation.
+- `Players`: `PlayerID`, `TeamID?`, `Status` (Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired), `Position`, names, `BirthDate`, `CollegeID`, `Hometown`, `ExperienceSeasons`, draft info, `JerseyNumber`; **measurables** (wide columns); **42 true attribute columns** (wide; floats); **hidden ratings** (`Potential`, `DevCurve`, `BustRisk`, `PeakAgeOffset`, `InjuryProneness`).
+- `PlayerTraits (PlayerID, Trait, Value)`: personality, extensible without schema changes (§4.7).
+- `RatingHistory (PlayerID, Season, Ovr, key attributes)`: one row per season.
+- `Colleges (CollegeID, Name, Region, Tier)`: copied from the data file at creation.
 - **Data files:** `data/players/positions.v1.json` (roster targets, OVR weights, archetypes, age distributions, measurable distributions), `traits.v1.json`, `jersey-rules.v1.json`, `generation.v1.json` (tier targets), `data/names/first.v1.json`, `last.v1.json`, `data/places/hometowns.v1.json`, `data/league/colleges.v1.json`, `data/blocklists/famous-people.json`.
-- **Read models** (all built through `IPerception` for the user's team): `PlayerRowDto` (id, name, position, age, team, OVR estimate + sigma, potential grade + spread, archetype), `PlayerDetailDto` (+ every attribute estimate + sigma, measurables, bio, personality descriptors where visible, contract summary).
+- **Read models** (all built through `IPerception` for the user's team): `PlayerRowDto` (ID, name, position, age, team, OVR estimate + sigma, potential grade + spread, archetype), `PlayerDetailDto` (+ every attribute estimate + sigma, measurables, bio, personality descriptors where visible, contract summary).
 
 ## 6. Application services
 
 | Service | Commands | Queries | Domain events |
 |---|---|---|---|
 | `Players/PlayerGenerator` | Used inside `CreateLeague` (and the yearly draft class step from M5) | — | `PlayersGenerated` |
-| `Players/PlayerQueries` | — | `GetRoster(teamId)`, `GetPlayer(playerId)`, `SearchPlayers(filter)`, all for the user's team as the viewer | — |
+| `Players/PlayerQueries` | — | `GetRoster(teamID)`, `GetPlayer(playerID)`, `SearchPlayers(filter)`, all for the user's team as the viewer | — |
 | `Players/Perception` (`IPerception`) | — | Used by every query above and by the AI with its own team as the viewer | — |
 | `Players/OverallCalculator` (Core, pure) | — | OVR, archetype label and the potential grade from ratings | — |
 

@@ -19,7 +19,7 @@
     <PackageReference Include="Serilog.Sinks.Debug" />
   </ItemGroup>
   <ItemGroup>
-    <!-- The torture tests reach the internals (LeagueDbContext, TypedIds, SqliteFile). -->
+    <!-- The torture tests reach the internals (LeagueDbContext, TypedIDs, SqliteFile). -->
     <InternalsVisibleTo Include="GridironFrontOffice.Infrastructure.Tests" />
   </ItemGroup>
 </Project>

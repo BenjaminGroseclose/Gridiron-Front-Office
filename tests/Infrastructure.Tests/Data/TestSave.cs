@@ -51,7 +51,7 @@ internal sealed class TestSave : IAsyncDisposable
 
     public string SavesPath => Path.Combine(RootPath, "Saves");
 
-    public string SnapshotsPath => Path.Combine(RootPath, "Snapshots", Save.SaveId.ToString());
+    public string SnapshotsPath => Path.Combine(RootPath, "Snapshots", Save.SaveID.ToString());
 
     public static async Task<TestSave> CreateAsync(string leagueName = "Torture League", Action<IServiceCollection>? configure = null)
     {
@@ -78,7 +78,7 @@ internal sealed class TestSave : IAsyncDisposable
     public Task CreateProbeTableAsync(string table = "Probe") =>
         Writer.ExecuteAsync("Test.CreateProbeTable", async (uow, ct) =>
         {
-            await using var create = uow.CreateCommand($"CREATE TABLE {table} (Id INTEGER PRIMARY KEY, Value TEXT NOT NULL);");
+            await using var create = uow.CreateCommand($"CREATE TABLE {table} (ID INTEGER PRIMARY KEY, Value TEXT NOT NULL);");
             await create.ExecuteNonQueryAsync(ct);
             return Result.Ok();
         });

@@ -15,12 +15,12 @@ public sealed class SnapshotServiceTests
     {
         await using var save = await TestSave.CreateAsync();
 
-        var snapshots = await save.Snapshots.ListAsync(save.Save.SaveId, Ct);
+        var snapshots = await save.Snapshots.ListAsync(save.Save.SaveID, Ct);
 
         var created = snapshots.ShouldHaveSingleItem();
-        (created.Name, created.Kind, created.SaveId).ShouldBe(("created", SnapshotKind.Created, save.Save.SaveId));
+        (created.Name, created.Kind, created.SaveID).ShouldBe(("created", SnapshotKind.Created, save.Save.SaveID));
         created.FilePath.ShouldBe(Path.Combine(save.SnapshotsPath, "created.gfo"));
-        TestSave.ScalarText(created.FilePath, "PRAGMA application_id").ShouldBe(SqliteFile.ApplicationId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        TestSave.ScalarText(created.FilePath, "PRAGMA application_id").ShouldBe(SqliteFile.ApplicationID.ToString(System.Globalization.CultureInfo.InvariantCulture));
         TestSave.ScalarText(created.FilePath, "SELECT LeagueName FROM SaveInfo").ShouldBe(save.Save.LeagueName);
     }
 
@@ -68,7 +68,7 @@ public sealed class SnapshotServiceTests
         await save.Snapshots.TakeAsync(SnapshotTrigger.PreUpgrade(1), Ct);
         await save.Snapshots.TakeAsync(SnapshotTrigger.PreUpgrade(2), Ct);
 
-        var names = (await save.Snapshots.ListAsync(save.Save.SaveId, Ct)).Select(s => s.Name);
+        var names = (await save.Snapshots.ListAsync(save.Save.SaveID, Ct)).Select(s => s.Name);
         names.ShouldBe(["pre-upgrade-v2", "S2027-W06", "S2027-W05", "S2027-W04", "S2027-W03", "created"]);   // newest first
     }
 
@@ -77,20 +77,20 @@ public sealed class SnapshotServiceTests
     {
         var options = new SnapshotOptions();
         await using var save = await TestSave.CreateAsync(configure: s => s.AddSingleton(options));
-        var size = (await save.Snapshots.ListAsync(save.Save.SaveId, Ct)).Single().SizeBytes;
+        var size = (await save.Snapshots.ListAsync(save.Save.SaveID, Ct)).Single().SizeBytes;
         options.BudgetBytes = size * 5 / 2;   // room for two and a half snapshots
 
         await save.Snapshots.TakeAsync(SnapshotTrigger.TrainingCamp(2027), Ct);
         await save.Snapshots.TakeAsync(SnapshotTrigger.Week(2027, 1), Ct);
         await save.Snapshots.TakeAsync(SnapshotTrigger.Week(2027, 2), Ct);
 
-        (await save.Snapshots.ListAsync(save.Save.SaveId, Ct)).Select(s => s.Name).ShouldBe(["S2027-W02", "created"]);
+        (await save.Snapshots.ListAsync(save.Save.SaveID, Ct)).Select(s => s.Name).ShouldBe(["S2027-W02", "created"]);
 
         options.BudgetBytes = 1;   // even a budget nothing fits keeps the safety nets and the snapshot just taken
         await save.Snapshots.TakeAsync(SnapshotTrigger.PreRestore, Ct);
         await save.Snapshots.TakeAsync(SnapshotTrigger.SeasonEnd(2027), Ct);
 
-        (await save.Snapshots.ListAsync(save.Save.SaveId, Ct)).Select(s => s.Name).ShouldBe(["S2027-end", "pre-restore", "created"]);
+        (await save.Snapshots.ListAsync(save.Save.SaveID, Ct)).Select(s => s.Name).ShouldBe(["S2027-end", "pre-restore", "created"]);
     }
 
     [Fact]
@@ -102,7 +102,7 @@ public sealed class SnapshotServiceTests
 
         await save.Snapshots.TakeAsync(SnapshotTrigger.Week(2027, 1), Ct);
 
-        (await save.Snapshots.ListAsync(save.Save.SaveId, Ct)).Select(s => s.Name).ShouldBe(["S2027-W01", "created"]);
+        (await save.Snapshots.ListAsync(save.Save.SaveID, Ct)).Select(s => s.Name).ShouldBe(["S2027-W01", "created"]);
         File.Exists(notes).ShouldBeTrue();
     }
 

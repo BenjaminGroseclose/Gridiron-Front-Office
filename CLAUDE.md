@@ -90,6 +90,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
 
 - **Docs first.** Write a feature spec (`docs/features/_TEMPLATE.md` → `F-xx_NAME.md`) right before building a feature. Keep code and docs in agreement within the same change.
 - **Git (D-066):** commit messages are `(type) *module* : summary` (types `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`), never Conventional Commits. Branches are `type/short-name`. Each milestone is one branch (`feat/m0-foundations`) with commits per work package, merged unsquashed when its exit checklist passes. Spike code is deleted once its results are recorded.
+- **Write `ID`, never `Id` (D-069):** `SaveID`, `PlayerID`, `IStronglyTypedID`, `saveID`, `IDs`, in code, columns, log properties and docs. Only outside names keep `Id` (`EventId`, `MigrationId`); `NamingRulesTests` enforces it.
 - **IDs:** features `F-xx`, milestones `M-x`, decisions `D-xxx`, questions `Q-xx`. When a question is answered: add a `D-xxx` (quote the owner's exact words), replace the question body with a pointer, update every affected doc, and update **this file** if a rule changed.
 - Stay inside the current milestone's scope (`docs/ROADMAP.md`). Park new ideas in `docs/IDEAS.md` instead of building them.
 - Every feature ships with its **AI counterpart** (AI teams use the same commands and validation as the user; no information cheating). There are no difficulty presets (D-042): the AI judges the user's offers with exactly the logic it applies to other AI teams.

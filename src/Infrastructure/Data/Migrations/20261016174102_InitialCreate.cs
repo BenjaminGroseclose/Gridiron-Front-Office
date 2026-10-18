@@ -15,7 +15,7 @@ namespace GridironFrontOffice.Infrastructure.Data.Migrations
                 name: "SaveInfo",
                 columns: table => new
                 {
-                    SaveId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    SaveID = table.Column<Guid>(type: "TEXT", nullable: false),
                     LeagueName = table.Column<string>(type: "TEXT", nullable: false),
                     SchemaVersion = table.Column<int>(type: "INTEGER", nullable: false),
                     AppVersionCreated = table.Column<string>(type: "TEXT", nullable: false),
@@ -33,7 +33,7 @@ namespace GridironFrontOffice.Infrastructure.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SaveInfo", x => x.SaveId);
+                    table.PrimaryKey("PK_SaveInfo", x => x.SaveID);
                 });
         }
 

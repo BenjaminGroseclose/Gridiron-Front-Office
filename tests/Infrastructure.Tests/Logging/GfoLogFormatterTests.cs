@@ -33,7 +33,7 @@ public sealed class GfoLogFormatterTests
     public void Context_properties_get_a_second_line_but_the_banner_ones_do_not()
     {
         string output;
-        using (LogContext.PushProperty("SaveId", 12))
+        using (LogContext.PushProperty("SaveID", 12))
         using (LogContext.PushProperty("Phase", "Draft"))
         {
             output = Render(log => log.Information("Advanced"));
@@ -42,10 +42,10 @@ public sealed class GfoLogFormatterTests
         var lines = Lines(output);
         lines.Length.ShouldBe(2);
         lines[1].ShouldStartWith("    {");
-        lines[1].ShouldContain("\"SaveId\":12");
+        lines[1].ShouldContain("\"SaveID\":12");
         lines[1].ShouldContain("\"Phase\":\"Draft\"");
         output.ShouldNotContain("AppVersion");
-        output.ShouldNotContain("SessionId");
+        output.ShouldNotContain("SessionID");
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public sealed class GfoLogFormatterTests
         using (var logger = new LoggerConfiguration()
                    .Enrich.FromLogContext()
                    .Enrich.WithProperty("AppVersion", "0.0.1+abc1234")
-                   .Enrich.WithProperty("SessionId", Guid.Empty)
+                   .Enrich.WithProperty("SessionID", Guid.Empty)
                    .WriteTo.Sink(new FormattingSink(new GfoLogFormatter(), writer))
                    .CreateLogger())
         {

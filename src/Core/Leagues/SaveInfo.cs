@@ -7,7 +7,7 @@ namespace GridironFrontOffice.Core.Leagues;
 /// </summary>
 public sealed class SaveInfo
 {
-    public Guid SaveId { get; set; }
+    public Guid SaveID { get; set; }
 
     public string LeagueName { get; set; } = "";
 

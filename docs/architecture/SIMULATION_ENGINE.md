@@ -36,9 +36,9 @@ flowchart LR
 ```
 
 **`SimGameInput`**
-- `GameId`, `Seed`, `EngineVersion`, `TuningVersion`, rules (OT format, kickoff rules)
+- `GameID`, `Seed`, `EngineVersion`, `TuningVersion`, rules (OT format, kickoff rules)
 - For each team, a `SimTeam`:
-  - `SimPlayer[]` (dressed players): `Id`, `Position`, the rating vector (**true ratings**; the engine plays the real game and fog of war affects only *perception*), stamina, injury status, traits
+  - `SimPlayer[]` (dressed players): `ID`, `Position`, the rating vector (**true ratings**; the engine plays the real game and fog of war affects only *perception*), stamina, injury status, traits
   - Depth chart by package and slot
   - `GamePlan` (§5) and `CoachTendencies` (play-calling style, 4th-down aggression, tempo)
   - Home/away. Weather and surface come later.
@@ -166,7 +166,7 @@ The user is **GM + game plan** ([D-009](../DECISIONS.md#d-009-game-day-role-gm--
 ## 6. Randomness and determinism
 
 - **PRNG:** an in-house xoshiro256** (or PCG32) in `GridironFrontOffice.Simulation.Random`. `System.Random` is banned because its seeded algorithm is an implementation detail that could change between .NET versions, and that would break golden tests and reproducibility.
-- **Seed derivation:** `gameSeed = StableHash(leagueSeed, "game", gameId)`. Inside a game, a single PRNG stream is consumed in a fixed order.
+- **Seed derivation:** `gameSeed = StableHash(leagueSeed, "game", gameID)`. Inside a game, a single PRNG stream is consumed in a fixed order.
 - **Determinism hazards to avoid:** iterating over `Dictionary`/`HashSet` (order isn't a contract), parallelism *inside* a game, `DateTime.Now`, culture-sensitive parsing, and floating-point reductions in a nondeterministic order. Parallelism *across* games is fine.
 - **Floating point:** deterministic on the same build and machine. Cross-architecture (x64 vs. ARM64) bit-exactness is not guaranteed and not required.
 - **Engine versioning:** `EngineVersion` (code) and `TuningVersion` (data) are stored with every game. Golden tests pin the expected output for a set of canonical inputs. Changing tuning means updating the golden files on purpose.
@@ -180,8 +180,8 @@ Every play records **who won the rep that mattered**:
 ```csharp
 public readonly record struct DecidingMatchup(
     MatchupKind Kind,          // PassRushVsBlock, CoverageVsRoute, RunBlockVsRunD, CarrierVsTackler, KickVsDistance, …
-    PlayerId Winner,
-    PlayerId Loser,
+    PlayerID Winner,
+    PlayerID Loser,
     float Margin);             // how decisive (normalized)
 ```
 

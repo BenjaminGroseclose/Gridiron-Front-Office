@@ -21,29 +21,29 @@ internal static partial class DataLog
     [LoggerMessage(EventId = 2004, Level = LogLevel.Error, Message = "Rolling back {Operation} failed too")]
     public static partial void RollbackFailed(ILogger logger, Exception exception, string operation);
 
-    [LoggerMessage(EventId = 2010, Level = LogLevel.Information, Message = "Created save \"{LeagueName}\" ({SaveId}) at {Path}")]
-    public static partial void SaveCreated(ILogger logger, string leagueName, Guid saveId, string path);
+    [LoggerMessage(EventId = 2010, Level = LogLevel.Information, Message = "Created save \"{LeagueName}\" ({SaveID}) at {Path}")]
+    public static partial void SaveCreated(ILogger logger, string leagueName, Guid saveID, string path);
 
-    [LoggerMessage(EventId = 2011, Level = LogLevel.Information, Message = "Opened save \"{LeagueName}\" ({SaveId}), schema {SchemaVersion}")]
-    public static partial void SaveOpened(ILogger logger, string leagueName, Guid saveId, int schemaVersion);
+    [LoggerMessage(EventId = 2011, Level = LogLevel.Information, Message = "Opened save \"{LeagueName}\" ({SaveID}), schema {SchemaVersion}")]
+    public static partial void SaveOpened(ILogger logger, string leagueName, Guid saveID, int schemaVersion);
 
-    [LoggerMessage(EventId = 2012, Level = LogLevel.Information, Message = "Upgraded save {SaveId} from schema {From} to {To} after snapshot {Snapshot}")]
-    public static partial void SaveUpgraded(ILogger logger, Guid saveId, int from, int to, string snapshot);
+    [LoggerMessage(EventId = 2012, Level = LogLevel.Information, Message = "Upgraded save {SaveID} from schema {From} to {To} after snapshot {Snapshot}")]
+    public static partial void SaveUpgraded(ILogger logger, Guid saveID, int from, int to, string snapshot);
 
-    [LoggerMessage(EventId = 2013, Level = LogLevel.Information, Message = "Closed save {SaveId} after {Minutes:F1} min")]
-    public static partial void SaveClosed(ILogger logger, Guid saveId, double minutes);
+    [LoggerMessage(EventId = 2013, Level = LogLevel.Information, Message = "Closed save {SaveID} after {Minutes:F1} min")]
+    public static partial void SaveClosed(ILogger logger, Guid saveID, double minutes);
 
     [LoggerMessage(EventId = 2014, Level = LogLevel.Warning, Message = "Didn't open {File}: {Error}")]
     public static partial void SaveRefused(ILogger logger, string file, string error);
 
-    [LoggerMessage(EventId = 2015, Level = LogLevel.Information, Message = "Took snapshot {Name} of save {SaveId} in {ElapsedMs} ms ({SizeKb} KB)")]
-    public static partial void SnapshotTaken(ILogger logger, string name, Guid saveId, long elapsedMs, long sizeKb);
+    [LoggerMessage(EventId = 2015, Level = LogLevel.Information, Message = "Took snapshot {Name} of save {SaveID} in {ElapsedMs} ms ({SizeKb} KB)")]
+    public static partial void SnapshotTaken(ILogger logger, string name, Guid saveID, long elapsedMs, long sizeKb);
 
-    [LoggerMessage(EventId = 2016, Level = LogLevel.Information, Message = "Pruned snapshot {Name} of save {SaveId}")]
-    public static partial void SnapshotPruned(ILogger logger, string name, Guid saveId);
+    [LoggerMessage(EventId = 2016, Level = LogLevel.Information, Message = "Pruned snapshot {Name} of save {SaveID}")]
+    public static partial void SnapshotPruned(ILogger logger, string name, Guid saveID);
 
-    [LoggerMessage(EventId = 2017, Level = LogLevel.Information, Message = "Restored save {SaveId} from snapshot {Name}; the state before it is snapshot pre-restore")]
-    public static partial void SaveRestored(ILogger logger, Guid saveId, string name);
+    [LoggerMessage(EventId = 2017, Level = LogLevel.Information, Message = "Restored save {SaveID} from snapshot {Name}; the state before it is snapshot pre-restore")]
+    public static partial void SaveRestored(ILogger logger, Guid saveID, string name);
 
     [LoggerMessage(EventId = 2018, Level = LogLevel.Information, Message = "Moved {File} to the Recycle Bin (with its snapshots: {WithSnapshots})")]
     public static partial void SaveDeleted(ILogger logger, string file, bool withSnapshots);

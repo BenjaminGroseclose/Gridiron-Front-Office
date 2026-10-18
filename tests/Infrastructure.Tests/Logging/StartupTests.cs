@@ -35,7 +35,7 @@ public sealed partial class StartupTests
         banner.ShouldContain("Screen: 2560x1440 @ 100%, 1 monitor");
         banner.ShouldContain(@"Paths: data=%LOCALAPPDATA%\GridironFrontOffice");
         banner.ShouldContain("theme=Dark accent=Team density=Compact logLevel=Information logSql=off simTrace=off");
-        banner.ShouldContain($"Session: {identity.SessionId}");
+        banner.ShouldContain($"Session: {identity.SessionID}");
         banner.ShouldNotContain(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), Case.Insensitive);
     }
 

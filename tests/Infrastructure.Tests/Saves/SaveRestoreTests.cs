@@ -36,7 +36,7 @@ public sealed class SaveRestoreTests
         save.ScalarText("PRAGMA integrity_check").ShouldBe("ok");
         File.Exists(save.Save.FilePath + ".restore-tmp").ShouldBeFalse();
 
-        var preRestore = (await save.Snapshots.ListAsync(save.Save.SaveId, Ct)).Single(s => s.Kind == SnapshotKind.PreRestore);
+        var preRestore = (await save.Snapshots.ListAsync(save.Save.SaveID, Ct)).Single(s => s.Kind == SnapshotKind.PreRestore);
         TestSave.ScalarText(preRestore.FilePath, "SELECT group_concat(Value) FROM Probe").ShouldBe("week 8,week 9");
         TestSave.ScalarText(week8.FilePath, "SELECT group_concat(Value) FROM Probe").ShouldBe("week 8", "The snapshot itself is never touched.");
     }
@@ -49,7 +49,7 @@ public sealed class SaveRestoreTests
         var empty = await save.Snapshots.TakeAsync(SnapshotTrigger.Week(2027, 1), Ct);
         await save.InsertProbeAsync("progress");
         await save.Saves.RestoreAsync(empty, Ct);
-        var preRestore = (await save.Snapshots.ListAsync(save.Save.SaveId, Ct)).Single(s => s.Kind == SnapshotKind.PreRestore);
+        var preRestore = (await save.Snapshots.ListAsync(save.Save.SaveID, Ct)).Single(s => s.Kind == SnapshotKind.PreRestore);
 
         var undone = await save.Saves.RestoreAsync(preRestore, Ct);
 
@@ -110,13 +110,13 @@ public sealed class SaveRestoreTests
     {
         await using var save = await TestSave.CreateAsync("Mine");
         var other = await save.Saves.CreateAsync("Other", Ct);
-        var otherSnapshot = (await save.Snapshots.ListAsync(other.Value.SaveId, Ct)).Single();
+        var otherSnapshot = (await save.Snapshots.ListAsync(other.Value.SaveID, Ct)).Single();
         await save.Saves.OpenAsync(save.Save.FilePath, Ct);
 
         (await save.Saves.RestoreAsync(otherSnapshot, Ct)).Error!.Code.ShouldBe("SnapshotNotForThisSave");
 
-        // The same file presented as this league's snapshot is refused too: its SaveId says otherwise.
-        (await save.Saves.RestoreAsync(otherSnapshot with { SaveId = save.Save.SaveId }, Ct)).Error!.Code.ShouldBe("SnapshotNotForThisSave");
+        // The same file presented as this league's snapshot is refused too: its SaveID says otherwise.
+        (await save.Saves.RestoreAsync(otherSnapshot with { SaveID = save.Save.SaveID }, Ct)).Error!.Code.ShouldBe("SnapshotNotForThisSave");
         save.Saves.Current!.LeagueName.ShouldBe("Mine");
     }
 

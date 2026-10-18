@@ -143,7 +143,7 @@ flowchart TD
 
 #### `GridironFrontOffice.Core` (domain)
 - Entities and value objects: `Team`, `Player`, `Contract`, `ContractYear`, `DraftPick`, `Game`, `Injury`, `Transaction`, …
-- **Strongly typed IDs** (`readonly record struct PlayerId(int Value)`), mapped to `INTEGER` keys ([D-015](DECISIONS.md#d-015-integer-keys-with-strongly-typed-ids)).
+- **Strongly typed IDs** (`readonly record struct PlayerID(int Value)`), mapped to `INTEGER` keys ([D-015](DECISIONS.md#d-015-integer-keys-with-strongly-typed-ids)).
 - **Pure rules** that are unit-testable without a database: cap hit and dead money math, contract proration, position overall formulas, tiebreakers, roster limit validation, draft order.
 - `Money` is a `long` number of whole dollars. **No `decimal` and no floating point for money** (SQLite stores `decimal` as TEXT, which breaks ordering and aggregation).
 - In-game dates use `DateOnly`, stored as ISO text so they sort correctly.
@@ -233,7 +233,7 @@ erDiagram
 - **Player lifecycle in one table.** `Players.Status` ∈ {Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired}. Prospects are players with a draft class and no team.
 - **Ratings.** Current true ratings live on the player and are used only by the sim. `RatingHistory` keeps one snapshot per season for history and development charts. **Every rating a screen or an AI sees goes through `IPerception`** for a viewing team ([F-03 §4.9](features/F-03_PLAYERS.md#49-perception-the-fog-of-war-boundary)): exact for that team's own roster, a derived fixed fuzz for other pros, and `ScoutingReport` state for prospects ([D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)).
 - **Contracts.** A contract header plus one `ContractYear` row per season (base salary, prorated bonus, guarantees, cap hit). Cap math is pure functions in Core.
-- **Draft picks** are first-class assets (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick` once known). Picks can be traded for the upcoming draft and the next two (the NFL's horizon, confirmed in the F-19 spec).
+- **Draft picks** are first-class assets (`Season`, `Round`, `OriginalTeamID`, `OwnerTeamID`, `OverallPick` once known). Picks can be traded for the upcoming draft and the next two (the NFL's horizon, confirmed in the F-19 spec).
 - **The transaction log** is append-only: every signing, release, trade, claim and pick. It's the source for history and the news engine.
 
 Schema details: [architecture/PERSISTENCE.md](architecture/PERSISTENCE.md).
@@ -340,7 +340,7 @@ Serilog writes to `%LOCALAPPDATA%\GridironFrontOffice\logs\gfo-YYYYMMDD.log`. Ro
 | What | Path |
 |---|---|
 | Saves | `%LOCALAPPDATA%\GridironFrontOffice\Saves\*.gfo` |
-| Snapshots | `%LOCALAPPDATA%\GridironFrontOffice\Snapshots\<SaveId>\*.gfo` |
+| Snapshots | `%LOCALAPPDATA%\GridironFrontOffice\Snapshots\<SaveID>\*.gfo` |
 | Logs | `%LOCALAPPDATA%\GridironFrontOffice\logs\` |
 | Settings | `%LOCALAPPDATA%\GridironFrontOffice\settings.json` |
 | Crash dumps / diagnostics zips | `%LOCALAPPDATA%\GridironFrontOffice\diagnostics\` |
@@ -358,7 +358,7 @@ All paths go through `IAppPaths`, so DevHost, tests and SimLab can redirect them
 
 ### 7.5 Randomness and determinism
 - One PRNG implementation, in `GridironFrontOffice.Simulation.Random`. `System.Random` is **banned** in Core, Simulation and Application (with a banned-API analyzer).
-- Seeds are **derived, not chained**: `seed(game) = Hash(leagueSeed, "game", gameId)`, `seed(progression) = Hash(leagueSeed, "prog", season, playerId)`. A change in one system doesn't shift the random sequence of another, so golden tests stay stable.
+- Seeds are **derived, not chained**: `seed(game) = Hash(leagueSeed, "game", gameID)`, `seed(progression) = Hash(leagueSeed, "prog", season, playerID)`. A change in one system doesn't shift the random sequence of another, so golden tests stay stable.
 - Live events involve human timing and are **not** reproducible. Their decisions are logged with inputs at Information level instead.
 
 ### 7.6 Localization

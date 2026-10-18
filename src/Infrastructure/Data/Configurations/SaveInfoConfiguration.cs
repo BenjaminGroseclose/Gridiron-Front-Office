@@ -12,8 +12,8 @@ internal sealed class SaveInfoConfiguration : IEntityTypeConfiguration<SaveInfo>
     public void Configure(EntityTypeBuilder<SaveInfo> builder)
     {
         builder.ToTable("SaveInfo");
-        builder.HasKey(x => x.SaveId);
-        builder.Property(x => x.SaveId).ValueGeneratedNever();
+        builder.HasKey(x => x.SaveID);
+        builder.Property(x => x.SaveID).ValueGeneratedNever();
         builder.Property(x => x.LeagueName).IsRequired();
         builder.Property(x => x.AppVersionCreated).IsRequired();
         builder.Property(x => x.AppVersionLastOpened).IsRequired();

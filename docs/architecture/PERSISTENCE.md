@@ -25,7 +25,7 @@ flowchart LR
     subgraph Live["Live save (autosave)"]
       DB[("Dynasty.gfo<br/>+ -wal / -shm while open")]
     end
-    subgraph Snap["Snapshots (per SaveId)"]
+    subgraph Snap["Snapshots (per SaveID)"]
       S1[("S2027-camp.gfo")]
       S2[("S2027-W08.gfo")]
       S3[("S2028-pre-draft.gfo")]
@@ -68,7 +68,7 @@ flowchart LR
 - **Ironman exception: corruption-only recovery.** Snapshots are still taken. If the live file fails its integrity check on open, or a schema migration fails, the app restores the **most recent good snapshot automatically**. The player never chooses the point in time.
 - **As built (M0 WP7): `ISaveManager.RestoreAsync(snapshot)`**, the engine the M3 Time Machine will call.
   1. **Rules first:** the snapshot must belong to the open save. `SaveRules.CanRestore` refuses Ironman (`IronmanNoRestore`) and a running live event (`LiveEventRunning`, through `ILiveEventStatus`, which reports "none" until M2).
-  2. **The snapshot is checked before anything closes:** it exists, it's a GFO file, `quick_check` passes, its `SaveId` matches, and its schema isn't newer. A bad snapshot leaves the save open and untouched.
+  2. **The snapshot is checked before anything closes:** it exists, it's a GFO file, `quick_check` passes, its `SaveID` matches, and its schema isn't newer. A bad snapshot leaves the save open and untouched.
   3. **Stage a copy:** `VACUUM INTO` from the snapshot to `{save}.restore-tmp`, switched to WAL. Staging first is what makes restoring `pre-restore` itself (undo) work, since step 5 replaces that snapshot.
   4. **Close** the save (recording the session).
   5. **Snapshot the current state as `pre-restore`.**
@@ -145,9 +145,9 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.1 Meta
 | Table | Key columns | Notes |
 |---|---|---|
-| `SaveInfo` (singleton). **M0 has:** `SaveId`, `LeagueName`, `SchemaVersion`, both app versions, both timestamps, `PlayTimeSeconds`, the creation settings and `Generation`. The league position (`UserTeamId`, season, phase, date, seed) arrives with M1. Enums are stored by name. | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
+| `SaveInfo` (singleton). **M0 has:** `SaveID`, `LeagueName`, `SchemaVersion`, both app versions, both timestamps, `PlayTimeSeconds`, the creation settings and `Generation`. The league position (`UserTeamID`, season, phase, date, seed) arrives with M1. Enums are stored by name. | `SaveID (GUID)`, `LeagueName`, `UserTeamID`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
 | `LeagueRules` (singleton) | Cap, cap growth, roster limits, practice squad size, minimum salaries table, live event toggles | Copied from defaults at creation |
-| `AdvanceJournal` | `OperationId`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
+| `AdvanceJournal` | `OperationID`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
 | `LiveEventState` | `EventType`, `Status`, `StateJson`, `ClockRemainingMs`, `LastHeartbeatUtc` | See [LIVE_EVENTS.md](LIVE_EVENTS.md) |
 
 ### 5.2 League structure
@@ -156,32 +156,32 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.3 People
 | Table | Key columns |
 |---|---|
-| `Players` | `PlayerId`, `TeamId?`, `Status`, `Position`, names, `BirthDate`, `College`, `Hometown`, `DraftSeason/Round/Pick/TeamId`, `ExperienceSeasons`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
-| `RatingHistory` | `PlayerId`, `Season`, overall + key attributes (one snapshot per season) |
-| `Contracts` | `ContractId`, `PlayerId`, `TeamId`, `SignedOn`, `Type` (Rookie, Veteran, Tag, Minimum, …), `TotalValue`, `SigningBonus`, `IsActive` |
-| `ContractYears` | `ContractId`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
-| `DeadMoney` | `TeamId`, `Season`, `PlayerId`, `Amount`, `Reason` |
-| `Injuries` | `PlayerId`, `GameId?`, `Type`, `BodyPart`, `Severity`, `OccurredOn`, `ExpectedReturn`, `ActualReturn` |
-| `ScoutingReports` | `TeamId`, `PlayerId`, `AttributeGroup`, `Estimate`, `Sigma`, `UpdatedOn` for **prospects only** (the user's team is persisted; AI perception may be derived, see §8). Pro perception is never stored: it's a fixed fuzz derived from `Hash(leagueSeed, "perception", teamId, playerId, season)` ([D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)). |
+| `Players` | `PlayerID`, `TeamID?`, `Status`, `Position`, names, `BirthDate`, `College`, `Hometown`, `DraftSeason/Round/Pick/TeamID`, `ExperienceSeasons`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
+| `RatingHistory` | `PlayerID`, `Season`, overall + key attributes (one snapshot per season) |
+| `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `SignedOn`, `Type` (Rookie, Veteran, Tag, Minimum, …), `TotalValue`, `SigningBonus`, `IsActive` |
+| `ContractYears` | `ContractID`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
+| `DeadMoney` | `TeamID`, `Season`, `PlayerID`, `Amount`, `Reason` |
+| `Injuries` | `PlayerID`, `GameID?`, `Type`, `BodyPart`, `Severity`, `OccurredOn`, `ExpectedReturn`, `ActualReturn` |
+| `ScoutingReports` | `TeamID`, `PlayerID`, `AttributeGroup`, `Estimate`, `Sigma`, `UpdatedOn` for **prospects only** (the user's team is persisted; AI perception may be derived, see §8). Pro perception is never stored: it's a fixed fuzz derived from `Hash(leagueSeed, "perception", teamID, playerID, season)` ([D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)). |
 
 ### 5.4 Season and games
 | Table | Key columns |
 |---|---|
-| `Seasons` | `Season`, `CapAmount`, `ChampionTeamId`, … |
-| `Games` | `GameId`, `Season`, `Week`, `Type` (Reg, WC, DIV, CONF, CHAMP; no preseason, [D-038](../DECISIONS.md#d-038-no-preseason-games-in-10)), `HomeTeamId`, `AwayTeamId`, `Date`, `HomeScore`, `AwayScore`, `Overtime`, `Status`, `EngineVersion`, `Seed` |
-| `TeamGameStats` | `GameId`, `TeamId`, ~40 stat columns |
-| `PlayerGameStats` | `GameId`, `PlayerId`, `TeamId`, ~60 stat columns (wide; SQLite stores 0 and 1 in zero payload bytes, so sparse wide rows are cheap) |
-| `PlayerSeasonStats` | `PlayerId`, `Season`, `TeamId`, `GameType`, same stat columns, upserted each week |
-| `GamePlayLogs` | `GameId (PK)`, `EngineVersion`, `Format`, `Compression`, `Data BLOB` (Brotli-compressed JSON of play events and deciding matchups) |
-| `DepthCharts` | `TeamId`, `Position` (incl. KR/PR), `Order`, `PlayerId`, `IsLocked`. Packages are derived from this ([D-052](../DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)). |
-| `DepthChartOverrides` | `TeamId`, `Package`, `Slot`, `PlayerId` (optional per-package overrides) |
-| `GamePlans` | `TeamId`, `GameId?` (null = default), settings columns |
+| `Seasons` | `Season`, `CapAmount`, `ChampionTeamID`, … |
+| `Games` | `GameID`, `Season`, `Week`, `Type` (Reg, WC, DIV, CONF, CHAMP; no preseason, [D-038](../DECISIONS.md#d-038-no-preseason-games-in-10)), `HomeTeamID`, `AwayTeamID`, `Date`, `HomeScore`, `AwayScore`, `Overtime`, `Status`, `EngineVersion`, `Seed` |
+| `TeamGameStats` | `GameID`, `TeamID`, ~40 stat columns |
+| `PlayerGameStats` | `GameID`, `PlayerID`, `TeamID`, ~60 stat columns (wide; SQLite stores 0 and 1 in zero payload bytes, so sparse wide rows are cheap) |
+| `PlayerSeasonStats` | `PlayerID`, `Season`, `TeamID`, `GameType`, same stat columns, upserted each week |
+| `GamePlayLogs` | `GameID (PK)`, `EngineVersion`, `Format`, `Compression`, `Data BLOB` (Brotli-compressed JSON of play events and deciding matchups) |
+| `DepthCharts` | `TeamID`, `Position` (incl. KR/PR), `Order`, `PlayerID`, `IsLocked`. Packages are derived from this ([D-052](../DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)). |
+| `DepthChartOverrides` | `TeamID`, `Package`, `Slot`, `PlayerID` (optional per-package overrides) |
+| `GamePlans` | `TeamID`, `GameID?` (null = default), settings columns |
 
 ### 5.5 Draft, transactions, narrative
-`Scouts` (`TeamId`, area or director, `Accuracy`, `PositionExpertise`), `ScoutAssignments` (`ScoutId`, `Kind` = Standing (region or position group) | Special (`ProspectId`), `Since`; [D-058](../DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)), `DraftClasses`, `DraftPicks` (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick?`, `SelectedPlayerId?`, `WasAutoPick`), `BigBoardEntries` (user), `Transactions` (append-only log), `Trades`, `TradeAssets`, `Awards`, `Records`, `HallOfFame`, `NewsItems`, `InboxMessages`.
+`Scouts` (`TeamID`, area or director, `Accuracy`, `PositionExpertise`), `ScoutAssignments` (`ScoutID`, `Kind` = Standing (region or position group) | Special (`ProspectID`), `Since`; [D-058](../DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)), `DraftClasses`, `DraftPicks` (`Season`, `Round`, `OriginalTeamID`, `OwnerTeamID`, `OverallPick?`, `SelectedPlayerID?`, `WasAutoPick`), `BigBoardEntries` (user), `Transactions` (append-only log), `Trades`, `TradeAssets`, `Awards`, `Records`, `HallOfFame`, `NewsItems`, `InboxMessages`.
 
 ### 5.6 Indexing guidelines
-- Index every foreign key used for filtering: `Players(TeamId, Status)`, `PlayerGameStats(PlayerId)`, `PlayerGameStats(GameId)`, `Games(Season, Week)`, `PlayerSeasonStats(Season, Position?)`, `Transactions(Season, TeamId)`.
+- Index every foreign key used for filtering: `Players(TeamID, Status)`, `PlayerGameStats(PlayerID)`, `PlayerGameStats(GameID)`, `Games(Season, Week)`, `PlayerSeasonStats(Season, Position?)`, `Transactions(Season, TeamID)`.
 - Keep indexes deliberate. Each one slows the weekly bulk insert. Measure with `EXPLAIN QUERY PLAN`.
 
 ---
@@ -258,7 +258,7 @@ sequenceDiagram
 ## 8. Determinism and stored vs. derived data
 
 - Store **what can't be cheaply re-derived or what the player has seen**: results, stats, contracts, transactions, the user's scouting reports.
-- **AI teams' perceptions** of players can be **derived** on demand from `(leagueSeed, teamId, playerId, scoutingInvestment)` with a deterministic noise function. That avoids storing ~31 × thousands of rows. Cache them in memory per session. Revisit if the AI needs perception *history*.
+- **AI teams' perceptions** of players can be **derived** on demand from `(leagueSeed, teamID, playerID, scoutingInvestment)` with a deterministic noise function. That avoids storing ~31 × thousands of rows. Cache them in memory per session. Revisit if the AI needs perception *history*.
 - Every `Game` stores its `Seed` and `EngineVersion`. Re-simulating it with the same inputs reproduces the result, which is invaluable for bug reports.
 
 ---
@@ -272,7 +272,7 @@ sequenceDiagram
   - **Status per card:** `Ready`, `NeedsUpgrade` (older `user_version`: opens after a `pre-upgrade` snapshot), `FromNewerVersion` (the card says to update), or `Unreadable` with a one-sentence `Problem` (not SQLite, not GFO, damaged, no league in it).
   - **Continue** (`SaveCards.ContinueTarget`) is the most recently played card that can be opened.
   - **Nothing is written next to the saves.** A plain read-only connection to a closed WAL save creates `-wal` and `-shm` files and can't remove them. So `SqliteFile.ReadOnly` opens a closed save (no `-wal`) as `immutable`. With a `-wal` present (the save is open, or a crash left it), the plain read-only connection reads through it. A test checks that a scan leaves the folder byte-for-byte unchanged.
-  - **The card's columns are read with raw SQL**, so saves from older and newer apps (whose `SaveInfo` has other columns) still get a card. Those columns (`SaveId`, `LeagueName`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `AppVersionLastOpened`, `IsIronman`) are never renamed or removed.
+  - **The card's columns are read with raw SQL**, so saves from older and newer apps (whose `SaveInfo` has other columns) still get a card. Those columns (`SaveID`, `LeagueName`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `AppVersionLastOpened`, `IsIronman`) are never renamed or removed.
   - **No `quick_check` in the list:** it reads the whole file, too slow for many saves. Damage that the header and `SaveInfo` don't show is caught when the save is opened.
   - Team, season, phase and record arrive in M1 with the league.
 
@@ -283,13 +283,13 @@ sequenceDiagram
 | Action | Implementation | Validation |
 |---|---|---|
 | **Export** | `VACUUM INTO <user-chosen path>` | Not available during live events |
-| **Import** | Copy into `Saves\` with a fresh file name | `application_id`, `quick_check`, schema version ≤ app, required tables present. If the `SaveId` collides with an existing save, assign a new `SaveId`. |
+| **Import** | Copy into `Saves\` with a fresh file name | `application_id`, `quick_check`, schema version ≤ app, required tables present. If the `SaveID` collides with an existing save, assign a new `SaveID`. |
 | **Delete** | Send to the **Recycle Bin** (not permanent), along with its snapshot folder, after a confirmation that names the league | — (as built in WP7, below) |
-| **Duplicate** | `VACUUM INTO` with a new `SaveId` and the name `"{name} (copy)"` | Not available during live events |
+| **Duplicate** | `VACUUM INTO` with a new `SaveID` and the name `"{name} (copy)"` | Not available during live events |
 
-**Delete, as built (M0 WP7):** `ISaveManager.DeleteAsync(path)` closes the save first if it's the open one. Then it hands the file (with any `-wal`/`-shm`) and `Snapshots\{SaveId}` to `IPlatformServices.SendToRecycleBin` in one call.
-- **Unreadable files can be deleted too.** Without a readable `SaveId`, only the file goes.
-- **A shared snapshot folder stays.** If another file in `Saves\` has the same `SaveId` (a copy made in Explorer), the snapshot folder is kept.
+**Delete, as built (M0 WP7):** `ISaveManager.DeleteAsync(path)` closes the save first if it's the open one. Then it hands the file (with any `-wal`/`-shm`) and `Snapshots\{SaveID}` to `IPlatformServices.SendToRecycleBin` in one call.
+- **Unreadable files can be deleted too.** Without a readable `SaveID`, only the file goes.
+- **A shared snapshot folder stays.** If another file in `Saves\` has the same `SaveID` (a copy made in Explorer), the snapshot folder is kept.
 - **Desktop:** the shell's `SHFileOperationW` with "allow undo" and the "nuke warning". If Windows can't recycle something (too big, or a drive without a Recycle Bin), it asks the player before deleting permanently. Saying no returns `DeleteCancelled`. A file another program holds returns `DeleteFailed`.
 - **DevHost:** a `.trash` folder in the dev data folder, so development never fills the real Recycle Bin.
 
