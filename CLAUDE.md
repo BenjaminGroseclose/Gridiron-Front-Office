@@ -92,6 +92,13 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - `::deep` needs an element of the component's own to anchor on. Style Fluent elements only through classes GFO adds via parameters (`Class`, `ActiveClass`).
   - Fluent's `IDialogService`/`INotificationService` can't be faked (internal members): test the overlay wrappers against real `FluentProviders` in bUnit.
   - The running DevHost locks its DLLs: stop it before building.
+- **Desktop window (WP9, UI_DESIGN_SYSTEM.md §7):**
+  - The page talks to the window through WebView2's own `chrome.webview.postMessage` (JSON strings from `gfo-host.js`, read by `PageMessages`), not Blazor interop. Pages mark drag areas with `data-drag-region`, and custom controls inside them with `data-no-drag`.
+  - Page zoom stays off: the hit test assumes CSS px = DIPs.
+  - Don't mark the caption buttons `IsHitTestVisibleInChrome`: WindowChrome then answers `HTCLIENT` over them even in the top resize band.
+  - A window restored maximized is positioned while hidden, then shown with `ShowWindow(SW_SHOWMAXIMIZED)`. `WindowState = Maximized` in the constructor creates it maximized, and Restore then goes to Windows' default spot.
+  - The app is single-instance: a second launch only brings the running window forward, so close it before running a new build.
+  - The composition control is invisible to UI Automation (only an `Image`; Q-31). To script the running page, launch with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` and use the DevTools protocol. The page's origin is `https://0.0.0.1/`.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 

@@ -14,10 +14,12 @@ public sealed partial class NamingRulesTests
         "EventId",       // Microsoft.Extensions.Logging: [LoggerMessage(EventId = …)], the struct, Serilog's property
         "eventId",       // ILogger.Log(…, EventId eventId, …)
         "MigrationId",   // EF Core's __EFMigrationsHistory column
+        "SessionId",     // System.Diagnostics.Process.SessionId (the single-instance guard)
     ];
 
-    // Outside members reached through a GFO name: the EventId struct's own property.
-    private static readonly string[] OutsideMembers = ["eventId.I" + "d"];
+    // Outside members reached through a GFO name: the EventId struct's own property, and Process's own ID property in the
+    // single-instance guard.
+    private static readonly string[] OutsideMembers = ["eventId.I" + "d", "current.I" + "d", "other.I" + "d"];
 
     private static readonly string[] TextFiles = [".cs", ".razor", ".js", ".css", ".md", ".json", ".props", ".csproj", ".ps1", ".xaml", ".html", ".txt"];
 

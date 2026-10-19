@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The desktop host's plain logic: window placement, the page's messages, the single-instance guard. The Windows SDK
+       TFM matches the host's; nothing here opens a window. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Desktop\GridironFrontOffice.Desktop.csproj" />
+  </ItemGroup>
+</Project>

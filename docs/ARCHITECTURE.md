@@ -104,6 +104,7 @@ GridironFrontOffice/
 │  ├─ Infrastructure.Tests.Crasher/  # Console app the kill-mid-write torture test launches and kills
 │  ├─ UI.Components.Tests/       # bUnit
 │  ├─ UI.Tests/                  # bUnit
+│  ├─ Desktop.Tests/             # the host's plain logic (window placement, page messages)
 │  └─ Architecture.Tests/        # Dependency rules enforced as tests
 └─ data/                         # Source seed data (names, colleges, cities, team identities) → embedded resources
 ```
@@ -255,7 +256,7 @@ sequenceDiagram
     Host->>Host: acquire single-instance mutex (else focus existing window, exit)
     Host->>Log: bootstrap logger (file sink) + startup banner
     Host->>Host: register global exception handlers
-    Host->>DI: AddWpfBlazorWebView() / AddGfoInfrastructure(paths) / AddGfoApplication() / AddGfoUi()
+    Host->>DI: AddWpfBlazorWebView() / AddGfoInfrastructure(paths) / AddGfoApplication() (from M1) / AddGfoUi()
     Host->>UI: show MainWindow, load BlazorWebView
     UI->>DI: ISaveCatalog.ListAsync()
     UI-->>OS: Main menu (Continue / New League / Load)

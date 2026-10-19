@@ -20,6 +20,7 @@
     <Project Path="tests/Infrastructure.Tests.Crasher/GridironFrontOffice.Infrastructure.Tests.Crasher.csproj" />
     <Project Path="tests/UI.Components.Tests/GridironFrontOffice.UI.Components.Tests.csproj" />
     <Project Path="tests/UI.Tests/GridironFrontOffice.UI.Tests.csproj" />
+    <Project Path="tests/Desktop.Tests/GridironFrontOffice.Desktop.Tests.csproj" />
     <Project Path="tests/Architecture.Tests/GridironFrontOffice.Architecture.Tests.csproj" />
   </Folder>
   <Folder Name="/build/">

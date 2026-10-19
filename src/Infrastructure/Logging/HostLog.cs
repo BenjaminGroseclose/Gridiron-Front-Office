@@ -28,6 +28,12 @@ public static partial class HostLog
     [LoggerMessage(EventId = 1005, Level = LogLevel.Information, Message = "Exiting (code {ExitCode}, session {Minutes:F1} min)")]
     public static partial void Exiting(ILogger logger, int exitCode, double minutes);
 
+    [LoggerMessage(EventId = 1014, Level = LogLevel.Information, Message = "Window placement: {Placement}")]
+    public static partial void WindowPlacement(ILogger logger, string placement);
+
+    [LoggerMessage(EventId = 1015, Level = LogLevel.Warning, Message = "The window placement couldn't be saved")]
+    public static partial void WindowPlacementNotSaved(ILogger logger, Exception exception);
+
     [LoggerMessage(EventId = 1010, Level = LogLevel.Critical, Message = "Unhandled exception on a background thread (terminating: {IsTerminating})")]
     public static partial void UnhandledException(ILogger logger, Exception exception, bool isTerminating);
 

@@ -1,10 +1,12 @@
 @implements IDisposable
 @inject ISettingsStore Settings
 @inject GfoThemeService Theme
-@* Applies Settings → Appearance once the page is up, and again whenever the settings change (UI_DESIGN_SYSTEM.md §3.2).
-   Renders nothing. *@
+@* Applies Settings → Appearance once the page is up, and again whenever it changes (UI_DESIGN_SYSTEM.md §3.2). Saves
+   that leave Appearance alone (the window placement on close, developer flags) don't re-apply. Renders nothing. *@
 
 @code {
+    private AppearanceSettings? _applied;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -15,9 +17,19 @@
     }
 
     // Saves complete off the UI thread, so the re-apply is marshalled back onto it.
-    private void OnSettingsChanged(object? sender, AppSettings settings) => _ = InvokeAsync(() => ApplyAsync(settings));
+    private void OnSettingsChanged(object? sender, AppSettings settings)
+    {
+        if (settings.Appearance != _applied)
+        {
+            _ = InvokeAsync(() => ApplyAsync(settings));
+        }
+    }
 
-    private Task ApplyAsync(AppSettings settings) => Theme.ApplyAsync(AppearanceMapping.From(settings.Appearance, teamPrimary: null));
+    private Task ApplyAsync(AppSettings settings)
+    {
+        _applied = settings.Appearance;
+        return Theme.ApplyAsync(AppearanceMapping.From(settings.Appearance, teamPrimary: null));
+    }
 
     public void Dispose() => Settings.Changed -= OnSettingsChanged;
 }

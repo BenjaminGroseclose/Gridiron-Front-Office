@@ -12,6 +12,9 @@ public sealed record AppSettings
     public AppearanceSettings Appearance { get; init; } = new();
 
     public DeveloperSettings Developer { get; init; } = new();
+
+    /// <summary>Where the main window was when the app last closed (the desktop host). Null until the first close.</summary>
+    public WindowPlacement? Window { get; init; }
 }
 
 /// <summary>Settings → Appearance (VISUAL_DESIGN.md §2, §3.3, §5).</summary>
@@ -35,6 +38,12 @@ public sealed record DeveloperSettings
     /// <summary>The simulation trace log (LOGGING.md §9). Arrives with the engine in M2.</summary>
     public bool SimTrace { get; init; }
 }
+
+/// <summary>
+/// The main window's normal (not maximized) bounds in physical screen pixels, the monitor DPI they were measured at,
+/// and whether it was maximized. The desktop host fits them back onto the monitors that exist at the next launch.
+/// </summary>
+public sealed record WindowPlacement(int Left, int Top, int Width, int Height, int Dpi, bool Maximized);
 
 /// <summary>Dark is the default (D-031). Match Windows follows the Windows app mode.</summary>
 public enum ThemeChoice

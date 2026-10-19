@@ -22,4 +22,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GridironFrontOffice.Desktop.Tests" />
+  </ItemGroup>
 </Project>

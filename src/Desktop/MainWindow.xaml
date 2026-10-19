@@ -7,10 +7,92 @@
         Title="Gridiron Front Office"
         Width="1440" Height="900" MinWidth="1280" MinHeight="720"
         WindowStartupLocation="CenterScreen">
-    <!-- Title bar: the HTML app bar is the title bar, with WPF caption buttons (D-068). Built in M0 WP9. -->
-    <blazor:BlazorWebView x:Name="WebView" HostPage="wwwroot\index.html">
-        <blazor:BlazorWebView.RootComponents>
-            <blazor:RootComponent Selector="#app" ComponentType="{x:Type ui:AppRoot}" />
-        </blazor:BlazorWebView.RootComponents>
-    </blazor:BlazorWebView>
+    <Window.Resources>
+        <!-- Windows 11 caption buttons (46 px wide, Segoe Fluent Icons) in the theme's colors, which TitleBar sets.
+             Tag = "hover"/"pressed" comes from the WM_NCHITTEST hook for the maximize button, which Windows owns
+             while the hook answers HTMAXBUTTON. Glyphs dim while the window is inactive, as native ones do. -->
+        <Style x:Key="CaptionButton" TargetType="Button">
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="IsTabStop" Value="False" />
+            <Setter Property="Foreground" Value="{DynamicResource GfoCaptionForeground}" />
+            <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource GfoCaptionInactive}" />
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource GfoCaptionHover}" />
+                                <Setter Property="Foreground" Value="{DynamicResource GfoCaptionForeground}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="hover">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource GfoCaptionHover}" />
+                                <Setter Property="Foreground" Value="{DynamicResource GfoCaptionForeground}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource GfoCaptionPressed}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="pressed">
+                                <Setter TargetName="Bg" Property="Background" Value="{DynamicResource GfoCaptionPressed}" />
+                                <Setter Property="Foreground" Value="{DynamicResource GfoCaptionForeground}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Close turns Windows' own close red on hover, in both modes. -->
+        <Style x:Key="CloseCaptionButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bg" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsActive, RelativeSource={RelativeSource AncestorType=Window}}" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource GfoCaptionInactive}" />
+                            </DataTrigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#C42B1C" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#B22A1C" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- The app bar is the title bar (D-068): the web view fills the window and the caption buttons float over the
+         app bar's right end, which it keeps free (ShellOptions.AppBarIsTitleBar). -->
+    <Grid x:Name="Root">
+        <blazor:BlazorWebView x:Name="WebView" HostPage="wwwroot\index.html">
+            <blazor:BlazorWebView.RootComponents>
+                <blazor:RootComponent Selector="#app" ComponentType="{x:Type ui:AppRoot}" />
+            </blazor:BlazorWebView.RootComponents>
+        </blazor:BlazorWebView>
+
+        <!-- 39 px: the app bar is 40 px including its bottom border, which stays visible under the buttons. -->
+        <StackPanel x:Name="CaptionButtons" Panel.ZIndex="1" Orientation="Horizontal" Height="39"
+                    HorizontalAlignment="Right" VerticalAlignment="Top">
+            <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" ToolTip="Minimize"
+                    AutomationProperties.Name="Minimize" Click="OnMinimize" />
+            <Button x:Name="MaxButton" Style="{StaticResource CaptionButton}" Content="&#xE922;"
+                    AutomationProperties.Name="Maximize" Click="OnMaximize" />
+            <Button Style="{StaticResource CloseCaptionButton}" Content="&#xE8BB;" ToolTip="Close"
+                    AutomationProperties.Name="Close" Click="OnClose" />
+        </StackPanel>
+    </Grid>
 </Window>

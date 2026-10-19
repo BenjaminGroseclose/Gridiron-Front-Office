@@ -5,11 +5,13 @@ using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Settings;
 using GridironFrontOffice.Desktop.Diagnostics;
 using GridironFrontOffice.Desktop.Platform;
+using GridironFrontOffice.Desktop.Windowing;
 using GridironFrontOffice.Infrastructure;
 using GridironFrontOffice.Infrastructure.Logging;
 using GridironFrontOffice.Infrastructure.Paths;
 using GridironFrontOffice.Infrastructure.Settings;
 using GridironFrontOffice.UI;
+using GridironFrontOffice.UI.Shell;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -19,9 +21,8 @@ using Serilog.Extensions.Logging;
 namespace GridironFrontOffice.Desktop;
 
 /// <summary>
-/// The composition root (ARCHITECTURE.md §6.1, LOGGING.md §4): paths → settings (before DI, so the log level can come
-/// from them) → logging → startup banner → failure hooks → services → window. The single-instance guard and the GFO
-/// application services arrive in M0 WP9.
+/// The composition root (ARCHITECTURE.md §6.1, LOGGING.md §4): the single-instance guard → paths → settings (before DI,
+/// so the log level can come from them) → logging → startup banner → failure hooks → services → window.
 /// </summary>
 internal sealed partial class App : System.Windows.Application
 {
@@ -31,6 +32,7 @@ internal sealed partial class App : System.Windows.Application
     private const string Configuration = "Release";
 #endif
 
+    private SingleInstance? _instance;
     private ServiceProvider? _services;
     private SettingsStore? _settings;
     private Microsoft.Extensions.Logging.ILogger _log = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
@@ -39,6 +41,14 @@ internal sealed partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // Before anything touches the logs or settings: a second launch hands over to the running window and leaves.
+        _instance = SingleInstance.TryAcquire(e.Args);
+        if (_instance is null)
+        {
+            Shutdown();
+            return;
+        }
 
         var paths = AppPaths.ForCurrentUser().EnsureCreated();
         _settings = SettingsStore.Load(paths);
@@ -71,22 +81,30 @@ internal sealed partial class App : System.Windows.Application
         services.AddSingleton<ISettingsStore>(_settings);
         services.AddWpfBlazorWebView();
         services.AddFluentUIComponents();
+        services.AddSingleton(new ShellOptions(AppBarIsTitleBar: true));   // the app bar is the title bar (D-068)
         services.AddGfoUi();
 #if DEBUG
         services.AddBlazorWebViewDeveloperTools();
 #endif
         _services = services.BuildServiceProvider();
 
-        new MainWindow(_services, paths).Show();
+        new MainWindow(_services, paths, _settings, WindowsTheme.StartsDark(_settings.Current.Appearance.Theme)).Show();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        if (_instance is null)
+        {
+            base.OnExit(e);   // the second launch: nothing was started
+            return;
+        }
+
         var minutes = (DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMinutes;
         HostLog.Exiting(_log, e.ApplicationExitCode, minutes);
         _services?.Dispose();
         _settings?.Dispose();
         Log.CloseAndFlush();
+        _instance.Dispose();
         base.OnExit(e);
     }
 

@@ -504,23 +504,35 @@ flowchart LR
 7. **`::deep` needs an element of the component's own** to anchor the scope attribute. `MainNav`'s first rule silently matched nothing.
 8. **Fluent's dialog and notification interfaces have internal members** and can't be faked. Their tests use Fluent's real providers in bUnit.
 
-### WP9 · Main menu, wiring and the M0 exit (M)
+### WP9 · Main menu, wiring and the M0 exit (M) · host half done 2026-10-19
 **Goal:** put it together into the walking skeleton.
-- [ ] The Desktop composition root: settings → logging → DI (`AddWpfBlazorWebView`, `AddGfoInfrastructure`, `AddGfoApplication`, `AddGfoUi`, Fluent) → window.
-- [ ] The window per [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar):
+- [x] The Desktop composition root: the single-instance guard → paths → settings → logging → DI (`AddWpfBlazorWebView`, `AddGfoInfrastructure`, `AddGfoUi`, Fluent, `ShellOptions(AppBarIsTitleBar: true)`) → window. **`AddGfoApplication` isn't added yet:** Application has nothing to register in M0 (its rules are static, and Infrastructure registers the ports' implementations), so the method arrives with the first Application service in M1 rather than as an empty one.
+- [x] The window per [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar):
   - `WindowChrome` with the `WM_NCHITTEST` hook (Snap Layouts on maximize, drag from the app bar's reported regions);
   - the WPF caption buttons following the theme mode;
   - the measured maximize overhang;
   - first paint from `settings.json`: native Ground backgrounds, plus `gfo-booting` and Fluent's listener flag in `index.html`;
   - ~~an explicit WebView2 user data folder under `IAppPaths`~~ (done in WP5).
-- [ ] **Single instance:** a named mutex. A second launch brings the existing window to the front and exits.
-- [ ] Window size and position remembered in `settings.json`, and restored safely when a monitor has been removed.
+- [x] **Single instance:** a named mutex. A second launch brings the existing window to the front and exits.
+- [x] Window size and position remembered in `settings.json`, and restored safely when a monitor has been removed.
 - [ ] **Main menu** (UI RCL): Continue / New League / Load / Settings.
   - **New League in M0** asks only for a league name (the real wizard is M1) and creates the save.
   - **Load screen:** save cards (name, created, last played, app version warning, unreadable-file card), plus Open and Delete.
   - **Open** shows the app shell with an empty Home ("Your league will live here"). **Close** returns to the menu.
 - [ ] DevHost wired the same way, against the dev save folder.
 - [ ] Run the exit checklist (§10), record the cold-start time, tag **`m0-complete`**.
+
+**Results (host half, 2026-10-19)**
+- **Title bar:** built from the S0c spike in `src/Desktop/Windowing/` and `wwwroot/gfo-host.js` (as built: [UI_DESIGN_SYSTEM.md §7](../architecture/UI_DESIGN_SYSTEM.md#7-app-shell-and-navigation)). The page reports its drag regions and theme mode through WebView2's own message channel, so the UI layer only marks `data-drag-region`. Checked on the real window with `WM_NCHITTEST` probes, normal and maximized, and with window-only captures in Dark and Light and across a runtime switch both ways.
+- **Two fixes over the spike:**
+  - the caption buttons are no longer `IsHitTestVisibleInChrome`, which made the top resize band over them answer `HTCLIENT`;
+  - a window restored maximized is positioned while hidden and then shown with `SW_SHOWMAXIMIZED`. With `WindowState = Maximized` set in the constructor, WPF created it maximized, and Restore took it to Windows' default spot instead of the saved bounds.
+- **Window placement:** `settings.json` → `window` holds the normal bounds in physical pixels, the DPI they were measured at, and the maximized flag. `WindowPlacementRules` puts the window on the monitor it overlaps most, keeps its size in DIPs, shrinks it to that work area and moves it fully inside. With no overlap (an unplugged monitor) it falls back to the default: 1440 × 900 centered on the primary, maximized if that doesn't fit. Saved when the window closes; the log records which placement was used (event 1014). Mixed-DPI monitors weren't available, so the DPI scaling is unit-tested only.
+- **Single instance:** a `Local\` mutex, taken before logging starts. A second launch brings the running window to the front and exits with code 0. The crash dialog's Restart passes `--restart`, so the new process waits up to 10 s for the old one to exit.
+- **Small extras:** page zoom is off (the hit test needs CSS px = DIPs); Release builds turn off the browser accelerator keys (F5 reload and the like); `AppearanceSync` no longer re-applies the theme for saves that leave Appearance alone, such as the placement on close.
+- **Tests:** a new `Desktop.Tests` project (placement rules, page messages, the mutex guard under its own name), plus an `AppearanceSync` test.
+- **Startup:** warm Debug launches reach the loaded page in 1.4–1.8 s, the same as before; the first run after a build is slower (cold disk and antivirus). The Release ReadyToRun measurement is still an exit item.
+- **Found, not fixed: the web content is invisible to UI Automation.** The composition control renders the page as an image, so the UIA tree holds only an `Image` and the three WPF caption buttons. Screen readers and UIA-based tests can't see the page, so the ARIA work in the Definition of Done doesn't reach anyone yet. This needs an owner decision: [Q-31](../OPEN_QUESTIONS.md#q-31-screen-readers-cant-see-the-page-the-composition-control).
 
 ---
 
@@ -546,13 +558,14 @@ GridironFrontOffice/
 │  │                       Saves/ (SaveManager, SaveCatalog, SnapshotService), Logging/, Settings/, Paths/
 │  ├─ UI.Components/       Theming/, DataGrid/, Dialogs/, Toasts/, Icons/, Components/ (EmptyState, Stat, Kbd…), wwwroot/ (tokens, fonts, js)
 │  ├─ UI/                  Shell/, Pages/ (MainMenu, LoadScreen, Home, Settings), wwwroot/js/gfo-diagnostics.js
-│  ├─ Desktop/             App.xaml, MainWindow.xaml, Diagnostics/ (CrashWindow, CrashHandler), PlatformServices, composition root
+│  ├─ Desktop/             App.xaml, MainWindow.xaml, Diagnostics/ (CrashWindow, CrashHandler), Platform/ (WindowsPlatformServices,
+│  │                       SingleInstance), Windowing/ (TitleBar, PageMessages, WindowPlacementRules), wwwroot/gfo-host.js
 │  └─ DevHost/             Program.cs, gallery pages (/_gallery/...)
 ├─ tools/SimLab/           (stub)
 └─ tests/
    ├─ Architecture.Tests/  Core.Tests/  Application.Tests/
    ├─ Infrastructure.Tests/  Infrastructure.Tests.Crasher/
-   └─ UI.Components.Tests/  UI.Tests/
+   └─ UI.Components.Tests/  UI.Tests/  Desktop.Tests/
 ```
 
 `spikes/S0a.EfProof/` exists only during WP2 (§11, question 3), and S0b's pages live in `src/DevHost/Components/Spike/` only during WP3.

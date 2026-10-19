@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows;
+using GridironFrontOffice.Desktop.Platform;
 using GridironFrontOffice.Infrastructure.Logging;
 using Microsoft.Extensions.Logging;
 using Serilog;
@@ -51,13 +52,16 @@ internal sealed class CrashHandler(Microsoft.Extensions.Logging.ILogger logger, 
 
         if (choice == CrashChoice.Restart && Environment.ProcessPath is { } exe)
         {
-            // WP9's single-instance guard must let this new process wait for the old one to exit.
+            // The original arguments carry over, except a Debug diagnostics test (it would just crash again). --restart
+            // tells the single-instance guard to wait for this process to finish exiting.
             var restart = new ProcessStartInfo(exe) { UseShellExecute = false };
-            // The original arguments carry over, except a Debug diagnostics test (it would just crash again).
-            foreach (var arg in Environment.GetCommandLineArgs().Skip(1).Where(a => !a.StartsWith("--diag-test=", StringComparison.Ordinal)))
+            foreach (var arg in Environment.GetCommandLineArgs().Skip(1)
+                         .Where(a => !a.StartsWith("--diag-test=", StringComparison.Ordinal) && a != SingleInstance.RestartArgument))
             {
                 restart.ArgumentList.Add(arg);
             }
+
+            restart.ArgumentList.Add(SingleInstance.RestartArgument);
 
             Process.Start(restart)?.Dispose();
         }

@@ -120,6 +120,16 @@ public sealed class AppearanceSyncTests : GfoTestContext
     }
 
     [Fact]
+    public async Task A_save_that_leaves_the_appearance_alone_does_not_re_apply()
+    {
+        Render<AppearanceSync>();
+
+        await _settings.SaveAsync(_settings.Current with { Window = new WindowPlacement(0, 0, 1440, 900, 96, Maximized: false) }, Xunit.TestContext.Current.CancellationToken);
+
+        Fluent.Created.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task After_the_page_goes_away_changes_are_ignored()
     {
         var cut = Render<AppearanceSync>();

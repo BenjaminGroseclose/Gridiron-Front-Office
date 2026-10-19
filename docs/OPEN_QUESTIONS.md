@@ -1,6 +1,6 @@
 # Open Questions & Challenges
 
-> **Status:** Living document · last updated 2026-10-14
+> **Status:** Living document · last updated 2026-10-19
 >
 > Each question has a **recommendation** and a **decide-by** milestone. When one is answered, record it in [DECISIONS.md](DECISIONS.md), replace the body here with a pointer, and update every affected doc.
 >
@@ -175,3 +175,12 @@ A live SQLite database in a OneDrive-synced folder is a corruption risk.
 
 ### Q-30: Data access library
 - **Resolved (2026-10-13):** EF Core with the unit-of-work rules → [D-024](DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work). Spike S0a becomes an *EF Core proof* (torture tests + bulk timing) rather than a library bake-off.
+
+### Q-31: Screen readers can't see the page (the composition control)
+- **Decide by:** M1, before the first real screens (it may touch [D-068](DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar))
+- **Context (found in M0 WP9):** the .NET 10 WPF `BlazorWebView` hosts WebView2's *composition* control, which renders the page as an image ([HOST_BENCHMARK.md](architecture/HOST_BENCHMARK.md)). The window's UI Automation tree holds only an `Image` and the three WPF caption buttons. Narrator and other screen readers, and UIA-based test tools, can't reach any page content, so the ARIA labels the Definition of Done asks for don't reach anyone. Keyboard use, contrast, reduced motion and color-blind safety aren't affected.
+- **Options:**
+  1. **The HWND-based WebView2 control**, if `BlazorWebView` can still be given one on .NET 10. Its accessibility is native. But WPF can no longer draw over it (airspace), so the caption buttons would move into HTML, and Snap Layouts would rely on WebView2's own non-client regions (`app-region`), which S0c couldn't use under the composition control. This reopens part of D-068.
+  2. **Bridge UIA** from the composition control to the hidden browser's automation provider. Possibly heavy, and not something the control offers today.
+  3. **Accept it for 1.0**: state that screen readers aren't supported, keep everything else, and revisit with the F-27 audit in M11.
+- **Recommendation:** a one-day spike on option 1 (does it load, do Snap Layouts and drag still work, does Narrator read the page?) before M1 builds screens, and fall back to option 3 if it fails. Until then the current host stays.
