@@ -161,7 +161,7 @@ Decided in [D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-bran
 - [ ] The AI counterpart exists and passes autoplay (if the feature has one)
 - [ ] The UI uses design system components only, with empty, loading and error states
 - [ ] Keyboard accessible, with focus handled correctly and a visible focus ring
-- [ ] Accessible in both themes: text contrast meets WCAG AA, color is never the only signal, reduced motion is respected, custom components carry ARIA labels ([VISUAL_DESIGN.md §10](../VISUAL_DESIGN.md) QA checklist)
+- [ ] Accessible in both themes: text contrast meets WCAG AA, color is never the only signal, reduced motion is respected, custom components carry ARIA labels ([VISUAL_DESIGN.md §10](../VISUAL_DESIGN.md) QA checklist). Screen readers aren't supported in the desktop host for 1.0 ([D-071](../DECISIONS.md#d-071-screen-readers-arent-supported-in-10)), but the labels stay: tests find elements by them, and they're ready if a later host can expose them
 - [ ] Logging at the right levels for lifecycle events
 - [ ] Performance within budget (timed log or benchmark)
 - [ ] Docs updated (feature spec, plus DECISIONS if anything was decided)

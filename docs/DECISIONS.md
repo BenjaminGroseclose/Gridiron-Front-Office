@@ -78,6 +78,7 @@
 | D-068 | Host shell: the app bar is the title bar | **Accepted** |
 | D-069 | Write `ID`, never `Id` | **Accepted** |
 | D-070 | Read models are records named `…Dto` | **Accepted** |
+| D-071 | Screen readers aren't supported in 1.0 | **Accepted** |
 
 ---
 
@@ -633,3 +634,13 @@
 - **Status:** **Accepted** (owner, 2026-10-18: *"Use the DTO suffix"*, choosing between the guide's `RosterRow` and the specs' `TeamSummaryDto`).
 - **Decision:** every read model a query service returns is a `sealed record` whose name ends in `Dto`: `RosterRowDto`, `TeamSummaryDto`, `PlayerDetailDto`, `LeagueHeaderDto`. It lives in the feature folder next to the query service that fills it. The casing is `Dto`, as in the F-02 and F-03 specs.
 - **Why:** one suffix makes it obvious at a glance what a screen may hold (a read-only copy, never an entity), and it's the form the specs already used.
+
+## D-071: Screen readers aren't supported in 1.0
+- **Status:** **Accepted** (owner, 2026-10-19: *"Option 3"*, answering [Q-31](OPEN_QUESTIONS.md#q-31-screen-readers-cant-see-the-page-the-composition-control)).
+- **Context:** the .NET 10 WPF `BlazorWebView` hosts WebView2's composition control, which renders the page as an image. Windows' UI Automation sees only that image and the three WPF caption buttons, so Narrator and other screen readers can't reach the page (found in M0 WP9).
+- **Decision:** GFO 1.0 doesn't support screen readers, and says so. The host stays as built ([D-068](#d-068-host-shell-the-app-bar-is-the-title-bar)), with no spike on the HWND-based web view and no UIA bridge.
+- **Everything else stays:** keyboard access with visible focus, WCAG AA contrast in both themes, color never the only signal, reduced motion, color-blind-safe ratings, the Pausable clock mode. Components keep their ARIA roles and labels: they cost little, tests find elements by them, the DevHost (a real browser) exposes them, and they're ready if a later host can.
+- **Steam:** no "Playable without Vision" claim. The store page's accessibility section lists only what GFO really has (F-29).
+- **Why:** no law requires a single-player PC game without chat to support screen readers (US CVAA covers only in-game communication; the EU Accessibility Act exempts microenterprises' services and doesn't list games), Steam doesn't require it, and the fix would reopen the title bar for an uncertain result. This is a personal project aiming for Steam, so the effort goes into the game.
+- **Revisit:** with the F-27 accessibility audit in M11, or sooner if WebView2's composition control starts exposing the page to UI Automation.
+

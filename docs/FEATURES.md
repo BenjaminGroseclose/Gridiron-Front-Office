@@ -325,7 +325,8 @@ flowchart LR
 
 ## 🟥 F-27: Settings, help & accessibility
 - **Ongoing:** settings (theme, accent: team or neutral, density, motion, sound (all off by default, [D-047](DECISIONS.md#d-047-sound-all-off-by-default-no-music)), snapshot budget, developer: log level and sim trace), a keyboard shortcut map and cheat sheet (`?`), the command palette, glossary tooltips (hover a term → definition from [GLOSSARY.md](GLOSSARY.md)).
-- **Ongoing:** UI zoom 90–150% (nearly free with WebView2's zoom factor). Glossary tooltips read from a runtime glossary data file, not the GLOSSARY.md doc.
+- **Ongoing:** UI zoom 90–150% (nearly free with WebView2's zoom factor; the title bar's hit test then has to divide by it, because the page reports its drag regions in CSS px, and the browser's own Ctrl+wheel zoom stays off). Glossary tooltips read from a runtime glossary data file, not the GLOSSARY.md doc.
+- **Screen readers aren't supported in 1.0** ([D-071](DECISIONS.md#d-071-screen-readers-arent-supported-in-10)): the desktop host's web view is invisible to UI Automation. The M11 audit revisits it.
 - **Accessibility is built per screen, not at the end:** the Definition of Done ([TESTING_AND_QUALITY.md §8.5](architecture/TESTING_AND_QUALITY.md#85-definition-of-done-per-feature)) requires contrast in both themes, color never the only signal, visible focus, reduced motion and ARIA labels on custom components from M1.
 - **M11:** **help pages** written in Markdown (`data/help/`) and rendered in the app ([D-051](DECISIONS.md#d-051-onboarding-is-help-pages-only-authored-in-markdown)), plus an accessibility **audit** (screen reader pass, colorblind review). No scripted onboarding: no "Assistant GM", no phase cards ([IDEAS.md](IDEAS.md)).
 
@@ -335,6 +336,7 @@ flowchart LR
 
 ## ⬜ F-29: Steam integration
 - **After the M11 gate:** Steamworks.NET (MIT): achievements (**Ironman only**, decided in [D-026](DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode); Ironman already requires the Live clock mode), Steam Cloud for snapshots and exports (not the live database), rich presence, store assets, trailer. **Research the Steam Deck before promising it** ([Q-23](OPEN_QUESTIONS.md#q-23-steam-deck)).
+- **Store page accessibility section:** Steam's self-reported accessibility features (opt-in, filterable in search). List only what GFO really has, such as contrast and color options, color-blind-safe ratings and play at your own pace (the Pausable clock mode). No "Playable without Vision" ([D-071](DECISIONS.md#d-071-screen-readers-arent-supported-in-10)). Check the current tag list in the Steamworks docs when the page is built.
 
 ## F-30: Source hosting & CI
 **Tier:** ⚙️ Engineering · **When:** later, at the owner's call. **Recommended before M5** (the autoplay health gate makes manual runs painful). **Required before M11** (reproducible builds for playtesters). Deferred by [D-030](DECISIONS.md#d-030-source-hosting-and-ci-deferred-to-f-30). Was [Q-25](OPEN_QUESTIONS.md#q-25-source-hosting-and-ci).

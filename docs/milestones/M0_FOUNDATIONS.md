@@ -532,7 +532,7 @@ flowchart LR
 - **Small extras:** page zoom is off (the hit test needs CSS px = DIPs); Release builds turn off the browser accelerator keys (F5 reload and the like); `AppearanceSync` no longer re-applies the theme for saves that leave Appearance alone, such as the placement on close.
 - **Tests:** a new `Desktop.Tests` project (placement rules, page messages, the mutex guard under its own name), plus an `AppearanceSync` test.
 - **Startup:** warm Debug launches reach the loaded page in 1.4–1.8 s, the same as before; the first run after a build is slower (cold disk and antivirus). The Release ReadyToRun measurement is still an exit item.
-- **Found, not fixed: the web content is invisible to UI Automation.** The composition control renders the page as an image, so the UIA tree holds only an `Image` and the three WPF caption buttons. Screen readers and UIA-based tests can't see the page, so the ARIA work in the Definition of Done doesn't reach anyone yet. This needs an owner decision: [Q-31](../OPEN_QUESTIONS.md#q-31-screen-readers-cant-see-the-page-the-composition-control).
+- **Found, not fixed: the web content is invisible to UI Automation.** The composition control renders the page as an image, so the UIA tree holds only an `Image` and the three WPF caption buttons. Screen readers and UIA-based tests can't see the page. **Decided:** screen readers aren't supported in 1.0 ([D-071](../DECISIONS.md#d-071-screen-readers-arent-supported-in-10)).
 
 ---
 
