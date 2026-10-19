@@ -108,6 +108,20 @@ The WPF window's first frame lands at about 875 ms, already in Ground, while Web
 4. **Persisted color scheme:** WebView2 persists `CoreWebView2Profile.PreferredColorScheme` in the profile across launches. Leave it at Auto.
 5. **Maximize overhang:** a maximized `WindowChrome` window hangs 8 px past the work area at 100% scale (`WindowResizeBorderThickness` says 4). Pad the content by the measured overhang.
 
+
+## M0 exit measurement (2026-10-19)
+
+The real app after WP9's host half: the title bar, window placement and single instance, measured with the log's startup events instead of a spike probe. `HostLog.FirstThemedScreen` (event 1016) fires on the page's first theme message, when the theme service has applied and lifted the boot hide. It stays in every log, so a startup regression shows up in any session.
+
+- **Build:** `./build.ps1 -Full` (Release, win-x64, self-contained, ReadyToRun): **248 MB**. WebView2 runtime 155.0.4283.62.
+- **Runs:** 7 launches through `Start-Process`, the first right after the publish (cold files), then 6 warm.
+
+| Measurement | Page loaded | **First themed screen** |
+|---|---|---|
+| First launch of the fresh publish | 1,711 ms | **1,998 ms** |
+| Warm (6 runs) | 1,200–1,273 ms | **1,397–1,508 ms, median 1,463 ms** |
+
+**Verdict:** inside the 3 s budget, and the same as S0c's 1.51 s, so WP9's host code (monitor enumeration, placement, the hit-test hook, the host script) costs nothing measurable. The screen is still the M0 Home page; re-measure when the main menu replaces it. A true cold start (after a reboot) wasn't measured.
 ---
 
 ## Non-performance benefits (unmeasured but real)

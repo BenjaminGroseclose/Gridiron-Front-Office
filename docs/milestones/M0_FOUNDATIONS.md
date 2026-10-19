@@ -631,15 +631,15 @@ Not in M0: BenchmarkDotNet (M2), `Microsoft.Extensions.TimeProvider.Testing` (M6
 
 From [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton), plus the spike outcomes:
 
-- [ ] Launch → main menu in under 3 s (cold start measured on the Release ReadyToRun build)
-- [ ] Create a save → it appears on the load screen → reopen it → close it → the file is unlocked and can be deleted
-- [ ] **All transaction torture tests pass**, including killing the process mid-transaction and reopening with no partial data
-- [ ] The log file contains the banner, the lifecycle events, a forced test exception with a stack trace, and a forwarded JavaScript error
+- [ ] Launch → main menu in under 3 s (cold start measured on the Release ReadyToRun build). **Measured 2026-10-19 to the Home page:** 2.0 s on the first launch after publishing, 1.46 s warm median ([HOST_BENCHMARK.md](../architecture/HOST_BENCHMARK.md#m0-exit-measurement-2026-10-19)). Re-measure once the main menu exists.
+- [ ] Create a save → it appears on the load screen → reopen it → close it → the file is unlocked and can be deleted. *Waits for WP9's screens; `SaveManagerTests` already cover each step below the UI.*
+- [x] **All transaction torture tests pass**, including killing the process mid-transaction and reopening with no partial data (2026-10-19: the 9 torture tests and the Crasher kill test, which run in every fast build)
+- [x] The log file contains the banner, the lifecycle events, a forced test exception with a stack trace, and a forwarded JavaScript error (2026-10-19, Debug `--diag-test=page` and `--diag-test=js`: banner, placement, window shown, WebView2 ready, page loaded, first themed screen, exiting, the page exception with its .NET stack, the JavaScript error with its JS stack. Save open and close events join with the load screen.)
 - [x] A snapshot can be taken and restored (WP7, tested)
-- [ ] `./build.ps1` is green. A forbidden reference, a stray `BeginTransaction` and an `async void` each turn it red (demonstrated, not committed).
+- [x] `./build.ps1` is green. A forbidden reference, a stray `BeginTransaction` and an `async void` each turn it red (demonstrated, not committed). 2026-10-19: UI → Infrastructure failed the architecture test ("UI must not reference Infrastructure"); `DbContext.Database.BeginTransaction()` in Infrastructure failed the compile (RS0030); an `async void` in Application failed the compile (VSTHRD100).
 - [x] The gallery shows every v0 component in both themes, with team tint on and off (WP8)
 - [x] Spike decisions recorded: S0a (EF Core, D-024), S0b (grid + icons + verified v5 names, D-067), S0c (title bar, D-068)
-- [ ] `THIRD_PARTY_NOTICES.md` lists every package, font and icon set in use
+- [x] `THIRD_PARTY_NOTICES.md` lists every package, font and icon set in use (2026-10-19: checked against every package in the Release publish. Added the transitive Blazor and Microsoft.Extensions packages, the WebView2 SDK (BSD-3-Clause, its text must ship with the app), the Windows SDK projection, the .NET runtime and the system caption fonts; corrected SQLitePCLRaw to 2.1.13.)
 - [ ] Tag `m0-complete`
 
 ---

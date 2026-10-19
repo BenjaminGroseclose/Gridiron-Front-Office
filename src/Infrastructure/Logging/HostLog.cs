@@ -34,6 +34,9 @@ public static partial class HostLog
     [LoggerMessage(EventId = 1015, Level = LogLevel.Warning, Message = "The window placement couldn't be saved")]
     public static partial void WindowPlacementNotSaved(ILogger logger, Exception exception);
 
+    [LoggerMessage(EventId = 1016, Level = LogLevel.Information, Message = "First themed screen {ElapsedMs} ms after process start")]
+    public static partial void FirstThemedScreen(ILogger logger, long elapsedMs);
+
     [LoggerMessage(EventId = 1010, Level = LogLevel.Critical, Message = "Unhandled exception on a background thread (terminating: {IsTerminating})")]
     public static partial void UnhandledException(ILogger logger, Exception exception, bool isTerminating);
 

@@ -42,6 +42,7 @@ internal sealed partial class MainWindow : Window
     private bool _restoreToMaximized;
     private bool _closing;
     private bool _readyToClose;
+    private bool _themedOnce;
 
     /// <param name="dark">The mode for the first paint, from settings.json (the page takes over once it's up).</param>
     public MainWindow(IServiceProvider services, IAppPaths paths, ISettingsStore settings, bool dark)
@@ -228,7 +229,22 @@ internal sealed partial class MainWindow : Window
                 break;
             case ThemeModeMessage theme:
                 ApplyMode(theme.Dark);
+                LogFirstThemedScreen();
                 break;
+        }
+    }
+
+    /// <summary>
+    /// The startup budget's end point (M0 exit: launch to a themed screen under 3 s). The first theme message means the
+    /// theme service has applied and lifted the boot hide, so the next frame shows the themed page.
+    /// </summary>
+    private void LogFirstThemedScreen()
+    {
+        if (!_themedOnce)
+        {
+            _themedOnce = true;
+            var sinceStart = (long)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds;
+            HostLog.FirstThemedScreen(_log, sinceStart);
         }
     }
 
