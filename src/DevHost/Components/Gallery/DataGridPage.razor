@@ -1,0 +1,55 @@
+@page "/_gallery/datagrid"
+<PageTitle>DataGrid · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">DataGrid</h1>
+
+<GallerySection Title="2,000 rows × 25 columns" Plain="true"
+                Check="Scroll far right and down: rows keep rendering (fix 1), the name stays pinned (fix 2), the header stays put. Rows are 46 px, or 36 px Compact. Click a header to sort (numbers high to low first). Click or Space selects; Enter or a double-click opens. PageUp/PageDown, Home/End and Ctrl+Home/End move focus.">
+    <p class="grid-status gfo-num" data-testid="grid-status">
+        Selected: <b>@(_selected?.Name ?? "none")</b> · Opened: <b>@(_opened?.Name ?? "none")</b>
+    </p>
+    <DataGrid TItem="GalleryPlayer" Items="@GallerySample.Players" Label="Sample players" ItemKey="@(p => p.ID)" Height="65vh"
+              @bind-SelectedItem="_selected" OnItemActivated="Open" data-testid="grid">
+        <DataGridColumn Title="Player" Property="@(p => p.Name)" Width="200px" Pinned="true" />
+        <DataGridColumn Title="Pos" Property="@(p => p.Position)" Width="72px" />
+        <DataGridColumn Title="Team" Property="@(p => p.Team)" Width="72px" />
+        <DataGridColumn Title="Age" Property="@(p => p.Age)" Width="64px" Numeric="true" />
+        <DataGridTemplateColumn Title="OVR" Width="130px" Numeric="true" SortBy="@ByOverall">
+            <span class="chip" style="--tier: var(--gfo-rating-@GallerySample.Tier(context.Overall))">@context.Overall</span>
+            <span class="range">@context.OverallLow–@context.OverallHigh</span>
+        </DataGridTemplateColumn>
+        <DataGridColumn Title="POT" Property="@(p => p.Potential)" Width="64px" />
+        <DataGridTemplateColumn Title="Cap hit" Width="100px" Numeric="true" SortBy="@ByCapHit">
+            @GallerySample.Money(context.CapHit)
+        </DataGridTemplateColumn>
+        @for (var i = 0; i < GallerySample.AttributeNames.Count; i++)
+        {
+            var index = i;
+            <DataGridColumn Title="@GallerySample.AttributeNames[index]" Property="@(p => p.Attributes[index])" Width="64px" Numeric="true" />
+        }
+    </DataGrid>
+</GallerySection>
+
+<GallerySection Title="Empty" Plain="true" Check="The empty content sits inside the frame.">
+    <DataGrid TItem="GalleryPlayer" Items="@NoPlayers" Label="No players" Height="200px" Virtualize="false">
+        <EmptyContent>
+            <EmptyState Title="No players yet" Icon="IconName.People">Players appear here once the league is generated.</EmptyState>
+        </EmptyContent>
+        <ChildContent>
+            <DataGridColumn Title="Player" Property="@(p => p.Name)" Width="200px" />
+            <DataGridColumn Title="Age" Property="@(p => p.Age)" Width="64px" Numeric="true" />
+        </ChildContent>
+    </DataGrid>
+</GallerySection>
+
+@code {
+    private static readonly GridSort<GalleryPlayer> ByOverall = GridSort<GalleryPlayer>.ByAscending(p => p.Overall);
+    private static readonly GridSort<GalleryPlayer> ByCapHit = GridSort<GalleryPlayer>.ByAscending(p => p.CapHit);
+
+    private static readonly GalleryPlayer[] NoPlayers = [];
+
+    private GalleryPlayer? _selected;
+    private GalleryPlayer? _opened;
+
+    private void Open(GalleryPlayer player) => _opened = player;
+}

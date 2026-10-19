@@ -9,4 +9,8 @@
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
     <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components.Icons" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GridironFrontOffice.UI.Components.Tests" />
+  </ItemGroup>
 </Project>

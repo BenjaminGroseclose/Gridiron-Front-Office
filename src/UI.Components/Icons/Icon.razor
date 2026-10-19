@@ -1,0 +1,30 @@
+@namespace GridironFrontOffice.UI.Components.Icons
+@* A GFO icon (VISUAL_DESIGN.md §7). Decorative unless it has a Label, which becomes its accessible name. *@
+<FluentIcon Value="@_icon" Width="@($"{(Width ?? Size)}px")" Title="@Label" Class="@CssClass"
+            aria-hidden="@(Label is null ? "true" : null)" role="@(Label is null ? null : "img")" @attributes="AdditionalAttributes" />
+
+@code {
+    private Microsoft.FluentUI.AspNetCore.Components.Icon _icon = default!;
+
+    [Parameter, EditorRequired] public IconName Name { get; set; }
+
+    /// <summary>16, 20 (default) or 24.</summary>
+    [Parameter] public int Size { get; set; } = 20;
+
+    /// <summary>The drawn width in px when it differs from the size: nav icons are 18 px drawn from the 20 px set.</summary>
+    [Parameter] public int? Width { get; set; }
+
+    /// <summary>The Filled style, for the active nav item and selected states.</summary>
+    [Parameter] public bool Filled { get; set; }
+
+    /// <summary>The accessible name. Leave it null for a decorative icon next to text.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string CssClass => string.IsNullOrEmpty(Class) ? "gfo-icon" : $"gfo-icon {Class}";
+
+    protected override void OnParametersSet() => _icon = IconCatalog.Create(Name, Size, Filled);
+}

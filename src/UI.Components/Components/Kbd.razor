@@ -1,0 +1,17 @@
+@namespace GridironFrontOffice.UI.Components
+@* A keyboard shortcut hint: "Ctrl+K" becomes Ctrl and K keycaps. *@
+<span class="gfo-kbd @Class" @attributes="AdditionalAttributes">
+    @foreach (var key in Keys.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+    {
+        <kbd>@key</kbd>
+    }
+</span>
+
+@code {
+    /// <summary>Keys joined by <c>+</c>: "Ctrl+K", "Ctrl+Enter", "G".</summary>
+    [Parameter, EditorRequired] public string Keys { get; set; } = "";
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+}

@@ -7,7 +7,11 @@
   <base href="/" />
   <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css" />
   <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-fonts.css" />
+  <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-tokens.css" />
   <link href="GridironFrontOffice.Desktop.styles.css" rel="stylesheet" />
+  <!-- Fluent re-applies its default theme on every Windows light/dark switch unless its own cache holds a mode, which GFO
+       doesn't use. This is the flag Fluent checks before adding that listener; GfoThemeService owns the switch (D-068). -->
+  <script>window.__FluentUIBlazorSystemThemeChangeListener = true;</script>
   <!-- Before Blazor, so even boot-time JavaScript errors reach the log (LOGGING.md §8). -->
   <script src="_content/GridironFrontOffice.UI/js/gfo-diagnostics.js"></script>
 </head>

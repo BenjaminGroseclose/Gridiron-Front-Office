@@ -1,0 +1,36 @@
+@page "/_gallery/app-shell"
+<PageTitle>AppShell · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">AppShell</h1>
+
+<GallerySection Title="In a league (sample content)" Plain="true"
+                Check="A 40 px Surface 1 bar on a Ground page; the primary action in the accent fill; the nav column on Surface 1. The bar is the drag region in the desktop host.">
+    <div class="shell-frame">
+        <AppShell>
+            <Brand>
+                <span class="crest gfo-display">W</span>
+                <span class="team gfo-display">Wolves</span>
+            </Brand>
+            <Context>2027 · Week 7 · 4–2</Context>
+            <Progress>Simulating Week 7 · 9/16 games</Progress>
+            <Actions>
+                <span class="cap gfo-num">Cap $12.4M</span>
+                <FluentTextInput Placeholder="Search…" /> <Kbd Keys="Ctrl+K" />
+            </Actions>
+            <PrimaryAction>
+                <FluentButton Appearance="ButtonAppearance.Primary" IconEnd="@IconCatalog.Create(IconName.Play, 20, filled: true)">Play Week 7</FluentButton>
+            </PrimaryAction>
+            <Navigation>
+                <FluentNav Width="100%" Density="NavDensity.Small" BackgroundColor="var(--colorNeutralBackground1)" BackgroundColorHover="var(--colorNeutralBackground2)">
+                    <FluentNavItem Href="_gallery/app-shell" IconRest="@IconCatalog.Create(IconName.Home)" IconActive="@IconCatalog.Create(IconName.Home, filled: true)">Home</FluentNavItem>
+                    <FluentNavItem Href="_gallery/app-shell#roster" IconRest="@IconCatalog.Create(IconName.People)">Roster</FluentNavItem>
+                    <FluentNavItem Href="_gallery/app-shell#standings" IconRest="@IconCatalog.Create(IconName.DataBarVertical)">Standings</FluentNavItem>
+                    <FluentNavItem Href="_gallery/app-shell#settings" IconRest="@IconCatalog.Create(IconName.Settings)">Settings</FluentNavItem>
+                </FluentNav>
+            </Navigation>
+            <ChildContent>
+                <EmptyState Title="Your league will live here" Icon="IconName.Trophy">Routed pages render on the Ground, inside 20–24 px of padding.</EmptyState>
+            </ChildContent>
+        </AppShell>
+    </div>
+</GallerySection>

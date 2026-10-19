@@ -6,6 +6,8 @@
 >
 > **Visual values (palette, fonts, radii, density, icons) come from [VISUAL_DESIGN.md](../VISUAL_DESIGN.md)**, the **Stadium** direction with Dark as the default mode ([D-031](../DECISIONS.md#d-031-visual-direction-stadium-light--dark-dark-by-default)). This doc covers the mechanics. When the two disagree on a value, VISUAL_DESIGN.md wins.
 >
+> **Built in M0 WP8 (2026-10-19):** the theme service, tokens, `Icon`, dialogs and toasts, `DataGrid<T>`, the small components, the app shell and Settings → Appearance, with a gallery page for each in the DevHost. The "As built" notes in each section record where the code differs from the design below.
+>
 > **API names were verified against Fluent UI Blazor 5.0.1 in Spike S0b** ([D-067](../DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)). Where Fluent needed help (the grid, contrast, Match Windows), the fix is described in the section concerned.
 
 ---
@@ -71,7 +73,7 @@ The owner's direction ([C-7](../OPEN_QUESTIONS.md#c-7-modern-and-elegant-vs-data
 - ✅ **Fonts:** override the font-family tokens once (Archivo + JetBrains Mono, per [VISUAL_DESIGN.md §4](../VISUAL_DESIGN.md#4-typography)).
 - ✅ **Dense data screens:** spacing tokens plus the DataGrid's `ItemSize`, which sets the exact row height (28–46 px verified in S0b, §5.3).
 - ⚠️ **"Broadcast moments" and football visuals** (scorebug, draft clock, crests, drive chart) are **our own components**. They use Fluent tokens for color and type but are styled freely.
-- ❌ Don't restyle Fluent component internals with deep CSS selectors. It breaks on upgrades (v5 already changed internal classes from v4). **The one sanctioned exception** is `DataGrid<T>`'s scoped stylesheet, which carries two layout fixes the grid can't work without (§5.3).
+- ❌ Don't restyle Fluent component internals with deep CSS selectors. It breaks on upgrades (v5 already changed internal classes from v4). **The one sanctioned exception** is `DataGrid<T>`'s scoped stylesheet, which carries the two layout fixes the grid can't work without, plus the selected-row paint (§5.3).
 
 ### 3.2 Team tinting
 
@@ -116,6 +118,12 @@ public sealed class GfoThemeService(IThemeService fluent, IAppSettings settings,
 - Called at **app start** (neutral brand) and on **league open** (team brand). Settings change → call it again.
 - **Per-element theming** (`SetThemeToElementAsync`) can tint a region in *another* team's colors, such as the opponent's half of the Game Center or the "pick is in" card in the picking team's colors, without touching the global theme.
 - Setting: **Accent: Team / Neutral** (some team colors are loud).
+- **As built (M0 WP8):**
+  - **`GfoThemeService.ApplyAsync(GfoAppearance)`.** `UI.Components` can't see Application's settings, so the service takes its own small value: `GfoAppearance(Mode, AccentColor, Density)`, where a null `AccentColor` means the neutral blue. In the UI layer, `AppearanceMapping.From(settings.Appearance, teamPrimary)` builds it, and `AppearanceSync` (rendered once by `MainLayout`) applies it after the first render and again on every `ISettingsStore.Changed`. Until M1 there's no team, so Accent: Team shows the neutral blue.
+  - **`GfoThemeState`** (`Current`, and the `Applied` event) carries the resolved mode, the four accent colors and the row height for the density. `DataGrid<T>` listens to it; the desktop host will use it in WP9 for its caption buttons.
+  - **The page side is `gfo-theme.js`:** it reports Windows light/dark changes back to the service (`OnWindowsThemeChanged`), and after each apply sets `data-theme` and `data-density` on `<html>` (which `gfo-tokens.css` reads) and removes `gfo-booting`.
+  - **The state variants are mapped too.** Fluent's hover, pressed and selected slots for Background 2–5, the card background, Foreground 1–3 and Stroke 1 get Stadium values, one surface step up from their base. Otherwise some controls showed Fluent's own default grays on hover.
+  - **Contrast:** the gallery's Theme page shows each derived color's ratio live. On-accent is white or near-black, whichever contrasts more, so a mid-tone team color can land at about 4.4:1 on its fill (the worst case of that rule); every F-02 primary tested is above 4.5:1.
 
 ### 3.3 Source of truth and persistence
 - Fluent caches `ThemeSettings` in `localStorage` (key `fluentui-blazor:theme-settings`, inside the WebView2 profile), but **only on the `SetThemeAsync(ThemeSettings)` path**. Applying a typed `Theme` neither writes nor clears the entry, and `GetThemeSettingsAsync` just reads the cache back, so it goes stale (verified in S0b).
@@ -164,6 +172,13 @@ Use **Fluent's tokens directly** for surfaces, text, borders, brand, status, typ
 ```
 Rule: if a value exists as a Fluent token, **reference it** (`var(--…)`) instead of duplicating it.
 
+**As built (M0 WP8):** `gfo-tokens.css` also has:
+- **status tokens** (`--gfo-status-positive`, `-warning`, `-negative`, `-inactive`), `--gfo-on-urgent`, and `--gfo-chip-tint` (20% Dark, 14% Light) for pill chips;
+- **accent aliases** that only read Fluent's brand tokens: `--gfo-accent-fill`, `--gfo-on-accent`, `--gfo-accent`, `--gfo-accent-text`, plus the derived `--gfo-accent-soft` and an opaque `--gfo-selection`;
+- the radii as references to Fluent's radius tokens, and `--gfo-cell-padding-x` beside the row height;
+- light overrides under `:root[data-theme="light"]`, set by the theme service;
+- a `reset` layer (the body font and Ground, and no focus ring for the programmatic focus `FocusOnNavigate` gives a page's `h1`) and the utilities `gfo-visually-hidden`, `gfo-truncate`, `gfo-num`, `gfo-display`.
+
 ### 3.5 Typography
 | Role | Implementation | Font ([VISUAL_DESIGN.md §4](../VISUAL_DESIGN.md#4-typography)) |
 |---|---|---|
@@ -183,11 +198,13 @@ Fonts are bundled locally as `woff2` (the app is offline). Both are SIL OFL.
 
 ## 4. Styling approach
 
-- **Fluent components:** styled through **tokens and parameters only**. The one exception is `DataGrid<T>`'s two scoped layout rules (§5.3).
+- **Fluent components:** styled through **tokens and parameters only**. The one exception is `DataGrid<T>`'s scoped stylesheet: two layout fixes and the selected-row paint (§5.3).
 - **Our components** (composites, charts, gap components): **plain modern CSS** with **Blazor CSS isolation** (`Component.razor.css`), consuming Fluent tokens and GFO extension tokens. WebView2 is evergreen Chromium, so native nesting, container queries, `:has()`, `color-mix()`, OKLCH and `@layer` all work without polyfills.
 - **Global CSS** is ordered with cascade layers: `@layer reset, fluent-overrides, gfo-tokens, components, utilities;`.
 - **A tiny utility set** (`gfo-visually-hidden`, `gfo-truncate`, `gfo-num`). No utility framework.
 - **JavaScript is a last resort:** small ES modules for the client-side clock animation, drag-and-drop helpers and diagnostics. Fluent's own JS ships with the library.
+- **Pages scroll inside their frame.** Fluent's stylesheet sets `body { overflow: hidden; height: 100% }`, so the app shell's content area (and the gallery) is the scroll container, never the body.
+- **A scroll frame inside a flex or grid layout** takes `contain: inline-size` (as `DataGrid<T>`'s frame does), or its content's width leaks up and the whole page scrolls sideways instead of the frame.
 
 ---
 
@@ -217,7 +234,7 @@ Fonts are bundled locally as `woff2` (the app is offline). Both are SIL OFL.
 | `CommandPalette` (`Ctrl+K`) | P1 (stub in M1) | Composed from a Fluent dialog + input + list. The command registry is ours. |
 | `Stat` (KPI tile), `Kbd` (shortcut hint), `EmptyState`, `KeyValueList`, `Timeline` | P0/P1 | Small, GFO-specific presentation |
 | `MoneyField` | P1 | Wraps a Fluent number input with `$12.5M` parsing and formatting |
-| `SegmentedControl` | P0 | v5 has no equivalent (verified), so build it from `FluentToggleButton`s |
+| `SegmentedControl` | P0 | v5 has no equivalent (verified), so build it from `FluentToggleButton`s. **As built:** a radio group for assistive technology (the chosen option is `aria-checked` and the only one in the Tab order), and focus follows the choice through `gfo-dom.js`, because Fluent's button `Element` can't be focused from .NET. |
 | `CountdownRing` | P1 | Trade phone offers, the mini draft clock |
 | **Charts:** `Sparkline`, `BarChart`, `LineChart`, `RadarChart`, `WinProbabilityChart` | P1 | Pure SVG, themed with Fluent tokens, accessible (`<title>` + a data-table fallback). Fluent UI Blazor isn't a charting library. |
 | **Football composites** (in `GridironFrontOffice.UI`) | — | See §5.4 |
@@ -243,11 +260,31 @@ GM games live in tables, so this wrapper gets extra investment. It adds GFO beha
 | Hierarchical rows / master–detail | ✅ `HasRowDetails` (not exercised) | Box score drill-downs, contract year breakdowns |
 | Column groups (Passing / Rushing) | ❓ Not exercised | If missing, build a group header row in the wrapper |
 
-**The two CSS fixes** are the only sanctioned reach into Fluent's markup. They live in `DataGrid<T>`'s scoped stylesheet, and the gallery page exercises them so an upgrade that breaks them shows up immediately:
+**The two CSS fixes** (and the selected-row paint, below) are the only sanctioned reach into Fluent's markup. They live in `DataGrid<T>`'s scoped stylesheet, and the gallery page exercises them so an upgrade that breaks them shows up immediately:
 ```css
 .gfo-grid .fluent-data-grid tr[aria-hidden="true"] { grid-column: 1 / -1; }   /* Virtualize spacers span every column */
 .gfo-grid .fluent-data-grid { width: max-content; min-width: 100%; }             /* sticky pinned cells need the full-width box */
 ```
+
+**As built (M0 WP8):**
+- **Columns are subclasses, not wrappers.** Fluent's grid (like QuickGrid) only collects columns rendered directly in its content; a GFO component rendering a Fluent column one level down left every row empty. So `DataGridColumn<TItem, TValue>` derives from `PropertyColumn` and `DataGridTemplateColumn<TItem>` from `TemplateColumn`, and each applies GFO's rules in `OnParametersSet`:
+  - `MinWidth` = `Width`, and a missing `Width` throws;
+  - `Numeric` right-aligns, adds `gfo-num` and sorts high to low on the first click;
+  - `Pinned` pins the column to the start;
+  - the compact header.
+
+  They keep Fluent's parameter names (`Title`, `Property`, `Width`, `Format`, `SortBy`).
+- **The grid:** `Items` (any `IEnumerable`, rows in natural order), `Label` (the table's accessible name), `ItemKey`, `Height` of the scrolling frame (default `60vh`), `Virtualize` (default on), `SelectedItem` / `SelectedItemChanged`, `OnItemActivated` (Enter or a double-click), `EmptyContent`. Set `TItem` explicitly when you bind the callbacks: Razor can't infer it through them.
+- **`ItemSize` follows the density** from `GfoThemeState` (46 or 36 px). The grid re-renders on a theme change, and virtualization re-measures as it scrolls.
+- **The keyboard map lives in `gfo-grid.js`:**
+  - PageUp/PageDown move a frame's worth of rows;
+  - Home/End go to the first or last cell of the row, Ctrl+Home/End to the first or last row, scrolling virtualized rows into existence first;
+  - Enter (open) and Space (select) are passed to .NET.
+
+  Fluent's cells stop key events inside Blazor's own event dispatch, so a Blazor `@onkeydown` on the frame never sees them; a DOM listener does. Fluent's rows are `display: contents`, so heights are measured on cells.
+- **Selection:** a click or Space selects; the selected row gets `gfo-row-selected`, painted with the opaque `--gfo-selection` so a pinned cell shows it too. This is the third scoped rule.
+- **No rows:** `EmptyContent` fills the whole frame instead of the table, because Fluent's empty row only spans the columns' total width.
+- **The frame** has `contain: inline-size`, so it scrolls sideways itself in any flex or grid layout.
 
 **Fallback (kept for upgrades):** if a later Fluent release fails a P0 item (virtualization + pinned column + sticky header together, or compact rows), keep Fluent for everything else and swap the wrapper's internals to another grid (QuickGrid or Radzen; see [UI_COMPONENT_OPTIONS.md](UI_COMPONENT_OPTIONS.md)). **Screens don't change**, because they use `DataGrid<T>`.
 
@@ -277,6 +314,12 @@ The earlier plan said "screens only use GFO component names" ([D-008](../DECISIO
 | Accessibility | Each component documents its ARIA role and keyboard map. bUnit tests cover both. |
 | Rendering | `@key` in lists. `ShouldRender` for high-frequency components (the clock, grid rows). |
 | Docs | Every GFO component has a **gallery page** in `GridironFrontOffice.DevHost` (`/_gallery/...`), shown in light and dark and with team tint on and off |
+
+**As built (M0 WP8): the overlay services.**
+- `IGfoDialogs.ConfirmAsync(title, message, confirm, cancel)` returns true for the confirm button; Escape is no.
+- `PeekAsync<TComponent>(title, parameters, width)` opens the drawer on the right and completes when it closes.
+- `IGfoToasts` has `SuccessAsync`, `InfoAsync`, `WarningAsync` and `ErrorAsync(title, message)`.
+- Fluent's `IDialogService` and `INotificationService` have internal members, so they can't be faked: their tests render Fluent's real `FluentProviders` in bUnit, which also proves the argument order.
 
 ### 6.3 Setup notes
 - Register Fluent UI services in **both** hosts (`GridironFrontOffice.Desktop` and `GridironFrontOffice.DevHost`). The DevHost is where UI work happens day to day.
@@ -325,6 +368,11 @@ The earlier plan said "screens only use GFO component names" ([D-008](../DECISIO
     4. Nothing in the top resize band, so `WindowChrome` answers `HTTOP`.
   - **Maximized:** pad the content by the window's *measured* overhang past the monitor's work area (8 px at 100%; `WindowResizeBorderThickness` alone is only 4).
   - **Theme:** the caption buttons follow the theme's mode, so the theme service tells the host when the mode changes.
+- **As built (M0 WP8):**
+  - `AppShell` has the slots `Brand` (the wordmark until a league is open), `Context` (the season line), `Progress` (announced politely), `Actions`, `PrimaryAction`, `Navigation` and the page.
+  - `ShellOptions(AppBarIsTitleBar)` decides the 138 px caption gap: the desktop host turns it on in WP9; the DevHost leaves it off.
+  - `MainNav` is `FluentNav` with Fluent's Small density (28 px items, so the full league nav fits a 720 px window) on Surface 1, set through its `BackgroundColor` parameters. The active item keeps Fluent's accent indicator and semibold text, and gets Accent soft through the `ActiveClass` parameter, which adds GFO's own class rather than touching Fluent's internals.
+  - Each item is a `NavEntry`: a Regular icon at rest and a Filled one when active.
 - **The primary action button** is context-aware: "Play Week 7", "Advance to Free Agency", "Enter the Draft Room". It's always in the same place, and `Ctrl+Enter` triggers it.
 - **Routing:** Blazor `Router` with deep-linkable entity routes (`/player/{id}`, `/team/{id}`, `/game/{id}`, `/draft`, …). Mouse back and forward buttons (XButton1/2) and `Alt+←/→` are wired to history.
 - **Peek sheets:** `PeekService.OpenPlayer(id)` opens the `PlayerPeekSheet` (a Fluent drawer) over any page. "Open full profile" navigates.

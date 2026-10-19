@@ -1,0 +1,100 @@
+@page "/_gallery/theme"
+@implements IDisposable
+@inject GfoThemeService Theme
+<PageTitle>Theme · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">Theme</h1>
+
+<GallerySection Title="Hero band" Check="The exact team color as a big fill, the title in on-accent. Readable with every tint, in both modes.">
+    <div class="hero">
+        <span class="hero-kicker">2027 season</span>
+        <span class="hero-title gfo-display">Roster</span>
+        <span class="hero-ghost gfo-display" aria-hidden="true">W</span>
+    </div>
+</GallerySection>
+
+<GallerySection Title="Accent colors (VISUAL_DESIGN.md §3.3)" Check="Accent ≥ 3:1 and accent text ≥ 4.5:1 on Surface 1; on-accent ≥ 4.5:1 on the fill.">
+    @if (Theme.Current is { } t)
+    {
+        var surface = StadiumPalette.For(t.IsDark).Surface1;
+        <div class="swatch-row">
+            <Swatch Name="Accent fill" Token="--gfo-accent-fill" Hex="@t.AccentFill" />
+            <Swatch Name="On-accent" Token="--gfo-on-accent" Hex="@t.OnAccent" Ratio="@AccentColors.Contrast(t.OnAccent, t.AccentFill)" Minimum="4.5" />
+            <Swatch Name="Accent" Token="--gfo-accent" Hex="@t.Accent" Ratio="@AccentColors.Contrast(t.Accent, surface)" Minimum="3" />
+            <Swatch Name="Accent text" Token="--gfo-accent-text" Hex="@t.AccentText" Ratio="@AccentColors.Contrast(t.AccentText, surface)" Minimum="4.5" />
+            <Swatch Name="Accent soft" Token="--gfo-accent-soft" />
+            <Swatch Name="Selection" Token="--gfo-selection" />
+        </div>
+        <p class="sample-text">A <a href="_gallery/theme">link in accent text</a> and <span class="accent-text">accent-colored label</span> on Surface 1.</p>
+    }
+</GallerySection>
+
+<GallerySection Title="Neutrals (VISUAL_DESIGN.md §3.1–3.2)" Check="Surfaces step up from the Ground; Faint is still readable.">
+    <div class="swatch-row">
+        <Swatch Name="Ground" Token="--colorNeutralBackground3" />
+        <Swatch Name="Surface 1" Token="--colorNeutralBackground1" />
+        <Swatch Name="Surface 2" Token="--colorNeutralBackground2" />
+        <Swatch Name="Surface 3" Token="--colorNeutralBackground1Pressed" />
+        <Swatch Name="Border" Token="--colorNeutralStroke2" />
+        <Swatch Name="Border strong" Token="--colorNeutralStroke1" />
+        <Swatch Name="Text" Token="--colorNeutralForeground1" />
+        <Swatch Name="Muted" Token="--colorNeutralForeground2" />
+        <Swatch Name="Faint" Token="--colorNeutralForeground3" />
+    </div>
+</GallerySection>
+
+<GallerySection Title="Ratings, status and urgent (VISUAL_DESIGN.md §3.4)" Check="Each chip shows its number; the steps stay apart in both modes.">
+    <div class="chip-row">
+        @foreach (var (tier, sample) in Ratings)
+        {
+            <span class="chip gfo-num" style="--tier: var(--gfo-rating-@tier)">@sample</span>
+        }
+        <span class="divider" aria-hidden="true"></span>
+        @foreach (var status in Statuses)
+        {
+            <span class="chip" style="--tier: var(--gfo-status-@status)">@status</span>
+        }
+        <span class="urgent">0:08</span>
+    </div>
+</GallerySection>
+
+<GallerySection Title="Type (VISUAL_DESIGN.md §4)" Check="Archivo at 100% width for UI, condensed 72% at 800 for display. Figures are tabular.">
+    <div class="type-scale">
+        <span class="gfo-display" style="font-size: 56px">Display L · Roster</span>
+        <span class="gfo-display" style="font-size: 44px">Display M · The pick is in</span>
+        <span class="gfo-display" style="font-size: 28px">Title · Marcus Okafor</span>
+        <span style="font-size: 15px">Body L · Wolves · 2027 Week 7 · 4–2</span>
+        <span>Body · Default text and table cells. 0123456789</span>
+        <span style="font-size: 13px; color: var(--colorNeutralForeground2)">Small · Secondary lines and filter chips</span>
+        <span style="font-size: 12px; font-weight: 600">Label · Section and field labels</span>
+        <span style="font-size: 11px; font-weight: 700; letter-spacing: .04em">MICRO · QB · EDGE</span>
+        <span class="mono">JetBrains Mono · debug overlay only</span>
+    </div>
+</GallerySection>
+
+<GallerySection Title="Radii (VISUAL_DESIGN.md §5)" Check="8 / 14 / 20 px and pills. No sharp corners.">
+    <div class="radius" style="border-radius: var(--gfo-radius-s)">S · 8</div>
+    <div class="radius" style="border-radius: var(--gfo-radius-m)">M · 14</div>
+    <div class="radius" style="border-radius: var(--gfo-radius-l)">L · 20</div>
+    <div class="radius pill" style="border-radius: var(--gfo-radius-pill)">Pill</div>
+</GallerySection>
+
+<GallerySection Title="Fluent controls in the theme" Check="Primary buttons in the exact fill with on-accent text; checked controls and focus rings in the accent.">
+    <FluentButton Appearance="ButtonAppearance.Primary">Play Week 7</FluentButton>
+    <FluentButton>Secondary</FluentButton>
+    <FluentButton Appearance="ButtonAppearance.Subtle">Subtle</FluentButton>
+    <FluentCheckbox Label="Checked" Value="true" />
+    <FluentSwitch Label="Switch" Value="true" />
+    <FluentTextInput Placeholder="Search…" />
+</GallerySection>
+
+@code {
+    private static readonly (string Tier, int Sample)[] Ratings = [("elite", 93), ("good", 84), ("avg", 76), ("below", 64), ("poor", 52)];
+    private static readonly string[] Statuses = ["positive", "warning", "negative", "inactive"];
+
+    protected override void OnInitialized() => Theme.Applied += OnApplied;
+
+    private void OnApplied(object? sender, GfoThemeState state) => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Theme.Applied -= OnApplied;
+}

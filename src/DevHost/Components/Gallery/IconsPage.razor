@@ -1,0 +1,22 @@
+@page "/_gallery/icons"
+<PageTitle>Icons · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">Icons</h1>
+
+<GallerySection Title="Every GFO icon name, Regular at 20 px" Check="Rounded Fluent System Icons in the text color; decorative unless labelled.">
+    <div class="icon-grid">
+        @foreach (var name in Enum.GetValues<IconName>())
+        {
+            <div class="icon-cell"><Icon Name="@name" /><span>@name</span></div>
+        }
+    </div>
+</GallerySection>
+
+<GallerySection Title="Sizes and styles" Check="16 inline, 18 for nav (drawn from 20), 20 for buttons, 24 for empty states. Filled marks the active state.">
+    <Icon Name="IconName.Home" Size="16" Label="Home, 16 px" />
+    <Icon Name="IconName.Home" Width="18" Label="Home, 18 px" />
+    <Icon Name="IconName.Home" Label="Home, 20 px" />
+    <Icon Name="IconName.Home" Size="24" Label="Home, 24 px" />
+    <Icon Name="IconName.Home" Size="24" Filled="true" Label="Home, 24 px, filled" />
+    <span class="accent"><Icon Name="IconName.Trophy" Size="24" Filled="true" Label="Trophy in the accent" /></span>
+</GallerySection>

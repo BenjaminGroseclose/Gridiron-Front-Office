@@ -1,0 +1,10 @@
+@* The navigation column (VISUAL_DESIGN.md §6): Fluent's nav on Surface 1 with small items. The active item keeps Fluent's
+   accent indicator and semibold text, and gets GFO's Accent soft background through the ActiveClass parameter. M0 has
+   Home and Settings; the league sections arrive with their features. Items are Fluent's Small density (28 px), so the full
+   league nav fits a 720 px window. *@
+<div class="gfo-main-nav">
+    <FluentNav Width="100%" Density="NavDensity.Small" BackgroundColor="var(--colorNeutralBackground1)" BackgroundColorHover="var(--colorNeutralBackground2)">
+        <NavEntry Href="/" Title="Home" Icon="IconName.Home" Match="NavLinkMatch.All" />
+        <NavEntry Href="/settings" Title="Settings" Icon="IconName.Settings" />
+    </FluentNav>
+</div>

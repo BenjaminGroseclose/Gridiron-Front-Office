@@ -9,6 +9,7 @@ using GridironFrontOffice.Infrastructure;
 using GridironFrontOffice.Infrastructure.Logging;
 using GridironFrontOffice.Infrastructure.Paths;
 using GridironFrontOffice.Infrastructure.Settings;
+using GridironFrontOffice.UI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.FluentUI.AspNetCore.Components;
@@ -70,6 +71,7 @@ internal sealed partial class App : System.Windows.Application
         services.AddSingleton<ISettingsStore>(_settings);
         services.AddWpfBlazorWebView();
         services.AddFluentUIComponents();
+        services.AddGfoUi();
 #if DEBUG
         services.AddBlazorWebViewDeveloperTools();
 #endif

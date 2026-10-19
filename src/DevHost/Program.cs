@@ -50,6 +50,7 @@ try
     builder.Services.AddSingleton<ISettingsStore>(settings);
     builder.Services.AddRazorComponents().AddInteractiveServerComponents();
     builder.Services.AddFluentUIComponents();
+    builder.Services.AddGfoUi();
 
     var app = builder.Build();
 

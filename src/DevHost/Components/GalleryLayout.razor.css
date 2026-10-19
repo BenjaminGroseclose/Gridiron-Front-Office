@@ -1,0 +1,95 @@
+/* Fluent's stylesheet makes <body> overflow: hidden, so the gallery scrolls itself (like AppShell's content area). */
+.gallery {
+  height: 100vh;
+  overflow: auto;
+  background: var(--colorNeutralBackground3);
+  color: var(--colorNeutralForeground1);
+}
+
+.gallery-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  background: var(--colorNeutralBackground1);
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.gallery-home {
+  font-size: 24px;
+  color: var(--colorNeutralForeground1);
+  text-decoration: none;
+}
+
+.gallery-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gallery-links ::deep a {
+  padding: 4px 10px;
+  border-radius: var(--gfo-radius-pill);
+  color: var(--colorNeutralForeground2);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.gallery-links ::deep a:hover { background: var(--colorNeutralBackground2); }
+
+.gallery-links ::deep a.is-active {
+  background: var(--gfo-accent-soft);
+  color: var(--gfo-accent-text);
+}
+
+.gallery-grow { flex: 1; }
+
+.gallery-swatches {
+  display: flex;
+  gap: 6px;
+}
+
+/* The sample team colors are data, like a team file: the swatch shows the raw color on purpose. */
+.gallery-swatch {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid var(--colorNeutralStroke1);
+  border-radius: var(--gfo-radius-pill);
+  background: var(--swatch);
+  cursor: pointer;
+}
+
+.gallery-swatch.is-active {
+  outline: 2px solid var(--colorNeutralForeground1);
+  outline-offset: 2px;
+}
+
+.gallery-swatch:focus-visible {
+  outline: 2px solid var(--colorStrokeFocus2);
+  outline-offset: 2px;
+}
+
+.gallery-status {
+  margin: 0;
+  padding: 6px 24px;
+  font-size: 12px;
+  color: var(--colorNeutralForeground3);
+}
+
+.gallery-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  padding: 8px 24px 32px;
+}
+
+.gallery-page ::deep .gallery-title {
+  margin: 8px 0 0;
+  font-size: 52px;
+}

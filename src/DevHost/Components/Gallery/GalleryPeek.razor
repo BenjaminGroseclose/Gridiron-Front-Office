@@ -1,0 +1,16 @@
+@* Peek sheet content for the gallery, standing in for the PlayerPeekSheet. FluentDialogBody draws the header, the close
+   button and the scrolling body. *@
+<FluentDialogBody>
+    <div class="peek" data-testid="peek-body">
+        <p class="muted">Player #@PlayerID · Age 26 · 6'4" 262 lb · Ridge State</p>
+        <div class="stats">
+            <Stat Label="Overall" Value="84" Detail="81–87 scouted" />
+            <Stat Label="Cap hit" Value="$9.5M" Detail="+$1.1M next year" Tone="StatTone.Negative" />
+        </div>
+        <FluentTextInput Label="Scouting note" Placeholder="Add a note" />
+    </div>
+</FluentDialogBody>
+
+@code {
+    [Parameter] public int PlayerID { get; set; }
+}

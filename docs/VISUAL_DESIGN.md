@@ -99,7 +99,14 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 | Injured reserve / inactive | `#A3A3A3` | `#5F6670` |
 | **Urgent** (draft clock ≤ 10 s, offer ≤ 8 s, LIVE tag) | `#C62828` fill + white text | same |
 
-> **Color-blind check (to do in M0):** run the rating scale through deuteranopia and protanopia simulation. The good/average/below steps rely partly on hue. Lightness differences plus the always-visible number are the safety net.
+> **Color-blind check (done in M0 WP8, 2026-10-19).** Machado (2009) simulation at full severity, adjacent tiers compared as CIEDE2000 ΔE (about 2 is barely noticeable, 5+ is clear):
+>
+> | Mode | Normal | Protanopia | Deuteranopia | Chip text contrast |
+> |---|---|---|---|---|
+> | Dark | 18–24 | closest Good/Average **6.9** | closest Average/Below **6.1** | 4.63–6.96:1 |
+> | Light | 15–26 | closest Average/Below **3.4** | Average/Below **1.1**, Below/Poor **1.0** | 4.51–5.20:1 |
+>
+> **Dark holds up.** The steps are subtle but distinct for both deficiencies. **Light doesn't.** For deuteranopia, Average, Below and Poor read as one color, and the light tiers differ by only about 1 L* in lightness, so lightness is no safety net there; only the always-visible number separates them. The chip text meets 4.5:1 in both modes. **Open:** whether to re-tune the light tiers into a lightness ramp before the `RatingChip` is built in M1.
 
 ---
 
@@ -159,7 +166,7 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 |---|---|
 | **Hero band** (page headers: Roster, Team, Draft Room clock band) | Accent fill, Radius L, padding 28 × 30, Display L title in on-accent. The team monogram is a "ghost" at 220 px in on-accent at 12% opacity, bottom-right, decorative. Segmented tabs sit on a black 22% tray, with the selected tab in an on-accent fill and team-color text. |
 | **Top bar** | Surface 1, crest + team name + "season · week · record", cap space pill, search with a `Ctrl K` hint, notifications, primary action button (accent fill). |
-| **Navigation** | Surface 1 column, 34 px items. The active item gets an Accent soft background, a 3 px accent indicator pill on the left, and bold text. A count badge uses Accent soft + Accent text. |
+| **Navigation** | Surface 1 column, 34 px items. The active item gets an Accent soft background, a 3 px accent indicator pill on the left, and bold text. A count badge uses Accent soft + Accent text. **As built (M0 WP8):** Fluent's nav offers 28 or 40 px items; GFO uses 28 px (Small), so the full league nav fits a 720 px window. The indicator is Fluent's own (4 px, in the accent) with semibold text, plus Accent soft. |
 | **Rating chip + range** | Pill chip (§3.4) followed by the scout range in Faint, e.g. `78  74–83`. Attribute bars use a 6 px Surface 3 track, an Accent soft band for the range, and a 3 × 10 px accent marker for the estimate. |
 | **Draft clock** | Display XL condensed digits in on-accent on the hero band. At ≤ 10 s, the clock sits on an Urgent red pill. The client animates the countdown ([LIVE_EVENTS.md §3](architecture/LIVE_EVENTS.md#3-time-handling)). |
 | **"The pick is in"** | Scrim `rgba(4,7,12,.8)`. Dialog with Radius L: an accent-fill header band with the title in condensed uppercase, then the player name in Display M. |
@@ -198,7 +205,7 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 |---|---|
 | Mode: Dark default / Light / Match Windows | `ThemeSettings.Mode` = `Dark` / `Light`, always set together with the color (v5 issue #5351). **Match Windows is resolved by GFO**, which watches `prefers-color-scheme`. Fluent never sees `System`, because on an OS flip it would swap in its default theme. |
 | Team accent | `ThemeSettings.Color` = team primary (or `#0F6CBD` for Neutral) with `IsExact = true`. GFO's §3.3 colors go to `Colors.Neutral.ForegroundOnBrand` (on-accent), `Colors.Brand.Foreground*` / `ForegroundLink*` (Accent text), and `Colors.Brand.Stroke*` + `Colors.Compound.BrandForeground*` / `BrandStroke*` (Accent). |
-| Ground and surfaces (§3.1–3.2) | `Colors.Neutral.Background1` = Surface 1 (its `Hover` = Surface 2, `Pressed` = Surface 3), `Background2` = Surface 2, `Background3`–`5` = Ground, `CardBackground` = Surface 1. `Foreground1`–`3` = Text / Muted / Faint. `Stroke1` = Border strong, and `Stroke2`, `Stroke3` and `StrokeSubtle` = Border. **Fluent paints `body` with Background1, so the app shell paints the page Ground itself.** |
+| Ground and surfaces (§3.1–3.2) | `Colors.Neutral.Background1` = Surface 1 (its `Hover` = Surface 2, `Pressed` = Surface 3), `Background2` = Surface 2, `Background3`–`5` = Ground, `CardBackground` = Surface 1. As built (WP8), every Background, card, Foreground and Stroke 1 state variant is set too, one surface step up from its base. `Foreground1`–`3` = Text / Muted / Faint. `Stroke1` = Border strong, and `Stroke2`, `Stroke3` and `StrokeSubtle` = Border. **Fluent paints `body` with Background1, so the app shell paints the page Ground itself.** |
 | Archivo, JetBrains Mono | `Fonts.Family.Base` and `.Numeric` = Archivo, `.Monospace` = JetBrains Mono (bundled `woff2`, `gfo-fonts.css`). `--gfo-font-display` = Archivo, with `font-stretch: 72%` applied by GFO components. |
 | Radius S / M / L / pill | `Borders.Radius.Small` = 8 px, `.Medium` = 14 px (buttons, inputs), `.Large` and `.XLarge` = 20 px, `.Circular` = 999 px |
 | Ratings, status, urgent, density, moment | GFO extension tokens (`--gfo-rating-*`, `--gfo-status-*`, `--gfo-urgent`, `--gfo-grid-row-height`, `--gfo-dur-moment`) in `gfo-tokens.css`. Grid density is `DataGrid<T>`'s `ItemSize`, which is the exact row height (§5). |

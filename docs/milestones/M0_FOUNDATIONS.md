@@ -450,7 +450,7 @@ flowchart LR
 3. **Restoring `pre-restore` would overwrite itself.** The new `pre-restore` is taken before the replace, so the chosen snapshot is staged (copied next to the save) first. A test undoes a restore.
 4. **The Crasher failed to start** because hosts must now register `IPlatformServices`. Its unhandled DI exception filled the redirected stderr pipe, so the process blocked instead of exiting. The kill test's `finally` cleaned it up as designed. The Crasher now registers a stub.
 
-### WP8 · Design system v0 and the gallery (L)
+### WP8 · Design system v0 and the gallery (L) ✅ Done 2026-10-19
 **Goal:** the components M1 needs, in the Stadium look, documented in the gallery ([UI_DESIGN_SYSTEM.md](../architecture/UI_DESIGN_SYSTEM.md), [VISUAL_DESIGN.md](../VISUAL_DESIGN.md)).
 
 | Component or service | Notes |
@@ -469,6 +469,40 @@ flowchart LR
 **Tests:** bUnit for every GFO component (rendering, parameters, keyboard, ARIA). Fluent's web components need bUnit's JS interop set to loose mode.
 
 **Exit:** the gallery shows every v0 component in both themes, with tint on and off. The QA checklist passes.
+
+**Result: built, and the exit criterion is met.** Every v0 component has a gallery page. Each was checked in Dark and Light, with the tint off and in the three sample colors (navy `#1B2A4A`, orange `#D9541E`, pale gold `#E1AD21`), and in both densities. Every derived accent color met its contrast floor in each combination.
+- **UI.Components:**
+  - `GfoThemeService` with `GfoAppearance`/`GfoThemeState`, `StadiumPalette`, `AccentColors` and `gfo-theme.js`;
+  - `gfo-tokens.css`;
+  - `Icon` + `IconCatalog`;
+  - `IGfoDialogs`, `IGfoToasts`;
+  - `DataGrid<T>` with `DataGridColumn` and `DataGridTemplateColumn`, and `gfo-grid.js`;
+  - `EmptyState`, `Stat`, `Kbd`, `SegmentedControl` (+ `gfo-dom.js`);
+  - `AddGfoUiComponents`.
+- **UI:** `AppShell` + `ShellOptions`, `MainNav`/`NavEntry`, `AppearanceMapping` + `AppearanceSync`, the Settings page (Appearance), `AddGfoUi`.
+- **Hosts:** both register `AddGfoUi`, link `gfo-tokens.css`, and set Fluent's listener guard. The rest of the first-paint layers are WP9.
+- **DevHost:** `/_gallery` with pages for the theme, icons, the grid (2,000 rows × 25 columns), dialogs and toasts, `SegmentedControl`, `Stat`, `EmptyState`, `Kbd` and `AppShell`. The toolbar drives the theme service directly and never touches `settings.json`.
+- **Tests:** 88 new bUnit and unit tests, covering rendering, parameters, keyboard and ARIA for every GFO component, plus the theme service, the color rules and the Settings page. 232 in the gate.
+- **The rating scale's color-blind check** (VISUAL_DESIGN.md §3.4): Dark holds up; in Light, Average/Below/Poor merge for deuteranopia. That's recorded as an open question for M1's `RatingChip`.
+- **Design review pending:** the design system is mirrored into a Claude Design system (tokens, the brand book, the icons and static component cards) for review. Changes from that review land as follow-up commits on this branch before the M0 merge.
+
+**Changed from the plan**
+- **`GfoThemeService` takes a `GfoAppearance`, not the settings.** `UI.Components` can't reference Application. The UI maps settings (and, from M1, the team color) onto it.
+- **Grid columns subclass Fluent's** (`DataGridColumn<TItem, TValue>`, `DataGridTemplateColumn<TItem>`) instead of wrapping them (below).
+- **`DataGrid<T>`'s scoped stylesheet has a third rule,** the selected-row paint, which must be opaque so a pinned cell shows it. `EmptyContent` replaces the table rather than sitting in Fluent's narrow empty row.
+- **Column resizing and saved views** wait for the first real table screen (M1). The compact header owns any options UI.
+- **The nav uses Fluent's 28 px items,** not the 34 px in VISUAL_DESIGN.md §6, since Fluent offers 28 or 40.
+- **`ShowInFolder`** and the other WP9 pieces aren't touched here. The desktop host's caption gap is ready (`ShellOptions`) but turned on in WP9.
+
+**Found while building it**
+1. **Fluent's grid only collects columns rendered directly in its content.** Wrapper columns rendered every row empty, so GFO's columns subclass Fluent's.
+2. **Fluent's stylesheet sets `body { overflow: hidden }`.** A page that relies on the body scrolling can't scroll, so frames scroll themselves.
+3. **A folder's `_Imports.razor` `@layout` applies to the layout in that folder too.** The gallery layout named itself and the router looped forever with no error, so layouts live outside the folder whose pages use them.
+4. **Fluent's cells stop key events inside Blazor's dispatch,** so Enter and Space go through `gfo-grid.js`. Fluent's rows are `display: contents` (no height of their own), which broke the first PageDown math.
+5. **A scroll frame in a CSS grid grew to its table's width,** so the page scrolled instead of the frame. Fixed with `contain: inline-size`.
+6. **`FluentToggleButton.Element` can't be focused from .NET,** so `SegmentedControl`'s focus moves through `gfo-dom.js`.
+7. **`::deep` needs an element of the component's own** to anchor the scope attribute. `MainNav`'s first rule silently matched nothing.
+8. **Fluent's dialog and notification interfaces have internal members** and can't be faked. Their tests use Fluent's real providers in bUnit.
 
 ### WP9 · Main menu, wiring and the M0 exit (M)
 **Goal:** put it together into the walking skeleton.
@@ -590,7 +624,7 @@ From [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton), plus the
 - [ ] The log file contains the banner, the lifecycle events, a forced test exception with a stack trace, and a forwarded JavaScript error
 - [x] A snapshot can be taken and restored (WP7, tested)
 - [ ] `./build.ps1` is green. A forbidden reference, a stray `BeginTransaction` and an `async void` each turn it red (demonstrated, not committed).
-- [ ] The gallery shows every v0 component in both themes, with team tint on and off
+- [x] The gallery shows every v0 component in both themes, with team tint on and off (WP8)
 - [x] Spike decisions recorded: S0a (EF Core, D-024), S0b (grid + icons + verified v5 names, D-067), S0c (title bar, D-068)
 - [ ] `THIRD_PARTY_NOTICES.md` lists every package, font and icon set in use
 - [ ] Tag `m0-complete`

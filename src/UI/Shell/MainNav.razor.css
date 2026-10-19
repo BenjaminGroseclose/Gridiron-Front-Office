@@ -1,0 +1,3 @@
+/* The active item's Accent soft background (VISUAL_DESIGN.md §6). The class comes from FluentNavItem's ActiveClass
+   parameter, so this styles GFO's own class rather than Fluent's internals. */
+.gfo-main-nav ::deep .gfo-nav-active { background-color: var(--gfo-accent-soft); }

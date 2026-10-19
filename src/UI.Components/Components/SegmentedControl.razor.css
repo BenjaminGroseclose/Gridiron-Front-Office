@@ -1,0 +1,9 @@
+/* The pill track (VISUAL_DESIGN.md §5: segmented controls are pills). The buttons are Fluent's, styled by parameters. */
+.gfo-segmented {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--gfo-radius-pill);
+  background: var(--colorNeutralBackground2);
+  border: 1px solid var(--colorNeutralStroke2);
+}

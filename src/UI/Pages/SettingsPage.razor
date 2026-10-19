@@ -1,0 +1,70 @@
+@page "/settings"
+@inject ISettingsStore Settings
+@* Settings → Appearance (VISUAL_DESIGN.md §2, §3.3, §5). Each change is written to settings.json and applied straight
+   away: AppearanceSync re-applies the theme when the store reports the save. *@
+
+<PageTitle>Settings · Gridiron Front Office</PageTitle>
+
+<h1 class="gfo-page-title gfo-display">Settings</h1>
+
+<section class="gfo-settings-panel" aria-labelledby="appearance-heading">
+    <h2 id="appearance-heading" class="gfo-settings-heading">Appearance</h2>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Theme</span>
+            <span class="gfo-setting-hint">Match Windows follows the Windows light or dark setting.</span>
+        </div>
+        <SegmentedControl TValue="ThemeChoice" Label="Theme" Options="ThemeOptions" Value="@_appearance.Theme"
+                          ValueChanged="@(value => SaveAsync(_appearance with { Theme = value }))" data-testid="theme" />
+    </div>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Accent</span>
+            <span class="gfo-setting-hint">Team uses your team's primary color once a league is open. Neutral is Fluent blue.</span>
+        </div>
+        <SegmentedControl TValue="AccentMode" Label="Accent" Options="AccentOptions" Value="@_appearance.Accent"
+                          ValueChanged="@(value => SaveAsync(_appearance with { Accent = value }))" data-testid="accent" />
+    </div>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Density</span>
+            <span class="gfo-setting-hint">Compact fits more rows in every table.</span>
+        </div>
+        <SegmentedControl TValue="Density" Label="Density" Options="DensityOptions" Value="@_appearance.Density"
+                          ValueChanged="@(value => SaveAsync(_appearance with { Density = value }))" data-testid="density" />
+    </div>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<SegmentedOption<ThemeChoice>> ThemeOptions =
+    [
+        new(ThemeChoice.Dark, "Dark", IconName.WeatherMoon),
+        new(ThemeChoice.Light, "Light", IconName.WeatherSunny),
+        new(ThemeChoice.MatchWindows, "Match Windows", IconName.Desktop),
+    ];
+
+    private static readonly IReadOnlyList<SegmentedOption<AccentMode>> AccentOptions =
+    [
+        new(AccentMode.Team, "Team"),
+        new(AccentMode.Neutral, "Neutral"),
+    ];
+
+    private static readonly IReadOnlyList<SegmentedOption<Density>> DensityOptions =
+    [
+        new(Density.Comfortable, "Comfortable"),
+        new(Density.Compact, "Compact"),
+    ];
+
+    private AppearanceSettings _appearance = new();
+
+    protected override void OnInitialized() => _appearance = Settings.Current.Appearance;
+
+    private async Task SaveAsync(AppearanceSettings appearance)
+    {
+        _appearance = appearance;
+        await Settings.SaveAsync(Settings.Current with { Appearance = appearance });
+    }
+}

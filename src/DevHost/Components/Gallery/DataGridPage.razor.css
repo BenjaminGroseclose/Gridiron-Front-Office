@@ -1,0 +1,15 @@
+.grid-status { margin: 0 0 8px; font-size: 13px; color: var(--colorNeutralForeground2); }
+
+/* A stand-in for the rating chip (a UI composite in M1). */
+.chip {
+  display: inline-block;
+  min-width: 2.2em;
+  padding: 1px 8px;
+  border-radius: var(--gfo-radius-pill);
+  background: color-mix(in srgb, var(--tier) var(--gfo-chip-tint), transparent);
+  color: var(--tier);
+  font-weight: 700;
+  text-align: center;
+}
+
+.range { margin-left: 6px; color: var(--colorNeutralForeground3); font-size: 12.5px; }

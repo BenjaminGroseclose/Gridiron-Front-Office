@@ -1,0 +1,13 @@
+@* One navigation item: a Regular icon at rest, Filled when active (VISUAL_DESIGN.md §7). *@
+<FluentNavItem Href="@Href" Match="@Match" ActiveClass="active gfo-nav-active"
+               IconRest="@IconCatalog.Create(Icon)" IconActive="@IconCatalog.Create(Icon, filled: true)">@Title</FluentNavItem>
+
+@code {
+    [Parameter, EditorRequired] public string Href { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    [Parameter, EditorRequired] public IconName Icon { get; set; }
+
+    [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
+}

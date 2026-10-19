@@ -1,0 +1,81 @@
+/* Fluent paints <body> with Background1 (Surface 1); the shell paints the page Ground itself (VISUAL_DESIGN.md §9). */
+.gfo-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--colorNeutralBackground3);
+  color: var(--colorNeutralForeground1);
+}
+
+/* The top bar (VISUAL_DESIGN.md §6): Surface 1, 40 px, one row. */
+.gfo-appbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 40px;
+  padding: 0 12px 0 16px;
+  background: var(--colorNeutralBackground1);
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+  user-select: none;
+}
+
+.gfo-appbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gfo-wordmark {
+  font-size: 18px;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.gfo-appbar-context {
+  color: var(--colorNeutralForeground2);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.gfo-appbar-progress {
+  flex: 1;
+  min-width: 0;
+  color: var(--colorNeutralForeground2);
+  font-size: 13px;
+}
+
+.gfo-appbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The three WPF caption buttons (3 × 46 px) sit over this space in the desktop host (D-068). */
+.gfo-caption-gap {
+  flex: none;
+  width: 126px;   /* 138 px reserved, minus the bar's 12 px right padding */
+}
+
+.gfo-shell-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+.gfo-shell-nav {
+  flex: none;
+  width: 220px;
+  overflow-y: auto;
+  padding-top: 8px;
+  background: var(--colorNeutralBackground1);
+  border-right: 1px solid var(--colorNeutralStroke2);
+}
+
+.gfo-shell-content {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+  padding: 20px 24px;
+}

@@ -1,0 +1,23 @@
+@* One block on a gallery page: a title, what to look for, and the component in a panel. *@
+<section class="gallery-section" aria-labelledby="@_id">
+    <h2 id="@_id" class="gallery-section-title">@Title</h2>
+    @if (Check is not null)
+    {
+        <p class="gallery-check">@Check</p>
+    }
+    <div class="gallery-panel @(Plain ? "is-plain" : "")">@ChildContent</div>
+</section>
+
+@code {
+    private readonly string _id = $"section-{Guid.NewGuid():N}";
+
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+
+    /// <summary>What to check by eye in both modes and with each tint.</summary>
+    [Parameter] public string? Check { get; set; }
+
+    /// <summary>No panel background (for components that bring their own).</summary>
+    [Parameter] public bool Plain { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

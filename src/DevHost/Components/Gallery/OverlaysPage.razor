@@ -1,0 +1,38 @@
+@page "/_gallery/overlays"
+@inject IGfoDialogs Dialogs
+@inject IGfoToasts Toasts
+<PageTitle>Dialogs & toasts · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">Dialogs & toasts</h1>
+
+<GallerySection Title="IGfoDialogs" Check="The confirm dialog has a 20 px radius and the primary button in the accent fill. The peek sheet slides in from the right; Escape and ✕ close both.">
+    <FluentButton OnClick="ConfirmAsync" data-testid="confirm">Release player…</FluentButton>
+    <FluentButton Appearance="ButtonAppearance.Primary" OnClick="PeekAsync" data-testid="peek">Peek player</FluentButton>
+    <span class="result" data-testid="result">@_result</span>
+</GallerySection>
+
+<GallerySection Title="IGfoToasts" Check="Bottom right, an icon per intent, readable in both modes.">
+    <FluentButton OnClick="@(() => Toasts.SuccessAsync("Signed R. Mensah", "4 years · $38.0M · $14.0M guaranteed"))">Success</FluentButton>
+    <FluentButton OnClick="@(() => Toasts.InfoAsync("Week 7 is ready", "All 16 games simulated."))">Info</FluentButton>
+    <FluentButton OnClick="@(() => Toasts.WarningAsync("Over the cap", "You're $1.2M over for next season."))">Warning</FluentButton>
+    <FluentButton OnClick="@(() => Toasts.ErrorAsync("Couldn't save", "The save file is in use by another program."))">Error</FluentButton>
+</GallerySection>
+
+@code {
+    private string _result = "Nothing opened yet.";
+
+    private async Task ConfirmAsync()
+    {
+        var released = await Dialogs.ConfirmAsync(
+            "Release player",
+            "Release M. Okafor? His remaining bonus becomes $4.2M of dead money this season.",
+            confirm: "Release", cancel: "Keep");
+        _result = released ? "Released." : "Kept.";
+    }
+
+    private async Task PeekAsync()
+    {
+        await Dialogs.PeekAsync<GalleryPeek>("M. Okafor · EDGE", new Dictionary<string, object?> { [nameof(GalleryPeek.PlayerID)] = 7 }, width: "440px");
+        _result = "Peek sheet closed.";
+    }
+}
