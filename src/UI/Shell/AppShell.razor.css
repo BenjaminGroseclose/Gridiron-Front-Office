@@ -14,7 +14,7 @@
   align-items: center;
   gap: 12px;
   height: 40px;
-  padding: 0 12px 0 16px;
+  padding: 0 12px 0 24px;   /* the brand starts on the nav's icon line (MainNav: 8 px gutter + 16 px inside the pill) */
   background: var(--colorNeutralBackground1);
   border-bottom: 1px solid var(--colorNeutralStroke2);
   user-select: none;

@@ -1,3 +1,22 @@
-/* The active item's Accent soft background (VISUAL_DESIGN.md §6). The class comes from FluentNavItem's ActiveClass
-   parameter, so this styles GFO's own class rather than Fluent's internals. */
-.gfo-main-nav ::deep .gfo-nav-active { background-color: var(--gfo-accent-soft); }
+/* GFO's classes on Fluent's nav (FluentNav.Class, FluentNavItem.Class and ActiveClass), so this never reaches into
+   Fluent's internals. VISUAL_DESIGN.md §6. */
+
+/* Even gutters: Fluent pads the column 10 px left and 4 px right. */
+.gfo-main-nav ::deep .gfo-nav { padding-inline: 8px; }
+
+/* Room inside each pill for the indicator, so the icons line up 16 px in. Through .gfo-nav as well, to outrank Fluent's
+   [density="small"] padding rule, which has the same weight and loads later. */
+.gfo-main-nav ::deep .gfo-nav .gfo-nav-item { padding-inline-start: 16px; }
+
+.gfo-main-nav ::deep .gfo-nav-item.gfo-nav-active { background-color: var(--gfo-accent-soft); }
+
+/* The indicator: a 3 × 16 px accent pill inside the active item's left end, centered. Fluent's own is sized for 40 px
+   items (100% − 20 px tall, 16 px outside the item), which at 28 px left it 8 px tall, off-center and in the gutter. */
+.gfo-main-nav ::deep .gfo-nav-item.gfo-nav-active::after {
+  inset-inline-start: 6px;
+  top: 50%;
+  translate: 0 -50%;
+  width: 3px;
+  height: 16px;
+  margin-inline-start: 0;
+}
