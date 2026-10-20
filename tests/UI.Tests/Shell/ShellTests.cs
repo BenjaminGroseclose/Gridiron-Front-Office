@@ -149,6 +149,7 @@ public sealed class SettingsPageTests : GfoTestContext
     {
         Services.AddSingleton<ISettingsStore>(_settings);
         Services.AddSingleton<GridironFrontOffice.Application.Saves.ISaveManager>(new TestDoubles.FakeSaveManager(new TestDoubles.FakeDomainEvents()));
+        Services.AddSingleton(TestDoubles.SaveScreenContext.App);
     }
 
     [Fact]

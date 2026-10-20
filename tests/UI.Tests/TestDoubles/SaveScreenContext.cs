@@ -27,7 +27,11 @@ public abstract class SaveScreenContext : GfoTestContext
         Services.AddSingleton<IGfoDialogs>(Dialogs);
         Services.AddSingleton<IGfoToasts>(Toasts);
         Services.AddSingleton<ISettingsStore>(new FakeSettingsStore(new AppSettings()));
+        Services.AddSingleton(App);
     }
+
+    /// <summary>The build the screens show: version 0.0.1 from commit 94b9338, a Debug build.</summary>
+    internal static AppIdentity App { get; } = AppIdentity.Parse("0.0.1+94b9338c0ffee", "Debug");
 
     internal FakeDomainEvents Events { get; } = new();
 

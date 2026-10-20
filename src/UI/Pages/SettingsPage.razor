@@ -2,9 +2,12 @@
 @inject ISettingsStore Settings
 @inject ISaveManager Saves
 @inject NavigationManager Navigation
+@inject AppIdentity App
+@inject IGfoToasts Toasts
+@inject IJSRuntime JS
 @* Settings → Appearance (VISUAL_DESIGN.md §2, §3.3, §5). Each change is written to settings.json and applied straight
    away: AppearanceSync re-applies the theme when the store reports the save. Reached from the main menu too, where
-   there's no navigation column, so it offers the way back. *@
+   there's no navigation column, so it offers the way back. About shows the full version, which a bug report needs. *@
 
 <PageTitle>Settings · Gridiron Front Office</PageTitle>
 
@@ -46,6 +49,18 @@
     </div>
 </section>
 
+<section class="gfo-settings-panel" aria-labelledby="about-heading">
+    <h2 id="about-heading" class="gfo-settings-heading">About</h2>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Version</span>
+            <span class="gfo-setting-value" data-testid="version">@VersionLine</span>
+        </div>
+        <FluentButton IconStart="@IconCatalog.Create(IconName.Copy)" OnClick="CopyVersionAsync" data-testid="copy-version">Copy</FluentButton>
+    </div>
+</section>
+
 @code {
     private static readonly IReadOnlyList<SegmentedOption<ThemeChoice>> ThemeOptions =
     [
@@ -70,9 +85,28 @@
 
     protected override void OnInitialized() => _appearance = Settings.Current.Appearance;
 
+    /// <summary>
+    /// "0.0.1+94b9338 (Debug)": the version, the commit it was built from, and the build configuration. Plain ASCII, so
+    /// it pastes cleanly into any bug report or terminal.
+    /// </summary>
+    private string VersionLine => $"{App.Display} ({App.Configuration})";
+
     private async Task SaveAsync(AppearanceSettings appearance)
     {
         _appearance = appearance;
         await Settings.SaveAsync(Settings.Current with { Appearance = appearance });
+    }
+
+    private async Task CopyVersionAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", VersionLine);
+            await Toasts.SuccessAsync("Version copied");
+        }
+        catch (JSException)
+        {
+            await Toasts.WarningAsync("Couldn't copy the version", "Select it and copy it instead.");
+        }
     }
 }

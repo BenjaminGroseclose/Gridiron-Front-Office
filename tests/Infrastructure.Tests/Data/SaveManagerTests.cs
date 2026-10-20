@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using GridironFrontOffice.Application.Data;
+using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Saves;
 using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.Core.Results;
@@ -189,7 +190,7 @@ public sealed class SaveManagerTests
         using var temp = new TempFolder();
         var services = new ServiceCollection()
             .AddLogging()
-            .AddGfoInfrastructure(Infrastructure.Paths.AppPaths.ForRoot(temp.Path), Infrastructure.Logging.AppIdentity.Parse("0.0.1", "Test"));
+            .AddGfoInfrastructure(Infrastructure.Paths.AppPaths.ForRoot(temp.Path), AppIdentity.Parse("0.0.1", "Test"));
 
         services.Where(d => typeof(DbContext).IsAssignableFrom(d.ServiceType)
                             || d.ServiceType.Name.StartsWith("DbContextOptions", StringComparison.Ordinal)

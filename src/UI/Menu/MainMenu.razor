@@ -3,8 +3,10 @@
 @inject ISaveManager Saves
 @inject SaveActions Actions
 @inject NavigationManager Navigation
+@inject AppIdentity App
 @* The main menu (M0 WP9). A plain centered panel for now: the design review decides the final look (option c).
-   Continue opens the most recently played save that can be opened. With a league open, this route goes to its home. *@
+   Continue opens the most recently played save that can be opened. With a league open, this route goes to its home.
+   The version under the panel is the short one; Settings → About has the full one for bug reports (D-072). *@
 
 <PageTitle>Gridiron Front Office</PageTitle>
 
@@ -33,6 +35,7 @@
         </div>
     </ChildContent>
     <After>
+        <p class="gfo-menu-version" data-testid="version">v@(App.Version)</p>
         @if (DiagnosticsTestPanel.Enabled)
         {
             <DiagnosticsTestPanel />

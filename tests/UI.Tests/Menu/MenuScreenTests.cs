@@ -23,6 +23,14 @@ public sealed class MainMenuTests : SaveScreenContext
     }
 
     [Fact]
+    public void The_short_version_sits_under_the_menu()
+    {
+        var cut = Render<MainMenu>();
+
+        cut.Find("[data-testid=version]").TextContent.ShouldBe("v0.0.1");
+    }
+
+    [Fact]
     public void Continue_opens_the_most_recently_played_save_that_can_open()
     {
         Catalog.Add("Older League", daysAgo: 3);
@@ -302,6 +310,36 @@ public sealed class SaveCardTextTests
 
 public sealed class SettingsFromTheMenuTests : SaveScreenContext
 {
+    [Fact]
+    public void About_shows_the_full_version_for_bug_reports()
+    {
+        var cut = Render<SettingsPage>();
+
+        cut.Find("[data-testid=version]").TextContent.ShouldBe("0.0.1+94b9338 (Debug)");
+    }
+
+    [Fact]
+    public void Copy_puts_the_full_version_on_the_clipboard()
+    {
+        var cut = Render<SettingsPage>();
+
+        cut.Find("[data-testid=copy-version]").Click();
+
+        JSInterop.VerifyInvoke("navigator.clipboard.writeText").Arguments.ShouldBe(["0.0.1+94b9338 (Debug)"]);
+        Toasts.Shown.ShouldHaveSingleItem().ShouldBe(("success", "Version copied", (string?)null));
+    }
+
+    [Fact]
+    public void A_clipboard_that_refuses_says_so()
+    {
+        JSInterop.SetupVoid("navigator.clipboard.writeText", _ => true).SetException(new Microsoft.JSInterop.JSException("Write permission denied."));
+        var cut = Render<SettingsPage>();
+
+        cut.Find("[data-testid=copy-version]").Click();
+
+        Toasts.Shown.ShouldHaveSingleItem().Kind.ShouldBe("warning");
+    }
+
     [Fact]
     public void At_the_main_menu_Settings_offers_the_way_back()
     {

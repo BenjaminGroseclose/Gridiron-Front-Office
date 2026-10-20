@@ -13,6 +13,8 @@
     <Deterministic>true</Deterministic>
     <IsPackable>false</IsPackable>
 
+    <!-- 0.<milestone>.<build> until 1.0 (D-072): the middle number is the milestone being built, raised when it starts;
+         the last goes up for each build handed out. The SDK appends +<commit>. -->
     <VersionPrefix>0.0.1</VersionPrefix>
     <Company>Gridiron Front Office</Company>
     <Product>Gridiron Front Office</Product>

@@ -22,6 +22,7 @@ public enum IconName
     ChevronLeft,
     ChevronRight,
     ChevronUp,
+    Copy,
     DataBarVertical,
     Delete,
     Desktop,

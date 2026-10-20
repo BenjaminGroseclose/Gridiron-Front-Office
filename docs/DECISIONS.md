@@ -79,6 +79,7 @@
 | D-069 | Write `ID`, never `Id` | **Accepted** |
 | D-070 | Read models are records named `…Dto` | **Accepted** |
 | D-071 | Screen readers aren't supported in 1.0 | **Accepted** |
+| D-072 | Versions are `0.<milestone>.<build>` until 1.0 | **Accepted** |
 
 ---
 
@@ -643,4 +644,14 @@
 - **Steam:** no "Playable without Vision" claim. The store page's accessibility section lists only what GFO really has (F-29).
 - **Why:** no law requires a single-player PC game without chat to support screen readers (US CVAA covers only in-game communication; the EU Accessibility Act exempts microenterprises' services and doesn't list games), Steam doesn't require it, and the fix would reopen the title bar for an uncertain result. This is a personal project aiming for Steam, so the effort goes into the game.
 - **Revisit:** with the F-27 accessibility audit in M11, or sooner if WebView2's composition control starts exposing the page to UI Automation.
+
+## D-072: Versions are `0.<milestone>.<build>` until 1.0
+- **Status:** **Accepted** (owner, 2026-10-19: *"go ahead with 0.<milestone>.<build>"*).
+- **Decision:** the app's version is `0.<milestone>.<build>` until the first Steam release, which is `1.0.0`.
+  - **Milestone:** the one being built. M0 is `0.0.x`, M1 is `0.1.x`, … M11 is `0.11.x`. It goes up when a milestone starts, right after the previous one merges (the `m0-complete` merge is followed by `0.1.0`).
+  - **Build:** goes up for each build handed to anyone outside development (a playtester). Development builds don't bump it.
+  - **The commit** is appended automatically: the .NET SDK stamps `0.0.1+94b9338`, so a bug report always points at exact code.
+- **One source:** `<VersionPrefix>` in `Directory.Build.props`, edited by hand. Everything reads it through `AppIdentity` (Application, built by each host): the log's banner, `SaveInfo`'s app versions, the main menu (`v0.0.1`, short) and Settings → About (`0.0.1+94b9338 (Debug)`, with Copy for bug reports).
+- **Save compatibility stays on the schema version** (the number of migrations, PERSISTENCE.md §3), never the app version, which a save only records.
+- **Why:** the version says which milestone a build belongs to at a glance. One line edited at a milestone is simpler than a git-tag tool (MinVer, Nerdbank.GitVersioning) for a solo project; revisit with CI (F-30) if builds go out often.
 

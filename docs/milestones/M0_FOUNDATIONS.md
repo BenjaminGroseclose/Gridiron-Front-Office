@@ -542,6 +542,7 @@ flowchart LR
 - **Main menu:** Continue names its target ("Saturday League · last played Oct 19, 2026") and is disabled with nothing to continue. The Debug diagnostics panel moved here from the old Home, so `--diag-test` still works.
 - **New League:** one field, at most `SaveRules.MaxLeagueNameLength` (60, now in Application so the form and `SaveManager` share it). Enter creates, through Fluent's `ChangeAfterKeyPress`.
 - **Load screen:** one card per save (`SaveCardView`): the name, last played, created and play time; an Ironman badge when set; a note for an older save (opening upgrades it), a newer one (update the app; no Open) and an unreadable file (named by its file, with Show in folder). The empty state offers New League.
+- **The version (D-072):** `AppIdentity` moved from Infrastructure to Application, so the screens can show it. The main menu has `v0.0.1` under its panel; Settings → About has `0.0.1+94b9338 (Debug)` with Copy, for bug reports.
 - **Desktop close:** closing the window closes the open league first (the WAL is checkpointed and the file released), then saves the placement. A failure there is logged (event 1017) and the window closes anyway.
 - **Checked:** 36 new bUnit tests (the screens, the shell, the text). The whole flow by hand in the DevHost (Dark and Light) and in the desktop app, plus the exit check below.
 
@@ -651,7 +652,7 @@ From [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton), plus the
 - [x] The gallery shows every v0 component in both themes, with team tint on and off (WP8)
 - [x] Spike decisions recorded: S0a (EF Core, D-024), S0b (grid + icons + verified v5 names, D-067), S0c (title bar, D-068)
 - [x] `THIRD_PARTY_NOTICES.md` lists every package, font and icon set in use (2026-10-19: checked against every package in the Release publish. Added the transitive Blazor and Microsoft.Extensions packages, the WebView2 SDK (BSD-3-Clause, its text must ship with the app), the Windows SDK projection, the .NET runtime and the system caption fonts; corrected SQLitePCLRaw to 2.1.13.)
-- [ ] Tag `m0-complete`
+- [ ] Tag `m0-complete`, merge, then set `VersionPrefix` to `0.1.0` for M1 ([D-072](../DECISIONS.md#d-072-versions-are-0milestonebuild-until-10))
 
 ---
 

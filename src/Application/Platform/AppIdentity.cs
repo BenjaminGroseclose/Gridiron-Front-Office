@@ -1,10 +1,12 @@
 using System.Reflection;
 
-namespace GridironFrontOffice.Infrastructure.Logging;
+namespace GridironFrontOffice.Application.Platform;
 
 /// <summary>
 /// Which build is running, and which run this is. The version and commit come from the entry assembly's informational
-/// version, which the .NET SDK stamps as <c>0.0.1+&lt;commit sha&gt;</c> when building from git.
+/// version, which the .NET SDK stamps as <c>0.0.1+&lt;commit sha&gt;</c> when building from git. The version is
+/// <c>0.&lt;milestone&gt;.&lt;build&gt;</c> until 1.0 (D-072), set once in Directory.Build.props. Each host builds one and
+/// registers it, so the log, the saves and the screens show the same thing.
 /// </summary>
 public sealed record AppIdentity(string Version, string? Commit, string Configuration, Guid SessionID)
 {
