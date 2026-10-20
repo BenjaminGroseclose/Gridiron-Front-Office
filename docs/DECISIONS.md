@@ -19,7 +19,7 @@
 | D-009 | Game day role: GM + game plan | **Accepted** |
 | D-010 | Draft clock: AI fast, user clock real | **Accepted** (amended by D-022) |
 | D-011 | Personal first, Steam-ready | **Accepted** |
-| D-012 | Deterministic sim with in-house PRNG | Proposed |
+| D-012 | Deterministic sim with in-house PRNG (xoshiro256\*\*) | **Accepted** |
 | D-013 | Statistical play-by-play sim, no physics | Accepted |
 | D-014 | Fixed 32-team structure for 1.0 | **Accepted** (via D-036) |
 | D-015 | Integer keys + strongly typed IDs | **Accepted** |
@@ -80,6 +80,9 @@
 | D-070 | Read models are records named `…Dto` | **Accepted** |
 | D-071 | Screen readers aren't supported in 1.0 | **Accepted** |
 | D-072 | Versions are `0.<milestone>.<build>` until 1.0 | **Accepted** |
+| D-073 | A league's first season is the real-world year it's created in | **Accepted** |
+| D-074 | Contracts are real from M1; contract actions arrive in M4 | **Accepted** |
+| D-075 | Color-blind tuning is reviewed before a public release | **Accepted** |
 
 ---
 
@@ -156,8 +159,8 @@
 - **Deferred until Gate 2:** Steamworks integration, achievements, cloud saves, store assets, trademark clearance.
 
 ## D-012: Deterministic simulation with an in-house PRNG
-- **Status:** Proposed
-- **Decision:** All randomness in Core, Simulation and Application comes from an in-house PRNG (xoshiro256** or PCG32) with **derived seeds** per purpose (game, progression, generation). `System.Random` and wall-clock time are banned in those projects (enforced by an analyzer).
+- **Status:** **Accepted** (owner, 2026-10-20: *"go with `xoshiro256**`"*, answering the M1 plan).
+- **Decision:** All randomness in Core, Simulation and Application comes from an in-house PRNG, **xoshiro256\*\*** (seeded through SplitMix64), with **derived seeds** per purpose (game, progression, generation). A seed is derived by an in-house stable hash of `(leagueSeed, purpose, ids…)`: FNV-1a 64 over the bytes, then SplitMix64's finalizer (never `string.GetHashCode`, which changes between runs). `System.Random` and wall-clock time are banned in those projects (enforced by an analyzer). The exact algorithms and their reference values are in [M1_WP1_GUIDE.md](milestones/M1_WP1_GUIDE.md).
 - **Consequences:** + Reproducible bugs, golden tests, resumable advances (re-simulating gives identical results). − A small amount of discipline (hash-based seed derivation, no unordered iteration in the sim).
 
 ## D-013: Statistical play-by-play simulation, no physics
@@ -654,4 +657,19 @@
 - **One source:** `<VersionPrefix>` in `Directory.Build.props`, edited by hand. Everything reads it through `AppIdentity` (Application, built by each host): the log's banner, `SaveInfo`'s app versions, the main menu (`v0.0.1`, short) and Settings → About (`0.0.1+94b9338 (Debug)`, with Copy for bug reports).
 - **Save compatibility stays on the schema version** (the number of migrations, PERSISTENCE.md §3), never the app version, which a save only records.
 - **Why:** the version says which milestone a build belongs to at a glance. One line edited at a milestone is simpler than a git-tag tool (MinVer, Nerdbank.GitVersioning) for a solo project; revisit with CI (F-30) if builds go out often.
+
+## D-073: A league's first season is the real-world year it's created in
+- **Status:** **Accepted** (owner, 2026-10-20: *"Yeah use the current year in real life, 2026 today"*, answering the M1 plan).
+- **Decision:** New League takes the current calendar year as the league's first season (a league created on 2026-10-20 starts at Training Camp of the 2026 season). The year is an input to generation, stored in `SaveInfo`, so **the same seed and the same year always give the same league**. Golden tests pin both. From M5 the D-049 simulated prior season is the year before.
+- **Why:** it feels current to the player; passing the year in keeps generation deterministic and testable.
+
+## D-074: Contracts are real from M1; contract actions arrive in M4
+- **Status:** **Accepted** (owner, 2026-10-20: *"Contract should be and feel real in the first version of the game, the core to managing a team"*, then chose "Real data now, actions in M4").
+- **Decision:** M1 generates **real contracts** for every player, in the real `Contracts` and `ContractYears` tables: 1–7 years, a base salary per year, a signing bonus prorated over at most 5 years, guaranteed money, and each year's cap hit from the real formula (pure functions in Core). Players start mid-contract, so proration and history span earlier seasons. Team cap totals stay under a first-season cap from data, and young players carry rookie-style deals. The Player page shows the contract and the Team page the cap totals.
+- **Still M4 (F-12):** the actions and rules: signing, releasing with dead money, the franchise tag, extensions, the rookie wage scale as a rule, minimum salaries as a rule, Top 51, the cap sheet and validation.
+- **Amends:** the roadmap's "simple contracts (one row per player with a cap hit)" for M1, and F-03's matching non-goal. F-12 gets an M1-slice spec for the structure and generation rules before WP4.
+
+## D-075: Color-blind tuning is reviewed before a public release
+- **Status:** **Accepted** (owner, 2026-10-20: *"No concerned about color blind right now, document in the future as something to review if we go public (sell) this."*).
+- **Decision:** no color-blind re-tuning during development. M0's finding stays recorded (in Light mode, the Average, Below and Poor rating colors merge for deuteranopia; VISUAL_DESIGN.md §3.4), and the review is a required item of the M11 accessibility audit (F-27) before any public or paid release. Numbers on rating chips stay, so color is never the only signal.
 

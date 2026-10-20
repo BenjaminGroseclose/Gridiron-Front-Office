@@ -106,7 +106,7 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 > | Dark | 18–24 | closest Good/Average **6.9** | closest Average/Below **6.1** | 4.63–6.96:1 |
 > | Light | 15–26 | closest Average/Below **3.4** | Average/Below **1.1**, Below/Poor **1.0** | 4.51–5.20:1 |
 >
-> **Dark holds up.** The steps are subtle but distinct for both deficiencies. **Light doesn't.** For deuteranopia, Average, Below and Poor read as one color, and the light tiers differ by only about 1 L* in lightness, so lightness is no safety net there; only the always-visible number separates them. The chip text meets 4.5:1 in both modes. **Open:** whether to re-tune the light tiers into a lightness ramp before the `RatingChip` is built in M1.
+> **Dark holds up.** The steps are subtle but distinct for both deficiencies. **Light doesn't.** For deuteranopia, Average, Below and Poor read as one color, and the light tiers differ by only about 1 L* in lightness, so lightness is no safety net there; only the always-visible number separates them. The chip text meets 4.5:1 in both modes. **Deferred ([D-075](DECISIONS.md#d-075-color-blind-tuning-is-reviewed-before-a-public-release)):** no re-tuning during development; re-tuning the light tiers is a required item of the M11 accessibility audit, before any public or paid release.
 
 ---
 

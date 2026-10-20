@@ -147,7 +147,7 @@ flowchart LR
 ## 🟥 F-04: Roster & depth chart
 **Player value:** shape the team, and see the consequences on Sunday.
 - **MVP**
-  - **Roster:** 53 active, practice squad of 16, IR. A roster grid with saved views. Player peek sheets everywhere. (No non-football injury list: nothing generates non-football injuries.)
+  - **Roster:** 53 active, practice squad of 16, IR. A roster grid (saved views arrive with the stats screens in M3). Player peek sheets everywhere. (No non-football injury list: nothing generates non-football injuries.)
   - **Limits:** 53/16 enforced at the right phases (90 in the offseason, 53 after final cuts).
   - **Depth chart by position** ([D-052](DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)): you order players per position (QB1, QB2, RB1…, WR1–WR5, CB1–CB4, …) and set K, P, LS, KR and PR. **Every package is derived automatically** (offense 11/12/21/22/10/goal line, defense base/nickel/dime/goal line, special teams coverage units). **Optional per-package overrides** for power users. Drag-and-drop **and** keyboard reordering. Locks. **Auto depth chart** (best available, aware of injuries and fatigue).
   - **Gameday inactives** (auto by default, with an override).
@@ -209,8 +209,9 @@ flowchart LR
 
 ## 🟥 F-12: Contracts & salary cap
 **Player value:** the GM's core puzzle: talent vs. money across years.
+- **M1 slice** ([D-074](DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4)): the contract structure and the cap-hit formula below, and **realistic generated contracts** for every player (mid-contract at creation, rookie-style deals for young players, team totals under a first-season cap). No actions yet.
 - **MVP (M4)**
-  - Contract = years (1–7) × (base salary, prorated signing bonus, guaranteed amount) → **cap hit per year** (pure functions in Core).
+  - Contract = years (1–7) × (base salary, prorated signing bonus, guaranteed amount) → **cap hit per year** (pure functions in Core; built in M1).
   - **Signing bonus proration** over at most 5 years.
   - **Release → dead money**, with remaining proration accelerated.
   - **The salary cap** per league year, with growth plus variance. **Cap rollover** of unused space.
@@ -328,7 +329,7 @@ flowchart LR
 - **Ongoing:** UI zoom 90–150% (nearly free with WebView2's zoom factor; the title bar's hit test then has to divide by it, because the page reports its drag regions in CSS px, and the browser's own Ctrl+wheel zoom stays off). Glossary tooltips read from a runtime glossary data file, not the GLOSSARY.md doc.
 - **Screen readers aren't supported in 1.0** ([D-071](DECISIONS.md#d-071-screen-readers-arent-supported-in-10)): the desktop host's web view is invisible to UI Automation. The M11 audit revisits it.
 - **Accessibility is built per screen, not at the end:** the Definition of Done ([TESTING_AND_QUALITY.md §8.5](architecture/TESTING_AND_QUALITY.md#85-definition-of-done-per-feature)) requires contrast in both themes, color never the only signal, visible focus, reduced motion and ARIA labels on custom components from M1.
-- **M11:** **help pages** written in Markdown (`data/help/`) and rendered in the app ([D-051](DECISIONS.md#d-051-onboarding-is-help-pages-only-authored-in-markdown)), plus an accessibility **audit** (screen reader pass, colorblind review). No scripted onboarding: no "Assistant GM", no phase cards ([IDEAS.md](IDEAS.md)).
+- **M11:** **help pages** written in Markdown (`data/help/`) and rendered in the app ([D-051](DECISIONS.md#d-051-onboarding-is-help-pages-only-authored-in-markdown)), plus an accessibility **audit** (screen reader pass, and the color-blind review that must happen before any public or paid release, [D-075](DECISIONS.md#d-075-color-blind-tuning-is-reviewed-before-a-public-release)). No scripted onboarding: no "Assistant GM", no phase cards ([IDEAS.md](IDEAS.md)).
 
 ## ⬜ F-28: Commissioner mode, editing & modding
 - **Post-1.0:** edit players, teams and contracts (the save is flagged `IsEdited`, which disables achievements), league rule edits (cap amount and growth, [D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)), multiple user-controlled teams, custom name lists, roster files, and maybe Steam Workshop later.
