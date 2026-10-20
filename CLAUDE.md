@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is in progress:** the solution skeleton (projects, references, guardrails, architecture tests, `build.ps1`) is scaffolded, and the work packages in `docs/milestones/M0_FOUNDATIONS.md` are being built in order. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
+Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is complete** (tagged `m0-complete`, 2026-10-20; `docs/milestones/M0_FOUNDATIONS.md` records what was built). **M1 · The League Exists is next.** Design changes from the Claude Design review land throughout development. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
 
 ## Commands
 

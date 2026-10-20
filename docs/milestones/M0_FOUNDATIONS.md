@@ -1,6 +1,6 @@
 # M0 · Foundations: the Plan
 
-> **Status:** Proposed (for owner review) · 2026-10-15 · Milestone definition: [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton)
+> **Status:** **Done** · tagged `m0-complete` 2026-10-20 (planned 2026-10-15) · Milestone definition: [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton)
 >
 > This is the detailed plan for M0, the "walking skeleton". It turns the roadmap's M0 scope into **ten ordered work packages**, lists every file, project, package and doc that changes, and ends with the exit checklist. **There's no football in M0.** It proves the toolchain, the host, logging, persistence you can trust, and the design system basics.
 >
@@ -484,7 +484,7 @@ flowchart LR
 - **DevHost:** `/_gallery` with pages for the theme, icons, the grid (2,000 rows × 25 columns), dialogs and toasts, `SegmentedControl`, `Stat`, `EmptyState`, `Kbd` and `AppShell`. The toolbar drives the theme service directly and never touches `settings.json`.
 - **Tests:** 88 new bUnit and unit tests, covering rendering, parameters, keyboard and ARIA for every GFO component, plus the theme service, the color rules and the Settings page. 232 in the gate.
 - **The rating scale's color-blind check** (VISUAL_DESIGN.md §3.4): Dark holds up; in Light, Average/Below/Poor merge for deuteranopia. That's recorded as an open question for M1's `RatingChip`.
-- **Design review pending:** the design system is mirrored into a Claude Design system (tokens, the brand book, the icons and static component cards) for review. Changes from that review land as follow-up commits on this branch before the M0 merge.
+- **Design review:** the design system is mirrored into a Claude Design system (tokens, the brand book, the icons and static component cards) for review. The owner chose not to hold M0 for it (2026-10-20: *"design changes will come throughout development I think we can close out M0"*), so its changes land as they come, in whichever milestone is current.
 
 **Changed from the plan**
 - **`GfoThemeService` takes a `GfoAppearance`, not the settings.** `UI.Components` can't reference Application. The UI maps settings (and, from M1, the team color) onto it.
@@ -504,7 +504,7 @@ flowchart LR
 7. **`::deep` needs an element of the component's own** to anchor the scope attribute. `MainNav`'s first rule silently matched nothing.
 8. **Fluent's dialog and notification interfaces have internal members** and can't be faked. Their tests use Fluent's real providers in bUnit.
 
-### WP9 · Main menu, wiring and the M0 exit (M) · host half and screens done 2026-10-19
+### WP9 · Main menu, wiring and the M0 exit (M) ✅ Done 2026-10-20
 **Goal:** put it together into the walking skeleton.
 - [x] The Desktop composition root: the single-instance guard → paths → settings → logging → DI (`AddWpfBlazorWebView`, `AddGfoInfrastructure`, `AddGfoUi`, Fluent, `ShellOptions(AppBarIsTitleBar: true)`) → window. **`AddGfoApplication` isn't added yet:** Application has nothing to register in M0 (its rules are static, and Infrastructure registers the ports' implementations), so the method arrives with the first Application service in M1 rather than as an empty one.
 - [x] The window per [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar):
@@ -520,7 +520,7 @@ flowchart LR
   - **Load screen:** save cards (name, created, last played, app version warning, unreadable-file card), plus Open and Delete.
   - **Open** shows the app shell with an empty Home ("Your league will live here"). **Close** returns to the menu.
 - [x] DevHost wired the same way, against the dev save folder.
-- [ ] Run the exit checklist (§10), record the cold-start time, tag **`m0-complete`**. *Everything but the tag is done; the tag waits for the design review's follow-ups.*
+- [x] Run the exit checklist (§10), record the cold-start time, tag **`m0-complete`** (2026-10-20).
 
 **Results (host half, 2026-10-19)**
 - **Title bar:** built from the S0c spike in `src/Desktop/Windowing/` and `wwwroot/gfo-host.js` (as built: [UI_DESIGN_SYSTEM.md §7](../architecture/UI_DESIGN_SYSTEM.md#7-app-shell-and-navigation)). The page reports its drag regions and theme mode through WebView2's own message channel, so the UI layer only marks `data-drag-region`. Checked on the real window with `WM_NCHITTEST` probes, normal and maximized, and with window-only captures in Dark and Light and across a runtime switch both ways.
@@ -652,7 +652,7 @@ From [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton), plus the
 - [x] The gallery shows every v0 component in both themes, with team tint on and off (WP8)
 - [x] Spike decisions recorded: S0a (EF Core, D-024), S0b (grid + icons + verified v5 names, D-067), S0c (title bar, D-068)
 - [x] `THIRD_PARTY_NOTICES.md` lists every package, font and icon set in use (2026-10-19: checked against every package in the Release publish. Added the transitive Blazor and Microsoft.Extensions packages, the WebView2 SDK (BSD-3-Clause, its text must ship with the app), the Windows SDK projection, the .NET runtime and the system caption fonts; corrected SQLitePCLRaw to 2.1.13.)
-- [ ] Tag `m0-complete`, merge, then set `VersionPrefix` to `0.1.0` for M1 ([D-072](../DECISIONS.md#d-072-versions-are-0milestonebuild-until-10))
+- [x] Tag `m0-complete`, merge, then set `VersionPrefix` to `0.1.0` for M1 ([D-072](../DECISIONS.md#d-072-versions-are-0milestonebuild-until-10)) (2026-10-20)
 
 ---
 

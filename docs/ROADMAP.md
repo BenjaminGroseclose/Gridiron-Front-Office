@@ -61,7 +61,7 @@ flowchart TD
 
 **Goal:** the toolchain, host, logging, persistence (with transactions you can trust) and design system basics all work end to end.
 
-**Detailed plan and progress:** [milestones/M0_FOUNDATIONS.md](milestones/M0_FOUNDATIONS.md), ten work packages in build order. WP1 (the solution skeleton and guardrails) is done.
+**✅ Done 2026-10-20** (tagged `m0-complete`). The plan and what was built: [milestones/M0_FOUNDATIONS.md](milestones/M0_FOUNDATIONS.md), ten work packages in build order.
 
 **Stack decided** (2026-10-13): WPF + BlazorWebView host ([D-021](DECISIONS.md#d-021-host-wpf--blazorwebview-maui-removed)), EF Core with the GFO unit of work ([D-024](DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work)), and Fluent UI Blazor v5 ([D-025](DECISIONS.md#d-025-ui-component-library-fluent-ui-blazor-v5)).
 
@@ -85,12 +85,12 @@ flowchart TD
 - Settings store (`settings.json`) with a theme switch.
 
 **Exit criteria**
-- [ ] Launch → main menu in under 3 s. Create a save → it appears on the load screen → reopen it → close it. The file is unlocked (it can be deleted).
-- [ ] **All transaction torture tests pass**, including killing the process mid-transaction and reopening with no partial data.
-- [ ] Log file contains the banner, the lifecycle events, and a forced test exception with a stack trace.
-- [ ] A snapshot can be taken and restored.
-- [ ] `./build.ps1` is green, and the architecture tests fail if a forbidden reference or a stray `BeginTransaction` is added.
-- [ ] The gallery shows every v0 component in both themes.
+- [x] Launch → main menu in under 3 s. Create a save → it appears on the load screen → reopen it → close it. The file is unlocked (it can be deleted).
+- [x] **All transaction torture tests pass**, including killing the process mid-transaction and reopening with no partial data.
+- [x] Log file contains the banner, the lifecycle events, and a forced test exception with a stack trace.
+- [x] A snapshot can be taken and restored.
+- [x] `./build.ps1` is green, and the architecture tests fail if a forbidden reference or a stray `BeginTransaction` is added.
+- [x] The gallery shows every v0 component in both themes.
 
 **Not in scope:** any football.
 
