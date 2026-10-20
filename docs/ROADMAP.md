@@ -100,13 +100,15 @@ flowchart TD
 
 **Goal:** generate a believable fictional league and browse every team and player.
 
+**Detailed plan:** [milestones/M1_THE_LEAGUE.md](milestones/M1_THE_LEAGUE.md), eleven work packages in build order (proposed, 2026-10-20).
+
 **Specs (accepted):** [F-02 League & teams](features/F-02_LEAGUE_AND_TEAMS.md), [F-03 Players](features/F-03_PLAYERS.md).
 
 **Scope**
 - **F-02:** 32 curated team identities in real cities with original nicknames ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)), conferences and divisions, **generated SVG crests**, stadiums.
 - **League data files:** teams and fictional colleges (with region and tier) load from **versioned JSON files with a published schema** ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). No user import yet (that's M11).
 - **F-03:** the player model (positions, attributes, hidden traits, measurables, bio), overall formulas, archetypes, the generator with distribution targets, the name blocklist.
-- Simple **contracts** (one row per player with a cap hit) so rosters look complete. Real contract math comes in M4.
+- **Real contracts** for every player ([D-074](DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4)): years, base salaries, a prorated signing bonus, guarantees and the real cap-hit formula, with team cap totals under a first-season cap. The contract **actions** (signing, releases and dead money, tags, extensions) come in M4.
 - **F-01:** the New League wizard **v0**: name and seed → generate (with progress) → pick a team. No rule steps yet; each arrives with its milestone. The league starts at Training Camp until M5.
 - Screens: **Home** (stub dashboard), **Team** page, **Roster** (**DataGrid v1**: virtualized, sticky header and first column, sorting, keyboard navigation), **Player** page + **PlayerPeekSheet**, **League** (all teams).
 - `RatingChip`/`RatingBar` with **range support** (σ = 0 for now) and letter-grade potential, per [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) and [D-034](DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential).

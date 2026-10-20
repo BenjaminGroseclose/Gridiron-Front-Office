@@ -483,7 +483,7 @@ flowchart LR
 - **Hosts:** both register `AddGfoUi`, link `gfo-tokens.css`, and set Fluent's listener guard. The rest of the first-paint layers are WP9.
 - **DevHost:** `/_gallery` with pages for the theme, icons, the grid (2,000 rows × 25 columns), dialogs and toasts, `SegmentedControl`, `Stat`, `EmptyState`, `Kbd` and `AppShell`. The toolbar drives the theme service directly and never touches `settings.json`.
 - **Tests:** 88 new bUnit and unit tests, covering rendering, parameters, keyboard and ARIA for every GFO component, plus the theme service, the color rules and the Settings page. 232 in the gate.
-- **The rating scale's color-blind check** (VISUAL_DESIGN.md §3.4): Dark holds up; in Light, Average/Below/Poor merge for deuteranopia. That's recorded as an open question for M1's `RatingChip`.
+- **The rating scale's color-blind check** (VISUAL_DESIGN.md §3.4): Dark holds up; in Light, Average/Below/Poor merge for deuteranopia. Re-tuning it waits for the review before a public release ([D-075](../DECISIONS.md#d-075-color-blind-tuning-is-reviewed-before-a-public-release)).
 - **Design review:** the design system is mirrored into a Claude Design system (tokens, the brand book, the icons and static component cards) for review. The owner chose not to hold M0 for it (2026-10-20: *"design changes will come throughout development I think we can close out M0"*), so its changes land as they come, in whichever milestone is current.
 
 **Changed from the plan**

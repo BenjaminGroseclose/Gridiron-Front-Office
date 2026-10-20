@@ -24,7 +24,7 @@ Players are the game's raw material: believable, distinct people whose ratings m
 - Fog-of-war *data* (σ > 0): M6 (F-17).
 - Progression, aging, retirement: M5 (F-20). Expected aging curves come from F-13 in M4.
 - Yearly draft classes: M5. The generator API exists in M1, but it's first used in M5.
-- Real contracts: M4 (F-12). M1 uses one simple cap-hit row per player.
+- Contract actions and cap rules: M4 (F-12). M1 generates real contract data for every player ([D-074](../DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4)).
 - Position changes, jersey number management UI (later).
 
 ## 3. Player stories
