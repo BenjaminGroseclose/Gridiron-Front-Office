@@ -1,0 +1,20 @@
+@* Test component: fails while its switch is on, renders normally otherwise. *@
+<p data-testid="content">The page content</p>
+
+@code {
+    [Parameter, EditorRequired]
+    public FailureSwitch Switch { get; set; } = default!;
+
+    protected override void OnParametersSet()
+    {
+        if (Switch.On)
+        {
+            throw new InvalidOperationException("Test failure while rendering");
+        }
+    }
+
+    public sealed class FailureSwitch
+    {
+        public bool On { get; set; }
+    }
+}

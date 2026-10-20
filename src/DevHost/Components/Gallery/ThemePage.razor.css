@@ -1,0 +1,69 @@
+/* Hero band (VISUAL_DESIGN.md §6) */
+.hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  padding: 28px 30px;
+  border-radius: var(--gfo-radius-l);
+  background: var(--gfo-accent-fill);
+  color: var(--gfo-on-accent);
+}
+
+.hero-kicker { font-size: 13px; font-weight: 600; opacity: .85; }
+.hero-title { font-size: 56px; }
+
+.hero-ghost {
+  position: absolute;
+  right: 24px;
+  bottom: -60px;
+  font-size: 220px;
+  opacity: .12;
+}
+
+.swatch-row { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.sample-text { margin: 0; width: 100%; }
+.sample-text a { color: var(--colorBrandForegroundLink); }
+.accent-text { color: var(--gfo-accent-text); font-weight: 600; }
+
+/* A stand-in for the rating chip (a UI composite in M1), to check the tokens. */
+.chip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+.chip {
+  min-width: 2.2em;
+  padding: 1px 10px;
+  border-radius: var(--gfo-radius-pill);
+  background: color-mix(in srgb, var(--tier) var(--gfo-chip-tint), transparent);
+  color: var(--tier);
+  font-weight: 700;
+  text-align: center;
+}
+
+.divider { width: 1px; height: 22px; background: var(--colorNeutralStroke2); margin: 0 4px; }
+
+.urgent {
+  padding: 1px 10px;
+  border-radius: var(--gfo-radius-pill);
+  background: var(--gfo-urgent);
+  color: var(--gfo-on-urgent);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.type-scale { display: grid; gap: 10px; }
+.mono { font-family: var(--fontFamilyMonospace); font-size: 13px; }
+
+.radius {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 64px;
+  background: var(--colorNeutralBackground2);
+  border: 1px solid var(--colorNeutralStroke1);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.radius.pill { width: 120px; height: 36px; }

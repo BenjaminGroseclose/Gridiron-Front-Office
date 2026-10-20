@@ -81,8 +81,8 @@ Build a dynasty, keep the cap healthy for years, satisfy (or outlast) your owner
 |---|---|---|
 | 1 | **The real-time draft.** The clock never stops (in the default Live mode; a Pausable mode can be chosen per save). AI picks come fast, your clock runs in real time, and trade calls arrive with expiring offers. | Core (owner's idea) |
 | 2 | **Modern, elegant UI.** A team-tinted theme, command palette, side-sheet "peeks", broadcast-style moments. | Core (owner's idea) |
-| 3 | **Scouting fog of war.** You never see true ratings, only your scouts' estimates, which are uncertain and sometimes biased. | **Proposed, strongly recommended as core** |
-| 4 | **Live Events.** The draft's real-time engine reused for the Free Agency Frenzy and Trade Deadline Day. | Proposed |
+| 3 | **Scouting fog of war.** You know your own players. Everyone else you see through public film (slightly fuzzy) or, for prospects, through your scouts' estimates, which are uncertain and sometimes biased. | **Core** ([D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)) |
+| 4 | **Live Events.** The draft's real-time engine reused for the Free Agency Frenzy and, if that proves the pattern, Trade Deadline Day. | Accepted ([D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)) |
 | 5 | **Film Room.** Every result is explainable: key matchups, win probability swings, efficiency analytics. | Proposed |
 | 6 | **The Owner's Box.** Owner personalities, mandates, job security. You can be fired and continue your career elsewhere. | Proposed |
 
@@ -94,7 +94,7 @@ Full design: [STANDOUT_FEATURES.md](STANDOUT_FEATURES.md).
 
 ### In scope for 1.0
 - Single-player, one user-controlled franchise, in a fictional 32-team league (2 conferences × 4 divisions).
-- Full annual cycle: preseason → 17-game regular season → 14-team playoffs → offseason.
+- Full annual cycle: training camp → 17-game regular season → 14-team playoffs → offseason (no preseason games, [D-038](DECISIONS.md#d-038-no-preseason-games-in-10)).
 - Rosters (53 active + practice squad + IR), depth charts, weekly game plans.
 - Contracts and salary cap (core rules), re-signing, free agency, waivers, trades.
 - Scouting with fog of war, and the real-time draft.
@@ -103,6 +103,7 @@ Full design: [STANDOUT_FEATURES.md](STANDOUT_FEATURES.md).
 - Stats, records, awards, history, and the Hall of Fame.
 - A statistical play-by-play sim with a live Game Center and Film Room.
 - Autosave with snapshots, and an optional Ironman mode.
+- A curated default league (real cities, original team names, fictional colleges), plus importing your own team set and college list ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 
 ### Explicitly out of scope for 1.0 (and why)
 
@@ -112,13 +113,14 @@ Full design: [STANDOUT_FEATURES.md](STANDOUT_FEATURES.md).
 | 2D/3D animated games | Huge cost, and it isn't the fantasy. A drive chart plus play-by-play is enough. |
 | Real NFL teams, players or logos | Licensing. The game is built Steam-ready ([D-011](DECISIONS.md#d-011-release-posture-personal-first-steam-ready)). |
 | Multiplayer or online leagues | A single-writer local SQLite design. It would be a different product. |
-| A business sim (ticket prices, concessions, stadium building) | Classic scope trap that doesn't serve the GM fantasy ([Q-15](OPEN_QUESTIONS.md#q-15-how-deep-is-the-financial-simulation)). |
+| A business sim (ticket prices, concessions, stadium building) | Classic scope trap that doesn't serve the GM fantasy ([D-041](DECISIONS.md#d-041-finances-owner-funded-staff-budget-in-m10-only)). |
+| Difficulty presets | The AI treats you exactly like any other team, and the team you pick is the difficulty dial ([D-042](DECISIONS.md#d-042-no-difficulty-presets-in-10)). |
 | A college football mode | A separate game. |
 | Mobile | Desktop-dense UI. Windows first. |
-| Configurable league size or season length | Breaks the schedule formula and multiplies test cases ([Q-13](OPEN_QUESTIONS.md#q-13-league-customization)). |
+| Configurable league size, season length or cap rules | Breaks the schedule formula and the league health gates, and multiplies test cases ([D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)). |
 
 ### Maybe later (post-1.0)
-Commissioner/edit mode, modding and team packs, macOS, multiple user-controlled teams, halftime adjustments, a "RedZone" multi-game view, Steam Workshop.
+Commissioner/edit mode, modding, macOS, multiple user-controlled teams, halftime adjustments, a "RedZone" multi-game view, Steam Workshop.
 
 ---
 

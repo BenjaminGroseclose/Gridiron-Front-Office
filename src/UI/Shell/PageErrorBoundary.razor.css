@@ -1,0 +1,26 @@
+.gfo-page-error {
+    max-width: 640px;
+    margin: 48px auto;
+    padding: 28px 30px;
+    border-radius: var(--borderRadiusLarge);
+    border: 1px solid var(--colorNeutralStroke2);
+    background: var(--colorNeutralBackground1);
+    color: var(--colorNeutralForeground1);
+}
+
+.gfo-page-error h1 {
+    margin: 0 0 8px;
+    font-size: 28px;
+    font-weight: 800;
+    font-stretch: 72%;
+}
+
+.gfo-page-error p {
+    margin: 0 0 20px;
+    color: var(--colorNeutralForeground2);
+}
+
+.gfo-page-error-actions {
+    display: flex;
+    gap: 8px;
+}

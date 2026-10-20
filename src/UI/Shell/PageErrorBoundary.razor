@@ -1,0 +1,50 @@
+@inherits ErrorBoundary
+@implements IDisposable
+@inject ILogger<PageErrorBoundary> Logger
+@inject NavigationManager Navigation
+@* The per-page error boundary (LOGGING.md §8): a page that throws logs the exception and shows a recovery panel,
+   while the shell keeps working. Navigating anywhere clears it. *@
+
+@if (CurrentException is null)
+{
+    @ChildContent
+}
+else
+{
+    <section class="gfo-page-error" role="alert" data-testid="page-error">
+        <h1>This screen hit a problem</h1>
+        <p>Your league is safe up to your last action. Try again, or head back to Home. The details are in the log.</p>
+        <div class="gfo-page-error-actions">
+            <FluentButton Appearance="ButtonAppearance.Primary" OnClick="TryAgain">Try again</FluentButton>
+            <FluentButton OnClick="GoHome">Home</FluentButton>
+        </div>
+    </section>
+}
+
+@code {
+    protected override void OnInitialized() => Navigation.LocationChanged += OnLocationChanged;
+
+    protected override Task OnErrorAsync(Exception exception)
+    {
+        UiLog.PageError(Logger, exception, Navigation.ToBaseRelativePath(Navigation.Uri));
+        return Task.CompletedTask;
+    }
+
+    private void TryAgain() => Recover();
+
+    private void GoHome()
+    {
+        Recover();
+        Navigation.NavigateTo("");
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        if (CurrentException is not null)
+        {
+            _ = InvokeAsync(Recover);
+        }
+    }
+
+    public void Dispose() => Navigation.LocationChanged -= OnLocationChanged;
+}

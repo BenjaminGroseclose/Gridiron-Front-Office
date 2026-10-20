@@ -1,0 +1,13 @@
+.swatch { display: grid; gap: 2px; width: 150px; font-size: 12px; }
+
+.swatch-color {
+  height: 48px;
+  border: 1px solid var(--colorNeutralStroke1);
+  border-radius: var(--gfo-radius-s);
+}
+
+.swatch-name { font-weight: 600; font-size: 13px; }
+.swatch-token { color: var(--colorNeutralForeground3); font-family: var(--fontFamilyMonospace); font-size: 11px; }
+.swatch-hex { color: var(--colorNeutralForeground2); }
+.swatch-ratio[data-ok="true"] { color: var(--gfo-status-positive); }
+.swatch-ratio[data-ok="false"] { color: var(--gfo-status-negative); font-weight: 700; }

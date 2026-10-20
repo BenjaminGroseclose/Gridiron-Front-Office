@@ -1,0 +1,100 @@
+@inherits LayoutComponentBase
+@inject GfoThemeService Theme
+@* The component gallery layout. It lives outside Gallery/ because that folder's _Imports sets @layout GalleryLayout, and a
+   layout that names itself would loop forever.
+   The component gallery (UI_DESIGN_SYSTEM.md §6.2, VISUAL_DESIGN.md §10): every v0 component, switchable between Dark
+   and Light, with team tint off (neutral) or in one of three sample team colors, and in either density. The switches
+   drive GfoThemeService directly and never touch settings.json. *@
+<div class="gallery">
+    <header class="gallery-bar">
+        <a class="gallery-home gfo-display" href="_gallery">Gallery</a>
+        <nav class="gallery-links" aria-label="Gallery pages">
+            @foreach (var (href, title) in Pages)
+            {
+                <NavLink href="@href" Match="NavLinkMatch.All" ActiveClass="is-active">@title</NavLink>
+            }
+        </nav>
+        <span class="gallery-grow"></span>
+        <SegmentedControl TValue="GfoThemeMode" Label="Mode" Options="ModeOptions" Value="@_mode" ValueChanged="SetModeAsync" />
+        <div class="gallery-swatches" role="group" aria-label="Team tint">
+            @foreach (var (name, color) in Tints)
+            {
+                <button type="button" class="gallery-swatch @(color == _accent ? "is-active" : "")" style="--swatch: @(color ?? GfoAppearance.NeutralAccent)"
+                        aria-pressed="@(color == _accent ? "true" : "false")" title="@name" @onclick="() => SetAccentAsync(color)">
+                    <span class="gfo-visually-hidden">@name</span>
+                </button>
+            }
+        </div>
+        <SegmentedControl TValue="GfoDensity" Label="Density" Options="DensityOptions" Value="@_density" ValueChanged="SetDensityAsync" />
+    </header>
+    <p class="gallery-status gfo-num">
+        @if (Theme.Current is { } t)
+        {
+            <span>@(t.IsDark ? "Dark" : "Light") · fill @t.AccentFill · on-accent @t.OnAccent · accent @t.Accent · accent text @t.AccentText · rows @t.RowHeight px</span>
+        }
+    </p>
+    <main class="gallery-page">
+        @Body
+    </main>
+</div>
+
+<FluentProviders />
+
+@code {
+    internal static readonly (string Href, string Title)[] Pages =
+    [
+        ("_gallery/theme", "Theme"),
+        ("_gallery/icons", "Icons"),
+        ("_gallery/datagrid", "DataGrid"),
+        ("_gallery/overlays", "Dialogs & toasts"),
+        ("_gallery/segmented-control", "SegmentedControl"),
+        ("_gallery/stat", "Stat"),
+        ("_gallery/empty-state", "EmptyState"),
+        ("_gallery/kbd", "Kbd"),
+        ("_gallery/app-shell", "AppShell"),
+    ];
+
+    // VISUAL_DESIGN.md §10: a dark navy, a bright orange and a pale team (F-02's Commodores, Aviators and Captains).
+    private static readonly (string Name, string? Color)[] Tints =
+    [
+        ("Tint off (neutral)", null),
+        ("Dark navy #1B2A4A", "#1B2A4A"),
+        ("Bright orange #D9541E", "#D9541E"),
+        ("Pale gold #E1AD21", "#E1AD21"),
+    ];
+
+    private static readonly IReadOnlyList<SegmentedOption<GfoThemeMode>> ModeOptions =
+        [new(GfoThemeMode.Dark, "Dark", IconName.WeatherMoon), new(GfoThemeMode.Light, "Light", IconName.WeatherSunny)];
+
+    private static readonly IReadOnlyList<SegmentedOption<GfoDensity>> DensityOptions =
+        [new(GfoDensity.Comfortable, "Comfortable"), new(GfoDensity.Compact, "Compact")];
+
+    private GfoThemeMode _mode = GfoThemeMode.Dark;
+    private string? _accent;
+    private GfoDensity _density = GfoDensity.Comfortable;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (Theme.Current is { } current)
+            {
+                (_mode, _accent, _density) = (current.Appearance.Mode, current.Appearance.AccentColor, current.Appearance.Density);
+            }
+
+            await ApplyAsync();
+        }
+    }
+
+    private Task SetModeAsync(GfoThemeMode mode) { _mode = mode; return ApplyAsync(); }
+
+    private Task SetAccentAsync(string? color) { _accent = color; return ApplyAsync(); }
+
+    private Task SetDensityAsync(GfoDensity density) { _density = density; return ApplyAsync(); }
+
+    private async Task ApplyAsync()
+    {
+        await Theme.ApplyAsync(new GfoAppearance(_mode, _accent, _density));
+        StateHasChanged();
+    }
+}

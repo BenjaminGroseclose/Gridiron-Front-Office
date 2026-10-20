@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!--
+    The game UI: app shell, routed pages and football composites (UI_DESIGN_SYSTEM.md §5.4).
+    Talks to Application commands and queries only. Never Infrastructure, EF Core or WPF.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\UI.Components\GridironFrontOffice.UI.Components.csproj" />
+    <ProjectReference Include="..\Application\GridironFrontOffice.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" />
+  </ItemGroup>
+</Project>

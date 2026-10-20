@@ -1,0 +1,83 @@
+@page "/load"
+@inject ISaveCatalog Catalog
+@inject ISaveManager Saves
+@inject SaveActions Actions
+@inject IPlatformServices Platform
+@inject NavigationManager Navigation
+@* The load screen (PERSISTENCE.md §9): every save in the saves folder, most recently played first, unreadable files
+   last. Open, Delete (asks first, to the Recycle Bin) and, for a file that can't open, Show in folder. *@
+
+<PageTitle>Load · Gridiron Front Office</PageTitle>
+
+<div class="gfo-load">
+    <header class="gfo-load-header">
+        <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
+                      OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
+        <h1 class="gfo-load-title gfo-display">Load a league</h1>
+    </header>
+
+    @if (_cards is null)
+    {
+        <p class="gfo-load-reading" role="status">Reading your saves…</p>
+    }
+    else if (_cards.Count == 0)
+    {
+        <EmptyState Title="No leagues yet" Icon="IconName.FolderOpen" data-testid="no-saves">
+            <ChildContent>Start one and it shows up here.</ChildContent>
+            <Actions>
+                <FluentButton Appearance="ButtonAppearance.Primary" IconStart="@IconCatalog.Create(IconName.Add)"
+                              OnClick="@(() => Navigation.NavigateTo("/new"))" data-testid="new-league">New league</FluentButton>
+            </Actions>
+        </EmptyState>
+    }
+    else
+    {
+        <ul class="gfo-load-list" aria-label="Saved leagues">
+            @foreach (var card in _cards)
+            {
+                <li @key="card.FilePath">
+                    <SaveCardView Card="card" Busy="_busy" OnOpen="OpenAsync" OnDelete="DeleteAsync" OnShowInFolder="ShowInFolder" />
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    private IReadOnlyList<SaveCard>? _cards;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Saves.Current is not null)
+        {
+            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);
+            return;
+        }
+
+        _cards = await Catalog.ListAsync();
+    }
+
+    private async Task OpenAsync(SaveCard card)
+    {
+        _busy = true;
+        if (!await Actions.OpenAsync(card))
+        {
+            _cards = await Catalog.ListAsync();
+            _busy = false;
+        }
+    }
+
+    private async Task DeleteAsync(SaveCard card)
+    {
+        _busy = true;
+        if (await Actions.DeleteAsync(card))
+        {
+            _cards = await Catalog.ListAsync();
+        }
+
+        _busy = false;
+    }
+
+    private void ShowInFolder(SaveCard card) => Platform.ShowInFolder(card.FilePath);
+}

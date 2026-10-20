@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Use cases in feature folders, ports, AI GMs, the phase machine and the live event runner (ARCHITECTURE.md §4.2).
+    Its only data dependency is the EF Core *core* package, for ILeagueDb / DbSet / LINQ (D-024). No provider.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Core\GridironFrontOffice.Core.csproj" />
+    <ProjectReference Include="..\Simulation\GridironFrontOffice.Simulation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- PrivateAssets="compile": EF types don't flow to UI at compile time, so UI code can't touch a DbContext. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" PrivateAssets="compile" />
+  </ItemGroup>
+</Project>

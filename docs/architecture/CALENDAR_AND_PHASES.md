@@ -23,10 +23,10 @@ The fictional league mirrors the real one so it feels familiar. Dates are approx
 
 | # | Phase | Anchor (approx.) | Stops inside the phase | Key processing |
 |---|---|---|---|---|
-| 1 | **Training Camp** | Late July | Camp open → Preseason games 1–3 → Final cuts | Annual progression applied at camp open, development focus, camp battles, preseason games, **cut to 53**, waivers, practice squad |
-| 2 | **Regular Season** | Early Sept → early Jan | Weeks 1–18 (17 games + 1 bye) | Weekly: AI prep → sim → stats → injuries → waivers → news. **Trade deadline** after Week 9 (Deadline Day live event later). |
+| 1 | **Training Camp** | Late July | Camp open → Final cuts | Annual progression applied at camp open, development focus, **cut to 53**, waivers, practice squad. No preseason games ([D-038](../DECISIONS.md#d-038-no-preseason-games-in-10)). |
+| 2 | **Regular Season** | Early Sept → early Jan | Weeks 1–18 (17 games + 1 bye) | Weekly: AI prep → sim → stats → injuries → waivers → news. **Trade deadline** after Week 9 (Deadline Day live event later, if built, [D-046](../DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)). |
 | 3 | **Playoffs** | Mid Jan → early Feb | Wild Card → Divisional → Conference → (bye week) → Championship | 7 seeds per conference, #1 gets a bye, reseeding |
-| 4 | **Season Wrap** | Feb | Awards → Retirements → Owner review → (Coaching carousel, M10) | Records, Hall of Fame vote, play-by-play retention pruning, season-end snapshot |
+| 4 | **Season Wrap** | Feb | Awards → Retirements → Owner review → (Coaching carousel, M10) | Records, Hall of Fame vote, season-end snapshot. (Play-by-play pruning only if the [D-039](../DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning) fallback is switched on.) |
 | 5 | **Re-sign & Tag Window** | Late Feb → early Mar | Window open → Tag deadline | Extensions, franchise tags, releases (cap clearing) |
 | 6 | **Combine** | Late Feb / early Mar | Combine | Prospect measurables revealed → scouting updates |
 | 7 | **Free Agency** | Mid March (**new league year**) | FA open (**FA Frenzy** live event, M9) → Day 2…14 → Weekly | Cap rollover, contract years advance, UFAs hit the market, AI bidding |
@@ -61,7 +61,7 @@ stateDiagram-v2
     }
 ```
 
-> **New-league setup:** a new league starts at **Training Camp** with generated rosters and contracts, an already-scouted (generated) draft class for next spring, and fresh schedules. A "Start at offseason" option (begin with free agency and the draft) is a nice-to-have.
+> **New-league setup ([D-049](../DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired)):** from M5, a new league starts at the **Re-sign & Tag Window**, as if the previous GM was fired at the owner review. At creation, the engine simulates the prior season headless (AI runs every team), so standings, the draft order, awards and stats are real history. The user's team inherits the previous regime's in-season prospect scouting. Before M5, development builds start at **Training Camp** with generated rosters and contracts.
 
 ---
 
@@ -136,7 +136,7 @@ public sealed record AdvanceStep(string Name, Func<StepContext, CancellationToke
 | 2 | AI pre-game | One per team or batched | Depth charts, game plans, inactive lists |
 | 3 | Simulate games | **None** (pure, in memory, parallel) | Deterministic. Re-runnable if a later step fails. |
 | 4 | Persist results | **One** | Scores, box scores, player stats (bulk), play logs, injuries, standings |
-| 5 | Post-week processing | One | Season aggregates, injury timelines, player grades, records check |
+| 5 | Post-week processing | One | Season aggregates, injury timelines, player grades (from M8), records check (from M10) |
 | 6 | Projections | One | News items, inbox messages, awards race |
 | 7 | AI post-week | Several | Waiver claims, signings, IR moves, (trade offers to the user) |
 | 8 | Advance the date | One | `SaveInfo.CurrentDate = next stop` |
@@ -175,7 +175,7 @@ Long advances (a week, an offseason phase with 31 AI teams acting) are split int
 - **Ties** are allowed in the regular season (OT rules). Playoffs continue overtime until there's a winner.
 - **The championship** is at a neutral site, with a bye week before it.
 - **A trade deadline on a bye week** is still keyed to the calendar date, not the team's schedule.
-- **Fired mid-season (M10):** the user's career moves to a "between jobs" state. The league continues to advance through AI autoplay until a job offer arrives (an end-of-season interview).
+- **Fired (M10):** only at the **owner review in Season Wrap**, never mid-season. The user interviews with teams that have openings in the same offseason and continues with a new team, so there's no "between jobs" autoplay state.
 - **Retired player un-retires:** rare event, supported by status transitions.
 
 ---

@@ -13,7 +13,7 @@
 3. **AI deliberation delays** scale with the acceleration setting (1×/2×/4×).
 4. Every state change is a **committed command** through the single-writer queue.
 5. **Restore, duplicate, export and calendar advance are disabled** while an event is running.
-6. A crash or close **never costs the user an action they didn't take**. The event resumes where it left off ([Q-08](../OPEN_QUESTIONS.md#q-08-app-closed-while-on-the-clock)).
+6. A crash or close **never costs the user an action they didn't take**. The event resumes where it left off, and committed actions stand: closing the app never undoes or redoes anything ([D-045](../DECISIONS.md#d-045-live-event-close-or-crash-resume-where-it-left-off)).
 
 ---
 
@@ -47,7 +47,7 @@ flowchart TB
 | `LiveEventSession` | The authoritative in-memory state: current step (e.g., pick #), whose turn it is, the **deadline** (monotonic timestamp), pending AI reveals, offers. It's rebuilt from the database on resume. |
 | `IEventScript` | Event-specific rules. `DraftScript`: on-the-clock rotation, expiry → auto-pick, trade handling. |
 | AI actors | Decide immediately (< 200 ms) on a background task, then **schedule the reveal** at `now + deliberationDelay / acceleration`. |
-| Offer book | Expiring offers with an `OfferId` and a `Version`. Accept and expire race through the writer. |
+| Offer book | Expiring offers with an `OfferID` and a `Version`. Accept and expire race through the writer. |
 | `LiveEventStore` (UI) | Holds a UI-friendly projection. It pushes changes to components on events only, never on every tick. |
 
 ---
@@ -58,7 +58,8 @@ flowchart TB
 - **The deadline model:** when the user goes on the clock, `deadline = now + clockLength`. Remaining time is `deadline - now`. There's no "decrement every tick", which avoids drift.
 - **Expiry check:** each 100 ms tick, `if (now >= deadline && !session.PickMade) → enqueue AutoPick(pickNo, version)`.
 - **UI rendering:** the server sends the deadline (as remaining milliseconds at a known instant). The `DraftClock` component animates the countdown **client-side** (`requestAnimationFrame` in a tiny JS module, or a CSS animation keyed on duration). Blazor doesn't re-render 10 times a second. The display re-syncs on every state push.
-- **Final 10 seconds:** a visual escalation and an optional tick sound. Both are client-side.
+- **Final 10 seconds:** a visual escalation and an optional tick sound (off by default, [D-047](../DECISIONS.md#d-047-sound-all-off-by-default-no-music)). Both are client-side.
+- **Window not focused:** when the user goes on the clock or an offer arrives, the host flashes the taskbar button (`FlashWindowEx`, behind `IPlatformServices`). It's the non-audio "you're up" cue for users who alt-tabbed during accelerated AI picks.
 - **System sleep or suspend:** if two consecutive ticks are more than 5 s apart, the gap is treated as a suspension. Only 1 s of the gap is charged to the clock and an Information log is written. *(This means sleeping the PC is effectively a pause. That's accepted as harmless. The alternative of auto-picking after a laptop lid closes would feel unfair.)*
 
 ---
@@ -70,9 +71,9 @@ Every mutating command carries the **expected version** of what it acts on. Vers
 | Race | Resolution |
 |---|---|
 | User sends in the pick at 0:00.05; the expiry auto-pick fires at 0:00.00 | Both commands carry `PickNo = 15`, `Version = v`. Whichever is dequeued first commits and bumps the version. The second fails with `PickAlreadyMade`. The UI shows the actual result ("Auto-pick: R. Mensah"). |
-| User accepts a trade offer as it expires | `AcceptOffer(offerId, version)` vs. `ExpireOffer(offerId, version)`: first committed wins. |
+| User accepts a trade offer as it expires | `AcceptOffer(offerID, version)` vs. `ExpireOffer(offerID, version)`: first committed wins. |
 | User trades down while on the clock | The trade commit transfers pick ownership. **The deadline carries over** (no reset). The session switches the on-the-clock team. |
-| An AI reveal is scheduled for pick 15, but the user traded into pick 15 | The scheduled reveal carries `(pickNo, ownerTeamId, version)`. It's discarded if stale at execution. |
+| An AI reveal is scheduled for pick 15, but the user traded into pick 15 | The scheduled reveal carries `(pickNo, ownerTeamID, version)`. It's discarded if stale at execution. |
 | The user's queued pick target was just taken | The pick queue resolves at your turn with the next available entry. At expiry, the Big Board → BPA fallback applies. |
 
 ---
@@ -87,10 +88,10 @@ Every mutating command carries the **expected version** of what it acts on. Vers
 
 **Resume algorithm** (on opening a save with `LiveEventState.Status = Running`):
 1. Rebuild the `LiveEventSession` from domain tables plus `StateJson`.
-2. **If the user was on the clock:** `deadline = now + ClockRemainingMs` (proposed policy, [Q-08](../OPEN_QUESTIONS.md#q-08-app-closed-while-on-the-clock)).
+2. **If the user was on the clock:** `deadline = now + ClockRemainingMs` ([D-045](../DECISIONS.md#d-045-live-event-close-or-crash-resume-where-it-left-off)).
 3. **If an AI team was on the clock:** re-decide (deterministically, from `(seed, pickNo)`) and schedule a short reveal (≤ 3 s).
 4. Pending offers: expire any offer older than its window. Otherwise restore it with its remaining time.
-5. Show "**Draft resumed** · Round 2, Pick 47 · You have 1:12" with a 3-second "get ready" countdown before the clock restarts. The countdown is a courtesy that isn't charged to the user. *(Proposed. It's a tiny grace period, not a pause, because it only happens on resume.)*
+5. Show "**Draft resumed** · Round 2, Pick 47 · You have 1:12" with a 3-second "get ready" countdown before the clock restarts. The countdown is a courtesy that isn't charged to the user. It's a tiny grace period, not a pause, because it only happens on resume (decided in D-045).
 
 ### 5.1 Pause (Pausable clock mode only)
 Pause reuses the resume machinery, which is why it's cheap:
@@ -102,7 +103,7 @@ Pause reuses the resume machinery, which is why it's cheap:
 | 3 | The runner stops ticking. The UI shows a full-width **PAUSED** state. Browsing is allowed, but picks and trades are disabled while paused. | The runner restarts. Same 3-second "get ready" countdown as a resume. |
 
 - In **Live** saves, the `PauseLiveEvent` command doesn't exist in the UI and is rejected by the Application layer (`ClockModeIsLive`) as defense in depth.
-- **Decision to confirm:** while paused, can the user still *browse* (scouting reports, the Big Board)? *Recommendation:* yes for browsing, no for picks and trades. Pausable is about interruptions, not extra free thinking time with full actions.
+- **Decided ([D-060](../DECISIONS.md#d-060-a-paused-live-event-allows-browsing-but-no-actions)):** while paused, the user can browse everything (scouting reports, the Big Board, team needs), but picks, trades and offers are disabled until resume.
 
 ---
 
@@ -137,12 +138,14 @@ An in-house curve (exponential decay from pick 1) used by both the AI and the "t
 
 ## 7. Generalizing: FA Frenzy and Deadline Day (M9)
 
+FA Frenzy is committed. Deadline Day is built only if FA Frenzy proves the pattern ([D-046](../DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)).
+
 | Concept | Draft | FA Frenzy | Deadline Day |
 |---|---|---|---|
 | Turn structure | Sequential picks | Concurrent: many players, many bidders | Concurrent: many trade conversations |
 | User clock | On your pick | Agent deadlines per player ("decides in 0:45") | Offer expirations |
 | AI actors | Pick and trade | Bid, raise, withdraw | Shop, offer, accept |
-| End condition | Last pick + UDFA | Frenzy timer (e.g., 12 min real ≈ 72 in-game hours) | Deadline timer (e.g., 8 min real) |
+| End condition | Last pick (the UDFA round follows as a turn-based step, [D-059](../DECISIONS.md#d-059-the-udfa-window-is-one-turn-based-round-of-blind-offers)) | Frenzy timer (e.g., 12 min real ≈ 72 in-game hours) | Deadline timer (e.g., 8 min real) |
 | After the event | Back to the calendar | Turn-based FA continues day by day | The trade window closes |
 
 The runner, offer book, persistence and resume logic are shared. Only the **script** differs.

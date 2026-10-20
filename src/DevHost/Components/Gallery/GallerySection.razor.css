@@ -1,0 +1,31 @@
+.gallery-section { display: grid; gap: 8px; }
+
+.gallery-section-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.gallery-check {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--colorNeutralForeground3);
+}
+
+.gallery-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--gfo-radius-m);
+  background: var(--colorNeutralBackground1);
+}
+
+.gallery-panel.is-plain {
+  display: block;
+  padding: 0;
+  border: none;
+  background: none;
+}

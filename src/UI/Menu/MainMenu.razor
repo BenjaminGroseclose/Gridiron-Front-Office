@@ -1,0 +1,76 @@
+@page "/"
+@inject ISaveCatalog Catalog
+@inject ISaveManager Saves
+@inject SaveActions Actions
+@inject NavigationManager Navigation
+@inject AppIdentity App
+@* The main menu (M0 WP9). A plain centered panel for now: the design review decides the final look (option c).
+   Continue opens the most recently played save that can be opened. With a league open, this route goes to its home.
+   The version under the panel is the short one; Settings → About has the full one for bug reports (D-072). *@
+
+<PageTitle>Gridiron Front Office</PageTitle>
+
+<MenuFrame Width="400px" LabelledBy="menu-title">
+    <ChildContent>
+        <h1 id="menu-title" class="gfo-menu-title gfo-display">Gridiron Front Office</h1>
+
+        <div class="gfo-menu-actions">
+            <FluentButton Appearance="ButtonAppearance.Primary" Size="ButtonSize.Large" Disabled="@(_continue is null || _busy)"
+                          IconStart="@IconCatalog.Create(IconName.Play, 20, filled: true)" OnClick="ContinueAsync" data-testid="continue">
+                Continue
+            </FluentButton>
+            @if (_continue is { } target)
+            {
+                <p class="gfo-menu-continue" data-testid="continue-target">
+                    @target.LeagueName · last played @SaveCardText.Date(target.LastPlayedAtUtc, CultureInfo.CurrentCulture)
+                </p>
+            }
+
+            <FluentButton Size="ButtonSize.Large" Disabled="_busy" IconStart="@IconCatalog.Create(IconName.Add)"
+                          OnClick="@(() => Navigation.NavigateTo("/new"))" data-testid="new-league">New league</FluentButton>
+            <FluentButton Size="ButtonSize.Large" Disabled="_busy" IconStart="@IconCatalog.Create(IconName.FolderOpen)"
+                          OnClick="@(() => Navigation.NavigateTo("/load"))" data-testid="load">Load</FluentButton>
+            <FluentButton Size="ButtonSize.Large" Disabled="_busy" IconStart="@IconCatalog.Create(IconName.Settings)"
+                          OnClick="@(() => Navigation.NavigateTo("/settings"))" data-testid="settings">Settings</FluentButton>
+        </div>
+    </ChildContent>
+    <After>
+        <p class="gfo-menu-version" data-testid="version">v@(App.Version)</p>
+        @if (DiagnosticsTestPanel.Enabled)
+        {
+            <DiagnosticsTestPanel />
+        }
+    </After>
+</MenuFrame>
+
+@code {
+    private SaveCard? _continue;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Saves.Current is not null)
+        {
+            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);
+            return;
+        }
+
+        _continue = (await Catalog.ListAsync()).ContinueTarget();
+    }
+
+    private async Task ContinueAsync()
+    {
+        if (_continue is not { } target)
+        {
+            return;
+        }
+
+        _busy = true;
+        if (!await Actions.OpenAsync(target))
+        {
+            // The file may have changed since the list was read (deleted, damaged): read it again.
+            _continue = (await Catalog.ListAsync()).ContinueTarget();
+            _busy = false;
+        }
+    }
+}

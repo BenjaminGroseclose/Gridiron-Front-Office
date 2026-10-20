@@ -1,0 +1,26 @@
+@* A color sample: the token's color, its name, and (when known) its value and contrast ratio against a minimum. *@
+<div class="swatch">
+    <span class="swatch-color" style="background: var(@Token)"></span>
+    <span class="swatch-name">@Name</span>
+    <code class="swatch-token">@Token</code>
+    @if (Hex is not null)
+    {
+        <span class="swatch-hex gfo-num">@Hex</span>
+    }
+    @if (Ratio is { } ratio)
+    {
+        <span class="swatch-ratio gfo-num" data-ok="@(ratio >= Minimum ? "true" : "false")">@ratio.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture):1 (≥ @Minimum)</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+
+    [Parameter, EditorRequired] public string Token { get; set; } = "";
+
+    [Parameter] public string? Hex { get; set; }
+
+    [Parameter] public double? Ratio { get; set; }
+
+    [Parameter] public double Minimum { get; set; }
+}

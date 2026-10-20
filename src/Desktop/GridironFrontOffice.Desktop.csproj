@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <!--
+    The WPF + BlazorWebView host and composition root (D-021). Stays thin: services, window, platform features.
+    The Windows SDK TFM is REQUIRED: on plain net10.0-windows the .NET 10 WPF BlazorWebView crashes at startup
+    (HOST_BENCHMARK.md, gotcha 1). Release publishes use ReadyToRun (build.ps1 -Full).
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <!-- Per-monitor v2 DPI awareness. Without it WPF is only system-aware, and Windows bitmap-stretches the window
+         (blurry) on a monitor with a different scale (Spike S0c). -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UI\GridironFrontOffice.UI.csproj" />
+    <ProjectReference Include="..\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Wpf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="GridironFrontOffice.Desktop.Tests" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,35 @@
+.gfo-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--colorNeutralForeground2);
+}
+
+.gfo-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--gfo-radius-pill);
+  background: var(--colorNeutralBackground2);
+  color: var(--gfo-accent);
+}
+
+.gfo-empty-title {
+  margin: 8px 0 0;
+  font-size: 28px;
+  color: var(--colorNeutralForeground1);
+}
+
+.gfo-empty-message {
+  margin: 0;
+  max-width: 44ch;
+}
+
+.gfo-empty-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}

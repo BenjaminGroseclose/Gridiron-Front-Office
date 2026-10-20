@@ -1,0 +1,206 @@
+@namespace GridironFrontOffice.UI.Components.DataGrid
+@typeparam TItem
+@attribute [CascadingTypeParameter(nameof(TItem))]
+@implements IAsyncDisposable
+@inject GfoThemeService Theme
+@inject IJSRuntime JS
+@* GFO's table (UI_DESIGN_SYSTEM.md §5.3, the Spike S0b verdict): FluentDataGrid, virtualized, with a sticky header, an
+   optional pinned first column and GFO's compact sort header. Row height follows the density setting. Fluent moves focus
+   with the arrow keys; gfo-grid.js adds PageUp/PageDown, Home/End and Ctrl+Home/End. Enter opens the focused row and
+   Space selects it. Columns are DataGridColumn and DataGridTemplateColumn. *@
+<div @ref="_frame" class="gfo-grid @Class" style="height: @Height" @attributes="AdditionalAttributes">
+    @if (_empty && EmptyContent is not null)
+    {
+        <div class="gfo-grid-empty">@EmptyContent</div>
+    }
+    else
+    {
+        <CascadingValue Value="this" IsFixed="true">
+            <FluentDataGrid @ref="_grid" TGridItem="TItem" Items="@_items" ItemKey="@ItemKey" Virtualize="@Virtualize" ItemSize="@RowHeight"
+                            GenerateHeader="DataGridGeneratedHeaderType.Sticky" ShowHover="true" RowClass="@RowClassFor"
+                            OnCellFocus="OnCellFocus" OnRowClick="OnRowClickAsync" OnRowDoubleClick="OnRowDoubleClickAsync"
+                            aria-label="@Label">
+                @ChildContent
+            </FluentDataGrid>
+        </CascadingValue>
+    }
+</div>
+
+@code {
+    private const string ModulePath = "./_content/GridironFrontOffice.UI.Components/gfo-grid.js";
+
+    private ElementReference _frame;
+    private FluentDataGrid<TItem>? _grid;
+    private IQueryable<TItem> _items = Enumerable.Empty<TItem>().AsQueryable();
+    private IEnumerable<TItem>? _source;
+    private bool _empty;
+    private IJSObjectReference? _module;
+    private IJSObjectReference? _keyboard;
+    private DotNetObjectReference<DataGrid<TItem>>? _self;
+    private ColumnBase<TItem>? _sortColumn;
+    private bool _sortDescending;
+    private TItem? _focused;
+    private bool _hasFocused;
+
+    /// <summary>The rows. Sorting happens in the grid; pass the rows in their natural order.</summary>
+    [Parameter, EditorRequired] public IEnumerable<TItem> Items { get; set; } = [];
+
+    /// <summary>The table's accessible name, e.g. "Roster".</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>A stable key per row (the item's ID), so rows keep their identity when the data changes.</summary>
+    [Parameter] public Func<TItem, object>? ItemKey { get; set; }
+
+    /// <summary>
+    /// The frame's height. The frame scrolls; the grid inside must never get <c>height: 100%</c>, which breaks the
+    /// sticky header (S0b).
+    /// </summary>
+    [Parameter] public string Height { get; set; } = "60vh";
+
+    /// <summary>Render only the rows in view. On by default; small static lists may turn it off.</summary>
+    [Parameter] public bool Virtualize { get; set; } = true;
+
+    [Parameter] public TItem? SelectedItem { get; set; }
+
+    [Parameter] public EventCallback<TItem?> SelectedItemChanged { get; set; }
+
+    /// <summary>Enter or a double-click on a row: usually "open the player".</summary>
+    [Parameter] public EventCallback<TItem> OnItemActivated { get; set; }
+
+    /// <summary>Shown across the whole frame, instead of the table, when there are no rows.</summary>
+    [Parameter] public RenderFragment? EmptyContent { get; set; }
+
+    /// <summary>The columns: DataGridColumn and DataGridTemplateColumn.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    /// <summary>The exact row height: 46 px Comfortable, 36 px Compact (VISUAL_DESIGN.md §5). <c>RowSize</c> is ignored when virtualized.</summary>
+    private int RowHeight => Theme.Current?.RowHeight ?? 46;
+
+    protected override void OnInitialized() => Theme.Applied += OnThemeApplied;
+
+    protected override void OnParametersSet()
+    {
+        if (!ReferenceEquals(Items, _source))
+        {
+            _source = Items;
+            _items = Items as IQueryable<TItem> ?? Items.AsQueryable();
+        }
+
+        _empty = !_items.Any();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", ModulePath);
+            _self = DotNetObjectReference.Create(this);
+            _keyboard = await _module.InvokeAsync<IJSObjectReference>("attach", _frame, _self);
+        }
+    }
+
+    /// <summary>
+    /// The compact header for a column (S0b): one button, so a 64 px stat column fits. The first click sorts numbers high
+    /// to low and text A to Z; the next click flips it. Fluent keeps the header cell's <c>aria-sort</c> up to date.
+    /// </summary>
+    internal RenderFragment<ColumnBase<TItem>> HeaderFor(bool sortable, bool numeric) =>
+        column => sortable ? SortHeader((column, numeric)) : PlainHeader(column);
+
+    private RenderFragment<ColumnBase<TItem>> PlainHeader => column => @<span class="gfo-th">@column.Title</span>;
+
+    private RenderFragment<(ColumnBase<TItem> Column, bool Numeric)> SortHeader => header =>
+        @<button type="button" class="gfo-th" data-sorted="@SortState(header.Column)"
+                 @onclick="() => SortAsync(header.Column, header.Numeric)" @onclick:stopPropagation="true">
+            <span class="gfo-th-title">@header.Column.Title</span>
+            @if (ReferenceEquals(header.Column, _sortColumn))
+            {
+                <Icon Name="@(_sortDescending ? IconName.ArrowSortDown : IconName.ArrowSortUp)" Size="16" />
+            }
+        </button>;
+
+    private string? SortState(ColumnBase<TItem> column) =>
+        ReferenceEquals(column, _sortColumn) ? (_sortDescending ? "descending" : "ascending") : null;
+
+    private async Task SortAsync(ColumnBase<TItem> column, bool numeric)
+    {
+        var descending = ReferenceEquals(column, _sortColumn) ? !_sortDescending : numeric;
+        (_sortColumn, _sortDescending) = (column, descending);
+        await _grid!.SortByColumnAsync(column, descending ? DataGridSortDirection.Descending : DataGridSortDirection.Ascending);
+    }
+
+    private string RowClassFor(TItem item) => IsSelected(item) ? "gfo-row-selected" : string.Empty;
+
+    private bool IsSelected(TItem item) =>
+        SelectedItem is { } selected
+        && (ItemKey is null ? EqualityComparer<TItem>.Default.Equals(item, selected) : Equals(ItemKey(item), ItemKey(selected)));
+
+    private void OnCellFocus(FluentDataGridCell<TItem> cell)
+    {
+        if (cell.CellType == DataGridCellType.Default && cell.Item is { } item)
+        {
+            (_focused, _hasFocused) = (item, true);
+        }
+    }
+
+    private Task OnRowClickAsync(FluentDataGridRow<TItem> row) =>
+        row.RowType == DataGridRowType.Default && row.Item is { } item ? SelectAsync(item) : Task.CompletedTask;
+
+    private Task OnRowDoubleClickAsync(FluentDataGridRow<TItem> row) =>
+        row.RowType == DataGridRowType.Default && row.Item is { } item ? OnItemActivated.InvokeAsync(item) : Task.CompletedTask;
+
+    /// <summary>Enter or Space on a body cell, reported by gfo-grid.js.</summary>
+    [JSInvokable("OnKey")]
+    public Task OnKeyAsync(string key)
+    {
+        if (!_hasFocused)
+        {
+            return Task.CompletedTask;
+        }
+
+        return key switch
+        {
+            "Enter" => OnItemActivated.InvokeAsync(_focused!),
+            " " => SelectAsync(_focused!),
+            _ => Task.CompletedTask,
+        };
+    }
+
+    private async Task SelectAsync(TItem item)
+    {
+        if (!IsSelected(item))
+        {
+            SelectedItem = item;
+            await SelectedItemChanged.InvokeAsync(item);
+        }
+    }
+
+    private void OnThemeApplied(object? sender, GfoThemeState state) => _ = InvokeAsync(StateHasChanged);
+
+    public async ValueTask DisposeAsync()
+    {
+        Theme.Applied -= OnThemeApplied;
+        try
+        {
+            if (_keyboard is not null)
+            {
+                await _keyboard.InvokeVoidAsync("dispose");
+                await _keyboard.DisposeAsync();
+            }
+
+            if (_module is not null)
+            {
+                await _module.DisposeAsync();
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // The page is already gone.
+        }
+
+        _self?.Dispose();
+    }
+}

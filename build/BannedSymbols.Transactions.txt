@@ -1,0 +1,17 @@
+# Only SaveWriter begins, commits or rolls back transactions (DATA_ACCESS_GUIDE.md §2 W3, §8).
+# SaveWriter suppresses RS0030 at its single call site with a justification comment.
+M:Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.BeginTransaction;Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade.BeginTransactionAsync(System.Threading.CancellationToken);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.BeginTransaction(Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade,System.Data.IsolationLevel);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.BeginTransactionAsync(Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade,System.Data.IsolationLevel,System.Threading.CancellationToken);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.UseTransaction(Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade,System.Data.Common.DbTransaction);Only SaveWriter owns transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.EntityFrameworkCore.RelationalDatabaseFacadeExtensions.UseTransactionAsync(Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade,System.Data.Common.DbTransaction,System.Threading.CancellationToken);Only SaveWriter owns transactions (DATA_ACCESS_GUIDE.md)
+M:System.Data.Common.DbConnection.BeginTransaction;Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:System.Data.Common.DbConnection.BeginTransaction(System.Data.IsolationLevel);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:System.Data.Common.DbConnection.BeginTransactionAsync(System.Threading.CancellationToken);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:System.Data.Common.DbConnection.BeginTransactionAsync(System.Data.IsolationLevel,System.Threading.CancellationToken);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.Data.Sqlite.SqliteConnection.BeginTransaction;Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.Data.Sqlite.SqliteConnection.BeginTransaction(System.Boolean);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.Data.Sqlite.SqliteConnection.BeginTransaction(System.Data.IsolationLevel);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+M:Microsoft.Data.Sqlite.SqliteConnection.BeginTransaction(System.Data.IsolationLevel,System.Boolean);Only SaveWriter begins transactions (DATA_ACCESS_GUIDE.md)
+T:System.Transactions.TransactionScope;Explicit transactions only, via ISaveWriter (DATA_ACCESS_GUIDE.md)

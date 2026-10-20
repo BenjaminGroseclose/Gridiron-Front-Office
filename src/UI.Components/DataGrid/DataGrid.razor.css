@@ -1,0 +1,53 @@
+/*
+  DataGrid<T>'s scoped styles (UI_DESIGN_SYSTEM.md §5.3). The frame scrolls; the grid inside never gets height: 100%.
+  The ::deep rules are the only reach into Fluent's grid markup in GFO (D-067), and the gallery page exercises each one
+  so a Fluent upgrade that breaks them shows up straight away.
+*/
+.gfo-grid {
+  position: relative;
+  overflow: auto;
+  contain: inline-size;   /* the frame never takes its table's width, so it scrolls in any flex or grid layout */
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--gfo-radius-m);
+  background: var(--colorNeutralBackground1);
+}
+
+.gfo-grid-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+}
+
+/* Fix 1: virtualization's spacer rows span every column; otherwise rows stop rendering once scrolled right past column 1. */
+.gfo-grid ::deep .fluent-data-grid tr[aria-hidden="true"] { grid-column: 1 / -1; }
+
+/* Fix 2: size the table to its columns; otherwise pinned cells let go after a long horizontal scroll. */
+.gfo-grid ::deep .fluent-data-grid { width: max-content; min-width: 100%; }
+
+/* A selected row is opaque (VISUAL_DESIGN.md §3.3, Selection), so a pinned cell shows it too. */
+.gfo-grid ::deep tr.gfo-row-selected > td { background: var(--gfo-selection); }
+
+/* The compact header: the title and, when sorted, the direction. Fits a 64 px column. */
+.gfo-th {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  font-weight: 600;
+  color: var(--colorNeutralForeground2);
+  white-space: nowrap;
+}
+
+button.gfo-th { cursor: pointer; }
+
+button.gfo-th:focus-visible {
+  outline: 2px solid var(--colorStrokeFocus2);
+  outline-offset: 2px;
+  border-radius: var(--gfo-radius-s);
+}
+
+.gfo-th[data-sorted] { color: var(--colorNeutralForeground1); }
+
+.gfo-th-title { overflow: hidden; text-overflow: ellipsis; }

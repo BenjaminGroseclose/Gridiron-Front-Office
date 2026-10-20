@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" class="gfo-booting">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gridiron Front Office</title>
+  <base href="/" />
+  <!-- First paint (UI_DESIGN_SYSTEM.md §3.3). While booting, the page is transparent, so WebView2's background (set
+       natively to the saved mode's Ground before the page loads) shows through, and #app stays hidden until
+       GfoThemeService has applied Stadium and removes the class. The class is static because a script added at document
+       creation can run after Blazor's first navigation (Spike S0c). The rules only apply while booting. -->
+  <style>
+    html.gfo-booting, html.gfo-booting body { background: transparent; }
+    html.gfo-booting #app { visibility: hidden; }
+  </style>
+  <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css" />
+  <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-fonts.css" />
+  <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-tokens.css" />
+  <link href="GridironFrontOffice.Desktop.styles.css" rel="stylesheet" />
+  <!-- Fluent re-applies its default theme on every Windows light/dark switch unless its own cache holds a mode, which GFO
+       doesn't use. This is the flag Fluent checks before adding that listener; GfoThemeService owns the switch (D-068). -->
+  <script>window.__FluentUIBlazorSystemThemeChangeListener = true;</script>
+  <!-- Before Blazor, so even boot-time JavaScript errors reach the log (LOGGING.md §8). -->
+  <script src="_content/GridironFrontOffice.UI/js/gfo-diagnostics.js"></script>
+  <!-- The title bar's drag regions and the theme mode, for the window (D-068). -->
+  <script src="gfo-host.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+  <script src="_framework/blazor.webview.js"></script>
+</body>
+</html>

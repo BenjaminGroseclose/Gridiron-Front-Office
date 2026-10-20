@@ -1,6 +1,6 @@
 # Persistence: SQLite Save Files
 
-> **Status:** Proposed · 2026-10-13 · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
+> **Status:** Proposed · 2026-10-13 · Save file core built in M0 WP6 (2026-10-16), save lifecycle in WP7 (2026-10-18) · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
 >
 > **Data access: EF Core with the GFO unit of work** ([D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work)). **How to read and write** (transactions, patterns, troubleshooting) is in **[DATA_ACCESS_GUIDE.md](DATA_ACCESS_GUIDE.md)**. This doc covers the save file itself.
 
@@ -25,8 +25,8 @@ flowchart LR
     subgraph Live["Live save (autosave)"]
       DB[("Dynasty.gfo<br/>+ -wal / -shm while open")]
     end
-    subgraph Snap["Snapshots (per SaveId)"]
-      S1[("S2027-preseason.gfo")]
+    subgraph Snap["Snapshots (per SaveID)"]
+      S1[("S2027-camp.gfo")]
       S2[("S2027-W08.gfo")]
       S3[("S2028-pre-draft.gfo")]
     end
@@ -40,7 +40,7 @@ flowchart LR
 | Trigger | Snapshot name | Retention |
 |---|---|---|
 | League created | `created` | Keep 1 |
-| Preseason begins | `S{yyyy}-preseason` | Last 3 seasons |
+| Training camp opens | `S{yyyy}-camp` | Last 3 seasons |
 | Before each regular-season week | `S{yyyy}-W{ww}` | Rolling last 4 weeks |
 | Before the trade deadline | `S{yyyy}-deadline` | Last 2 |
 | Playoffs begin | `S{yyyy}-playoffs` | Last 2 |
@@ -52,6 +52,13 @@ flowchart LR
 
 - **Total budget:** 2 GB per league by default (configurable). Rolling snapshots are pruned oldest-first until the total fits.
 - Snapshots are taken off the UI thread with `VACUUM INTO`, which produces a compact, consistent, single file without closing the live database.
+- **As built (M0 WP7):**
+  - **The table is code:** `SnapshotTrigger` builds the names (`SnapshotTrigger.Week(2027, 8)` → `S2027-W08`) and `SnapshotPolicy` holds the keep counts and the pruning rule, as pure functions in Application with unit tests. M0 takes `created` (after a save is created), `pre-upgrade-v{n}` and `pre-restore`. The phase kinds are defined, but nothing triggers them until phases exist.
+  - **Keep counts:** "last N" is the newest N of that kind; "until the next successful upgrade" is keep 1 (each new `pre-upgrade` replaces the older ones). Taking a snapshot whose name already exists replaces it.
+  - **The budget:** only the phase snapshots (camp, weeks, deadline, playoffs, end, pre-FA, pre-draft) give way, oldest first. `created`, `pre-upgrade` and `pre-restore` are safety nets that are never pruned for the budget, and neither is the snapshot just taken. The budget is `SnapshotOptions.BudgetBytes` (2 GB); a user setting can come with the Time Machine.
+  - **A snapshot's time is its file's write time.** There's no index file to get out of step with the folder. Files in the folder that don't match a snapshot name are ignored.
+  - **Between commands:** `ISnapshotService.TakeAsync` holds the writer's gate, so a snapshot is always a point between two commands, and commands queued meanwhile simply wait.
+  - **Snapshots are rollback-journal files.** `VACUUM INTO` doesn't keep WAL mode, so restore switches the file back to WAL.
 
 ### 2.2 Restore ("Time Machine" screen)
 - Lists snapshots with season, phase, record and timestamp.
@@ -59,6 +66,15 @@ flowchart LR
 - **Disabled** while a live event (draft, FA Frenzy, Deadline Day) is in progress.
 - **Disabled** in Ironman leagues ([D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)). The check lives in `SaveManager`, not just the UI.
 - **Ironman exception: corruption-only recovery.** Snapshots are still taken. If the live file fails its integrity check on open, or a schema migration fails, the app restores the **most recent good snapshot automatically**. The player never chooses the point in time.
+- **As built (M0 WP7): `ISaveManager.RestoreAsync(snapshot)`**, the engine the M3 Time Machine will call.
+  1. **Rules first:** the snapshot must belong to the open save. `SaveRules.CanRestore` refuses Ironman (`IronmanNoRestore`) and a running live event (`LiveEventRunning`, through `ILiveEventStatus`, which reports "none" until M2).
+  2. **The snapshot is checked before anything closes:** it exists, it's a GFO file, `quick_check` passes, its `SaveID` matches, and its schema isn't newer. A bad snapshot leaves the save open and untouched.
+  3. **Stage a copy:** `VACUUM INTO` from the snapshot to `{save}.restore-tmp`, switched to WAL. Staging first is what makes restoring `pre-restore` itself (undo) work, since step 5 replaces that snapshot.
+  4. **Close** the save (recording the session).
+  5. **Snapshot the current state as `pre-restore`.**
+  6. **Replace:** delete any `-wal`/`-shm` (a stale WAL must never be replayed onto another file), then move the staged copy over the save.
+  7. **Reopen** through the normal open path (an older snapshot is upgraded on the way). Then one command carries the play time over: real time played doesn't go back with the league.
+- **Not built yet:** the corruption recovery (Standard's offer and Ironman's automatic restore) builds on the same engine and arrives with the Time Machine.
 
 ### 2.3 Duplicate and export
 - **Duplicate league** (make a branch) and **Export** (a single-file copy for backup or sharing) both use `VACUUM INTO`.
@@ -71,10 +87,11 @@ flowchart LR
 
 ## 3. Connection and pragmas
 
-**Connection string (built by `SaveConnectionFactory`):**
+**Connection string (built by `LeagueSession.For`):**
 ```
-Data Source={path};Mode=ReadWriteCreate;Cache=Private;Pooling=True;Foreign Keys=True;Default Timeout=30
+Data Source={path};Mode=ReadWrite;Cache=Private;Pooling=True;Foreign Keys=True;Default Timeout=30
 ```
+`ReadWrite`, not `ReadWriteCreate`: a save that vanished must fail, not reappear empty. Only `SaveManager.CreateAsync` creates files (`SqliteFile.InitializeNew`).
 
 **Set once at creation (persistent in the file):**
 ```sql
@@ -83,6 +100,7 @@ PRAGMA page_size = 4096;
 PRAGMA application_id = 0x47464F31;  -- 'GFO1' magic: lets us recognize our files
 PRAGMA user_version = {schema};      -- mirrors schema version for quick checks
 ```
+(`page_size`, `journal_mode` and `application_id` are set by `SqliteFile.InitializeNew` before the first table exists. `user_version` is set after every migration, on create and on upgrade.)
 
 **Set on every connection open (an EF `DbConnectionInterceptor`, `SqlitePragmaInterceptor`, registered on the session's context options):**
 ```sql
@@ -127,9 +145,9 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.1 Meta
 | Table | Key columns | Notes |
 |---|---|---|
-| `SaveInfo` (singleton) | `SaveId (GUID)`, `LeagueName`, `UserTeamId`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `Difficulty`, `ClockPreset`, **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
+| `SaveInfo` (singleton). **M0 has:** `SaveID`, `LeagueName`, `SchemaVersion`, both app versions, both timestamps, `PlayTimeSeconds`, the creation settings and `Generation`. The league position (`UserTeamID`, season, phase, date, seed) arrives with M1. Enums are stored by name. | `SaveID (GUID)`, `LeagueName`, `UserTeamID`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
 | `LeagueRules` (singleton) | Cap, cap growth, roster limits, practice squad size, minimum salaries table, live event toggles | Copied from defaults at creation |
-| `AdvanceJournal` | `OperationId`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
+| `AdvanceJournal` | `OperationID`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
 | `LiveEventState` | `EventType`, `Status`, `StateJson`, `ClockRemainingMs`, `LastHeartbeatUtc` | See [LIVE_EVENTS.md](LIVE_EVENTS.md) |
 
 ### 5.2 League structure
@@ -138,31 +156,32 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.3 People
 | Table | Key columns |
 |---|---|
-| `Players` | `PlayerId`, `TeamId?`, `Status`, `Position`, names, `BirthDate`, `College`, `Hometown`, `DraftSeason/Round/Pick/TeamId`, `ExperienceSeasons`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
-| `RatingHistory` | `PlayerId`, `Season`, overall + key attributes (one snapshot per season) |
-| `Contracts` | `ContractId`, `PlayerId`, `TeamId`, `SignedOn`, `Type` (Rookie, Veteran, Tag, Minimum, …), `TotalValue`, `SigningBonus`, `IsActive` |
-| `ContractYears` | `ContractId`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
-| `DeadMoney` | `TeamId`, `Season`, `PlayerId`, `Amount`, `Reason` |
-| `Injuries` | `PlayerId`, `GameId?`, `Type`, `BodyPart`, `Severity`, `OccurredOn`, `ExpectedReturn`, `ActualReturn` |
-| `ScoutingReports` | `TeamId`, `PlayerId`, `AttributeGroup`, `Estimate`, `Sigma`, `UpdatedOn` (the user's team is persisted; AI perception may be derived, see §8) |
+| `Players` | `PlayerID`, `TeamID?`, `Status`, `Position`, names, `BirthDate`, `College`, `Hometown`, `DraftSeason/Round/Pick/TeamID`, `ExperienceSeasons`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
+| `RatingHistory` | `PlayerID`, `Season`, overall + key attributes (one snapshot per season) |
+| `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `SignedOn`, `Type` (Rookie, Veteran, Tag, Minimum, …), `TotalValue`, `SigningBonus`, `IsActive` |
+| `ContractYears` | `ContractID`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
+| `DeadMoney` | `TeamID`, `Season`, `PlayerID`, `Amount`, `Reason` |
+| `Injuries` | `PlayerID`, `GameID?`, `Type`, `BodyPart`, `Severity`, `OccurredOn`, `ExpectedReturn`, `ActualReturn` |
+| `ScoutingReports` | `TeamID`, `PlayerID`, `AttributeGroup`, `Estimate`, `Sigma`, `UpdatedOn` for **prospects only** (the user's team is persisted; AI perception may be derived, see §8). Pro perception is never stored: it's a fixed fuzz derived from `Hash(leagueSeed, "perception", teamID, playerID, season)` ([D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)). |
 
 ### 5.4 Season and games
 | Table | Key columns |
 |---|---|
-| `Seasons` | `Season`, `CapAmount`, `ChampionTeamId`, … |
-| `Games` | `GameId`, `Season`, `Week`, `Type` (Pre, Reg, WC, DIV, CONF, CHAMP), `HomeTeamId`, `AwayTeamId`, `Date`, `HomeScore`, `AwayScore`, `Overtime`, `Status`, `EngineVersion`, `Seed` |
-| `TeamGameStats` | `GameId`, `TeamId`, ~40 stat columns |
-| `PlayerGameStats` | `GameId`, `PlayerId`, `TeamId`, ~60 stat columns (wide; SQLite stores 0 and 1 in zero payload bytes, so sparse wide rows are cheap) |
-| `PlayerSeasonStats` | `PlayerId`, `Season`, `TeamId`, `GameType`, same stat columns, upserted each week |
-| `GamePlayLogs` | `GameId (PK)`, `EngineVersion`, `Format`, `Compression`, `Data BLOB` (Brotli-compressed JSON of play events and deciding matchups) |
-| `DepthChartSlots` | `TeamId`, `Package`, `Slot`, `Order`, `PlayerId`, `IsLocked` |
-| `GamePlans` | `TeamId`, `GameId?` (null = default), settings columns |
+| `Seasons` | `Season`, `CapAmount`, `ChampionTeamID`, … |
+| `Games` | `GameID`, `Season`, `Week`, `Type` (Reg, WC, DIV, CONF, CHAMP; no preseason, [D-038](../DECISIONS.md#d-038-no-preseason-games-in-10)), `HomeTeamID`, `AwayTeamID`, `Date`, `HomeScore`, `AwayScore`, `Overtime`, `Status`, `EngineVersion`, `Seed` |
+| `TeamGameStats` | `GameID`, `TeamID`, ~40 stat columns |
+| `PlayerGameStats` | `GameID`, `PlayerID`, `TeamID`, ~60 stat columns (wide; SQLite stores 0 and 1 in zero payload bytes, so sparse wide rows are cheap) |
+| `PlayerSeasonStats` | `PlayerID`, `Season`, `TeamID`, `GameType`, same stat columns, upserted each week |
+| `GamePlayLogs` | `GameID (PK)`, `EngineVersion`, `Format`, `Compression`, `Data BLOB` (Brotli-compressed JSON of play events and deciding matchups) |
+| `DepthCharts` | `TeamID`, `Position` (incl. KR/PR), `Order`, `PlayerID`, `IsLocked`. Packages are derived from this ([D-052](../DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)). |
+| `DepthChartOverrides` | `TeamID`, `Package`, `Slot`, `PlayerID` (optional per-package overrides) |
+| `GamePlans` | `TeamID`, `GameID?` (null = default), settings columns |
 
 ### 5.5 Draft, transactions, narrative
-`DraftClasses`, `DraftPicks` (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick?`, `SelectedPlayerId?`, `WasAutoPick`), `BigBoardEntries` (user), `Transactions` (append-only log), `Trades`, `TradeAssets`, `Awards`, `Records`, `HallOfFame`, `NewsItems`, `InboxMessages`.
+`Scouts` (`TeamID`, area or director, `Accuracy`, `PositionExpertise`), `ScoutAssignments` (`ScoutID`, `Kind` = Standing (region or position group) | Special (`ProspectID`), `Since`; [D-058](../DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)), `DraftClasses`, `DraftPicks` (`Season`, `Round`, `OriginalTeamID`, `OwnerTeamID`, `OverallPick?`, `SelectedPlayerID?`, `WasAutoPick`), `BigBoardEntries` (user), `Transactions` (append-only log), `Trades`, `TradeAssets`, `Awards`, `Records`, `HallOfFame`, `NewsItems`, `InboxMessages`.
 
 ### 5.6 Indexing guidelines
-- Index every foreign key used for filtering: `Players(TeamId, Status)`, `PlayerGameStats(PlayerId)`, `PlayerGameStats(GameId)`, `Games(Season, Week)`, `PlayerSeasonStats(Season, Position?)`, `Transactions(Season, TeamId)`.
+- Index every foreign key used for filtering: `Players(TeamID, Status)`, `PlayerGameStats(PlayerID)`, `PlayerGameStats(GameID)`, `Games(Season, Week)`, `PlayerSeasonStats(Season, Position?)`, `Transactions(Season, TeamID)`.
 - Keep indexes deliberate. Each one slows the weekly bulk insert. Measure with `EXPLAIN QUERY PLAN`.
 
 ---
@@ -173,12 +192,14 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 |---|---|---|---|
 | Players (all statuses) | +~300 prospects/yr | ~5,000 players | Retired players kept for history |
 | `PlayerGameStats` | ~285 games × ~90 players ≈ 26k rows | ~260k | Wide rows, mostly zeros |
-| `GamePlayLogs` | ~285 × ~5 KB (Brotli) ≈ 1.5 MB | ~15 MB | Before retention pruning |
+| `GamePlayLogs` | ~285 × ~5 KB (Brotli) ≈ 1.5 MB | ~15 MB | Kept, not pruned ([D-039](../DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning)). **Estimate to verify in M3.** |
 | `ScoutingReports` (user) | ~300 prospects × ~8 groups ≈ 2.4k | Pruned after the draft | |
 | `Transactions` / `NewsItems` | ~3–5k | ~40k | |
 | **Estimated file size** | | **~60–120 MB** | Budget: < 150 MB |
 
-**Retention policy (setting):** keep full play-by-play for the **last 3 seasons** by default ([Q-26](../OPEN_QUESTIONS.md#q-26-play-by-play-retention)). Box scores, stats, records and history are kept forever. Pruning runs at season end, followed by an incremental vacuum.
+**Measured in Spike S0a (synthetic data, 2026-10-15):** a play log is about **6.0 KB** per game (39.9 KB of JSON, Brotli), and a season of stats + logs is about **4.5 MB**. So about 50 MB at 10 seasons, and play logs alone about 17 MB per 10 seasons, below the D-039 pruning trigger. `PRAGMA quick_check` costs about 3 ms per MB (29 ms on 10.8 MB). Re-measure with real engine output in M3.
+
+**Retention policy ([D-039](../DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning)):** keep everything, with no pruning job and no setting. Measure real play log sizes in M3 and in the M5 10-season autoplay. **If play logs exceed 25% of the 10-season budget (about 37 MB)**, switch on the fallback: league-wide play-by-play for the last 3 seasons, plus every one of the user's team's games forever, with season aggregates and record-worthy plays extracted first. Pruning would then run at season end, followed by an incremental vacuum. Box scores, stats, records and history are kept forever regardless.
 
 ---
 
@@ -205,9 +226,31 @@ sequenceDiagram
     end
 ```
 
-- **Tooling:** **EF Core migrations** in `GridironFrontOffice.Infrastructure`, applied programmatically (`Database.MigrateAsync()`) when a save is opened, never at app startup across all saves. `PRAGMA user_version` mirrors the schema version for quick checks on the load screen.
+- **Tooling:** **EF Core migrations** in `GridironFrontOffice.Infrastructure/Data/Migrations`, applied programmatically (`Database.MigrateAsync()`) when a save is opened, never at app startup across all saves. `PRAGMA user_version` mirrors the schema version for quick checks on the load screen. Add one with:
+  `dotnet ef migrations add <Name> --project src/Infrastructure --output-dir Data/Migrations`
+- **As built (M0 WP6):**
+  - **The schema version is the number of EF migrations.** Adding a migration bumps it; there's no constant to forget.
+  - **A save is from a newer app** when it has a migration this app doesn't know, or its `user_version` is higher than this app's count. It's refused with "Update the app", naming the version that last opened it, and the file is released.
+  - **Opening an older save:** a `pre-upgrade-v{n}` snapshot through the snapshot service (WP7), then migrate, then set `user_version`.
+  - **Migrations are the one exception to "only `SaveWriter` begins transactions":** EF runs each migration in its own transaction, before the save becomes the open session.
+  - **Opening checks run in order:**
+    1. the file exists;
+    2. it's SQLite with `application_id = GFO1` (otherwise `NotAGfoSave`);
+    3. `quick_check(1)` is `ok` (otherwise `SaveDamaged`);
+    4. the schema check.
+
+    Opening always closes the current save first.
+  - **Closing:**
+    1. one command records the session (`PlayTimeSeconds`, `LastPlayedAtUtc`);
+    2. the writer is drained;
+    3. `wal_checkpoint(TRUNCATE)`;
+    4. clear the pool.
+
+    If the app exits without `CloseAsync`, `SaveManager.Dispose` still checkpoints and releases the file (without recording play time).
 - **Data migrations** (e.g., backfilling a new rating) are allowed inside migrations. They must be **deterministic** (using derived seeds) so two copies of the same save upgrade identically.
 - **Test fixtures:** keep one real save from every *released* schema version under `tests/GridironFrontOffice.Infrastructure.Tests/Fixtures/`. A test upgrades each one to the current version and runs invariant checks.
+- **Older-schema saves for tests:** `IMigrator.MigrateAsync("<migration>")` creates a save stopped at any earlier migration, which is how Spike S0a simulated an old save. It complements the real fixture saves above.
+- **Migrations are generated code:** `.editorconfig` marks `**/Migrations/*.cs` as `generated_code`, because the main migration file has no `<auto-generated>` header and would otherwise fail the style rules (IDE0161, CA1861).
 - **Pre-1.0 policy:** until the first public build, it's fine to squash migrations and break saves, as long as the change is announced in the changelog.
 
 ---
@@ -215,7 +258,7 @@ sequenceDiagram
 ## 8. Determinism and stored vs. derived data
 
 - Store **what can't be cheaply re-derived or what the player has seen**: results, stats, contracts, transactions, the user's scouting reports.
-- **AI teams' perceptions** of players can be **derived** on demand from `(leagueSeed, teamId, playerId, scoutingInvestment)` with a deterministic noise function. That avoids storing ~31 × thousands of rows. Cache them in memory per session. Revisit if the AI needs perception *history*.
+- **AI teams' perceptions** of players can be **derived** on demand from `(leagueSeed, teamID, playerID, scoutingInvestment)` with a deterministic noise function. That avoids storing ~31 × thousands of rows. Cache them in memory per session. Revisit if the AI needs perception *history*.
 - Every `Game` stores its `Seed` and `EngineVersion`. Re-simulating it with the same inputs reproduces the result, which is invaluable for bug reports.
 
 ---
@@ -225,6 +268,14 @@ sequenceDiagram
 - Scan `Saves\*.gfo`. For each file, open a **read-only** connection, verify `application_id`, and read `SaveInfo` plus the user team's identity and record.
 - Show a card per save: team mark and colors, league name, season and phase, record, last played, Ironman badge, app version warning.
 - Corrupt or unrecognized files show a "Can't read this save" card with "Show in folder".
+- **As built (M0 WP7): `ISaveCatalog.ListAsync()`** returns `SaveCard`s, most recently played first, unreadable files last.
+  - **Status per card:** `Ready`, `NeedsUpgrade` (older `user_version`: opens after a `pre-upgrade` snapshot), `FromNewerVersion` (the card says to update), or `Unreadable` with a one-sentence `Problem` (not SQLite, not GFO, damaged, no league in it).
+  - **Continue** (`SaveCards.ContinueTarget`) is the most recently played card that can be opened.
+  - **Nothing is written next to the saves.** A plain read-only connection to a closed WAL save creates `-wal` and `-shm` files and can't remove them. So `SqliteFile.ReadOnly` opens a closed save (no `-wal`) as `immutable`. With a `-wal` present (the save is open, or a crash left it), the plain read-only connection reads through it. A test checks that a scan leaves the folder byte-for-byte unchanged.
+  - **The card's columns are read with raw SQL**, so saves from older and newer apps (whose `SaveInfo` has other columns) still get a card. Those columns (`SaveID`, `LeagueName`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `AppVersionLastOpened`, `IsIronman`) are never renamed or removed.
+  - **No `quick_check` in the list:** it reads the whole file, too slow for many saves. Damage that the header and `SaveInfo` don't show is caught when the save is opened.
+  - Team, season, phase and record arrive in M1 with the league.
+- **The screens, as built (M0 WP9):** the load screen (`/load`) shows one `SaveCardView` per card: the league name (the file name when unreadable), last played, created and play time, an Ironman badge, and a note for `NeedsUpgrade`, `FromNewerVersion` and `Unreadable`. Open shows only for cards that can open; Show in folder only for those that can't. The main menu's Continue names its target. `SaveActions` turns every result into navigation and a message.
 
 ---
 
@@ -233,9 +284,16 @@ sequenceDiagram
 | Action | Implementation | Validation |
 |---|---|---|
 | **Export** | `VACUUM INTO <user-chosen path>` | Not available during live events |
-| **Import** | Copy into `Saves\` with a fresh file name | `application_id`, `quick_check`, schema version ≤ app, required tables present. If the `SaveId` collides with an existing save, assign a new `SaveId`. |
-| **Delete** | Send to the **Recycle Bin** (not permanent), along with its snapshot folder, after a confirmation that names the league | — |
-| **Duplicate** | `VACUUM INTO` with a new `SaveId` and the name `"{name} (copy)"` | Not available during live events |
+| **Import** | Copy into `Saves\` with a fresh file name | `application_id`, `quick_check`, schema version ≤ app, required tables present. If the `SaveID` collides with an existing save, assign a new `SaveID`. |
+| **Delete** | Send to the **Recycle Bin** (not permanent), along with its snapshot folder, after a confirmation that names the league | — (as built in WP7, below) |
+| **Duplicate** | `VACUUM INTO` with a new `SaveID` and the name `"{name} (copy)"` | Not available during live events |
+
+**Delete, as built (M0 WP7):** `ISaveManager.DeleteAsync(path)` closes the save first if it's the open one. Then it hands the file (with any `-wal`/`-shm`) and `Snapshots\{SaveID}` to `IPlatformServices.SendToRecycleBin` in one call.
+- **Unreadable files can be deleted too.** Without a readable `SaveID`, only the file goes.
+- **A shared snapshot folder stays.** If another file in `Saves\` has the same `SaveID` (a copy made in Explorer), the snapshot folder is kept.
+- **Desktop:** the shell's `SHFileOperationW` with "allow undo" and the "nuke warning". If Windows can't recycle something (too big, or a drive without a Recycle Bin), it asks the player before deleting permanently. Saying no returns `DeleteCancelled`. A file another program holds returns `DeleteFailed`.
+- **DevHost:** a `.trash` folder in the dev data folder, so development never fills the real Recycle Bin.
+- **The confirmation (M0 WP9):** "Delete Saturday League? Saturday League, with its snapshots, goes to the Recycle Bin. You can restore it from there." with Delete and Keep it. An unreadable file has no known snapshots, so they aren't mentioned. Saying No in Windows' own permanent-delete prompt shows a notice, not an error.
 
 ---
 

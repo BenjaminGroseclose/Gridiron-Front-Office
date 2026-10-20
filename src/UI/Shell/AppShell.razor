@@ -1,0 +1,60 @@
+@inject ShellOptions Options
+@* The app's frame (UI_DESIGN_SYSTEM.md §7, VISUAL_DESIGN.md §6): the 40 px app bar across the top, the navigation column,
+   and the routed page on the Ground. In the desktop host the app bar is the window's title bar (D-068): it's marked as the
+   drag region, and its right end stays free for the WPF caption buttons. Interactive things in it are real buttons and
+   inputs, or carry data-no-drag, so they aren't dragged. *@
+<div class="gfo-shell">
+    <header class="gfo-appbar" data-drag-region>
+        <div class="gfo-appbar-brand">
+            @if (Brand is not null)
+            {
+                @Brand
+            }
+            else
+            {
+                <span class="gfo-wordmark gfo-display">Gridiron Front Office</span>
+            }
+        </div>
+        @if (Context is not null)
+        {
+            <div class="gfo-appbar-context">@Context</div>
+        }
+        <div class="gfo-appbar-progress" role="status" aria-live="polite">@Progress</div>
+        <div class="gfo-appbar-actions">
+            @Actions
+            @PrimaryAction
+        </div>
+        @if (Options.AppBarIsTitleBar)
+        {
+            <span class="gfo-caption-gap" aria-hidden="true"></span>
+        }
+    </header>
+    <div class="gfo-shell-body">
+        @if (Navigation is not null)
+        {
+            <nav class="gfo-shell-nav" aria-label="Main">@Navigation</nav>
+        }
+        <main class="gfo-shell-content">@ChildContent</main>
+    </div>
+</div>
+
+@code {
+    /// <summary>The left end of the app bar: the crest and team name once a league is open. Defaults to the wordmark.</summary>
+    [Parameter] public RenderFragment? Brand { get; set; }
+
+    /// <summary>The season line next to the brand: "2027 · Week 7 · 4–2".</summary>
+    [Parameter] public RenderFragment? Context { get; set; }
+
+    /// <summary>Inline progress for long operations: "Simulating Week 7 · 9/16 games". Announced politely.</summary>
+    [Parameter] public RenderFragment? Progress { get; set; }
+
+    /// <summary>Search, notifications and the like, before the primary action.</summary>
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    /// <summary>The context-aware primary action ("Play Week 7"). Always in the same place.</summary>
+    [Parameter] public RenderFragment? PrimaryAction { get; set; }
+
+    [Parameter] public RenderFragment? Navigation { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

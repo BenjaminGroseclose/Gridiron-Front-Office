@@ -23,6 +23,7 @@
 | `GridironFrontOffice.Infrastructure.Tests` | **Transaction torture tests** ([DATA_ACCESS_GUIDE.md §9](DATA_ACCESS_GUIDE.md#9-proving-it-the-torture-tests-m0-run-on-every-build), including a kill-the-process test), migrations (fixture saves from each released schema), snapshots, export/import, integrity handling, bulk writers | xUnit | Every build |
 | `GridironFrontOffice.UI.Components.Tests` | Components: rendering, parameters, keyboard, ARIA | bUnit | Every build |
 | `GridironFrontOffice.UI.Tests` | Screens with fake query services | bUnit | Every build |
+| `GridironFrontOffice.Desktop.Tests` | The desktop host's plain logic: window placement, the page's messages, the single-instance guard | xUnit | Every build |
 | `GridironFrontOffice.Architecture.Tests` | Dependency rules ([ARCHITECTURE.md §4.1](../ARCHITECTURE.md#41-dependency-rules)), banned APIs | NetArchTest (MIT) | Every build |
 | *(optional)* E2E | Smoke flows through `GridironFrontOffice.DevHost` | Playwright for .NET | Slow gate, from M3 |
 
@@ -82,10 +83,12 @@ All real-time behavior is tested with `FakeTimeProvider`. See the scenario table
 Source hosting and CI are a deliberate later task, **[F-30](../FEATURES.md#f-30-source-hosting--ci)** ([D-030](../DECISIONS.md#d-030-source-hosting-and-ci-deferred-to-f-30)). Until then, a single script at the repo root runs the same gates locally, and when CI arrives it just calls this script.
 
 ```powershell
-# build.ps1 (M0)
-./build.ps1          # restore → build (warnings as errors) → fast tests (Category!=Slow), including the transaction torture tests
-./build.ps1 -Full    # + slow gates: SimLab calibration, 30-season autoplay (from M5), benchmarks, E2E (from M3); reports → ./artifacts/
+# build.ps1 (exists since M0 WP1)
+./build.ps1          # restore → build (warnings as errors) → fast tests (not Category=Slow), including the transaction torture tests
+./build.ps1 -Full    # + slow tests, Release ReadyToRun publish; later SimLab calibration (M2), E2E (M3), 30-season autoplay (M5) → ./artifacts/
 ```
+
+**Test runner:** xUnit v3 on **Microsoft.Testing.Platform** (`global.json` → `"test": { "runner": "Microsoft.Testing.Platform" }`). The .NET 10 SDK no longer supports xUnit v3 through the VSTest bridge. Mark slow tests with `[Trait("Category", "Slow")]`. Filter with xUnit's options (`--filter-not-trait "Category=Slow"`, `--filter-class`, `--filter-method`), not VSTest `--filter` expressions. A project with zero tests exits with code 8, which `build.ps1` accepts.
 
 **Habit until F-30:** run `./build.ps1` before every commit, and `./build.ps1 -Full` before closing a milestone, plus at least weekly once the autoplay gate exists (M5).
 
@@ -133,7 +136,7 @@ jobs:
 - File-scoped namespaces, `sealed` by default, `record`/`record struct` for DTOs and value objects, primary constructors for services.
 - `Async` suffix. `CancellationToken` is the last parameter and is passed through.
 - No `#region`. Prefer small files: one public type per file.
-- **Banned APIs** (via `BannedSymbols.txt` and the Microsoft.CodeAnalysis.BannedApiAnalyzers package) in Core, Simulation and Application: `System.Random`, `DateTime.Now`/`UtcNow` (use `TimeProvider` / the league date), `Console.*`, `Thread.Sleep`, `Task.Result`/`Wait()`.
+- **Banned APIs** (Microsoft.CodeAnalysis.BannedApiAnalyzers, three tiers in `build/BannedSymbols.*.txt` wired by `Directory.Build.props`: `Transactions` everywhere, `Pure` for Core/Simulation/Application, `RawSqlite` everywhere except Infrastructure) in Core, Simulation and Application: `System.Random`, `DateTime.Now`/`UtcNow` (use `TimeProvider` / the league date), `Console.*`, `Thread.Sleep`, `Task.Result`/`Wait()`.
 - **Banned everywhere except `SaveWriter`:** `DbConnection.BeginTransaction*`, `DatabaseFacade.BeginTransaction*`/`UseTransaction*` (if EF Core), `System.Transactions.TransactionScope`. See [DATA_ACCESS_GUIDE.md §8](DATA_ACCESS_GUIDE.md#8-how-the-rules-are-enforced-so-you-cant-do-it-wrong-by-accident).
 - **No `AddDbContext`/`AddDbContextFactory`** (architecture test), and **no `async void`** (VSTHRD100 as an error).
 - Domain errors are `Result<T>` with typed error codes. Exceptions are reserved for bugs and I/O.
@@ -144,16 +147,21 @@ jobs:
 - Use `@key` on list items. Never inject `DbContext` into a component (it's architecturally impossible anyway, since UI has no EF reference).
 - CSS isolation per component, tokens only, no raw hex.
 
-### 8.4 Git workflow
-- **Trunk-based:** short-lived branches (`feat/m1-roster-grid`), squash merge to `main`.
-- **Conventional Commits** (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`) make changelog generation easy later.
+### 8.4 Git workflow (D-066)
+Decided in [D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone).
+
+- **Commit messages:** `(type) *module* : summary`, for example `(feat) *m0* : scaffold solution, projects and guardrails` or `(doc) *docs* : resolve open questions`. Types (the commit-review skill's list): `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`. Branch prefixes reuse the same types.
+- **Branches:** `type/short-name`, for example `feat/m0-foundations` or `doc/open-questions-pass`.
+- **One branch per milestone:** commits per work package on a milestone branch, merged into `main` once the milestone's exit checklist passes. Merge without squashing, so each work package's commit stays in history.
+- Run `./build.ps1` before every commit.
 - Tag milestones (`m0-complete`, …) as save-compatible checkpoints.
 
 ### 8.5 Definition of Done (per feature)
 - [ ] The rules are covered by unit tests (Core/Application)
 - [ ] The AI counterpart exists and passes autoplay (if the feature has one)
 - [ ] The UI uses design system components only, with empty, loading and error states
-- [ ] Keyboard accessible, with focus handled correctly
+- [ ] Keyboard accessible, with focus handled correctly and a visible focus ring
+- [ ] Accessible in both themes: text contrast meets WCAG AA, color is never the only signal, reduced motion is respected, custom components carry ARIA labels ([VISUAL_DESIGN.md §10](../VISUAL_DESIGN.md) QA checklist). Screen readers aren't supported in the desktop host for 1.0 ([D-071](../DECISIONS.md#d-071-screen-readers-arent-supported-in-10)), but the labels stay: tests find elements by them, and they're ready if a later host can expose them
 - [ ] Logging at the right levels for lifecycle events
 - [ ] Performance within budget (timed log or benchmark)
 - [ ] Docs updated (feature spec, plus DECISIONS if anything was decided)

@@ -1,0 +1,29 @@
+@namespace GridironFrontOffice.UI.Components
+@* A KPI tile: a label, one big number in the display face, and an optional detail line (UI_DESIGN_SYSTEM.md §5.2). *@
+<div class="gfo-stat @Class" @attributes="AdditionalAttributes">
+    <span class="gfo-stat-label">@Label</span>
+    <span class="gfo-stat-value gfo-display gfo-num">@Value</span>
+    @if (!string.IsNullOrEmpty(Detail))
+    {
+        <span class="gfo-stat-detail gfo-num" data-tone="@ToneName">@Detail</span>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>Already formatted: "$12.4M", "4–2", "81".</summary>
+    [Parameter, EditorRequired] public string Value { get; set; } = "";
+
+    /// <summary>A short line under the value: "+3 this week", "of 53".</summary>
+    [Parameter] public string? Detail { get; set; }
+
+    /// <summary>Colors the detail line. Neutral unless the detail is good or bad news.</summary>
+    [Parameter] public StatTone Tone { get; set; }
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string ToneName => Tone.ToString().ToLowerInvariant();
+}

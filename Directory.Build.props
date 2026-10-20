@@ -1,0 +1,41 @@
+<Project>
+  <!-- Shared build settings for every project (docs/architecture/TESTING_AND_QUALITY.md §8.1). -->
+
+  <PropertyGroup>
+    <!-- Desktop overrides this with net10.0-windows10.0.19041.0 (required by the WPF BlazorWebView). -->
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <Deterministic>true</Deterministic>
+    <IsPackable>false</IsPackable>
+
+    <!-- 0.<milestone>.<build> until 1.0 (D-072): the middle number is the milestone being built, raised when it starts;
+         the last goes up for each build handed out. The SDK appends +<commit>. -->
+    <VersionPrefix>0.0.1</VersionPrefix>
+    <Company>Gridiron Front Office</Company>
+    <Product>Gridiron Front Office</Product>
+    <Copyright>Copyright © Ben Groseclose</Copyright>
+  </PropertyGroup>
+
+  <!--
+    Banned APIs (docs/architecture/DATA_ACCESS_GUIDE.md §8, TESTING_AND_QUALITY.md §8.2).
+    Each tier is a BannedSymbols.*.txt file under build/, read by Microsoft.CodeAnalysis.BannedApiAnalyzers (RS0030).
+  -->
+  <PropertyGroup>
+    <_GfoProjectShortName>$(MSBuildProjectName.Replace('GridironFrontOffice.', ''))</_GfoProjectShortName>
+    <!-- Pure projects: deterministic, no wall clock, no blocking waits. -->
+    <_GfoIsPureProject Condition="'$(_GfoProjectShortName)' == 'Core' Or '$(_GfoProjectShortName)' == 'Simulation' Or '$(_GfoProjectShortName)' == 'Application'">true</_GfoIsPureProject>
+    <!-- Only Infrastructure (and its tests) may open SQLite connections directly. -->
+    <_GfoMayOpenSqlite Condition="$(_GfoProjectShortName.StartsWith('Infrastructure'))">true</_GfoMayOpenSqlite>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)build/BannedSymbols.Transactions.txt" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)build/BannedSymbols.Pure.txt" Condition="'$(_GfoIsPureProject)' == 'true'" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)build/BannedSymbols.RawSqlite.txt" Condition="'$(_GfoMayOpenSqlite)' != 'true'" />
+  </ItemGroup>
+</Project>

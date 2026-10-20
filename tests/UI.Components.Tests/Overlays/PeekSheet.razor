@@ -1,0 +1,9 @@
+@* A stand-in for a peek sheet's content. Like every drawer's content, it goes inside FluentDialogBody, which draws the
+   header (the title and the close button), the padding and the scrolling body. *@
+<FluentDialogBody>
+    <p data-testid="sheet">Player @PlayerID</p>
+</FluentDialogBody>
+
+@code {
+    [Parameter] public int PlayerID { get; set; }
+}

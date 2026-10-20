@@ -1,6 +1,6 @@
 # Host Benchmark: MAUI Blazor Hybrid vs. WPF + BlazorWebView
 
-> **Status:** Measured · 2026-10-13 · Supports [D-021](../DECISIONS.md#d-021-host-wpf--blazorwebview-maui-removed)
+> **Status:** Measured · 2026-10-13, real shell re-measured 2026-10-16 (Spike S0c, [§ below](#real-shell-spike-s0c-2026-10-16)) · Supports [D-021](../DECISIONS.md#d-021-host-wpf--blazorwebview-maui-removed), [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar)
 >
 > Owner: *"Can you estimate the performance improvement / benefits with this decision?"* Rather than estimate, we measured.
 
@@ -15,7 +15,7 @@
 | **Release publish** | **WPF** | **2× faster** like-for-like (18 s vs. 37 s), 12× without ReadyToRun (3 s) |
 | **Shipped size** | **WPF** | **14–28% smaller** (200 / 168 MB vs. 233 MB), 30% fewer files (444 vs. 630) |
 | **Tooling** | **WPF** | No MAUI workload, no Windows App SDK layer |
-| **Warm startup to first Blazor render** | **MAUI** | ~0.2 s faster (0.79 s vs. ~1.0 s) |
+| **Warm startup to first Blazor render** | **MAUI** | ~0.2 s faster (0.79 s vs. ~1.0 s). The real GFO shell: ~1.5 s to a themed screen ([below](#real-shell-spike-s0c-2026-10-16)). |
 | **Memory** | Tie | ~480 MB vs. ~505 MB total working set (WPF ~5% lower). Private bytes are about equal. |
 | **UI rendering at runtime** | Tie | Same WebView2 and the same Blazor renderer, so they're identical by construction |
 
@@ -30,7 +30,7 @@
 - **Builds:** Debug, 3 runs each, alternating apps. *Clean* = delete `bin`/`obj` and build (restore from a warm NuGet cache). *No-op* = build again with no changes. *Razor edit* = append a comment to `Home.razor`, then build.
 - **Publish:** `dotnet publish -c Release -r win-x64 --self-contained`.
 - **Startup:** published Release apps, launched 6 times each. A probe in `MainLayout.OnAfterRenderAsync(firstRender)` records the **time from process start to the first completed Blazor render**, then the memory after a 2 s settle (app process plus the WebView2 child processes started by that run).
-- Scripts and raw output were in the session scratchpad (not committed). Rerun in M0 on the real `GridironFrontOffice.Desktop` if you want numbers for the actual app.
+- Scripts and raw output were in the session scratchpad (not committed). The real `GridironFrontOffice.Desktop` was re-measured in M0 (Spike S0c, below).
 
 ---
 
@@ -67,6 +67,68 @@
 2. **MAUI's Windows App SDK build breaks on long paths.** In a deep folder, the MAUI build failed with `MSB3030: Could not copy … MsixContent\*.winmd` because the paths exceeded 260 characters. Not a problem in a short repo path, but it's an example of the extra layer MAUI brings.
 3. **The composition control has an upside:** WPF elements can overlay the WebView (no "airspace" problem). This helps the native title bar option (a) in [UI_DESIGN_SYSTEM.md §7](UI_DESIGN_SYSTEM.md#7-app-shell-and-navigation).
 
+---
+
+## Real shell: Spike S0c (2026-10-16)
+
+The actual `GridironFrontOffice.Desktop` was measured with the S0c shell: the HTML app bar as the title bar ([D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar)), Fluent UI v5 with the Stadium theme, and the bundled fonts.
+
+**Setup:**
+- **Machine and runtime:** the same machine; SDK 10.0.402, WebView2 runtime 155.0.4283.45.
+- **Build:** `dotnet publish -c Release -r win-x64 --self-contained -p:PublishReadyToRun=true`.
+- **Probe:** marks from process start to each step (an env-var-gated spike probe). Each run ended once the theme was applied.
+
+| Measurement | Result |
+|---|---|
+| Publish time / size / files | 40 s / **247 MB** / 333 files. Larger than the benchmark's 200 MB because the app also ships Fluent UI and its icons (~22 MB), EF Core, SQLite and the GFO assemblies. |
+| **Warm start → themed first screen** | **median 1.51 s** over 8 runs (1.39–2.09 s; typical 1.38–1.56 s) |
+| Warm start → first Blazor render | median 1.47 s (1.35–2.03 s) |
+| First-ever launch (fresh WebView2 profile) | 1.52 s first render, **1.57 s** themed |
+| Option (a) WPF caption strip vs. (b) app bar as title bar | No difference (themed 1.39–1.57 s over 4 runs of (a)) |
+
+**Where a warm start goes** (typical run):
+
+| Step | Ends at | Takes |
+|---|---|---|
+| .NET + WPF to `App.OnStartup` | ~140 ms | ~140 ms |
+| `MainWindow.InitializeComponent` (loads the BlazorWebView and WebView2 assemblies) | ~415 ms | ~260 ms |
+| WebView2 environment + browser process (starts ~490 ms) | ~1,080 ms | **~590 ms** |
+| Host page DOM loaded | ~1,175 ms | ~90 ms |
+| Blazor boot → first render | ~1,345 ms | ~175 ms |
+| Stadium theme applied, page revealed | ~1,380 ms | ~35 ms |
+
+The WPF window's first frame lands at about 875 ms, already in Ground, while WebView2 is still starting.
+
+**Verdict:** well inside M0's "launch → main menu in under 3 s". WebView2's browser-process start is the largest step. `BlazorWebView` has no supported way to start it earlier, so it's left alone until a budget demands it.
+
+**Gotchas found on the real shell** (all now in the docs):
+1. **DPI:** without an app manifest, WPF is only *system* DPI aware (`awareness=1`), and Windows would bitmap-stretch the window on a monitor with a different scale. `app.manifest` declares PerMonitorV2 (`awareness=2` after).
+2. **First paint:** WebView2's default background is **white**: about 220 ms of it on every start. A frame of Fluent's default theme followed, which is light on a light Windows. The fix is three layers ([UI_DESIGN_SYSTEM.md §3.3](UI_DESIGN_SYSTEM.md#33-source-of-truth-and-persistence)): native Ground backgrounds, a static boot class on the host page, and the theme service revealing the page.
+3. **Script race:** a script registered with `AddScriptToExecuteOnDocumentCreatedAsync` in `BlazorWebViewInitialized` didn't run before Blazor's first navigation. Anything the first paint depends on is static in `index.html` or set natively.
+4. **Persisted color scheme:** WebView2 persists `CoreWebView2Profile.PreferredColorScheme` in the profile across launches. Leave it at Auto.
+5. **Maximize overhang:** a maximized `WindowChrome` window hangs 8 px past the work area at 100% scale (`WindowResizeBorderThickness` says 4). Pad the content by the measured overhang.
+
+
+## M0 exit measurement (2026-10-19)
+
+The real app after WP9's host half: the title bar, window placement and single instance, measured with the log's startup events instead of a spike probe. `HostLog.FirstThemedScreen` (event 1016) fires on the page's first theme message, when the theme service has applied and lifted the boot hide. It stays in every log, so a startup regression shows up in any session.
+
+- **Build:** `./build.ps1 -Full` (Release, win-x64, self-contained, ReadyToRun): **248 MB**. WebView2 runtime 155.0.4283.62.
+- **Runs:** 7 launches through `Start-Process`, the first right after the publish (cold files), then 6 warm.
+
+| Measurement | Page loaded | **First themed screen** |
+|---|---|---|
+| First launch of the fresh publish | 1,711 ms | **1,998 ms** |
+| Warm (6 runs) | 1,200–1,273 ms | **1,397–1,508 ms, median 1,463 ms** |
+
+**Verdict:** inside the 3 s budget, and the same as S0c's 1.51 s, so WP9's host code (monitor enumeration, placement, the hit-test hook, the host script) costs nothing measurable. A true cold start (after a reboot) wasn't measured.
+
+**To the main menu** (the same method, once WP9's screens existed; the menu reads the save list on the way, with an empty saves folder):
+
+| Measurement | Page loaded | **First themed screen** |
+|---|---|---|
+| First launch of the fresh publish | 1,484 ms | **1,807 ms** |
+| Warm (6 runs) | 993–1,102 ms | **1,156–1,277 ms, median 1,172 ms** |
 ---
 
 ## Non-performance benefits (unmeasured but real)

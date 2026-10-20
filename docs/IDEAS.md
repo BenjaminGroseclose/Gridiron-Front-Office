@@ -1,0 +1,23 @@
+# Ideas Parking Lot
+
+> **Status:** Living document · created 2026-10-14
+>
+> Ideas that are **not** on the roadmap. Writing one down here is how it stays out of the current milestone ([C-1](OPEN_QUESTIONS.md#c-1-scope-is-the-real-enemy)). Nothing here gets built without first moving into [FEATURES.md](FEATURES.md) or [ROADMAP.md](ROADMAP.md), normally at a gate or when a milestone's spec is written.
+>
+> **Add an idea:** one row, with where it came from and the signal that would make it worth revisiting. **Promote an idea:** move it into a feature or milestone and delete the row.
+
+| Idea | Source | Why it's parked | Revisit when |
+|---|---|---|---|
+| **Randomize team identities** (generated names, colors, crests per league) | [D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames) | Needs a nickname generator and color-harmony logic for a rarely used feature. User import (M11) covers customization. | After M11, if replay variety is requested |
+| **Preseason games** (3 simulated games, starters on limited snaps) | [D-038](DECISIONS.md#d-038-no-preseason-games-in-10) | No longer feeds fog of war. Costs snap-limit rules, separate stats and extra calendar weeks. | If camp feels hollow at Gate 1 |
+| **Difficulty presets** (trade/negotiation strictness toward the user, scouting accuracy, owner patience) | [D-042](DECISIONS.md#d-042-no-difficulty-presets-in-10) | Team choice is the dial, and one AI code path is easier to make fleece-proof. Hooks (`UserDealMargin`, `UserScoutingAccuracy`) already exist. | Gate 2, if playtesters find the AI too tough |
+| **Leadership trait and locker-room chemistry** | [D-043](DECISIONS.md#d-043-limited-personality-model-only-traits-with-a-consumer) | Opaque, hard to explain in the Film Room, easy to feel random. Nothing would read Leadership in 1.0. | Post-1.0, only with a clear explanation model |
+| **Pro scouting assignments** (spend a scout to tighten a specific pro's range) | [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) | Other teams' players are slightly fuzzy by a fixed amount. Keeping it simple. | If trades or free agency feel like guessing at Gate 1 |
+| **Scout biases and scout-specific reports** ("our West scout loves him"; a scout consistently over- or under-rates a prospect type, learnable via per-scout hit rates) | [D-058](DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10) | Biases can't be learned without attributed reports, so in 1.0 they'd just be noise. | Post-1.0, with scout hiring and firing |
+| **Pro perception that sharpens with snaps played** | [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) | "Too complex" (owner). | Only together with pro scouting above |
+| **More coaching and support staff** (special teams coordinator, position coaches, strength staff, medical staff with faster recoveries) | [D-062](DECISIONS.md#d-062-coaching-staff-is-head-coach--two-coordinators-only) | Head coach + two coordinators cover every system that reads coaching. More roles need their own consumers and calibration. | Post-1.0 |
+| **RFA tenders and offer sheets, the transition tag** | [D-040](DECISIONS.md#d-040-salary-cap-realism-tiers) | Lots of rules for a small slice of players. Exclusive rights cover the basic case. | Post-1.0 cap depth pass |
+| **"Start at Training Camp" option** in the New League wizard | [D-049](DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired) | The offseason start is the identity. The camp-start code path exists anyway (M1–M4 builds), so it's cheap if wanted. | If players ask to "just play a season" first |
+| **Scripted onboarding** ("Assistant GM" character, first-time phase cards) | [D-051](DECISIONS.md#d-051-onboarding-is-help-pages-only-authored-in-markdown) | Help pages in Markdown plus the Advance button's "what's next" cover it. A scripted system has to be maintained as features change. | Gate 2, if playtesters get lost |
+| **Void years, incentives (LTBE/NLTBE), offsets, compensatory picks** | [D-040](DECISIONS.md#d-040-salary-cap-realism-tiers) | Realism with little GM decision value per hour of work. | Post-1.0 |
+| **Screen reader support** (spike the HWND-based web view: does it load on .NET 10, do drag and Snap Layouts survive with HTML caption buttons, does Narrator read the page?) | [D-071](DECISIONS.md#d-071-screen-readers-arent-supported-in-10) | It would reopen the title bar (D-068) for an uncertain result, and no law or store rule requires it. | The M11 accessibility audit, or if WebView2's composition control gains UI Automation support |

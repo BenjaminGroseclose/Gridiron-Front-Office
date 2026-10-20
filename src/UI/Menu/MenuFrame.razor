@@ -1,0 +1,21 @@
+@* The menu screens' frame (main menu, New League, Load): a panel centered on the Ground. A placeholder layout until the
+   design review decides the main menu's look (WP9, option c). *@
+<div class="gfo-menu">
+    <section class="gfo-menu-panel" style="--gfo-menu-width: @Width" aria-labelledby="@LabelledBy">
+        @ChildContent
+    </section>
+    @After
+</div>
+
+@code {
+    /// <summary>The panel's width at most (it shrinks with the window).</summary>
+    [Parameter] public string Width { get; set; } = "440px";
+
+    /// <summary>The ID of the heading that names the panel.</summary>
+    [Parameter, EditorRequired] public string LabelledBy { get; set; } = "";
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Anything below the panel (the Debug diagnostics panel on the main menu).</summary>
+    [Parameter] public RenderFragment? After { get; set; }
+}

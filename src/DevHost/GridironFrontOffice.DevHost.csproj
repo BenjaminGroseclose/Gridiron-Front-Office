@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    Browser host for day-to-day UI work: hot reload, DevTools, the /_gallery component gallery, and (from M3)
+    Playwright smoke tests (D-003). Interactive Server rendering. Never shipped.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\UI\GridironFrontOffice.UI.csproj" />
+    <ProjectReference Include="..\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,20 @@
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.icon-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--gfo-radius-s);
+  font-size: 12.5px;
+  color: var(--colorNeutralForeground2);
+}
+
+.icon-cell:hover { background: var(--colorNeutralBackground2); }
+
+.accent { color: var(--gfo-accent); }

@@ -1,0 +1,70 @@
+@implements IAsyncDisposable
+@inject IJSRuntime JS
+@inject ILoggerFactory LoggerFactory
+@* Connects gfo-diagnostics.js (loaded by the host page before Blazor) to the log. Renders nothing. *@
+
+@code {
+    /// <summary>The log category for JavaScript errors (LOGGING.md §8).</summary>
+    public const string Category = "GridironFrontOffice.UI.Js";
+
+    /// <summary>Errors logged per session before the rest are dropped, so a failing loop can't flood the log.</summary>
+    public const int Limit = 50;
+
+    private DotNetObjectReference<ClientDiagnostics>? _self;
+    private ILogger _log = NullLogger.Instance;
+    private int _received;
+    private bool _attached;
+
+    protected override void OnInitialized() => _log = LoggerFactory.CreateLogger(Category);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        _self = DotNetObjectReference.Create(this);
+        try
+        {
+            await JS.InvokeVoidAsync("gfoDiagnostics.attach", _self);
+            _attached = true;
+        }
+        catch (JSException ex)
+        {
+            UiLog.DiagnosticsScriptMissing(_log, ex);
+        }
+    }
+
+    [JSInvokable]
+    public void LogClientError(string kind, string message, string source, int line, int column, string stack)
+    {
+        _received++;
+        if (_received <= Limit)
+        {
+            UiLog.ClientError(_log, kind, message, source, line, column, stack);
+        }
+        else if (_received == Limit + 1)
+        {
+            UiLog.ClientErrorsSuppressed(_log, Limit);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            // Never attached (e.g. a statically prerendered copy): no JavaScript to talk to.
+            if (_attached)
+            {
+                await JS.InvokeVoidAsync("gfoDiagnostics.detach");
+            }
+        }
+        catch (Exception ex) when (ex is JSDisconnectedException or JSException or TaskCanceledException)
+        {
+            // The page is already gone.
+        }
+
+        _self?.Dispose();
+    }
+}

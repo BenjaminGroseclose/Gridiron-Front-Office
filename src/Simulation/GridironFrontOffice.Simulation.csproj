@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The game engine: pure and deterministic (SIMULATION_ENGINE.md). Depends only on Core.
+    The engine itself arrives in M2.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Core\GridironFrontOffice.Core.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,73 @@
+@page "/_gallery/segmented-control"
+@page "/_gallery/stat"
+@page "/_gallery/empty-state"
+@page "/_gallery/kbd"
+@inject NavigationManager Navigation
+@* The small components, one route each (the page shows the one its route names). *@
+<PageTitle>@Title · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">@Title</h1>
+
+@switch (Slug)
+{
+    case "segmented-control":
+        <GallerySection Title="Three options, with icons" Check="A pill track; the chosen option in the accent fill with on-accent text. Left/Right and Home/End move the choice and focus.">
+            <SegmentedControl TValue="string" Label="Theme" Options="ThemeOptions" @bind-Value="_theme" data-testid="segmented" />
+            <span class="value">Chosen: <b>@_theme</b></span>
+        </GallerySection>
+        <GallerySection Title="Two options, text only, and disabled">
+            <SegmentedControl TValue="string" Label="Accent" Options="AccentOptions" @bind-Value="_accent" />
+            <SegmentedControl TValue="string" Label="Accent (disabled)" Options="AccentOptions" Value="@("Team")" Disabled="true" />
+        </GallerySection>
+        break;
+
+    case "stat":
+        <GallerySection Title="KPI tiles" Check="Surface 2 with an 8 px radius, the value in the condensed display face, tabular figures, color only on news.">
+            <Stat Label="Cap space" Value="$12.4M" Detail="of $255.0M" />
+            <Stat Label="Record" Value="4–2" Detail="+1 game in the division" Tone="StatTone.Positive" />
+            <Stat Label="Dead money" Value="$7.9M" Detail="+$4.2M this week" Tone="StatTone.Negative" />
+            <Stat Label="Roster" Value="53" Detail="2 questionable" Tone="StatTone.Warning" />
+        </GallerySection>
+        break;
+
+    case "empty-state":
+        <GallerySection Title="With an action" Check="The icon in the accent on a Surface 2 circle; the title in the display face.">
+            <EmptyState Title="No saves yet" Icon="IconName.Folder">
+                <ChildContent>Start a new league and it will show up here.</ChildContent>
+                <Actions><FluentButton Appearance="ButtonAppearance.Primary">New league</FluentButton></Actions>
+            </EmptyState>
+        </GallerySection>
+        <GallerySection Title="Title only">
+            <EmptyState Title="Nothing in the inbox" Icon="IconName.Alert" />
+        </GallerySection>
+        break;
+
+    default:
+        <GallerySection Title="Shortcut hints" Check="Keycaps with a heavier bottom edge, readable on Surface 1 and in buttons.">
+            <span>Search <Kbd Keys="Ctrl+K" /></span>
+            <span>Primary action <Kbd Keys="Ctrl+Enter" /></span>
+            <span>Go to Roster <Kbd Keys="G" /> <Kbd Keys="R" /></span>
+            <FluentTextInput Placeholder="Search…" />
+        </GallerySection>
+        break;
+}
+
+@code {
+    private static readonly IReadOnlyList<SegmentedOption<string>> ThemeOptions =
+        [new("Dark", "Dark", IconName.WeatherMoon), new("Light", "Light", IconName.WeatherSunny), new("Match Windows", "Match Windows", IconName.Desktop)];
+
+    private static readonly IReadOnlyList<SegmentedOption<string>> AccentOptions = [new("Team", "Team"), new("Neutral", "Neutral")];
+
+    private string _theme = "Dark";
+    private string _accent = "Team";
+
+    private string Slug => Navigation.ToBaseRelativePath(Navigation.Uri).Split('?')[0].Split('/').Last();
+
+    private string Title => Slug switch
+    {
+        "segmented-control" => "SegmentedControl",
+        "stat" => "Stat",
+        "empty-state" => "EmptyState",
+        _ => "Kbd",
+    };
+}

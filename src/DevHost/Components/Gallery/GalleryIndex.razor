@@ -1,0 +1,14 @@
+@page "/_gallery"
+<PageTitle>Gallery · GFO DevHost</PageTitle>
+
+<h1 class="gallery-title gfo-display">Design system v0</h1>
+<p class="gallery-intro">
+    Every v0 component, for checking by eye against the QA list in VISUAL_DESIGN.md §10. Use the switches above to see each
+    page in Dark and Light, with the tint off and in the three sample team colors, and in both densities.
+</p>
+<ul class="gallery-index">
+    @foreach (var (href, title) in GalleryLayout.Pages)
+    {
+        <li><a href="@href">@title</a></li>
+    }
+</ul>

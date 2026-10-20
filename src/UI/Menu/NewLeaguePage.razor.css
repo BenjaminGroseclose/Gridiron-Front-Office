@@ -1,0 +1,15 @@
+.gfo-new-title {
+  margin: 0;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.gfo-new-hint {
+  margin: -6px 0 4px;
+  color: var(--colorNeutralForeground3);
+}
+
+.gfo-new-actions {
+  display: flex;
+  justify-content: flex-end;
+}

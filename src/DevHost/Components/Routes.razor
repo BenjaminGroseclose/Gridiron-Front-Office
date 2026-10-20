@@ -1,0 +1,11 @@
+@* Routes from the shared UI library plus DevHost-only pages (the /_gallery, from M0 WP8). *@
+<Router AppAssembly="typeof(Program).Assembly" AdditionalAssemblies="SharedUiAssemblies">
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>
+
+@code {
+    private static readonly Assembly[] SharedUiAssemblies = [typeof(AppRoot).Assembly];
+}

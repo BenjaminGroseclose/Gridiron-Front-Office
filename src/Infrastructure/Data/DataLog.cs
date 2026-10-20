@@ -1,0 +1,62 @@
+using Microsoft.Extensions.Logging;
+
+namespace GridironFrontOffice.Infrastructure.Data;
+
+/// <summary>Persistence messages. Event IDs 2000–2999 (LOGGING.md §11).</summary>
+internal static partial class DataLog
+{
+    // Debug, not Information: a live draft runs a command every clock tick, and the log stays under 1 MB/hour.
+    [LoggerMessage(EventId = 2000, Level = LogLevel.Debug, Message = "{Operation} committed in {ElapsedMs} ms")]
+    public static partial void Committed(ILogger logger, string operation, long elapsedMs);
+
+    [LoggerMessage(EventId = 2001, Level = LogLevel.Information, Message = "{Operation} rejected: {Error}")]
+    public static partial void Rejected(ILogger logger, string operation, string error);
+
+    [LoggerMessage(EventId = 2002, Level = LogLevel.Error, Message = "{Operation} rolled back after an exception")]
+    public static partial void RolledBack(ILogger logger, Exception exception, string operation);
+
+    [LoggerMessage(EventId = 2003, Level = LogLevel.Warning, Message = "{Operation} took {ElapsedMs} ms (budget {BudgetMs} ms)")]
+    public static partial void Slow(ILogger logger, string operation, long elapsedMs, long budgetMs);
+
+    [LoggerMessage(EventId = 2004, Level = LogLevel.Error, Message = "Rolling back {Operation} failed too")]
+    public static partial void RollbackFailed(ILogger logger, Exception exception, string operation);
+
+    [LoggerMessage(EventId = 2010, Level = LogLevel.Information, Message = "Created save \"{LeagueName}\" ({SaveID}) at {Path}")]
+    public static partial void SaveCreated(ILogger logger, string leagueName, Guid saveID, string path);
+
+    [LoggerMessage(EventId = 2011, Level = LogLevel.Information, Message = "Opened save \"{LeagueName}\" ({SaveID}), schema {SchemaVersion}")]
+    public static partial void SaveOpened(ILogger logger, string leagueName, Guid saveID, int schemaVersion);
+
+    [LoggerMessage(EventId = 2012, Level = LogLevel.Information, Message = "Upgraded save {SaveID} from schema {From} to {To} after snapshot {Snapshot}")]
+    public static partial void SaveUpgraded(ILogger logger, Guid saveID, int from, int to, string snapshot);
+
+    [LoggerMessage(EventId = 2013, Level = LogLevel.Information, Message = "Closed save {SaveID} after {Minutes:F1} min")]
+    public static partial void SaveClosed(ILogger logger, Guid saveID, double minutes);
+
+    [LoggerMessage(EventId = 2014, Level = LogLevel.Warning, Message = "Didn't open {File}: {Error}")]
+    public static partial void SaveRefused(ILogger logger, string file, string error);
+
+    [LoggerMessage(EventId = 2015, Level = LogLevel.Information, Message = "Took snapshot {Name} of save {SaveID} in {ElapsedMs} ms ({SizeKb} KB)")]
+    public static partial void SnapshotTaken(ILogger logger, string name, Guid saveID, long elapsedMs, long sizeKb);
+
+    [LoggerMessage(EventId = 2016, Level = LogLevel.Information, Message = "Pruned snapshot {Name} of save {SaveID}")]
+    public static partial void SnapshotPruned(ILogger logger, string name, Guid saveID);
+
+    [LoggerMessage(EventId = 2017, Level = LogLevel.Information, Message = "Restored save {SaveID} from snapshot {Name}; the state before it is snapshot pre-restore")]
+    public static partial void SaveRestored(ILogger logger, Guid saveID, string name);
+
+    [LoggerMessage(EventId = 2018, Level = LogLevel.Information, Message = "Moved {File} to the Recycle Bin (with its snapshots: {WithSnapshots})")]
+    public static partial void SaveDeleted(ILogger logger, string file, bool withSnapshots);
+
+    [LoggerMessage(EventId = 2019, Level = LogLevel.Warning, Message = "The save list can't read {File}: {Problem}")]
+    public static partial void SaveUnreadable(ILogger logger, string file, string problem);
+
+    [LoggerMessage(EventId = 2020, Level = LogLevel.Error, Message = "A {EventType} subscriber failed; the other subscribers still ran")]
+    public static partial void EventHandlerFailed(ILogger logger, Exception exception, string eventType);
+
+    [LoggerMessage(EventId = 2021, Level = LogLevel.Information, Message = "Didn't restore snapshot {Name}: {Error}")]
+    public static partial void RestoreRefused(ILogger logger, string name, string error);
+
+    [LoggerMessage(EventId = 2022, Level = LogLevel.Information, Message = "Didn't delete {File}: {Error}")]
+    public static partial void DeleteRefused(ILogger logger, string file, string error);
+}

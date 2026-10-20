@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\UI\GridironFrontOffice.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="bunit" />
+  </ItemGroup>
+
+  <!-- The design system's test doubles (a fake Fluent theme service and the bUnit context around it), shared as source. -->
+  <ItemGroup>
+    <Compile Include="..\UI.Components.Tests\TestDoubles\FakeThemeService.cs" Link="TestDoubles\FakeThemeService.cs" />
+    <Compile Include="..\UI.Components.Tests\TestDoubles\GfoTestContext.cs" Link="TestDoubles\GfoTestContext.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,112 @@
+@page "/settings"
+@inject ISettingsStore Settings
+@inject ISaveManager Saves
+@inject NavigationManager Navigation
+@inject AppIdentity App
+@inject IGfoToasts Toasts
+@inject IJSRuntime JS
+@* Settings → Appearance (VISUAL_DESIGN.md §2, §3.3, §5). Each change is written to settings.json and applied straight
+   away: AppearanceSync re-applies the theme when the store reports the save. Reached from the main menu too, where
+   there's no navigation column, so it offers the way back. About shows the full version, which a bug report needs. *@
+
+<PageTitle>Settings · Gridiron Front Office</PageTitle>
+
+@if (Saves.Current is null)
+{
+    <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
+                  OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
+}
+<h1 class="gfo-page-title gfo-display">Settings</h1>
+
+<section class="gfo-settings-panel" aria-labelledby="appearance-heading">
+    <h2 id="appearance-heading" class="gfo-settings-heading">Appearance</h2>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Theme</span>
+            <span class="gfo-setting-hint">Match Windows follows the Windows light or dark setting.</span>
+        </div>
+        <SegmentedControl TValue="ThemeChoice" Label="Theme" Options="ThemeOptions" Value="@_appearance.Theme"
+                          ValueChanged="@(value => SaveAsync(_appearance with { Theme = value }))" data-testid="theme" />
+    </div>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Accent</span>
+            <span class="gfo-setting-hint">Team uses your team's primary color once a league is open. Neutral is Fluent blue.</span>
+        </div>
+        <SegmentedControl TValue="AccentMode" Label="Accent" Options="AccentOptions" Value="@_appearance.Accent"
+                          ValueChanged="@(value => SaveAsync(_appearance with { Accent = value }))" data-testid="accent" />
+    </div>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Density</span>
+            <span class="gfo-setting-hint">Compact fits more rows in every table.</span>
+        </div>
+        <SegmentedControl TValue="Density" Label="Density" Options="DensityOptions" Value="@_appearance.Density"
+                          ValueChanged="@(value => SaveAsync(_appearance with { Density = value }))" data-testid="density" />
+    </div>
+</section>
+
+<section class="gfo-settings-panel" aria-labelledby="about-heading">
+    <h2 id="about-heading" class="gfo-settings-heading">About</h2>
+
+    <div class="gfo-setting">
+        <div class="gfo-setting-text">
+            <span class="gfo-setting-label">Version</span>
+            <span class="gfo-setting-value" data-testid="version">@VersionLine</span>
+        </div>
+        <FluentButton IconStart="@IconCatalog.Create(IconName.Copy)" OnClick="CopyVersionAsync" data-testid="copy-version">Copy</FluentButton>
+    </div>
+</section>
+
+@code {
+    private static readonly IReadOnlyList<SegmentedOption<ThemeChoice>> ThemeOptions =
+    [
+        new(ThemeChoice.Dark, "Dark", IconName.WeatherMoon),
+        new(ThemeChoice.Light, "Light", IconName.WeatherSunny),
+        new(ThemeChoice.MatchWindows, "Match Windows", IconName.Desktop),
+    ];
+
+    private static readonly IReadOnlyList<SegmentedOption<AccentMode>> AccentOptions =
+    [
+        new(AccentMode.Team, "Team"),
+        new(AccentMode.Neutral, "Neutral"),
+    ];
+
+    private static readonly IReadOnlyList<SegmentedOption<Density>> DensityOptions =
+    [
+        new(Density.Comfortable, "Comfortable"),
+        new(Density.Compact, "Compact"),
+    ];
+
+    private AppearanceSettings _appearance = new();
+
+    protected override void OnInitialized() => _appearance = Settings.Current.Appearance;
+
+    /// <summary>
+    /// "0.0.1+94b9338 (Debug)": the version, the commit it was built from, and the build configuration. Plain ASCII, so
+    /// it pastes cleanly into any bug report or terminal.
+    /// </summary>
+    private string VersionLine => $"{App.Display} ({App.Configuration})";
+
+    private async Task SaveAsync(AppearanceSettings appearance)
+    {
+        _appearance = appearance;
+        await Settings.SaveAsync(Settings.Current with { Appearance = appearance });
+    }
+
+    private async Task CopyVersionAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", VersionLine);
+            await Toasts.SuccessAsync("Version copied");
+        }
+        catch (JSException)
+        {
+            await Toasts.WarningAsync("Couldn't copy the version", "Select it and copy it instead.");
+        }
+    }
+}

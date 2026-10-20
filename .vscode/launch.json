@@ -1,0 +1,62 @@
+{
+  // Run and debug from VS Code (C# Dev Kit): pick a configuration in Run and Debug, then F5. Each one builds first.
+  // The desktop app is single-instance: if it's already running, a new launch only brings that window forward.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Desktop app",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: Desktop",
+      "program": "${workspaceFolder}/src/Desktop/bin/Debug/net10.0-windows10.0.19041.0/GridironFrontOffice.Desktop.dll",
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      // Debug builds only: fires one failure hook after startup to prove the logging and crash paths (LOGGING.md §8).
+      "name": "Desktop app: diagnostics test",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: Desktop",
+      "program": "${workspaceFolder}/src/Desktop/bin/Debug/net10.0-windows10.0.19041.0/GridironFrontOffice.Desktop.dll",
+      "args": ["--diag-test=${input:diagTest}"],
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      // The browser host for UI work, against its own dev data folder. Opens the browser once it's listening; the
+      // component gallery is at /_gallery. Stop it before building again: it locks its DLLs.
+      "name": "DevHost (browser)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build: DevHost",
+      "program": "${workspaceFolder}/src/DevHost/bin/Debug/net10.0/GridironFrontOffice.DevHost.dll",
+      "args": ["--environment", "Development", "--urls", "http://localhost:5180"],
+      "cwd": "${workspaceFolder}/src/DevHost",
+      "console": "internalConsole",
+      "stopAtEntry": false,
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "Now listening on:\\s+(https?://\\S+)",
+        "uriFormat": "%s"
+      }
+    }
+  ],
+  "inputs": [
+    {
+      "id": "diagTest",
+      "type": "pickString",
+      "description": "Which failure path to prove",
+      "options": [
+        { "label": "js: a JavaScript error, forwarded to the log", "value": "js" },
+        { "label": "page: a page exception, caught by the error boundary", "value": "page" },
+        { "label": "task: an unobserved task exception", "value": "task" },
+        { "label": "crash: a fatal error and the crash dialog", "value": "crash" },
+        { "label": "ui: an exception on the WPF UI thread", "value": "ui" }
+      ],
+      "default": "js"
+    }
+  ]
+}

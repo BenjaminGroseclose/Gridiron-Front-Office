@@ -77,9 +77,12 @@ flowchart LR
 GridironFrontOffice/
 ├─ GridironFrontOffice.slnx      # XML solution format (.NET 9 SDK+ / VS 17.13+)
 ├─ CLAUDE.md                     # Conventions for AI assistants (points into docs/)
-├─ Directory.Build.props         # Nullable, LangVersion, TreatWarningsAsErrors, analyzers
-├─ Directory.Packages.props      # Central Package Management (all versions in one place)
-├─ global.json                   # Pin the .NET 10 SDK band
+├─ build.ps1                     # The local gates (CI later calls it, F-30)
+├─ build/                        # BannedSymbols.*.txt: the three banned-API tiers
+├─ Directory.Build.props         # Nullable, LangVersion, TreatWarningsAsErrors, banned-API wiring
+├─ Directory.Packages.props      # Central Package Management (all versions in one place) + global analyzers
+├─ global.json                   # Pin the .NET 10 SDK band; tests run on Microsoft.Testing.Platform
+├─ THIRD_PARTY_NOTICES.md        # License inventory (D-011)
 ├─ .editorconfig
 ├─ docs/                         # ← you are here
 ├─ src/                          # Each folder holds GridironFrontOffice.<Folder>.csproj
@@ -98,8 +101,10 @@ GridironFrontOffice/
 │  ├─ Simulation.Tests/
 │  ├─ Application.Tests/
 │  ├─ Infrastructure.Tests/
+│  ├─ Infrastructure.Tests.Crasher/  # Console app the kill-mid-write torture test launches and kills
 │  ├─ UI.Components.Tests/       # bUnit
 │  ├─ UI.Tests/                  # bUnit
+│  ├─ Desktop.Tests/             # the host's plain logic (window placement, page messages)
 │  └─ Architecture.Tests/        # Dependency rules enforced as tests
 └─ data/                         # Source seed data (names, colleges, cities, team identities) → embedded resources
 ```
@@ -139,7 +144,7 @@ flowchart TD
 
 #### `GridironFrontOffice.Core` (domain)
 - Entities and value objects: `Team`, `Player`, `Contract`, `ContractYear`, `DraftPick`, `Game`, `Injury`, `Transaction`, …
-- **Strongly typed IDs** (`readonly record struct PlayerId(int Value)`), mapped to `INTEGER` keys ([D-015](DECISIONS.md#d-015-integer-keys-with-strongly-typed-ids)).
+- **Strongly typed IDs** (`readonly record struct PlayerID(int Value)`), mapped to `INTEGER` keys ([D-015](DECISIONS.md#d-015-integer-keys-with-strongly-typed-ids)).
 - **Pure rules** that are unit-testable without a database: cap hit and dead money math, contract proration, position overall formulas, tiebreakers, roster limit validation, draft order.
 - `Money` is a `long` number of whole dollars. **No `decimal` and no floating point for money** (SQLite stores `decimal` as TEXT, which breaks ordering and aggregation).
 - In-game dates use `DateOnly`, stored as ISO text so they sort correctly.
@@ -177,11 +182,11 @@ flowchart TD
 - A screen-level state container (`GameStateStore`) for "where am I in the league": current date and phase, user team, record, cap summary, live event status.
 
 #### `GridironFrontOffice.Desktop` (WPF host)
-- A WPF app (**`net10.0-windows10.0.19041.0`**, `<UseWPF>true</UseWPF>`, Razor SDK) with one `MainWindow` containing a `BlazorWebView`. The Windows SDK TFM is required: the .NET 10 WPF `BlazorWebView` uses WebView2's composition control and crashes at startup on plain `net10.0-windows` ([HOST_BENCHMARK.md](architecture/HOST_BENCHMARK.md#gotchas-found-while-measuring-worth-knowing-for-m0)).
+- A WPF app (**`net10.0-windows10.0.19041.0`**, `<UseWPF>true</UseWPF>`, Razor SDK) with one `MainWindow` containing a `BlazorWebView`. The Windows SDK TFM is required: the .NET 10 WPF `BlazorWebView` uses WebView2's composition control and crashes at startup on plain `net10.0-windows` ([HOST_BENCHMARK.md](architecture/HOST_BENCHMARK.md#gotchas-found-while-measuring-worth-knowing-for-m0)). An `app.manifest` declares per-monitor-v2 DPI awareness. The HTML app bar doubles as the title bar, with WPF caption buttons ([D-068](DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar)).
 - `App.OnStartup`: bootstrap logging → build the `ServiceCollection` (`AddWpfBlazorWebView()` + GFO services) → configure the window (minimum size, restore size and position, title bar) → show it.
-- **Title bar options** (to validate in M0): (a) `WindowChrome` with a slim native WPF caption strip styled to match, the simplest and keeps native Snap Layouts; (b) a borderless window with the title bar drawn in HTML using WebView2 non-client region support (`IsNonClientRegionSupportEnabled` + CSS `app-region: drag`). Option (b) looks more seamless, but WebView2 docs note it doesn't give native caption-button behavior such as Snap Layouts.
+- **Title bar:** the HTML app bar is the title bar. WPF caption buttons keep Snap Layouts, and the page reports its drag regions to a `WM_NCHITTEST` hook ([D-068](DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar), [UI_DESIGN_SYSTEM.md §7](architecture/UI_DESIGN_SYSTEM.md#7-app-shell-and-navigation)).
 - Platform services: open a folder in Explorer, file pickers for import/export, single-instance mutex, window title.
-- Global exception hooks (see [LOGGING.md](architecture/LOGGING.md)).
+- Global exception hooks and the native crash dialog (`Diagnostics/`, see [LOGGING.md §8](architecture/LOGGING.md#8-capturing-failures-everywhere)).
 
 #### `GridironFrontOffice.DevHost` (browser dev host)
 - A Blazor Web App (Interactive Server) hosting `GridironFrontOffice.UI` against a dev save folder.
@@ -227,9 +232,9 @@ erDiagram
 
 **Key modeling choices**
 - **Player lifecycle in one table.** `Players.Status` ∈ {Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired}. Prospects are players with a draft class and no team.
-- **Ratings.** Current true ratings live on the player (hidden in the UI). `RatingHistory` keeps one snapshot per season for history and development charts. Perceived ratings live in `ScoutingReport`.
+- **Ratings.** Current true ratings live on the player and are used only by the sim. `RatingHistory` keeps one snapshot per season for history and development charts. **Every rating a screen or an AI sees goes through `IPerception`** for a viewing team ([F-03 §4.9](features/F-03_PLAYERS.md#49-perception-the-fog-of-war-boundary)): exact for that team's own roster, a derived fixed fuzz for other pros, and `ScoutingReport` state for prospects ([D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)).
 - **Contracts.** A contract header plus one `ContractYear` row per season (base salary, prorated bonus, guarantees, cap hit). Cap math is pure functions in Core.
-- **Draft picks** are first-class assets (`Season`, `Round`, `OriginalTeamId`, `OwnerTeamId`, `OverallPick` once known). Future picks can be traded up to 3 seasons out.
+- **Draft picks** are first-class assets (`Season`, `Round`, `OriginalTeamID`, `OwnerTeamID`, `OverallPick` once known). Picks can be traded for the upcoming draft and the next two (the NFL's horizon, confirmed in the F-19 spec).
 - **The transaction log** is append-only: every signing, release, trade, claim and pick. It's the source for history and the news engine.
 
 Schema details: [architecture/PERSISTENCE.md](architecture/PERSISTENCE.md).
@@ -251,7 +256,7 @@ sequenceDiagram
     Host->>Host: acquire single-instance mutex (else focus existing window, exit)
     Host->>Log: bootstrap logger (file sink) + startup banner
     Host->>Host: register global exception handlers
-    Host->>DI: AddWpfBlazorWebView() / AddGfoInfrastructure(paths) / AddGfoApplication() / AddGfoUi()
+    Host->>DI: AddWpfBlazorWebView() / AddGfoInfrastructure(paths) / AddGfoApplication() (from M1) / AddGfoUi()
     Host->>UI: show MainWindow, load BlazorWebView
     UI->>DI: ISaveCatalog.ListAsync()
     UI-->>OS: Main menu (Continue / New League / Load)
@@ -324,8 +329,8 @@ Details: [CALENDAR_AND_PHASES.md](architecture/CALENDAR_AND_PHASES.md), [LIVE_EV
 
 ### 7.1 Error handling
 - **Commands** validate first and return typed results (`Result<T>` with domain error codes such as `OverCap` or `RosterFull`). Exceptions are for bugs and I/O, not business rules.
-- **UI**: an `ErrorBoundary` on each routed page shows a friendly error panel with "Copy diagnostics" and "Return to dashboard". The app shell keeps working.
-- **Unhandled exceptions**: logged as Fatal and shown in a crash dialog with the log path. The save is safe because every command is a transaction.
+- **UI**: `PageErrorBoundary` wraps every routed page. On an exception it logs it and shows a recovery panel with **Try again** and **Home**, and navigating anywhere clears it. The app shell keeps working. ("Copy diagnostics" arrives in M11.)
+- **Unhandled exceptions**: logged as Fatal, then a native crash dialog (Open logs folder, Close, Restart), then the process exits. The save is safe because every command is a transaction.
 - **On open**: integrity check failure → offer to restore the most recent snapshot.
 
 ### 7.2 Logging
@@ -336,22 +341,25 @@ Serilog writes to `%LOCALAPPDATA%\GridironFrontOffice\logs\gfo-YYYYMMDD.log`. Ro
 | What | Path |
 |---|---|
 | Saves | `%LOCALAPPDATA%\GridironFrontOffice\Saves\*.gfo` |
-| Snapshots | `%LOCALAPPDATA%\GridironFrontOffice\Snapshots\<SaveId>\*.gfo` |
+| Snapshots | `%LOCALAPPDATA%\GridironFrontOffice\Snapshots\<SaveID>\*.gfo` |
 | Logs | `%LOCALAPPDATA%\GridironFrontOffice\logs\` |
 | Settings | `%LOCALAPPDATA%\GridironFrontOffice\settings.json` |
 | Crash dumps / diagnostics zips | `%LOCALAPPDATA%\GridironFrontOffice\diagnostics\` |
+| WebView2 profile (desktop host) | `%LOCALAPPDATA%\GridironFrontOffice\WebView2\` |
+| DevHost (development only) | `%LOCALAPPDATA%\GridironFrontOffice-Dev\` with the same layout |
 
 > **Challenge: why not `Documents\My Games`?** OneDrive's Known Folder Move silently redirects `Documents` into a synced folder on many Windows machines. A **live** SQLite database with `-wal`/`-shm` side files inside a sync folder risks locking conflicts and partially synced (corrupt) copies. Saves therefore live in non-synced `LocalAppData`. For sharing and backups there's an explicit **Export** (a consistent single-file copy via `VACUUM INTO`) and an **Open saves folder** button.
 
 All paths go through `IAppPaths`, so DevHost, tests and SimLab can redirect them.
 
 ### 7.4 Settings
-- **App settings** (theme, density, sound, snapshot budget, window position, developer flags) are stored in `settings.json`, loaded with `IOptionsMonitor`, and written atomically (write to temp, then replace).
-- **League settings** (difficulty, clock preset, Ironman, Live Event toggles, rules) live **inside the save**. A save file is self-contained.
+- **App settings** (theme, density, sound, snapshot budget, window position, developer flags) are stored in `settings.json`. They're exposed through `ISettingsStore`, which is loaded synchronously **before DI** (the log level comes from it) and raises `Changed` after each save. Saves are atomic: write to a temp file, then replace. **A missing file is created with the defaults on first launch**, so it's there to find and edit by hand (each host logs that it did). An unreadable one is copied to `settings.unreadable.json` and defaults are used, with a Warning in the log. The file isn't part of .NET's `IConfiguration`: the app writes it itself and needs it before DI. `appsettings.json` exists only in the DevHost, for ASP.NET's own settings, and can't override the log level here.
+- **League settings** (clock mode, clock preset, Ironman, Live Event toggles, injury frequency, rules; [D-036](DECISIONS.md#d-036-league-settings-at-creation-are-gameplay-only-one-user-team)) live **inside the save**. A save file is self-contained.
+- **League data files** (the default team set and the fictional college list) are versioned JSON files with a published schema, shipped with the app. The generators read them and never hard-code lists. A user-supplied set can be imported at league creation from M11 ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 
 ### 7.5 Randomness and determinism
 - One PRNG implementation, in `GridironFrontOffice.Simulation.Random`. `System.Random` is **banned** in Core, Simulation and Application (with a banned-API analyzer).
-- Seeds are **derived, not chained**: `seed(game) = Hash(leagueSeed, "game", gameId)`, `seed(progression) = Hash(leagueSeed, "prog", season, playerId)`. A change in one system doesn't shift the random sequence of another, so golden tests stay stable.
+- Seeds are **derived, not chained**: `seed(game) = Hash(leagueSeed, "game", gameID)`, `seed(progression) = Hash(leagueSeed, "prog", season, playerID)`. A change in one system doesn't shift the random sequence of another, so golden tests stay stable.
 - Live events involve human timing and are **not** reproducible. Their decisions are logged with inputs at Information level instead.
 
 ### 7.6 Localization
@@ -366,7 +374,7 @@ Fully offline. No telemetry. No network calls. Crash reports, if ever added, are
 
 - Name lists (first/last with frequency weights), colleges, hometowns, team identities (city, nickname, colors, mark style), stadiums and personality text templates live in `data/` as JSON and are compiled as **embedded resources**.
 - **A save is self-contained.** At league creation, any reference data the league needs (team identities, the college list in use) is copied into the save. App updates to name lists never change existing leagues.
-- **Steam-ready:** all names are fictional. Generated full names are checked against a blocklist of famous real people. College names are an open question ([Q-18](OPEN_QUESTIONS.md#q-18-real-college-names)).
+- **Steam-ready:** all names are fictional. Generated full names are checked against a blocklist of famous real people. Teams use real cities with original nicknames ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)), and colleges are fictional ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 
 ---
 
@@ -377,6 +385,7 @@ Measured on the reference machine: a 6-core CPU from around 2020, 16 GB of RAM, 
 | Operation | Budget | Notes |
 |---|---|---|
 | Cold start to main menu | < 3 s | WebView2 warm-up dominates |
+| Generate a new league | < 5 s (M1); < 15 s with the simulated prior season (M5) | With progress ([D-049](DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired)) |
 | Open a save (10 seasons in) | < 1.5 s | Includes `quick_check` |
 | Navigate between screens | < 150 ms | Read-model queries < 50 ms |
 | Sort or filter a 2,000-row grid | < 100 ms | Virtualized rendering |
@@ -385,7 +394,7 @@ Measured on the reference machine: a 6-core CPU from around 2020, 16 GB of RAM, 
 | Advance an offseason phase (AI processing) | < 5 s | With a progress UI |
 | AI draft pick decision | < 200 ms | The "deliberation" delay is cosmetic |
 | Snapshot (`VACUUM INTO`) at 100 MB | < 2 s | Off the UI thread |
-| Save size after 10 seasons | < 150 MB | Play-by-play retention policy |
+| Save size after 10 seasons | < 150 MB | Measured in M5; play-by-play fallback pruning if logs exceed 25% ([D-039](DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning)) |
 | Memory (steady state) | < 600 MB | WebView2 accounts for ~150–300 MB |
 
 Budgets are checked with BenchmarkDotNet (engine) and timed log entries (everything else). A regression of more than 20% fails the slow gate (`build.ps1 -Full`, and nightly CI once F-30 lands).

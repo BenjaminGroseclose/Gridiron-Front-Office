@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>GFO DevHost</title>
+    <link rel="stylesheet" href="_content/Microsoft.FluentUI.AspNetCore.Components/Microsoft.FluentUI.AspNetCore.Components.bundle.scp.css" />
+    <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-fonts.css" />
+    <link rel="stylesheet" href="_content/GridironFrontOffice.UI.Components/gfo-tokens.css" />
+    <link rel="stylesheet" href="@Assets["GridironFrontOffice.DevHost.styles.css"]" />
+    <HeadOutlet @rendermode="InteractiveNoPrerender" />
+    <!-- Fluent re-applies its default theme on every Windows light/dark switch unless its own cache holds a mode, which GFO
+         doesn't use. This is the flag Fluent checks before adding that listener; GfoThemeService owns the switch (D-068). -->
+    <script>window.__FluentUIBlazorSystemThemeChangeListener = true;</script>
+    <!-- Before Blazor, so even boot-time JavaScript errors reach the log (LOGGING.md §8). -->
+    <script src="_content/GridironFrontOffice.UI/js/gfo-diagnostics.js"></script>
+</head>
+<body>
+    <Routes @rendermode="InteractiveNoPrerender" />
+    <script src="_framework/blazor.web.js"></script>
+</body>
+</html>
+
+@code {
+    // No prerendering: the desktop WebView never prerenders, so the DevHost shouldn't either. A prerendered copy is
+    // disposed straight away, and Fluent v5 components then fault fire-and-forget tasks on the disposed scope (WP5).
+    private static readonly IComponentRenderMode InteractiveNoPrerender = new InteractiveServerRenderMode(prerender: false);
+}

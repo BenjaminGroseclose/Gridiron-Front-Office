@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    EF Core + SQLite (LeagueDbContext, migrations, SaveWriter/SaveReader, SaveManager, snapshots),
+    logging bootstrap, AppPaths and the settings store (ARCHITECTURE.md §4.2, DATA_ACCESS_GUIDE.md §3).
+    The ONLY project allowed to open SQLite connections or own transactions.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Application\GridironFrontOffice.Application.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <!-- Design-time only: `dotnet ef migrations add`. Never shipped. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Extensions.Logging" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Sinks.Async" />
+    <PackageReference Include="Serilog.Sinks.Debug" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The torture tests reach the internals (LeagueDbContext, TypedIDs, SqliteFile). -->
+    <InternalsVisibleTo Include="GridironFrontOffice.Infrastructure.Tests" />
+  </ItemGroup>
+</Project>

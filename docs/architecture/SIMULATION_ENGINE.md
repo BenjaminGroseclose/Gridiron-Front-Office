@@ -36,16 +36,16 @@ flowchart LR
 ```
 
 **`SimGameInput`**
-- `GameId`, `Seed`, `EngineVersion`, `TuningVersion`, rules (OT format, kickoff rules)
+- `GameID`, `Seed`, `EngineVersion`, `TuningVersion`, rules (OT format, kickoff rules)
 - For each team, a `SimTeam`:
-  - `SimPlayer[]` (dressed players): `Id`, `Position`, the rating vector (**true ratings**; the engine plays the real game and fog of war affects only *perception*), stamina, injury status, traits
+  - `SimPlayer[]` (dressed players): `ID`, `Position`, the rating vector (**true ratings**; the engine plays the real game and fog of war affects only *perception*), stamina, injury status, traits
   - Depth chart by package and slot
   - `GamePlan` (§5) and `CoachTendencies` (play-calling style, 4th-down aggression, tempo)
   - Home/away. Weather and surface come later.
 
 **`SimGameResult`**
 - Final score and per-quarter scores, OT flag
-- `PlayEvent[]`: the ordered log. Each event: situation before, call, personnel, outcome type, yards, participants (passer, target, ball carrier, tackler(s), defender in coverage, …), penalties, injuries, clock run-off, **deciding matchup**, win probability before and after (§8)
+- `PlayEvent[]`: the ordered log. Each event: situation before, call, personnel, outcome type, yards, participants (passer, target, ball carrier, tackler(s), defender in coverage, …), penalties, injuries, clock run-off, **deciding matchup**, win probability before and after (§8; empty until the tables exist in M8)
 - Derived on demand: drives, box score, player and team stat lines (**the event log is the single source of truth**)
 
 ---
@@ -79,6 +79,8 @@ stateDiagram-v2
 
 **4th-down and 2-point decisions** use a decision model driven by the Expected Points / Win Probability tables (§8), shifted by coach aggression and the game plan. This produces believable "analytics-era" behavior on average, with variety between coaches.
 
+> **Bootstrapping:** the tables are generated *from* this engine and arrive in M8 (v1.0). Until then (v0.1–v0.3), the coaching AI uses a **heuristic 4th-down and 2-point chart** (by distance, field position, score and time), shifted the same way. In M8: generate the tables → switch decisions to them → regenerate once so the tables reflect the new decisions → recalibrate.
+
 ---
 
 ## 4. Play resolution
@@ -93,21 +95,23 @@ All coefficients live in **`SimTuning.json`**, versioned and loaded at startup, 
 
 | Stage | Inputs | Output |
 |---|---|---|
-| 1. **Protection** | Each pass rusher vs. assigned blocker(s): pass rush (power/finesse) vs. pass block, plus blitz extra rushers vs. RB/TE protection | Time-to-pressure distribution; pressure, hit or sack; the *losing blocker* is recorded |
-| 2. **Coverage** | Each eligible receiver vs. assigned defender (man) or zone defender: route running, release and speed vs. man/zone coverage, press and speed | A separation score per receiver per "read window" |
-| 3. **Read and target** | QB awareness/decision-making, pocket presence under pressure, the game plan's focus target | The chosen target (or a throwaway or scramble) |
+| 1. **Protection** | Each pass rusher vs. assigned blocker(s): pass rush (power/finesse) and acceleration (get-off) vs. pass block and strength (anchor), plus blitz extra rushers vs. RB/TE protection | Time-to-pressure distribution; pressure, hit or sack; the *losing blocker* is recorded |
+| 2. **Coverage** | Each eligible receiver vs. assigned defender (man) or zone defender: route running, release, speed and agility vs. man coverage (with agility and speed) or zone coverage (with awareness), press vs. release | A separation score per receiver per "read window" |
+| 3. **Read and target** | QB awareness (finding the open man), decision making (throwaway vs. force), pocket presence under pressure, the game plan's focus target | The chosen target (or a throwaway or scramble) |
 | 4. **Throw** | Accuracy (short/medium/deep by depth), arm strength (deep), pressure penalty, throw on the run | Ball placement quality |
 | 5. **Catch point** | Placement + separation vs. hands, contested catch vs. ball skills | Complete / incomplete / **interception** / deflection; drop chance |
-| 6. **After the catch** | Elusiveness, speed, break tackle vs. tackling, pursuit and angles | YAC (a right-skewed distribution); **fumble** chance; broken-tackle events |
+| 6. **After the catch** | Elusiveness, agility, speed, break tackle vs. tackling, pursuit (and awareness for angles); ball security vs. hit power | YAC (a right-skewed distribution); **fumble** chance; broken-tackle events |
 
 ### 4.2 Run play pipeline
 
 | Stage | Inputs | Output |
 |---|---|---|
-| 1. **Point of attack** | Run blockers vs. run defenders at the called gap (inside/outside), box count vs. blockers | Gap quality: stuffed / normal / crease / hole |
-| 2. **Ball carrier** | Vision (finding the cutback), acceleration, power vs. tackling | Yards before contact + yards after contact |
-| 3. **Big play** | Speed and elusiveness vs. second-level and safety pursuit | A heavy right tail: breakaway chance |
-| 4. **Ball security** | Ball security vs. hit power and strip skill | Fumble, and the recovery roll |
+| 1. **Point of attack** | Run block and lead block (FB/TE/pulling guard) with strength vs. block shedding with strength, plus defenders' awareness (run fits) at the called gap (inside/outside), box count vs. blockers | Gap quality: stuffed / normal / crease / hole |
+| 2. **Ball carrier** | Vision (finding the cutback), acceleration, strength and break tackle vs. tackling | Yards before contact + yards after contact |
+| 3. **Big play** | Speed, elusiveness and agility vs. second-level and safety pursuit | A heavy right tail: breakaway chance |
+| 4. **Ball security** | Ball security vs. hit power | Fumble, and the recovery roll |
+
+> **Every player attribute is read somewhere in this section or in §4.3–4.6** ([D-050](../DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim)). The full attribute → stage matrix is in [F-03 §4.2](../features/F-03_PLAYERS.md#42-attributes-and-their-consumers-d-050).
 
 > Yardage is sampled from **mixture distributions** (e.g., a "normal play" component plus an "explosive" component) rather than a single normal. Real football has fat tails, and a plain normal distribution produces boring, wrong-looking games.
 
@@ -125,7 +129,7 @@ All coefficients live in **`SimTuning.json`**, versioned and loaded at startup, 
 ### 4.5 Injuries
 - Each snap, each participating player gets an injury hazard: `base × positionFactor × contactIntensity × (1 + fatigue) × injuryProneness / toughness`.
 - On injury: sample body part, type and severity, which gives the expected weeks out. The player leaves the game, and the depth chart substitutes.
-- Calibrated to a believable rate of season-ending injuries per team ([Q-17](../OPEN_QUESTIONS.md#q-17-injury-frequency)).
+- Calibrated to a believable rate of season-ending injuries per team on **Realistic**. The league's injury frequency setting (Low / Realistic / High, [D-037](../DECISIONS.md#d-037-injury-frequency-setting-locked-at-creation)) scales the base rate.
 
 ### 4.6 Fatigue and substitution
 - Per-player fatigue increases with snaps (heavier for DL and RB) and recovers between series.
@@ -162,7 +166,7 @@ The user is **GM + game plan** ([D-009](../DECISIONS.md#d-009-game-day-role-gm--
 ## 6. Randomness and determinism
 
 - **PRNG:** an in-house xoshiro256** (or PCG32) in `GridironFrontOffice.Simulation.Random`. `System.Random` is banned because its seeded algorithm is an implementation detail that could change between .NET versions, and that would break golden tests and reproducibility.
-- **Seed derivation:** `gameSeed = StableHash(leagueSeed, "game", gameId)`. Inside a game, a single PRNG stream is consumed in a fixed order.
+- **Seed derivation:** `gameSeed = StableHash(leagueSeed, "game", gameID)`. Inside a game, a single PRNG stream is consumed in a fixed order.
 - **Determinism hazards to avoid:** iterating over `Dictionary`/`HashSet` (order isn't a contract), parallelism *inside* a game, `DateTime.Now`, culture-sensitive parsing, and floating-point reductions in a nondeterministic order. Parallelism *across* games is fine.
 - **Floating point:** deterministic on the same build and machine. Cross-architecture (x64 vs. ARM64) bit-exactness is not guaranteed and not required.
 - **Engine versioning:** `EngineVersion` (code) and `TuningVersion` (data) are stored with every game. Golden tests pin the expected output for a set of canonical inputs. Changing tuning means updating the golden files on purpose.
@@ -176,8 +180,8 @@ Every play records **who won the rep that mattered**:
 ```csharp
 public readonly record struct DecidingMatchup(
     MatchupKind Kind,          // PassRushVsBlock, CoverageVsRoute, RunBlockVsRunD, CarrierVsTackler, KickVsDistance, …
-    PlayerId Winner,
-    PlayerId Loser,
+    PlayerID Winner,
+    PlayerID Loser,
     float Margin);             // how decisive (normalized)
 ```
 
@@ -188,7 +192,7 @@ Examples:
 
 **Consumers**
 - **Film Room** ([STANDOUT_FEATURES.md §C](../STANDOUT_FEATURES.md#c-film-room-explainable-results)): key matchups won and lost, unit grades, player grades.
-- **Player grades** (0–100 per game) feed awards voting, contract talks and fog-of-war "performance signal" updates.
+- **Player grades** (0–100 per game, M8) feed awards voting and contract talks. They **don't** update perception: other teams' players never sharpen ([D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)).
 - **The news generator**: "Toure feasted on the Wolves' right side: 3 sacks."
 
 ---
@@ -268,7 +272,7 @@ simlab calibrate --seed 42 --seasons 200 --tuning ./SimTuning.json --out ./repor
 - Shows the scorebug, drive chart (SVG field strip), play-by-play feed, WP chart, key stats and other games' scores.
 - Results for *other* games are hidden until they "finish" during the replay, which keeps the suspense.
 - Because the result already exists, closing the Game Center mid-replay loses nothing.
-- **Future (post-1.0):** halftime adjustments would require splitting simulation at halftime (simulate the first half → user tweak → simulate the second half). The engine API should allow `Simulate(input, stopAt: Halftime)` and `Resume(state, newPlan)` from the start, even if unused, so the option stays cheap.
+- **Future (post-1.0, [D-048](../DECISIONS.md#d-048-halftime-adjustments-post-10-engine-split-kept-possible)):** halftime adjustments would require splitting simulation at halftime (simulate the first half → user tweak → simulate the second half). The engine API should allow `Simulate(input, stopAt: Halftime)` and `Resume(state, newPlan)` from the start, even if unused, so the option stays cheap.
 
 ---
 
@@ -278,6 +282,6 @@ simlab calibrate --seed 42 --seasons 200 --tuning ./SimTuning.json --out ./repor
 |---|---|---|
 | v0.1 | M2 | Game state machine, simple run/pass, kicks, scoring, clock, basic play calling. Stats derived from events. |
 | v0.2 | M2 | Matchup-based pass and run pipelines, penalties (top 6 types), basic injuries, fatigue. **Deciding matchup recorded on every play** (cheap now, expensive to retrofit). SimLab calibration within bands. |
-| v0.3 | M3 | Depth chart packages, basic game plan (3 settings), OT rules, playoffs |
-| v1.0 | M8 | Full game plan, EP/WP tables, player grades, Film Room data |
+| v0.3 | M3 | Depth chart packages (derived from position depth, [D-052](../DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)), basic game plan (3 settings), OT rules, playoffs. Heuristic 4th-down chart. |
+| v1.0 | M8 | Full game plan, EP/WP tables (and the switch from the heuristic chart), player grades, Film Room data |
 | v1.x | M10+ | Weather, surface, scheme fit, coaching quality effects, halftime adjustments (maybe) |

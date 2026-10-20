@@ -1,0 +1,54 @@
+@* One save on the load screen (PERSISTENCE.md §9): the league, when it was last played, a note for anything that isn't
+   simply ready, and its actions. An unreadable file keeps a card, named by its file, with Show in folder and Delete. *@
+<article class="gfo-save-card" data-status="@Card.Status" aria-labelledby="@_titleID" data-testid="save-card">
+    <div class="gfo-save-card-text">
+        <div class="gfo-save-card-heading">
+            <h2 id="@_titleID" class="gfo-save-card-title gfo-display">@SaveCardText.Title(Card)</h2>
+            @if (Card.IsIronman)
+            {
+                <FluentBadge Appearance="BadgeAppearance.Tint" Color="BadgeColor.Important">Ironman</FluentBadge>
+            }
+        </div>
+        @if (SaveCardText.Details(Card, CultureInfo.CurrentCulture) is { } details)
+        {
+            <p class="gfo-save-card-details">@details</p>
+        }
+        @if (SaveCardText.Note(Card) is { } note)
+        {
+            <p class="gfo-save-card-note" data-testid="save-note">
+                <Icon Name="@(Card.Status == SaveCardStatus.NeedsUpgrade ? IconName.Info : IconName.Warning)" Size="16" />
+                <span>@note</span>
+            </p>
+        }
+    </div>
+
+    <div class="gfo-save-card-actions">
+        @if (!Card.CanOpen)
+        {
+            <FluentButton Appearance="ButtonAppearance.Subtle" Disabled="Busy" IconStart="@IconCatalog.Create(IconName.Folder)"
+                          OnClick="@(() => OnShowInFolder.InvokeAsync(Card))" data-testid="show-in-folder">Show in folder</FluentButton>
+        }
+        <FluentButton Appearance="ButtonAppearance.Subtle" Disabled="Busy" IconStart="@IconCatalog.Create(IconName.Delete)"
+                      OnClick="@(() => OnDelete.InvokeAsync(Card))" data-testid="delete">Delete</FluentButton>
+        @if (Card.CanOpen)
+        {
+            <FluentButton Appearance="ButtonAppearance.Primary" Disabled="Busy" OnClick="@(() => OnOpen.InvokeAsync(Card))"
+                          data-testid="open">Open</FluentButton>
+        }
+    </div>
+</article>
+
+@code {
+    private readonly string _titleID = $"save-{Guid.NewGuid():N}";
+
+    [Parameter, EditorRequired] public SaveCard Card { get; set; } = default!;
+
+    /// <summary>Another action is running: every button waits.</summary>
+    [Parameter] public bool Busy { get; set; }
+
+    [Parameter] public EventCallback<SaveCard> OnOpen { get; set; }
+
+    [Parameter] public EventCallback<SaveCard> OnDelete { get; set; }
+
+    [Parameter] public EventCallback<SaveCard> OnShowInFolder { get; set; }
+}

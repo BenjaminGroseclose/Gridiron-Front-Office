@@ -14,13 +14,14 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 |---|---|---|
 | 1 | [ONE_PAGER.md](ONE_PAGER.md) | What are we building, who is it for, and why will anyone care? |
 | 2 | [STANDOUT_FEATURES.md](STANDOUT_FEATURES.md) | What makes GFO different: the real-time draft, the modern UI, plus four proposed ideas |
-| 3 | [FEATURES.md](FEATURES.md) | The full feature catalog (F-00 … F-29): MVP vs. later, dependencies, AI counterparts |
+| 3 | [FEATURES.md](FEATURES.md) | The full feature catalog (F-00 … F-30): MVP vs. later, dependencies, AI counterparts |
 | 4 | [ROADMAP.md](ROADMAP.md) | The order we build in (M0 … M11) and the exit criteria for each milestone |
 | 5 | [VISUAL_DESIGN.md](VISUAL_DESIGN.md) | What GFO looks like: the Stadium direction, dark/light palettes, type, shape, signature elements |
 | 5b | [ARCHITECTURE.md](ARCHITECTURE.md) | Technical architecture overview: stack, solution layout, runtime model |
 | 6 | [architecture/](architecture/) | Deep dives (listed below) |
 | 7 | [DECISIONS.md](DECISIONS.md) | Decision log: what was decided, why, and what we gave up |
 | 8 | [OPEN_QUESTIONS.md](OPEN_QUESTIONS.md) | What is still open, with recommendations and challenges |
+| 8b | [IDEAS.md](IDEAS.md) | The parking lot: ideas deliberately kept off the roadmap, and when to revisit them |
 | 9 | [GLOSSARY.md](GLOSSARY.md) | Football, salary cap and project terminology |
 
 ### Architecture deep dives
@@ -38,6 +39,19 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 | [architecture/CALENDAR_AND_PHASES.md](architecture/CALENDAR_AND_PHASES.md) | League calendar, phase state machine, the Advance flow |
 | [architecture/LIVE_EVENTS.md](architecture/LIVE_EVENTS.md) | Real-time engine behind the draft (and later FA Frenzy / Deadline Day) |
 | [architecture/TESTING_AND_QUALITY.md](architecture/TESTING_AND_QUALITY.md) | Test strategy, SimLab gates, `build.ps1` (CI later, F-30), code conventions |
+
+### Milestone plans
+
+| Document | Scope |
+|---|---|
+| [milestones/M0_FOUNDATIONS.md](milestones/M0_FOUNDATIONS.md) | M0 in detail: ten work packages, every file and package that changes, risks, the exit checklist, and progress |
+
+### Feature specs
+
+| Document | Status |
+|---|---|
+| [features/F-02_LEAGUE_AND_TEAMS.md](features/F-02_LEAGUE_AND_TEAMS.md) | Accepted (M1): structure, the 32 default franchises, crests |
+| [features/F-03_PLAYERS.md](features/F-03_PLAYERS.md) | Accepted (M1): the player model, generation, the perception boundary |
 
 ### Templates
 
