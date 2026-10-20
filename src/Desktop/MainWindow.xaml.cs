@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Threading;
 using GridironFrontOffice.Application.Platform;
+using GridironFrontOffice.Application.Saves;
 using GridironFrontOffice.Application.Settings;
 using GridironFrontOffice.Desktop.Windowing;
 using GridironFrontOffice.Infrastructure.Logging;
@@ -21,8 +22,8 @@ namespace GridironFrontOffice.Desktop;
 
 /// <summary>
 /// The one window: the web view under the app bar's caption buttons (D-068). It opens where it was last closed, fitted
-/// to today's monitors, paints the saved mode's Ground before the page exists, follows the page's theme mode, and saves
-/// its placement when it closes.
+/// to today's monitors, paints the saved mode's Ground before the page exists, follows the page's theme mode, and on
+/// closing closes the open league and saves its placement.
 /// </summary>
 internal sealed partial class MainWindow : Window
 {
@@ -34,6 +35,7 @@ internal sealed partial class MainWindow : Window
     private readonly ILogger<MainWindow> _log;
     private readonly IAppPaths _paths;
     private readonly ISettingsStore _settings;
+    private readonly ISaveManager _saves;
     private readonly TitleBar _titleBar;
     private readonly StartupPlacement _startup;
     private readonly Stopwatch _webViewStartup = new();
@@ -50,6 +52,7 @@ internal sealed partial class MainWindow : Window
         _log = services.GetRequiredService<ILogger<MainWindow>>();
         _paths = paths;
         _settings = settings;
+        _saves = services.GetRequiredService<ISaveManager>();
         _dark = dark;
         InitializeComponent();
 
@@ -112,7 +115,7 @@ internal sealed partial class MainWindow : Window
         HostLog.WindowPlacement(_log, placement);
     }
 
-    /// <summary>Saves the placement first (it's async), then closes for real.</summary>
+    /// <summary>Closes the open league and saves the placement first (both async), then closes for real.</summary>
     protected override void OnClosing(CancelEventArgs e)
     {
         if (!_readyToClose)
@@ -121,7 +124,7 @@ internal sealed partial class MainWindow : Window
             if (!_closing)
             {
                 _closing = true;
-                _ = SavePlacementThenCloseAsync();
+                _ = ShutDownThenCloseAsync();
             }
 
             return;
@@ -130,24 +133,49 @@ internal sealed partial class MainWindow : Window
         base.OnClosing(e);
     }
 
-    private async Task SavePlacementThenCloseAsync()
+    private async Task ShutDownThenCloseAsync()
     {
         try
         {
-            if (_normalBounds is { } normal)
-            {
-                var maximized = WindowState == WindowState.Maximized || (WindowState == WindowState.Minimized && _restoreToMaximized);
-                await _settings.SaveAsync(_settings.Current with { Window = normal with { Maximized = maximized } });
-            }
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            HostLog.WindowPlacementNotSaved(_log, ex);
+            await CloseLeagueAsync();
+            await SavePlacementAsync();
         }
         finally
         {
             _readyToClose = true;
             Close();
+        }
+    }
+
+    /// <summary>A clean close: the running command finishes, the WAL is checkpointed and the file is released.</summary>
+    private async Task CloseLeagueAsync()
+    {
+        try
+        {
+            await _saves.CloseAsync();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The app is exiting either way. Every command is its own transaction, so the save is still whole.
+            HostLog.LeagueNotClosed(_log, ex);
+        }
+    }
+
+    private async Task SavePlacementAsync()
+    {
+        if (_normalBounds is not { } normal)
+        {
+            return;
+        }
+
+        try
+        {
+            var maximized = WindowState == WindowState.Maximized || (WindowState == WindowState.Minimized && _restoreToMaximized);
+            await _settings.SaveAsync(_settings.Current with { Window = normal with { Maximized = maximized } });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            HostLog.WindowPlacementNotSaved(_log, ex);
         }
     }
 

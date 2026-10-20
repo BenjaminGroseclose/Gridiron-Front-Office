@@ -43,7 +43,7 @@ public sealed class SaveManagerTests
 
         Path.GetFileName(save.Save.FilePath).ShouldBe("Wolves_ Year 1_.gfo");
         (await save.Saves.CreateAsync("   ", Ct)).Error!.Code.ShouldBe("InvalidLeagueName");
-        (await save.Saves.CreateAsync(new string('x', SaveManager.MaxLeagueNameLength + 1), Ct)).Error!.Code.ShouldBe("InvalidLeagueName");
+        (await save.Saves.CreateAsync(new string('x', SaveRules.MaxLeagueNameLength + 1), Ct)).Error!.Code.ShouldBe("InvalidLeagueName");
 
         var second = await save.Saves.CreateAsync("Wolves: Year 1?", Ct);
         Path.GetFileName(second.Value.FilePath).ShouldBe("Wolves_ Year 1_ (2).gfo");

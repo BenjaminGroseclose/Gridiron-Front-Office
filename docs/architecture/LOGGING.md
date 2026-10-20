@@ -192,7 +192,7 @@ Every hook has a trigger, so the paths are tested end to end rather than assumed
 M0 checked every path in both hosts. Each one landed in the log with its stack trace, and no log line contained the Windows user name.
 
 ### 8.2 Event IDs in use
-- **1000–1016, App/Host (`HostLog`):** banner, settings unreadable, settings file created (1006), window shown, WebView2 ready, host page loaded, exiting, the unhandled background-thread, unobserved-task and UI-thread exceptions, the crash dialog choice, the window placement used at startup (1014: saved, default, or default because the saved one is off every monitor) a placement that couldn't be saved (1015), and the first themed screen with its time since process start (1016, the startup budget's end point).
+- **1000–1017, App/Host (`HostLog`):** banner, settings unreadable, settings file created (1006), window shown, WebView2 ready, host page loaded, exiting, the unhandled background-thread, unobserved-task and UI-thread exceptions, the crash dialog choice, the window placement used at startup (1014: saved, default, or default because the saved one is off every monitor) a placement that couldn't be saved (1015), the first themed screen with its time since process start (1016, the startup budget's end point), and an open league that couldn't be closed cleanly on exit (1017).
 - **2000–2022, Persistence (`DataLog`):**
   - commands: committed (Debug), rejected, rolled back, slow (> 1 s), rollback failed;
   - saves: created, opened, upgraded, closed, refused (2014), restored (2017), deleted (2018), a restore or delete refused (2021, 2022);

@@ -504,7 +504,7 @@ flowchart LR
 7. **`::deep` needs an element of the component's own** to anchor the scope attribute. `MainNav`'s first rule silently matched nothing.
 8. **Fluent's dialog and notification interfaces have internal members** and can't be faked. Their tests use Fluent's real providers in bUnit.
 
-### WP9 · Main menu, wiring and the M0 exit (M) · host half done 2026-10-19
+### WP9 · Main menu, wiring and the M0 exit (M) · host half and screens done 2026-10-19
 **Goal:** put it together into the walking skeleton.
 - [x] The Desktop composition root: the single-instance guard → paths → settings → logging → DI (`AddWpfBlazorWebView`, `AddGfoInfrastructure`, `AddGfoUi`, Fluent, `ShellOptions(AppBarIsTitleBar: true)`) → window. **`AddGfoApplication` isn't added yet:** Application has nothing to register in M0 (its rules are static, and Infrastructure registers the ports' implementations), so the method arrives with the first Application service in M1 rather than as an empty one.
 - [x] The window per [D-068](../DECISIONS.md#d-068-host-shell-the-app-bar-is-the-title-bar):
@@ -515,12 +515,12 @@ flowchart LR
   - ~~an explicit WebView2 user data folder under `IAppPaths`~~ (done in WP5).
 - [x] **Single instance:** a named mutex. A second launch brings the existing window to the front and exits.
 - [x] Window size and position remembered in `settings.json`, and restored safely when a monitor has been removed.
-- [ ] **Main menu** (UI RCL): Continue / New League / Load / Settings.
+- [x] **Main menu** (UI RCL): Continue / New League / Load / Settings.
   - **New League in M0** asks only for a league name (the real wizard is M1) and creates the save.
   - **Load screen:** save cards (name, created, last played, app version warning, unreadable-file card), plus Open and Delete.
   - **Open** shows the app shell with an empty Home ("Your league will live here"). **Close** returns to the menu.
-- [ ] DevHost wired the same way, against the dev save folder.
-- [ ] Run the exit checklist (§10), record the cold-start time, tag **`m0-complete`**.
+- [x] DevHost wired the same way, against the dev save folder.
+- [ ] Run the exit checklist (§10), record the cold-start time, tag **`m0-complete`**. *Everything but the tag is done; the tag waits for the design review's follow-ups.*
 
 **Results (host half, 2026-10-19)**
 - **Title bar:** built from the S0c spike in `src/Desktop/Windowing/` and `wwwroot/gfo-host.js` (as built: [UI_DESIGN_SYSTEM.md §7](../architecture/UI_DESIGN_SYSTEM.md#7-app-shell-and-navigation)). The page reports its drag regions and theme mode through WebView2's own message channel, so the UI layer only marks `data-drag-region`. Checked on the real window with `WM_NCHITTEST` probes, normal and maximized, and with window-only captures in Dark and Light and across a runtime switch both ways.
@@ -533,6 +533,17 @@ flowchart LR
 - **Tests:** a new `Desktop.Tests` project (placement rules, page messages, the mutex guard under its own name), plus an `AppearanceSync` test.
 - **Startup:** warm Debug launches reach the loaded page in 1.4–1.8 s, the same as before; the first run after a build is slower (cold disk and antivirus). The Release ReadyToRun measurement is still an exit item.
 - **Found, not fixed: the web content is invisible to UI Automation.** The composition control renders the page as an image, so the UIA tree holds only an `Image` and the three WPF caption buttons. Screen readers and UIA-based tests can't see the page. **Decided:** screen readers aren't supported in 1.0 ([D-071](../DECISIONS.md#d-071-screen-readers-arent-supported-in-10)).
+
+**Results (screens, 2026-10-19)**
+- **Option (c):** the menu screens use a plain frame, a panel centered on the Ground (`MenuFrame`), until the design review decides the main menu's look. Everything else is design-independent and stays.
+- **Routes:** `/` main menu, `/new` New League, `/load` the load screen, `/league` the open league's home, `/settings` (both modes). The menu routes go to `/league` while a league is open; `/league` goes to `/` when none is.
+- **The shell follows the save:** `MainLayout` reads `ISaveManager.Current` and follows `SaveOpened` and `SaveClosed` (marshalled with `InvokeAsync`). With a league open: the wordmark, the league name as the app bar's context, Close league, and the nav (Home → `/league`, Settings). At the main menu: the app bar stays the title bar but empty, the menu panel carries the wordmark, and there's no nav, so Settings, New League and Load each offer "Main menu" back.
+- **`SaveActions`** (scoped, UI) is the one place that turns `ISaveManager` results into navigation and messages: Open (an error toast on failure, an info toast when the file was upgraded), Create (the refusal is shown under the field), Delete (a confirmation that names the league and says the snapshots go too, except for an unreadable file; a success toast; Windows' own "No" is a notice, not an error), Close.
+- **Main menu:** Continue names its target ("Saturday League · last played Oct 19, 2026") and is disabled with nothing to continue. The Debug diagnostics panel moved here from the old Home, so `--diag-test` still works.
+- **New League:** one field, at most `SaveRules.MaxLeagueNameLength` (60, now in Application so the form and `SaveManager` share it). Enter creates, through Fluent's `ChangeAfterKeyPress`.
+- **Load screen:** one card per save (`SaveCardView`): the name, last played, created and play time; an Ironman badge when set; a note for an older save (opening upgrades it), a newer one (update the app; no Open) and an unreadable file (named by its file, with Show in folder). The empty state offers New League.
+- **Desktop close:** closing the window closes the open league first (the WAL is checkpointed and the file released), then saves the placement. A failure there is logged (event 1017) and the window closes anyway.
+- **Checked:** 36 new bUnit tests (the screens, the shell, the text). The whole flow by hand in the DevHost (Dark and Light) and in the desktop app, plus the exit check below.
 
 ---
 
@@ -631,8 +642,8 @@ Not in M0: BenchmarkDotNet (M2), `Microsoft.Extensions.TimeProvider.Testing` (M6
 
 From [ROADMAP.md §M0](../ROADMAP.md#m0--foundations-walking-skeleton), plus the spike outcomes:
 
-- [ ] Launch → main menu in under 3 s (cold start measured on the Release ReadyToRun build). **Measured 2026-10-19 to the Home page:** 2.0 s on the first launch after publishing, 1.46 s warm median ([HOST_BENCHMARK.md](../architecture/HOST_BENCHMARK.md#m0-exit-measurement-2026-10-19)). Re-measure once the main menu exists.
-- [ ] Create a save → it appears on the load screen → reopen it → close it → the file is unlocked and can be deleted. *Waits for WP9's screens; `SaveManagerTests` already cover each step below the UI.*
+- [x] Launch → main menu in under 3 s (cold start measured on the Release ReadyToRun build). **To the main menu, 2026-10-19:** 1.81 s on the first launch after publishing, 1.17 s warm median ([HOST_BENCHMARK.md](../architecture/HOST_BENCHMARK.md#m0-exit-measurement-2026-10-19)).
+- [x] Create a save → it appears on the load screen → reopen it → close it → the file is unlocked and can be deleted. 2026-10-19, in the desktop app (driven over the DevTools port): New League "M0 exit check" → its home → Close → the load screen lists it → Open → Close → another process opened the file exclusively while the app ran, with no `-wal`/`-shm` left → Delete from the load screen sent the file and its snapshot folder to the Recycle Bin. Closing the window with a league open also closed it cleanly.
 - [x] **All transaction torture tests pass**, including killing the process mid-transaction and reopening with no partial data (2026-10-19: the 9 torture tests and the Crasher kill test, which run in every fast build)
 - [x] The log file contains the banner, the lifecycle events, a forced test exception with a stack trace, and a forwarded JavaScript error (2026-10-19, Debug `--diag-test=page` and `--diag-test=js`: banner, placement, window shown, WebView2 ready, page loaded, first themed screen, exiting, the page exception with its .NET stack, the JavaScript error with its JS stack. Save open and close events join with the load screen.)
 - [x] A snapshot can be taken and restored (WP7, tested)

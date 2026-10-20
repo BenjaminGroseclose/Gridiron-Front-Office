@@ -32,7 +32,6 @@ internal sealed class SaveManager(
     TimeProvider time,
     ILogger<SaveManager> log) : ISaveManager, IDisposable
 {
-    public const int MaxLeagueNameLength = 60;
 
     private readonly SemaphoreSlim _lifecycle = new(1, 1);
     private long _openedAt;
@@ -47,9 +46,9 @@ internal sealed class SaveManager(
             return Result.Fail<OpenSave>(SaveErrors.InvalidName("A league needs a name."));
         }
 
-        if (name.Length > MaxLeagueNameLength)
+        if (name.Length > SaveRules.MaxLeagueNameLength)
         {
-            return Result.Fail<OpenSave>(SaveErrors.InvalidName($"League names are at most {MaxLeagueNameLength} characters."));
+            return Result.Fail<OpenSave>(SaveErrors.InvalidName($"League names are at most {SaveRules.MaxLeagueNameLength} characters."));
         }
 
         var dispatch = new List<IDomainEvent>();

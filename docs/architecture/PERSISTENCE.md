@@ -275,6 +275,7 @@ sequenceDiagram
   - **The card's columns are read with raw SQL**, so saves from older and newer apps (whose `SaveInfo` has other columns) still get a card. Those columns (`SaveID`, `LeagueName`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `AppVersionLastOpened`, `IsIronman`) are never renamed or removed.
   - **No `quick_check` in the list:** it reads the whole file, too slow for many saves. Damage that the header and `SaveInfo` don't show is caught when the save is opened.
   - Team, season, phase and record arrive in M1 with the league.
+- **The screens, as built (M0 WP9):** the load screen (`/load`) shows one `SaveCardView` per card: the league name (the file name when unreadable), last played, created and play time, an Ironman badge, and a note for `NeedsUpgrade`, `FromNewerVersion` and `Unreadable`. Open shows only for cards that can open; Show in folder only for those that can't. The main menu's Continue names its target. `SaveActions` turns every result into navigation and a message.
 
 ---
 
@@ -292,6 +293,7 @@ sequenceDiagram
 - **A shared snapshot folder stays.** If another file in `Saves\` has the same `SaveID` (a copy made in Explorer), the snapshot folder is kept.
 - **Desktop:** the shell's `SHFileOperationW` with "allow undo" and the "nuke warning". If Windows can't recycle something (too big, or a drive without a Recycle Bin), it asks the player before deleting permanently. Saying no returns `DeleteCancelled`. A file another program holds returns `DeleteFailed`.
 - **DevHost:** a `.trash` folder in the dev data folder, so development never fills the real Recycle Bin.
+- **The confirmation (M0 WP9):** "Delete Saturday League? Saturday League, with its snapshots, goes to the Recycle Bin. You can restore it from there." with Delete and Keep it. An unreadable file has no known snapshots, so they aren't mentioned. Saying No in Windows' own permanent-delete prompt shows a notice, not an error.
 
 ---
 

@@ -81,7 +81,7 @@ public sealed class AppShellTests : GfoTestContext
 public sealed class MainNavTests : GfoTestContext
 {
     [Theory]
-    [InlineData("/", "Home")]
+    [InlineData("/league", "Home")]
     [InlineData("/settings", "Settings")]
     public void Home_and_Settings_with_the_current_one_active(string uri, string active)
     {
@@ -145,7 +145,11 @@ public sealed class SettingsPageTests : GfoTestContext
 {
     private readonly FakeSettingsStore _settings = new(new AppSettings { Developer = new DeveloperSettings { LogSql = true } });
 
-    public SettingsPageTests() => Services.AddSingleton<ISettingsStore>(_settings);
+    public SettingsPageTests()
+    {
+        Services.AddSingleton<ISettingsStore>(_settings);
+        Services.AddSingleton<GridironFrontOffice.Application.Saves.ISaveManager>(new TestDoubles.FakeSaveManager(new TestDoubles.FakeDomainEvents()));
+    }
 
     [Fact]
     public void Each_setting_shows_its_saved_choice()

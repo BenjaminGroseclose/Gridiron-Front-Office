@@ -1,20 +1,72 @@
 @inherits LayoutComponentBase
-@* The layout both hosts use: the AppShell around the routed page. The main menu and league navigation arrive in M0 WP9. *@
+@implements IDisposable
+@inject ISaveManager Saves
+@inject IDomainEventDispatcher Events
+@inject SaveActions Actions
+@* The layout both hosts use: the AppShell around the routed page. With a league open, the app bar names it and offers
+   Close league, and the navigation column shows. At the main menu (no league), the menu screens own the page: the app
+   bar stays as the title bar but leaves the wordmark to the menu panel. It follows SaveOpened and SaveClosed, which
+   arrive on the thread that finished the command, so the re-render is marshalled. *@
 <AppearanceSync />
 
-<AppShell>
-    <Navigation>
-        <MainNav />
-    </Navigation>
-    <ChildContent>
+@if (_league is { } league)
+{
+    <AppShell>
+        <Context>
+            <span class="gfo-league-context" data-testid="league-name">@league.LeagueName</span>
+        </Context>
+        <Actions>
+            <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.Dismiss)"
+                          OnClick="Actions.CloseAsync" data-testid="close-league">Close league</FluentButton>
+        </Actions>
+        <Navigation>
+            <MainNav />
+        </Navigation>
+        <ChildContent>
+            <PageErrorBoundary>
+                @Body
+            </PageErrorBoundary>
+        </ChildContent>
+    </AppShell>
+}
+else
+{
+    <AppShell Brand="NoBrand">
         <PageErrorBoundary>
             @Body
         </PageErrorBoundary>
-    </ChildContent>
-</AppShell>
+    </AppShell>
+}
 
 @* Forwards JavaScript errors to the log (the host page loads gfo-diagnostics.js before Blazor). *@
 <ClientDiagnostics />
 
 @* Fluent UI v5 hosts the dialog, drawer, toast and tooltip providers here (shared by both hosts). *@
 <FluentProviders />
+
+@code {
+    private static readonly RenderFragment NoBrand = _ => { };
+
+    private OpenSave? _league;
+    private IDisposable? _opened;
+    private IDisposable? _closed;
+
+    protected override void OnInitialized()
+    {
+        _league = Saves.Current;
+        _opened = Events.Subscribe<SaveOpened>(e => Follow(e.Save));
+        _closed = Events.Subscribe<SaveClosed>(_ => Follow(null));
+    }
+
+    private void Follow(OpenSave? league) => _ = InvokeAsync(() =>
+    {
+        _league = league;
+        StateHasChanged();
+    });
+
+    public void Dispose()
+    {
+        _opened?.Dispose();
+        _closed?.Dispose();
+    }
+}

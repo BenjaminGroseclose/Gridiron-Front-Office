@@ -1,10 +1,18 @@
 @page "/settings"
 @inject ISettingsStore Settings
+@inject ISaveManager Saves
+@inject NavigationManager Navigation
 @* Settings → Appearance (VISUAL_DESIGN.md §2, §3.3, §5). Each change is written to settings.json and applied straight
-   away: AppearanceSync re-applies the theme when the store reports the save. *@
+   away: AppearanceSync re-applies the theme when the store reports the save. Reached from the main menu too, where
+   there's no navigation column, so it offers the way back. *@
 
 <PageTitle>Settings · Gridiron Front Office</PageTitle>
 
+@if (Saves.Current is null)
+{
+    <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
+                  OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
+}
 <h1 class="gfo-page-title gfo-display">Settings</h1>
 
 <section class="gfo-settings-panel" aria-labelledby="appearance-heading">

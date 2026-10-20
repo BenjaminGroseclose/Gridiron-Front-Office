@@ -1,0 +1,25 @@
+@page "/league"
+@inject ISaveManager Saves
+@inject NavigationManager Navigation
+@* The open league's home. Empty in M0: the league itself (teams, players, the season) arrives in M1. Without an open
+   league, this route goes back to the main menu. *@
+
+@if (Saves.Current is { } league)
+{
+    <PageTitle>@league.LeagueName · Gridiron Front Office</PageTitle>
+
+    <h1 class="gfo-league-title gfo-display">@league.LeagueName</h1>
+    <EmptyState Title="Your league will live here" Icon="IconName.Trophy" data-testid="league-empty">
+        Teams, players and the season come next.
+    </EmptyState>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (Saves.Current is null)
+        {
+            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+        }
+    }
+}

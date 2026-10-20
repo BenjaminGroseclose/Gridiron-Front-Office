@@ -1,0 +1,60 @@
+/* A panel (VISUAL_DESIGN.md §5): Surface 1, Radius M, flat with a border. */
+.gfo-save-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--gfo-radius-m);
+  background: var(--colorNeutralBackground1);
+}
+
+.gfo-save-card-text {
+  flex: 1;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.gfo-save-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.gfo-save-card-title {
+  margin: 0;
+  overflow: hidden;
+  font-size: 24px;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gfo-save-card-details {
+  margin: 0;
+  color: var(--colorNeutralForeground3);
+  font-size: 13px;
+}
+
+.gfo-save-card-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--colorNeutralForeground2);
+}
+
+/* A save that can't open says so in the warning color, never by color alone: the note's words carry it. */
+.gfo-save-card[data-status="FromNewerVersion"] .gfo-save-card-note,
+.gfo-save-card[data-status="Unreadable"] .gfo-save-card-note {
+  color: var(--gfo-status-warning);
+}
+
+.gfo-save-card-actions {
+  flex: none;
+  display: flex;
+  gap: 8px;
+}

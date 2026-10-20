@@ -1,0 +1,30 @@
+.gfo-load {
+  display: grid;
+  gap: 20px;
+  width: min(100%, 880px);
+  margin: 0 auto;
+}
+
+.gfo-load-header {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.gfo-load-title {
+  margin: 0;
+  font-size: 52px;
+  line-height: 1;
+}
+
+.gfo-load-reading {
+  color: var(--colorNeutralForeground3);
+}
+
+.gfo-load-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

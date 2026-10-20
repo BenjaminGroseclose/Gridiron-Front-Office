@@ -1,0 +1,59 @@
+@page "/new"
+@inject ISaveManager Saves
+@inject SaveActions Actions
+@inject NavigationManager Navigation
+@* New League, M0 version: a name only. The real wizard (team set, your team, settings) arrives in M1 (F-01).
+   Enter in the field creates, like the button. *@
+
+<PageTitle>New league · Gridiron Front Office</PageTitle>
+
+<MenuFrame LabelledBy="new-title">
+    <div>
+        <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
+                      OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
+    </div>
+    <h1 id="new-title" class="gfo-new-title gfo-display">New league</h1>
+    <p class="gfo-new-hint">Just a name for now. Teams and players come with the league wizard.</p>
+
+    <FluentTextInput Label="League name" @bind-Value="_name" MaxLength="SaveRules.MaxLeagueNameLength" Autofocus="true"
+                     Required="true" Message="@_error" MessageState="@(_error is null ? null : MessageState.Error)"
+                     ChangeAfterKeyPress="SubmitKeys" OnChangeAfterKeyPress="OnEnterAsync" data-testid="league-name" />
+
+    <div class="gfo-new-actions">
+        <FluentButton Appearance="ButtonAppearance.Primary" Loading="_busy" OnClick="CreateAsync" data-testid="create">Create league</FluentButton>
+    </div>
+</MenuFrame>
+
+@code {
+    private static readonly KeyPress[] SubmitKeys = [KeyPress.For(KeyCode.Enter)];
+
+    private string? _name = "";
+    private string? _error;
+    private bool _busy;
+
+    protected override void OnInitialized()
+    {
+        if (Saves.Current is not null)
+        {
+            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);
+        }
+    }
+
+    private Task OnEnterAsync(FluentKeyPressEventArgs e)
+    {
+        _name = e.Value;
+        return CreateAsync();
+    }
+
+    private async Task CreateAsync()
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        _busy = true;
+        _error = (await Actions.CreateAsync(_name ?? ""))?.Message;
+        _busy = false;
+    }
+}

@@ -1,0 +1,19 @@
+.gfo-menu-title {
+  margin: 8px 0;
+  font-size: 40px;
+  line-height: 1;
+  text-align: center;
+}
+
+.gfo-menu-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.gfo-menu-continue {
+  margin: -4px 0 6px;
+  color: var(--colorNeutralForeground3);
+  font-size: 13px;
+  text-align: center;
+}
+

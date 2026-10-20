@@ -37,6 +37,9 @@ public static partial class HostLog
     [LoggerMessage(EventId = 1016, Level = LogLevel.Information, Message = "First themed screen {ElapsedMs} ms after process start")]
     public static partial void FirstThemedScreen(ILogger logger, long elapsedMs);
 
+    [LoggerMessage(EventId = 1017, Level = LogLevel.Error, Message = "The open league couldn't be closed cleanly on exit")]
+    public static partial void LeagueNotClosed(ILogger logger, Exception exception);
+
     [LoggerMessage(EventId = 1010, Level = LogLevel.Critical, Message = "Unhandled exception on a background thread (terminating: {IsTerminating})")]
     public static partial void UnhandledException(ILogger logger, Exception exception, bool isTerminating);
 

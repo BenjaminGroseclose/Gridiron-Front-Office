@@ -121,7 +121,14 @@ The real app after WP9's host half: the title bar, window placement and single i
 | First launch of the fresh publish | 1,711 ms | **1,998 ms** |
 | Warm (6 runs) | 1,200–1,273 ms | **1,397–1,508 ms, median 1,463 ms** |
 
-**Verdict:** inside the 3 s budget, and the same as S0c's 1.51 s, so WP9's host code (monitor enumeration, placement, the hit-test hook, the host script) costs nothing measurable. The screen is still the M0 Home page; re-measure when the main menu replaces it. A true cold start (after a reboot) wasn't measured.
+**Verdict:** inside the 3 s budget, and the same as S0c's 1.51 s, so WP9's host code (monitor enumeration, placement, the hit-test hook, the host script) costs nothing measurable. A true cold start (after a reboot) wasn't measured.
+
+**To the main menu** (the same method, once WP9's screens existed; the menu reads the save list on the way, with an empty saves folder):
+
+| Measurement | Page loaded | **First themed screen** |
+|---|---|---|
+| First launch of the fresh publish | 1,484 ms | **1,807 ms** |
+| Warm (6 runs) | 993–1,102 ms | **1,156–1,277 ms, median 1,172 ms** |
 ---
 
 ## Non-performance benefits (unmeasured but real)
