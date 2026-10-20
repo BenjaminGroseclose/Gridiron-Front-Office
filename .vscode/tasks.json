@@ -1,0 +1,43 @@
+{
+  // Build tasks for launch.json, plus the commit gate. Ctrl+Shift+B runs build.ps1 (CLAUDE.md: before every commit).
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build: Desktop",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/Desktop/GridironFrontOffice.Desktop.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": { "reveal": "silent", "clear": true }
+    },
+    {
+      "label": "build: DevHost",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "build",
+        "${workspaceFolder}/src/DevHost/GridironFrontOffice.DevHost.csproj",
+        "/property:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary"
+      ],
+      "problemMatcher": "$msCompile",
+      "group": "build",
+      "presentation": { "reveal": "silent", "clear": true }
+    },
+    {
+      "label": "gate: build.ps1",
+      "type": "process",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/build.ps1"],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "clear": true }
+    }
+  ]
+}
