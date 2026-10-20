@@ -73,7 +73,7 @@
 | D-063 | "Career can end" is a creation setting, off by default | **Accepted** |
 | D-064 | F-02 team set accepted; shared city labels | **Accepted** |
 | D-065 | F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages | **Accepted** |
-| D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** |
+| D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** (branching amended by D-076) |
 | D-067 | Spike S0b: Fluent UI v5 fits; `DataGrid<T>` keeps `FluentDataGrid` | **Accepted** |
 | D-068 | Host shell: the app bar is the title bar | **Accepted** |
 | D-069 | Write `ID`, never `Id` | **Accepted** |
@@ -83,6 +83,7 @@
 | D-073 | A league's first season is the real-world year it's created in | **Accepted** |
 | D-074 | Contracts are real from M1; contract actions arrive in M4 | **Accepted** |
 | D-075 | Color-blind tuning is reviewed before a public release | **Accepted** |
+| D-076 | Work happens on `main`; no milestone branches | **Accepted** |
 
 ---
 
@@ -553,7 +554,8 @@
   - **Per-position roster targets are league averages**, not rules. Each team varies within a typical range, above a floor that keeps every package fieldable ([F-03 §4.1](features/F-03_PLAYERS.md#41-positions)). The only hard rule stays F-05's "required depth chart slots filled".
 
 ## D-066: Git workflow: GFO commit format, one branch per milestone
-- **Status:** **Accepted** (owner, 2026-10-15, answering the M0 plan's questions: chose "Your current format" for commits, "One M0 branch" for landing work, and "Delete it" for spike code).
+- **Status:** **Accepted**; the branching part is **amended by [D-076](#d-076-work-happens-on-main-no-milestone-branches)** (work happens on `main`).
+- **Originally:** **Accepted** (owner, 2026-10-15, answering the M0 plan's questions: chose "Your current format" for commits, "One M0 branch" for landing work, and "Delete it" for spike code).
 - **Decision:**
   - **Commit messages** use the owner's existing format, `(type) *module* : summary` (e.g., `(feat) *m0* : scaffold solution, projects and guardrails`), replacing the Conventional Commits rule in TESTING_AND_QUALITY.md §8.4. Types follow the commit-review skill: `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`. **Branches** are `type/short-name`, reusing the same types.
   - **One branch per milestone** (`feat/m0-foundations` for M0), with commits per work package, merged into `main` once the exit checklist passes. Merged without squashing, so the work-package history survives.
@@ -651,7 +653,7 @@
 ## D-072: Versions are `0.<milestone>.<build>` until 1.0
 - **Status:** **Accepted** (owner, 2026-10-19: *"go ahead with 0.<milestone>.<build>"*).
 - **Decision:** the app's version is `0.<milestone>.<build>` until the first Steam release, which is `1.0.0`.
-  - **Milestone:** the one being built. M0 is `0.0.x`, M1 is `0.1.x`, … M11 is `0.11.x`. It goes up when a milestone starts, right after the previous one merges (the `m0-complete` merge is followed by `0.1.0`).
+  - **Milestone:** the one being built. M0 is `0.0.x`, M1 is `0.1.x`, … M11 is `0.11.x`. It goes up when a milestone starts, right after the previous one is tagged (`m0-complete` was followed by `0.1.0`).
   - **Build:** goes up for each build handed to anyone outside development (a playtester). Development builds don't bump it.
   - **The commit** is appended automatically: the .NET SDK stamps `0.0.1+94b9338`, so a bug report always points at exact code.
 - **One source:** `<VersionPrefix>` in `Directory.Build.props`, edited by hand. Everything reads it through `AppIdentity` (Application, built by each host): the log's banner, `SaveInfo`'s app versions, the main menu (`v0.0.1`, short) and Settings → About (`0.0.1+94b9338 (Debug)`, with Copy for bug reports).
@@ -672,4 +674,10 @@
 ## D-075: Color-blind tuning is reviewed before a public release
 - **Status:** **Accepted** (owner, 2026-10-20: *"No concerned about color blind right now, document in the future as something to review if we go public (sell) this."*).
 - **Decision:** no color-blind re-tuning during development. M0's finding stays recorded (in Light mode, the Average, Below and Poor rating colors merge for deuteranopia; VISUAL_DESIGN.md §3.4), and the review is a required item of the M11 accessibility audit (F-27) before any public or paid release. Numbers on rating chips stay, so color is never the only signal.
+
+## D-076: Work happens on `main`; no milestone branches
+- **Status:** **Accepted** (owner, 2026-10-20: *"From now on lets stay on main, branching does not matter to me in this repo"*).
+- **Decision:** commits go straight to `main`. No milestone branches and no merge step; this amends D-066's "one branch per milestone".
+- **Unchanged:** the commit format (`(type) *module* : summary`), a commit per work package (or per meaningful slice), `./build.ps1` before every commit, and a tag per milestone (`m1-complete`, …) when its exit checklist passes, which is also when the version's middle number goes up (D-072).
+- **History:** M0 used `feat/m0-foundations`, merged into `main` with `m0-complete` on the merge commit; M1's first commits came through PR #2.
 

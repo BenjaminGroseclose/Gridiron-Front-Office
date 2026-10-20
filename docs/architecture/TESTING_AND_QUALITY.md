@@ -147,12 +147,11 @@ jobs:
 - Use `@key` on list items. Never inject `DbContext` into a component (it's architecturally impossible anyway, since UI has no EF reference).
 - CSS isolation per component, tokens only, no raw hex.
 
-### 8.4 Git workflow (D-066)
-Decided in [D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone).
+### 8.4 Git workflow (D-066, D-076)
+Decided in [D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone), with branching replaced by [D-076](../DECISIONS.md#d-076-work-happens-on-main-no-milestone-branches).
 
 - **Commit messages:** `(type) *module* : summary`, for example `(feat) *m0* : scaffold solution, projects and guardrails` or `(doc) *docs* : resolve open questions`. Types (the commit-review skill's list): `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`. Branch prefixes reuse the same types.
-- **Branches:** `type/short-name`, for example `feat/m0-foundations` or `doc/open-questions-pass`.
-- **One branch per milestone:** commits per work package on a milestone branch, merged into `main` once the milestone's exit checklist passes. Merge without squashing, so each work package's commit stays in history.
+- **Work on `main`** (D-076): no branches and no merge step. A commit per work package, or per meaningful slice of a large one.
 - Run `./build.ps1` before every commit.
 - Tag milestones (`m0-complete`, …) as save-compatible checkpoints.
 

@@ -99,14 +99,18 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - A window restored maximized is positioned while hidden, then shown with `ShowWindow(SW_SHOWMAXIMIZED)`. `WindowState = Maximized` in the constructor creates it maximized, and Restore then goes to Windows' default spot.
   - The app is single-instance: a second launch only brings the running window forward, so close it before running a new build.
   - The composition control is invisible to UI Automation (only an `Image`), so screen readers aren't supported in 1.0 (D-071). To script the running page, launch with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` and use the DevTools protocol. The page's origin is `https://0.0.0.1/`.
+- **Core (M1 WP1):**
+  - Never use `string.GetHashCode()` or `HashCode.Combine` for anything that must repeat: .NET randomizes them per process. Seeds come from `Seeds.Derive` (FNV-1a 64 + SplitMix64's `Mix`).
+  - Naming analyzers fail the build: CA1720 rejects members named after types (`Single`, `Double`), and CA1711 reserves the `Attribute` suffix (`PlayerAttribute` carries a justified suppression).
+  - Typed IDs are one line each in `Core/IDs/EntityIDs.cs`. A typed-ID key only gets `AUTOINCREMENT` when it's marked generated: EF treats a converted key as not generated (see WP5 in the M1 plan).
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 
 ## Workflow
 
 - **Docs first.** Write a feature spec (`docs/features/_TEMPLATE.md` → `F-xx_NAME.md`) right before building a feature. Keep code and docs in agreement within the same change.
-- **Git (D-066):** commit messages are `(type) *module* : summary` (types `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`), never Conventional Commits. Branches are `type/short-name`. Each milestone is one branch (`feat/m0-foundations`) with commits per work package, merged unsquashed when its exit checklist passes. Spike code is deleted once its results are recorded.
-- **Versions (D-072):** `0.<milestone>.<build>` until 1.0, set only in `Directory.Build.props` (`VersionPrefix`). Raise the middle number when a milestone starts (right after the previous merge), the last for each build handed out. Save compatibility is the schema version, never the app version.
+- **Git (D-066, D-076):** commit messages are `(type) *module* : summary` (types `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`), never Conventional Commits. **Work on `main`**, no branches. A commit per work package (or per meaningful slice), and a tag (`m1-complete`, …) when a milestone's exit checklist passes. Spike code is deleted once its results are recorded.
+- **Versions (D-072):** `0.<milestone>.<build>` until 1.0, set only in `Directory.Build.props` (`VersionPrefix`). Raise the middle number when a milestone starts (right after the previous milestone's tag), the last for each build handed out. Save compatibility is the schema version, never the app version.
 - **Write `ID`, never `Id` (D-069):** `SaveID`, `PlayerID`, `IStronglyTypedID`, `saveID`, `IDs`, in code, columns, log properties and docs. Only outside names keep `Id` (`EventId`, `MigrationId`); `NamingRulesTests` enforces it.
 - **IDs:** features `F-xx`, milestones `M-x`, decisions `D-xxx`, questions `Q-xx`. When a question is answered: add a `D-xxx` (quote the owner's exact words), replace the question body with a pointer, update every affected doc, and update **this file** if a rule changed.
 - Stay inside the current milestone's scope (`docs/ROADMAP.md`). Park new ideas in `docs/IDEAS.md` instead of building them.

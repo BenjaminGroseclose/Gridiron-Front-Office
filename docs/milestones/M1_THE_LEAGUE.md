@@ -1,6 +1,6 @@
 # M1 · The League Exists: the Plan
 
-> **Status:** **Accepted** (owner answered §12 on 2026-10-20) · 2026-10-20 · Milestone definition: [ROADMAP.md §M1](../ROADMAP.md#m1--the-league-exists) · Branch: `feat/m1-league` · Version: `0.1.x` ([D-072](../DECISIONS.md#d-072-versions-are-0milestonebuild-until-10))
+> **Status:** **Accepted** (owner answered §12 on 2026-10-20) · 2026-10-20 · Milestone definition: [ROADMAP.md §M1](../ROADMAP.md#m1--the-league-exists) · Branch: `main` (D-076) · Version: `0.1.x` ([D-072](../DECISIONS.md#d-072-versions-are-0milestonebuild-until-10))
 >
 > This is the detailed plan for M1. It turns the roadmap's scope into **eleven ordered work packages**, names what each one builds and how it's checked, and ends with the exit checklist and the questions only the owner can answer. **M1 is the first football:** a generated, believable league you can browse, with no games yet (those are M2 and M3).
 >
@@ -44,7 +44,7 @@
 | WP | Name | Size | Needs | Done when |
 |---|---|---|---|---|
 | WP0 | Decisions and docs prep | S | — | §12 answered ✅; F-01 and F-12 M1 specs written |
-| WP1 | Core: IDs, positions and the PRNG | M | WP0 | Golden PRNG sequence, derived seeds, the first typed IDs |
+| WP1 | Core: IDs, positions and the PRNG | M | WP0 | ✅ Done 2026-10-20 |
 | WP2 | Team and college data | M | WP1 | `teams.v1.json`, `colleges.v1.json`, schemas, every F-02 guardrail test green |
 | WP3 | Player data | M–L | WP1 | Positions, OVR weights, archetypes, distributions, traits, jersey rules, names, hometowns, blocklists |
 | WP4 | The player model and generator | L | WP2, WP3 | Distribution, golden, blocklist and contract tests green over many seeds |
@@ -64,13 +64,15 @@
 - **F-01's M1 spec** (`docs/features/F-01_LEAGUE_CREATION.md`, from the template; Claude drafts, you review): the wizard steps, what the team picker shows, progress, cancel, the error cases, and what the load screen's cards gain (crest, team, season, phase).
 - **Route fix from M0:** F-02 puts the League page (all teams) at `/league`, which M0 used for the league home. The home becomes `/home`, the League page `/league` (UI_DESIGN_SYSTEM.md §7, `SaveActions.LeagueHome`).
 
-### WP1 · Core: IDs, positions and the PRNG (M)
+### WP1 · Core: IDs, positions and the PRNG (M) ✅ Done 2026-10-20
 **Goal:** the deterministic building blocks every later package uses. **Builder's guide:** [M1_WP1_GUIDE.md](M1_WP1_GUIDE.md).
 - **PRNG** (Core, D-012): xoshiro256\*\* seeded through SplitMix64, with `Normal`, `Range`, weighted pick and correlated multivariate normal draws. **Derived seeds:** a stable 64-bit hash of `(leagueSeed, purpose, ids…)` written in-house (never `string.GetHashCode`, which changes between runs). A golden test pins the first values for fixed seeds, so an accidental algorithm change can't pass.
 - **Typed IDs:** `TeamID`, `PlayerID`, `ConferenceID`, `DivisionID`, `StadiumID`, `CollegeID`, `ContractID`, on the M0 `IStronglyTypedID` convention with `UseAutoincrement()`.
 - **The cap-hit formula (D-074):** a pure Core function in `long` dollars: the year's base salary plus the signing bonus prorated evenly over the first min(years, 5) seasons.
 - **Enums and value types:** `Position` (16), `PlayerStatus`, `CrestShape`, `CrestStripe`, `Roof`, `Surface`, `ClimateZone`, `Attribute` (42), potential grades.
 - **Tests:** the PRNG's distributions (mean and SD within tolerance), seed independence across purposes, the golden sequence.
+
+**Results (2026-10-20):** the PRNG, seed derivation, typed IDs, enums and the cap-hit formula, with 42 Core tests; details and the review in [M1_WP1_GUIDE.md §6](M1_WP1_GUIDE.md#6-done-when). Changed from this plan: the typed IDs live in one file (`EntityIDs.cs`, one line each, owner's call), `Position.EDGE` is upper case so every name is its abbreviation, and the crest stripes are `Bar`/`TwinBars` (F-02 updated).
 
 ### WP2 · Team and college data (M)
 **Goal:** the league's identity, as data, with every guardrail proven.
@@ -103,6 +105,7 @@
 **Goal:** a generated league written safely into the save.
 - **Migration:** `Conferences`, `Divisions`, `Teams`, `Stadiums`, `Colleges`, `Players` (wide: measurables, 42 attributes, hidden ratings), `PlayerTraits`, `RatingHistory`, `Contracts` + `ContractYears` (D-074: type, signed season, total value, signing bonus, guarantees, and per year the base salary, prorated bonus, guaranteed amount and cap hit), and `SaveInfo`'s league position (`UserTeamID`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `TeamSetName`, `TeamSetVersion`).
 - **`CreateLeague`:** generation runs **outside** the write transaction; then one command bulk-inserts everything through `uow.CreateCommand` (EF change tracking costs ~100 µs per entity; this is ~2,300 players). Either the whole league exists or none of it does. Progress is reported per step; the league starts at Training Camp.
+- **Typed-ID keys need opting in to `AUTOINCREMENT`** (found 2026-10-20): EF treats a key with a value converter as *not generated*, so `TypedIDs.UseAutoincrementForGeneratedKeys` skips it unless the entity says `.ValueGeneratedOnAdd()` (M0's convention test does). Either mark every typed-ID key generated in one place (preferred: extend the convention so no entity can forget), or have the bulk insert assign IDs itself; rows added later (contracts in M4, prospects in M5) still need `AUTOINCREMENT`.
 - **The user's team:** picking a team after generation is a second, small command (`IsUserTeam`, `SaveInfo.UserTeamID`).
 - **Tests:** the bulk insert round-trips every column; a failure mid-write leaves no partial league; the torture tests stay green; generate + write < 5 s.
 
@@ -144,7 +147,7 @@
 ### WP10 · Command palette v0 and the M1 exit (S–M)
 **Goal:** jump anywhere, then prove the milestone.
 - **Command palette v0** (`Ctrl+K`): a Fluent dialog with a search box and results; players and teams by name; Enter navigates. The command registry comes later (P1).
-- **Run the exit checklist** (§10), record the generation time, update the docs, tag **`m1-complete`**, merge unsquashed, set `VersionPrefix` to `0.2.0`.
+- **Run the exit checklist** (§10), record the generation time, update the docs, tag **`m1-complete`**, set `VersionPrefix` to `0.2.0`.
 
 ## 5. What the repository gains in M1
 
@@ -208,11 +211,11 @@ From [ROADMAP.md §M1](../ROADMAP.md#m1--the-league-exists) and the specs' test 
 - [ ] Every player name is a link that opens a peek sheet.
 - [ ] The app wears the user team's colors in both modes, with readable text.
 - [ ] `./build.ps1` is green; THIRD_PARTY_NOTICES lists every data source.
-- [ ] Tag `m1-complete`, merge unsquashed, set `VersionPrefix` to `0.2.0`.
+- [ ] Tag `m1-complete`, set `VersionPrefix` to `0.2.0`.
 
 ## 11. How M1 lands
 
-As in M0 (D-066): one branch, `feat/m1-league`, a commit per work package (or per meaningful slice of a large one), `./build.ps1` before every commit, merged unsquashed when §10 passes.
+On `main` (D-076): a commit per work package (or per meaningful slice of a large one), `./build.ps1` before every commit, and the `m1-complete` tag when §10 passes.
 
 **The owner writes the code** (2026-10-20). For each work package:
 1. **Claude writes its builder's guide** (`M1_WPn_GUIDE.md`): what to build and where, the signatures, the tests that define "done", reference values, and the gotchas from earlier milestones.

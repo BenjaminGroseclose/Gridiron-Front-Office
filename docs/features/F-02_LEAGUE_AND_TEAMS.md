@@ -80,7 +80,7 @@ A small parametric SVG, so 32 crests look like one family and can be read at 16 
 |---|---|
 | `Shape` | Shield, Roundel, Hexagon, Diamond, Banner |
 | `Monogram` | 1–3 characters, Archivo condensed 800 ([VISUAL_DESIGN.md](../VISUAL_DESIGN.md)) |
-| `Stripe` | None, Single, Double, Chevron, Sash |
+| `Stripe` | None, Bar, TwinBars, Chevron, Sash (one stripe, two stripes; the code can't use "Single" and "Double", which are .NET type names) |
 | Colors | Field = Primary, stripe = Secondary, monogram = Accent (or the on-color when the accent fails contrast) |
 
 - Rendered by `TeamMark` (in `GridironFrontOffice.UI`) at the sizes used in grids (16–20 px), cards (32–48 px) and hero bands (the large "ghost" monogram).
@@ -101,7 +101,7 @@ A small parametric SVG, so 32 crests look like one family and can be read at 16 
   "teams": [
     { "abbr": "NYX", "city": "New York", "nickname": "Excelsiors", "metro": "new-york",
       "colors": { "primary": "#A6192E", "secondary": "#2B2E34", "accent": "#C9CDD2" },
-      "crest": { "shape": "Shield", "monogram": "NY", "stripe": "Double" },
+      "crest": { "shape": "Shield", "monogram": "NY", "stripe": "TwinBars" },
       "stadium": { "name": "Empire Field", "capacity": 82500, "roof": "Open", "surface": "Grass", "climate": "Cold" } }
   ]
 }
@@ -178,41 +178,41 @@ Colors are first-pass values. Each must pass the §4.3 tests before the data fil
 
 | Div | Abbr | Team | Rooted in | Colors (P / S / A) | Avoids | Crest | Stadium (roof, cap.) |
 |---|---|---|---|---|---|---|---|
-| East | NYX | **New York Excelsiors** | "Excelsior", the state motto | Crimson `#A6192E` / Charcoal `#2B2E34` / Silver `#C9CDD2` | Royal blue + red, green | Shield · NY · Double | Empire Field (Open, 82,500) |
-| East | PHI | **Philadelphia Continentals** | The Continental Congress and Army | Colonial blue `#1F3F7A` / Buff `#D8C39A` / White `#FFFFFF` | Midnight green, silver, black | Roundel · P · Single | Founders Field (Open, 68,000) |
+| East | NYX | **New York Excelsiors** | "Excelsior", the state motto | Crimson `#A6192E` / Charcoal `#2B2E34` / Silver `#C9CDD2` | Royal blue + red, green | Shield · NY · TwinBars | Empire Field (Open, 82,500) |
+| East | PHI | **Philadelphia Continentals** | The Continental Congress and Army | Colonial blue `#1F3F7A` / Buff `#D8C39A` / White `#FFFFFF` | Midnight green, silver, black | Roundel · P · Bar | Founders Field (Open, 68,000) |
 | East | WAS | **Washington Statesmen** | The capital | Forest `#1F5B3F` / Marble `#ECE6D6` / Bronze `#9C7A4A` | Burgundy + gold | Banner · W · Chevron | Federal Park (Open, 67,000) |
 | East | BAL | **Baltimore Privateers** | The War of 1812 privateers | Slate `#3D4F5C` / Rust `#C2562B` / Sailcloth `#F0E6D2` | Purple, black, gold | Diamond · B · Sash | Harborview Stadium (Open, 70,500) |
-| North | CHI | **Chicago Zephyrs** | The Windy City and its famous Zephyr train | Flag blue `#2A8FC4` / Star red `#D7263D` / White `#FFFFFF` | Navy + orange | Hexagon · C · Single | Lakefront Field (Open, 61,500) |
+| North | CHI | **Chicago Zephyrs** | The Windy City and its famous Zephyr train | Flag blue `#2A8FC4` / Star red `#D7263D` / White `#FFFFFF` | Navy + orange | Hexagon · C · Bar | Lakefront Field (Open, 61,500) |
 | North | GB | **Green Bay Voyageurs** | The French voyageurs who reached the bay | Oxblood `#7A1F1F` / Birch `#E9E0CC` / Pine `#2E4A3A` | Green + gold | Shield · GB · Chevron | Bayshore Field (Open, 78,000) |
-| North | MIN | **Minneapolis Millers** | The Mill City's flour mills | Mill iron `#343A40` / Flour `#F4F1EA` / Wheat `#D98E04` | Purple + gold | Roundel · M · Double | Mill City Dome (Dome, 66,800) |
+| North | MIN | **Minneapolis Millers** | The Mill City's flour mills | Mill iron `#343A40` / Flour `#F4F1EA` / Wheat `#D98E04` | Purple + gold | Roundel · M · TwinBars | Mill City Dome (Dome, 66,800) |
 | North | KC | **Kansas City Drovers** | The cattle drives and stockyards | Saddle `#6B4226` / Hide tan `#E7D7B5` / Prairie sky `#2C5F8A` | Red + gold | Banner · KC · Sash | Stockyard Stadium (Open, 76,400) |
 | South | ATL | **Atlanta Aviators** | One of the world's busiest airports | Safety orange `#D9541E` / Steel `#2F3E46` / White `#F2F2F2` | Red + black | Diamond · A · Chevron | Terminus Dome (Retractable, 71,000) |
 | South | CHA | **Charlotte Prospectors** | The first U.S. gold rush and the Charlotte Mint | Nugget gold `#B88A1B` / Deep pine `#1E3B2F` / Cream `#F5F0E1` | Black, process blue, silver | Shield · C · Sash | Queen City Stadium (Open, 74,800) |
-| South | NSH | **Nashville Longhunters** | Tennessee's 18th-century longhunters | Hunter green `#4E6B3A` / Buckskin `#C9A36B` / Dark brown `#2B1E16` | Navy, light blue, red | Hexagon · N · Double | Cumberland Field (Open, 69,000) |
-| South | JAX | **Jacksonville Commodores** | The city's naval stations | Navy `#1B2A4A` / White `#E8EDF2` / Signal red `#B22234` | Teal, gold, black | Roundel · J · Single | St. Johns Stadium (Open, 67,800) |
+| South | NSH | **Nashville Longhunters** | Tennessee's 18th-century longhunters | Hunter green `#4E6B3A` / Buckskin `#C9A36B` / Dark brown `#2B1E16` | Navy, light blue, red | Hexagon · N · TwinBars | Cumberland Field (Open, 69,000) |
+| South | JAX | **Jacksonville Commodores** | The city's naval stations | Navy `#1B2A4A` / White `#E8EDF2` / Signal red `#B22234` | Teal, gold, black | Roundel · J · Bar | St. Johns Stadium (Open, 67,800) |
 | West | LAC | **Los Angeles Condors** | The California condor | Sunset orange `#E07A2F` / Night `#1F2E4A` / Sand `#F4E1C1` | Royal blue + yellow (and the other LA team's powder blue + gold) | Roundel · LA · Sash | Sunset Bowl (Open, 70,000) |
-| West | SF | **San Francisco Sea Lions** | The sea lions of the bay | Bay blue `#2E6F8E` / Fog `#B8C4CC` / Ink `#1B1F24` | Red + gold | Shield · SF · Single | Bayside Stadium (Open, 68,500) |
-| West | SEA | **Seattle Steelheads** | Washington's state fish | Steelhead rose `#A33B57` / Silver `#D6DEE3` / Rain slate `#23343F` | Navy, action green, wolf grey | Diamond · S · Double | Sound Field (Open, 68,000) |
+| West | SF | **San Francisco Sea Lions** | The sea lions of the bay | Bay blue `#2E6F8E` / Fog `#B8C4CC` / Ink `#1B1F24` | Red + gold | Shield · SF · Bar | Bayside Stadium (Open, 68,500) |
+| West | SEA | **Seattle Steelheads** | Washington's state fish | Steelhead rose `#A33B57` / Silver `#D6DEE3` / Rain slate `#23343F` | Navy, action green, wolf grey | Diamond · S · TwinBars | Sound Field (Open, 68,000) |
 | West | LV | **Las Vegas Sidewinders** | The Mojave desert | Turquoise `#1F9E94` / Sand `#E3C9A0` / Charcoal `#2B2B2B` | Silver + black | Hexagon · LV · Chevron | Mojave Dome (Dome, 65,000) |
 
 ### Frontier Conference
 
 | Div | Abbr | Team | Rooted in | Colors (P / S / A) | Avoids | Crest | Stadium (roof, cap.) |
 |---|---|---|---|---|---|---|---|
-| East | NYK | **New York Kings** | Kings County (Brooklyn), home of their stadium | Brownstone `#8A4B32` / Cream `#F3E9D7` / Black `#1A1A1A` | Green, royal blue + red, black + white (and purple + silver, which reads as Sacramento's NBA Kings) | Shield · K · Single | Kings County Field (Open, 72,000) |
-| East | BOS | **Boston Ironsides** | USS *Constitution*, "Old Ironsides", berthed in Boston | Hull black `#1C1C1C` / White `#F2F2F2` / Copper `#B87333` | Navy, red, silver | Banner · B · Double | Harbor Point Stadium (Open, 65,900) |
+| East | NYK | **New York Kings** | Kings County (Brooklyn), home of their stadium | Brownstone `#8A4B32` / Cream `#F3E9D7` / Black `#1A1A1A` | Green, royal blue + red, black + white (and purple + silver, which reads as Sacramento's NBA Kings) | Shield · K · Bar | Kings County Field (Open, 72,000) |
+| East | BOS | **Boston Ironsides** | USS *Constitution*, "Old Ironsides", berthed in Boston | Hull black `#1C1C1C` / White `#F2F2F2` / Copper `#B87333` | Navy, red, silver | Banner · B · TwinBars | Harbor Point Stadium (Open, 65,900) |
 | East | BUF | **Buffalo Canalers** | The Erie Canal's western terminus | Canal green `#3B6E4F` / Towpath tan `#C9B37E` / Ink `#1D2A33` | Royal blue + red | Hexagon · BUF · Chevron | Erie Field (Open, 71,600) |
 | East | PIT | **Pittsburgh Forgemen** | The steel mills | Furnace red `#B23A1E` / Iron grey `#5A5F66` / White `#EDEDED` | Black + gold (all three local teams) | Diamond · P · Sash | Confluence Field (Open, 68,400) |
-| North | DET | **Detroit Motormen** | The Motor City | Gunmetal `#2F3B45` / Signal amber `#E0A100` / Chrome `#C0C7CE` | Honolulu blue + silver | Hexagon · D · Double | Motor City Dome (Dome, 65,000) |
+| North | DET | **Detroit Motormen** | The Motor City | Gunmetal `#2F3B45` / Signal amber `#E0A100` / Chrome `#C0C7CE` | Honolulu blue + silver | Hexagon · D · TwinBars | Motor City Dome (Dome, 65,000) |
 | North | CLE | **Cleveland Freighters** | The Great Lakes ore freighters | Lake blue `#2C5E7A` / Ore rust `#9E4A2F` / Off-white `#F0EDE6` | Brown + orange | Shield · C · Sash | Lakeshore Stadium (Open, 67,400) |
-| North | CIN | **Cincinnati Rivermen** | The Ohio River trade | River green `#2F5D3A` / Buff `#E8D9B5` / Maroon `#7A2E2E` | Orange + black | Roundel · CIN · Single | Queensgate Field (Open, 65,500) |
+| North | CIN | **Cincinnati Rivermen** | The Ohio River trade | River green `#2F5D3A` / Buff `#E8D9B5` / Maroon `#7A2E2E` | Orange + black | Roundel · CIN · Bar | Queensgate Field (Open, 65,500) |
 | North | IND | **Indianapolis Drivers** | The city's racing heritage | Racing red `#C1121F` / Black `#111111` / White `#FFFFFF` | Royal blue + white | Banner · I · Chevron | Crossroads Dome (Retractable, 67,000) |
 | South | MIA | **Miami Tarpons** | Tarpon fishing in Biscayne Bay | Deep sea `#12355B` / Tarpon silver `#A9B8C3` / Coral `#F26B4A` | Aqua + orange | Roundel · M · Sash | Biscayne Stadium (Open, 65,300) |
-| South | TPA | **Tampa Captains** | The port and Gulf shipping | Sun gold `#E1AD21` / Palm green `#1F4E3D` / White `#FFFFFF` | Red + pewter | Banner · T · Single | Bayfront Stadium (Open, 69,200) |
+| South | TPA | **Tampa Captains** | The port and Gulf shipping | Sun gold `#E1AD21` / Palm green `#1F4E3D` / White `#FFFFFF` | Red + pewter | Banner · T · Bar | Bayfront Stadium (Open, 69,200) |
 | South | NO | **New Orleans Crescents** | The Crescent City | Mardi Gras purple `#5B2C83` / Green `#2E8B57` / Gold `#E3B505` | Black + old gold | Diamond · NO · Chevron | Crescent Dome (Dome, 73,000) |
-| South | HOU | **Houston Wildcatters** | The oil wildcatters | Crude black `#2A2A2A` / Flame `#E86A10` / White `#F5F5F5` | Steel blue + red (and the old Columbia blue + red) | Shield · H · Double | Bayou Dome (Retractable, 72,200) |
-| West | LAN | **Los Angeles Navigators** | The twin ports of Los Angeles and Long Beach | Harbor teal `#136F72` / Cream `#F7F3EA` / Deep harbor `#0B2B30` | Royal blue + yellow, powder blue + gold | Diamond · N · Single | Harbor Gate Stadium (Open, 62,000) |
-| West | PHX | **Phoenix Scorpions** | The Sonoran Desert | Copper `#B5651D` / Sand `#F0D9B5` / Charcoal `#2B2B2B` | Cardinal red, black, white | Banner · P · Double | Saguaro Dome (Retractable, 63,400) |
+| South | HOU | **Houston Wildcatters** | The oil wildcatters | Crude black `#2A2A2A` / Flame `#E86A10` / White `#F5F5F5` | Steel blue + red (and the old Columbia blue + red) | Shield · H · TwinBars | Bayou Dome (Retractable, 72,200) |
+| West | LAN | **Los Angeles Navigators** | The twin ports of Los Angeles and Long Beach | Harbor teal `#136F72` / Cream `#F7F3EA` / Deep harbor `#0B2B30` | Royal blue + yellow, powder blue + gold | Diamond · N · Bar | Harbor Gate Stadium (Open, 62,000) |
+| West | PHX | **Phoenix Scorpions** | The Sonoran Desert | Copper `#B5651D` / Sand `#F0D9B5` / Charcoal `#2B2B2B` | Cardinal red, black, white | Banner · P · TwinBars | Saguaro Dome (Retractable, 63,400) |
 | West | DEN | **Denver Bighorns** | The Rocky Mountain bighorn, Colorado's state animal | Mountain sky `#3C6E9F` / Snow `#EEF2F3` / Alpine green `#2E5E4E` | Orange + navy | Shield · D · Chevron | Summit Field (Open, 76,100) |
 | West | DAL | **Dallas Marshals** | The frontier lawmen | Black `#1E1E1E` / Badge gold `#C8A04B` / Cream `#F2EFE6` | Navy, silver, royal blue | Hexagon · DAL · Sash | Trinity Dome (Retractable, 80,000) |
 

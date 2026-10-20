@@ -1,6 +1,6 @@
 # M1 · WP1 builder's guide: Core building blocks
 
-> **For:** the owner, who builds M1 ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP1](M1_THE_LEAGUE.md#wp1--core-ids-positions-and-the-prng-m) · **Size:** M · **Written:** 2026-10-20
+> **Status:** ✅ **Done 2026-10-20** (§6 has the review) · **For:** the owner, who builds M1 ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP1](M1_THE_LEAGUE.md#wp1--core-ids-positions-and-the-prng-m) · **Size:** M · **Written:** 2026-10-20
 >
 > Everything later in M1 stands on this: the random number generator every draw comes from, the seeds that make a league repeatable, the first typed IDs, the football enums, and the cap-hit formula. It's all pure Core code with no dependencies, so it's the easiest place to start and the most important to get exactly right.
 
@@ -8,7 +8,7 @@
 
 ## 0. Before you start
 
-- You're on `feat/m1-league` (version `0.1.0`), and `./build.ps1` is green.
+- You're on `main` (version `0.1.0`; no branches, D-076), and `./build.ps1` is green.
 - Read: [D-012](../DECISIONS.md#d-012-deterministic-simulation-with-an-in-house-prng) (the PRNG), [D-015](../DECISIONS.md#d-015-integer-keys-with-strongly-typed-ids) (typed IDs), [D-074](../DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4) (contracts), [F-03 §4.1–4.2](../features/F-03_PLAYERS.md#41-positions) (positions and the 42 attributes), and CLAUDE.md's "Determinism".
 - **The guardrails will stop you if you slip:** Core can't reference any project or package (architecture tests), and `System.Random`, `DateTime.Now`/`UtcNow`, `Thread.Sleep` and blocking waits fail the build there (`build/BannedSymbols.Pure.txt`). Warnings are errors.
 
@@ -126,31 +126,37 @@ Statistical tests use a fixed seed, so they're deterministic, never flaky.
 
 ## 3. Typed IDs (D-015)
 
+All in **one file**, `src/Core/IDs/EntityIDs.cs`, one line each (owner, 2026-10-20: one file per ID was overkill):
+
 ```csharp
 public readonly record struct TeamID(int Value) : IStronglyTypedID;
 ```
 
-The same for `PlayerID`, `ConferenceID`, `DivisionID`, `StadiumID`, `CollegeID` and `ContractID`, in `src/Core/IDs/`. That's all a new ID needs: Infrastructure's converter scans the Core assembly for `IStronglyTypedID` types and maps them to `INTEGER` with `AUTOINCREMENT` (M0, `TypedIDs.cs`). Write `ID`, never `Id` (D-069); a test enforces it.
+The same for `PlayerID`, `ConferenceID`, `DivisionID`, `StadiumID`, `CollegeID` and `ContractID`. That's all a new ID needs: Infrastructure's converter scans the Core assembly for `IStronglyTypedID` types and stores each as a plain `INTEGER` column (the key gets `AUTOINCREMENT`; M0, `TypedIDs.cs`). Write `ID`, never `Id` (D-069); a test enforces it.
 
-*Optional:* override `ToString()` to return the number, so log lines read `PlayerID 812` rather than `PlayerID { Value = 812 }`.
+- **Structs, not classes:** an ID costs what an `int` costs (no heap allocation; the sim creates millions), and it can't be null unless you write `TeamID?` on purpose ("no team").
+- **No `ToString` override**, to keep each ID one line: logs show `PlayerID { Value = 812 }`. Use `id.Value` where only the number should appear.
+- **Sort in memory by `.Value`** (a record struct isn't comparable); inside an EF query, `OrderBy(p => p.ID)` is fine.
+- **Tests** (`tests/Core.Tests/IDs/TypedIDTests.cs`, done): the list of IDs, and each one's shape (name ends in `ID`, a public `(int)` constructor, `readonly`).
 
 ## 4. The enums
 
-**Enums are stored by name in the save** (PERSISTENCE.md §5.1), so renaming a member later needs a migration. Pick the final names now.
+**Done** (2026-10-20), in two files: `src/Core/Players/PlayerEnums.cs` (`Position`, `PlayerStatus`, `PotentialGrade`, `AttributeGroup`, `PlayerAttribute`) and `src/Core/Leagues/TeamEnums.cs` (`CrestShape`, `CrestStripe`, `Roof`, `Surface`, `ClimateZone`).
 
-| Enum | Members |
-|---|---|
-| `Position` | `QB, RB, FB, WR, TE, OT, OG, C, Edge, DT, LB, CB, S, K, P, LS` (F-03 §4.1's order) |
-| `PlayerAttribute` | The 42 from F-03 §4.2, in its order: `Speed, Acceleration, Agility, Strength, Stamina, Toughness, Awareness, Discipline, ArmStrength, ShortAccuracy, MediumAccuracy, DeepAccuracy, ThrowOnTheRun, PocketPresence, DecisionMaking, BallSecurity, Vision, Elusiveness, BreakTackle, Hands, RouteRunning, Release, ContestedCatch, PassBlock, RunBlock, LeadBlock, PassRushPower, PassRushFinesse, BlockShedding, Tackling, Pursuit, HitPower, ManCoverage, ZoneCoverage, Press, BallSkills, KickPower, KickAccuracy, PuntPower, PuntAccuracy, Return, SnapAccuracy` |
-| `PlayerStatus` | `Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired` |
-| `PotentialGrade` | `APlus, A, AMinus, BPlus, B, BMinus, CPlus, C, CMinus, D, F` (the bands that map peak OVR to a grade come in WP4) |
-| `CrestShape` | `Shield, Roundel, Hexagon, Diamond, Banner` |
-| `CrestStripe` | `None, Single, Double, Chevron, Sash` |
-| `Roof` / `Surface` / `ClimateZone` | `Open, Dome, Retractable` / `Grass, Turf` / `Cold, Temperate, Hot` |
+**Enums are stored by name in the save** (M0's `LeagueDbContext` converts every enum to its name), so reordering or adding members is safe, but renaming one needs a migration.
 
-- **Call it `PlayerAttribute`, not `Attribute`:** `Attribute` collides with `System.Attribute` everywhere.
-- **`Edge`, not `EDGE`:** .NET's naming keeps two-letter acronyms upper case (`QB`) and longer ones Pascal case. What the screen shows comes from a display map (`Position.Edge → "EDGE"`), never from the enum's name.
-- **Tests:** `PlayerAttribute` has exactly 42 members (D-050 hangs on that number), and `Position` has 16.
+| Enum | Members | Why this way |
+|---|---|---|
+| `Position` | `QB, RB, FB, WR, TE, OT, OG, C, EDGE, DT, LB, CB, S, K, P, LS` | Each name is its abbreviation, so `ToString()` is the screen label and no display map is needed |
+| `PlayerStatus` | `Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired` | `TeamID` is set for the middle three and null for the rest |
+| `PotentialGrade` | `F, D, CMinus, C, CPlus, BMinus, B, BPlus, AMinus, A, APlus` | **Worst to best**, so `grade >= PotentialGrade.B` means "B or better"; "A+" and "A−" come from a display map. The bands that map peak OVR to a grade come in WP4. |
+| `AttributeGroup` | `Physical, Mental, Passing, BallCarrying, Receiving, Blocking, Defense, SpecialTeams` | F-03 §4.2's groups, the Player page's order (WP9). Mapping each attribute to its group comes with that page. |
+| `PlayerAttribute` | The 42 from F-03 §4.2, in its order | Not `Attribute` (collides with `System.Attribute`). The name trips CA1711 (types ending in `Attribute` are reserved for attribute classes), so the enum carries a justified suppression rather than renaming the concept every doc calls an attribute. |
+| `CrestShape` | `Shield, Roundel, Hexagon, Diamond, Banner` | |
+| `CrestStripe` | `None, Bar, TwinBars, Chevron, Sash` | F-02 said `Single` and `Double`, which fail CA1720 (they're .NET type names); F-02 now uses these names |
+| `Roof` / `Surface` / `ClimateZone` | `Open, Dome, Retractable` / `Grass, Turf` / `Cold, Temperate, Hot` | |
+
+**Tests** (`tests/Core.Tests/Players/PlayerEnumTests.cs`, done): 42 attributes and 16 positions (D-050 hangs on those counts), position names are the abbreviations, and grades run worst to best.
 
 ## 5. The cap-hit formula (D-074)
 
@@ -172,9 +178,13 @@ public static class CapMath
 
 ## 6. Done when
 
-- [ ] Every test in §2.5, §3–5 passes, and `./build.ps1` is green.
-- [ ] No banned API in Core, no `Id` in a name.
-- [ ] **Ask for a review.** I'll run the gate, read the diff against this guide and the specs, and list anything to change. Then commit as `(feat) *core* : add the PRNG, seed derivation, typed IDs and enums` (or split it, as you like).
+- [x] Every test in §2.5, §3–5 passes, and `./build.ps1` is green: 42 Core tests.
+- [x] No banned API in Core, no `Id` in a name.
+- [x] **Reviewed** (2026-10-20). What the review found and fixed:
+  - **A bug in `CapMath.ProratedBonus`:** it checked `yearIndex` against the 7-year maximum instead of `years`, so a contract of any length was accepted. Fixed; the test `Impossible_contracts_throw` (8 years) now guards it.
+  - **A wrong comment:** proration stops at 5 seasons because that's the league's rule, not because "the last year is never prorated" (a 3-year deal prorates all three). `MaxContractYear` became `MaxContractYears`.
+  - **Tidying:** the constructor's doc comment had landed on a field; an unused `using`; tabs converted to spaces (`.editorconfig`).
+- **What was built:** `Random/` (`SplitMix64`, `GfoRandom`, `Seeds` + `SeedPurpose`), `IDs/EntityIDs.cs`, `Players/PlayerEnums.cs`, `Leagues/TeamEnums.cs`, `Contracts/CapMath.cs`, and `tests/Core.Tests/` (`Random/`, `IDs/`, `Players/`, `Contracts/`).
 
 ## 7. While you build this
 
