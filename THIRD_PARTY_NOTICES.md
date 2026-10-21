@@ -4,7 +4,7 @@
 >
 > **How licenses were checked:** the `<license>` expression in each restored package's `.nuspec`, or the source repository's LICENSE file where the package declares none. Versions match `Directory.Packages.props`. At the M0 exit, the shipped list was also checked against every package in the Release publish (`GridironFrontOffice.Desktop.deps.json`), transitive ones included.
 >
-> Last updated: 2026-10-20 (M1 WP2: the college blocklist).
+> Last updated: 2026-10-21 (M1 WP3: the name lists).
 
 ## Shipped with the app
 
@@ -41,6 +41,15 @@
 | bunit | 2.11.3 | MIT | UI tests | |
 | NetArchTest.Rules | 1.3.2 | MIT | Architecture tests | The package declares no license. MIT per its [repository LICENSE](https://github.com/BenMorris/NetArchTest/blob/master/LICENSE). |
 | Mono.Cecil (transitive) | 0.11.3 | MIT | Architecture tests | Via NetArchTest |
+
+## Data shipped with the app
+
+| Data | Version | License | Location | Notes |
+|---|---|---|---|---|
+| Baby names (U.S. Social Security Administration) | National data, downloaded 2026-10-21 (`names.zip`, 7,860,026 bytes) | Public domain (a U.S. government work, 17 U.S.C. §105) | `data/names/first.json` | Male births 1986–2005: the 1,500 most common names given to boys at least as often as to girls, placeholders removed, weighted by births. Read from `ssa.gov/oact/babynames/names.zip` in the browser (the server refuses scripted downloads); only the name, sex and count columns were read. |
+| 2010 Census surnames (U.S. Census Bureau) | `Names_2010Census.csv`, downloaded 2026-10-21 (`names.zip`, 12,874,389 bytes) | Public domain (17 U.S.C. §105) | `data/names/last.json` | The 10,000 most common surnames, weighted by count. From `www2.census.gov/topics/genealogy/2010surnames/names.zip`; only the name and count columns were read. |
+
+The famous-people blocklist (`data/blocklists/famous-people.json`) also ships: it's a list of names compiled by hand, which are facts, so it carries no license.
 
 ## Data used only by tests (never shipped)
 
