@@ -38,12 +38,12 @@ The league is 32 fictional franchises in the same metros as the real league, org
 
 | Rule | Detail | Test |
 |---|---|---|
-| Fixed shape | 2 conferences × 4 divisions (East, North, South, West) × 4 teams = 32 | `League_Structure_Is32Teams2x4x4` |
+| Fixed shape | 2 conferences × 4 divisions (East, North, South, West) × 4 teams = 32 | `The_league_is_2_conferences_of_4_divisions_of_4_teams_and_every_team_is_in_exactly_one` |
 | Conference names | **Heritage Conference** and **Frontier Conference** (original; accepted for the base set. An imported set can rename conferences and divisions) | — |
 | Geographic alignment | Divisions group nearby metros. Each conference spans the country. | Review |
-| Two-team metros split | New York and Los Angeles each have two teams, one per conference | `League_SharedMetros_SplitAcrossConferences` |
-| Shared city, distinct identity | Teams that share a city label have different abbreviations, monograms and primary colors | `Teams_SharedCity_DistinctAbbrMonogramColor` |
-| Unique abbreviations | 2–3 uppercase letters, unique league-wide | `Teams_Abbreviations_Unique` |
+| Two-team metros split | New York and Los Angeles each have two teams, one per conference | `Teams_sharing_a_metro_play_in_different_conferences` |
+| Shared city, distinct identity | Teams that share a city label have different abbreviations, monograms and primary colors | `Teams_sharing_a_city_label_differ_in_monogram_and_primary_color` |
+| Unique abbreviations | 2–3 uppercase letters, unique league-wide | `Abbreviations_are_2_or_3_capital_letters_and_unique` |
 | Division rivalries | Mean the schedule only (6 division games) until storylines in M10 | — |
 
 ### 4.2 Team identity fields
@@ -61,13 +61,13 @@ The league is 32 fictional franchises in the same metros as the real league, org
 
 | Guardrail | Detail | Test |
 |---|---|---|
-| No real pro football names | Every nickname is checked against a blocklist of pro football team names, past and present: NFL, AFL, AAFC, WFL, USFL (all eras), XFL (all eras), UFL (all eras), AAF, CFL, World League / NFL Europe, and arena and indoor leagues | `Teams_Nicknames_NotInFootballBlocklist` |
-| No same-metro major-league names | A nickname can't match a **current** NBA, MLB, NHL, MLS, WNBA or NWSL team in the same metro | `Teams_Nicknames_NoSameMetroMajorLeagueName` |
-| No echo of the real team's colors | Each metro lists the real NFL team's colors. A team's primary/secondary pair can't sit within a ΔE (CIEDE2000) threshold of that pair | `Teams_Colors_DoNotEchoMetroNflTeam` |
-| Distinct within a division | The four primaries in a division are pairwise ≥ ΔE 20 apart | `Teams_Colors_DistinctWithinDivision` |
-| Readable | Text on each primary meets WCAG AA in both themes, using the derived on-color | `Teams_Colors_OnColorContrast` |
-| Distinct crests | No two teams in a division share the same `Shape` + `Stripe` pair | `Teams_Crests_DistinctWithinDivision` |
-| No real stadium names | Stadium names are checked against a list of current and former pro stadium names | `Stadiums_Names_NotInBlocklist` |
+| No real pro football names | Every nickname is checked against a blocklist of pro football team names, past and present: NFL, AFL, AAFC, WFL, USFL (all eras), XFL (all eras), UFL (all eras), AAF, CFL, World League / NFL Europe, and arena and indoor leagues | `No_nickname_is_a_pro_football_name` |
+| No same-metro major-league names | A nickname can't match a **current** NBA, MLB, NHL, MLS, WNBA or NWSL team in the same metro | `No_nickname_is_a_major_league_name_in_its_own_metro` |
+| No echo of the real team's colors | Each metro lists the real NFL team's colors. A team's primary/secondary pair can't have both colors within ΔE 12 (CIEDE2000) of that pair, in either order | `No_team_echoes_the_colors_of_its_metros_NFL_team` |
+| Distinct within a division | The four primaries in a division are pairwise ≥ ΔE 20 apart | `Primaries_in_a_division_are_clearly_different` |
+| Readable | Text on each primary meets WCAG AA (4.5:1) in both themes, using the derived on-color | `Text_on_every_primary_is_readable` |
+| Distinct crests | No two teams in a division share the same `Shape` + `Stripe` pair | `Crests_in_a_division_differ_in_shape_or_stripe` |
+| No real stadium names | Stadium names are checked against a list of current and former pro stadium names | `No_stadium_is_a_real_stadium_name` |
 | Sensitive names | No nickname uses Confederate, Indigenous or other cultural imagery | Review checklist |
 
 The blocklists live in `data/blocklists/` as plain JSON lists, compiled once (team and stadium names are facts) and extended whenever a collision is found. *The draft names in Appendix A were checked by hand against the leagues above. Running the automated test may still force a swap or two.*

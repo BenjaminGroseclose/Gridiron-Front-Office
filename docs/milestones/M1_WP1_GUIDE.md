@@ -1,6 +1,6 @@
 # M1 · WP1 builder's guide: Core building blocks
 
-> **Status:** ✅ **Done 2026-10-20** (§6 has the review) · **For:** the owner, who builds M1 ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP1](M1_THE_LEAGUE.md#wp1--core-ids-positions-and-the-prng-m) · **Size:** M · **Written:** 2026-10-20
+> **Status:** ✅ **Done 2026-10-20** (§6 has the review) · **For:** the owner, who builds M1 ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP1](M1_THE_LEAGUE.md#wp1--core-ids-positions-and-the-prng-m--done-2026-10-20) · **Size:** M · **Written:** 2026-10-20
 >
 > Everything later in M1 stands on this: the random number generator every draw comes from, the seeds that make a league repeatable, the first typed IDs, the football enums, and the cap-hit formula. It's all pure Core code with no dependencies, so it's the easiest place to start and the most important to get exactly right.
 

@@ -1,6 +1,6 @@
 # M1 · WP2 builder's guide: team and college data
 
-> **Status:** Ready to build · **For:** the owner, who builds M1 ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP2](M1_THE_LEAGUE.md#wp2--team-and-college-data-m) · **Size:** M · **Written:** 2026-10-20
+> **Status:** ✅ **Done 2026-10-21** (§6 has the review) · **For:** the owner, who builds M1 ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP2](M1_THE_LEAGUE.md#wp2--team-and-college-data-m--done-2026-10-21) · **Size:** M · **Written:** 2026-10-20
 >
 > WP2 turns the league's identity into data: the 32 teams (F-02) and about 230 fictional colleges (D-035) as JSON files, loaded once and guarded by tests that prove no team copies a real one and every color is readable. Generation (WP4) and league creation (WP5) read everything through one port, `ISeedData`; nothing hard-codes a team or a college.
 
@@ -11,7 +11,7 @@
 | | |
 |---|---|
 | **Claude prepares** (§2) | The data files: `teams.json` (F-02's appendix, colors adjusted where the guardrails fail, for your review), `colleges.json` (~230 fictional programs), their two public schemas, and the test-only blocklists |
-| **You build** (§3–§5) | The definition records, the `ISeedData` port, the embedded loader, the logging, and the tests with their color-check helper |
+| **You build** (§3–§5) | The definition records, the `ISeedData` port, the embedded loader and the logging. **Claude writes the tests** (owner, 2026-10-21) |
 
 **Read first:** F-02 §4–6 and §10–13, [D-033](../DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames), [D-035](../DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11), [D-064](../DECISIONS.md#d-064-f-02-team-set-accepted-shared-city-labels).
 
@@ -189,21 +189,25 @@ They load the shipped data through `EmbeddedSeedData` and read the blocklists fr
 
 **Name matching** is exact after normalizing: trimmed, case-insensitive, accents removed (`Normalize(NormalizationForm.FormD)`, then drop non-spacing marks).
 
+The team tests are in `TeamGuardrailTests`, the college tests in `CollegeGuardrailTests`. Names are sentences, like the rest of the repo's tests.
+
 | Test | Rule | Threshold |
 |---|---|---|
-| `Teams_Structure_Is32Teams2x4x4` | 2 conferences × 4 divisions × 4 teams (D-014); every team in exactly one division, and every division entry a real team; abbreviations 2–3 upper-case letters, unique; colors `#RRGGBB` | — |
-| `Colleges_Names_Unique` | No two colleges share a name (after normalizing) | — |
-| `Teams_SharedMetros_SplitAcrossConferences` | A metro key used by two teams puts them in different conferences | — |
-| `Teams_SharedCity_DistinctAbbrMonogramColor` | Teams sharing a city label differ in abbreviation, monogram and primary color | primaries ΔE ≥ 20 |
-| `Teams_Nicknames_NotInFootballBlocklist` | No nickname matches `football-teams.json` | — |
-| `Teams_Nicknames_NoSameMetroMajorLeagueName` | No nickname matches its metro's list in `major-league-teams.json` | — |
-| `Teams_Colors_DoNotEchoMetroNflTeam` | A team's primary/secondary pair doesn't echo its metro's NFL pair: **an echo is both colors within the threshold of the real two, in either order** | ΔE < 12 for both |
-| `Teams_Colors_DistinctWithinDivision` | The four primaries in a division, pairwise | ΔE ≥ 20 |
-| `Teams_Colors_OnColorContrast` | Every primary's best on-color | ≥ 4.5:1 |
-| `Teams_Crests_DistinctWithinDivision` | No two teams in a division share shape + stripe | — |
-| `Stadiums_Names_NotInBlocklist` | No stadium name matches `stadiums.json` | — |
-| `Colleges_Names_NotRealInstitutions` | No college name matches `real-colleges.json` | — |
-| `Colleges_Tiers_And_Regions_AreCovered` | Every region has colleges of every tier; about 50 / 80 / 100 by tier | ±10 per tier |
+| `The_league_is_2_conferences_of_4_divisions_of_4_teams_and_every_team_is_in_exactly_one` | 2 × 4 × 4 (D-014); every team in exactly one division, and every division entry a real team | — |
+| `Abbreviations_are_2_or_3_capital_letters_and_unique` | League-wide | — |
+| `Colors_are_RRGGBB_and_monograms_are_1_to_3_characters` | Every team color, every monogram | — |
+| `Teams_sharing_a_metro_play_in_different_conferences` | A metro key used by two teams puts them in different conferences | — |
+| `Teams_sharing_a_city_label_differ_in_monogram_and_primary_color` | Their abbreviations already differ (unique league-wide) | primaries ΔE ≥ 20 |
+| `No_nickname_is_a_pro_football_name` | No nickname matches `football-teams.json` | — |
+| `No_nickname_is_a_major_league_name_in_its_own_metro` | No nickname matches its metro's list in `major-league-teams.json`; a metro missing from the list fails too | — |
+| `No_team_echoes_the_colors_of_its_metros_NFL_team` | **An echo is both colors within the threshold of the real two, in either order**; a metro missing from `metro-nfl-colors.json` fails too | ΔE < 12 for both |
+| `Primaries_in_a_division_are_clearly_different` | The four primaries in a division, pairwise | ΔE ≥ 20 |
+| `Text_on_every_primary_is_readable` | Every primary's best on-color | ≥ 4.5:1 |
+| `Crests_in_a_division_differ_in_shape_or_stripe` | No two teams in a division share shape + stripe | — |
+| `No_stadium_is_a_real_stadium_name` | No stadium name matches `stadiums.json` | — |
+| `College_names_are_unique` | After normalizing | — |
+| `No_college_is_a_real_institution` | No college name matches `real-colleges.json` | — |
+| `Every_region_has_every_tier_in_about_the_planned_mix` | Every region has colleges of every tier; about 50 / 80 / 100 by tier | ±10 per tier |
 
 F-02's "Sensitive names" guardrail stays a review checklist item, not a test.
 
@@ -230,11 +234,15 @@ Compare doubles with a tolerance (`ShouldBe(expected, tolerance: 0.0001)`).
 
 ## 6. Done when
 
-- [ ] `ColorChecks` matches §5.
-- [ ] `EmbeddedSeedData` loads the shipped files: 32 teams and 230 colleges, logged with the time it took.
-- [ ] Every guardrail test in §4 passes against the shipped data.
-- [ ] Events 1200–1201 logged and listed in LOGGING.md; `./build.ps1` green.
-- [ ] **Ask for a review**, then commit with the message I give you.
+- [x] `ColorChecks` matches §5.
+- [x] `EmbeddedSeedData` loads the shipped files: 32 teams and 230 colleges, logged with the time it took. The app registers one shared instance.
+- [x] Every guardrail test in §4 passes against the shipped data, and each was **proven to fail**. The first draft's problems were planted back in (Phoenix's contrast, the Aviators, Empire Field, the Kansas City/Green Bay colors, a same-metro nickname, a shared crest, a shared monogram, a real and a duplicate college, a reversed Cowboys echo); each was caught by its own test, then removed.
+- [x] Events 1200–1201 logged and listed in LOGGING.md; `./build.ps1` green: 381 tests, 31 of them new.
+- [x] **Reviewed** (2026-10-21). What the review found and fixed:
+  - **`ISeedData` wasn't registered** in `AddGfoInfrastructure`, so nothing could inject it, and nothing would have noticed until WP4. Registered; `The_app_registers_one_shared_instance` now guards it.
+  - **Whitespace:** tabs and missing final newlines in every new production file (`.editorconfig` wants spaces). The build doesn't enforce it; `dotnet format whitespace` fixed it.
+- **What was built:** `Core/Leagues/CollegeEnums.cs`; `Application/Leagues/` (`TeamSet.cs`, `ISeedData.cs`); `Infrastructure/Seed/` (`EmbeddedSeedData`, `SeedLog`), the two embedded files and the registration; `tests/Infrastructure.Tests/Seed/` (`EmbeddedSeedDataTests`, `ColorChecksTests`, `TeamGuardrailTests`, `CollegeGuardrailTests`, with the `RepoFiles` and `ColorChecks` helpers).
+- **Changed from this guide:** Claude wrote the tests (owner, 2026-10-21) and applied the two review fixes at the owner's request.
 
 ## 7. Where the data stands
 
@@ -242,4 +250,4 @@ The data files are ready (2026-10-20), and every §4 guardrail passes against th
 - `teams.json`: four nicknames and one stadium were already taken and eight primaries were too close or too dark. F-02's Appendix A lists every change and why.
 - `colleges.json`: 230 programs (Power 50, Major 80, Small 100), every region holding every tier, no duplicate names.
 - `real-colleges.json`: about 13,900 names. They come from all 6,072 institutions in the U.S. Department of Education's IPEDS directory (HD2024, public domain) with their aliases and sports-style short forms, plus a hand-compiled list for nicknames ("Ole Miss") and closed schools. No fictional college matches one exactly. The one near miss, Ridge State against Florida's Ridge Technical College, stays: it's D-035's own example, no real Ridge State exists, and the test's exact-match rule passes it.
-- Your tests are the real check: if one disagrees with this, tell me before changing the data or the threshold.
+- The guardrail tests confirm all of this (2026-10-21).

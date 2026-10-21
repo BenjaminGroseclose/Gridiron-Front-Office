@@ -22,4 +22,9 @@
     <!-- The torture tests reach the internals (LeagueDbContext, TypedIDs, SqliteFile). -->
     <InternalsVisibleTo Include="GridironFrontOffice.Infrastructure.Tests" />
   </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\data\league\teams.json" LogicalName="league/teams.json" />
+    <EmbeddedResource Include="..\..\data\league\colleges.json" LogicalName="league/colleges.json" />
+  </ItemGroup>
 </Project>

@@ -1,10 +1,12 @@
 using GridironFrontOffice.Application.Data;
+using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Application.LiveEvents;
 using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Saves;
 using GridironFrontOffice.Infrastructure.Data;
 using GridironFrontOffice.Infrastructure.Logging;
 using GridironFrontOffice.Infrastructure.Saves;
+using GridironFrontOffice.Infrastructure.Seed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -14,8 +16,8 @@ namespace GridironFrontOffice.Infrastructure;
 public static class InfrastructureServices
 {
     /// <summary>
-    /// Registers paths, the save manager, catalog and snapshots, and the data layer. The host registers
-    /// <see cref="IPlatformServices"/> (the Recycle Bin and Explorer). Deliberately absent: AddDbContext and
+    /// Registers paths, the save manager, catalog and snapshots, the data layer and the built-in league data. The host
+    /// registers <see cref="IPlatformServices"/> (the Recycle Bin and Explorer). Deliberately absent: AddDbContext and
     /// AddDbContextFactory. Contexts are created per command and per query from the open save (a test checks this).
     /// </summary>
     public static IServiceCollection AddGfoInfrastructure(this IServiceCollection services, IAppPaths paths, AppIdentity app)
@@ -42,6 +44,7 @@ public static class InfrastructureServices
         services.AddSingleton<ISnapshotService>(sp => sp.GetRequiredService<SnapshotService>());
         services.AddSingleton<SaveManager>();
         services.AddSingleton<ISaveManager>(sp => sp.GetRequiredService<SaveManager>());
+        services.AddSingleton<ISeedData, EmbeddedSeedData>();
 
         // Until the live event runner arrives (M2), nothing is ever running. WP9's AddGfoApplication takes this over.
         services.TryAddSingleton<ILiveEventStatus, NoLiveEvents>();

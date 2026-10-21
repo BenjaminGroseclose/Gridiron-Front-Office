@@ -103,6 +103,10 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - Never use `string.GetHashCode()` or `HashCode.Combine` for anything that must repeat: .NET randomizes them per process. Seeds come from `Seeds.Derive` (FNV-1a 64 + SplitMix64's `Mix`).
   - Naming analyzers fail the build: CA1720 rejects members named after types (`Single`, `Double`), and CA1711 reserves the `Attribute` suffix (`PlayerAttribute` carries a justified suppression).
   - Typed IDs are one line each in `Core/IDs/EntityIDs.cs`. A typed-ID key only gets `AUTOINCREMENT` when it's marked generated: EF treats a converted key as not generated (see WP5 in the M1 plan).
+- **League data (M1 WP2):**
+  - The built-in team set and college list are embedded in Infrastructure (`league/teams.json`, `league/colleges.json`) and parsed by `EmbeddedSeedData.JsonOptions`, which rejects unknown, missing and null fields. A field added later needs a default value, or every older file fails (D-077).
+  - The blocklists (`data/blocklists/`) are test-only; `RepoFiles` reads them from the repository. A failing guardrail test means fixing the data (F-02 Appendix A records it), never loosening a threshold.
+  - The build doesn't enforce whitespace (`.editorconfig`'s spaces and final newline). `dotnet format whitespace --folder --include <paths>` fixes it.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 

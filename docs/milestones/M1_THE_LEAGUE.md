@@ -47,7 +47,7 @@
 | ---- | ---------------------------------- | ---- | -------- | ------------------------------------------------------------------------------------------------------- |
 | WP0  | Decisions and docs prep            | S    | —        | §12 answered ✅; F-01 and F-12 M1 specs written                                                         |
 | WP1  | Core: IDs, positions and the PRNG  | M    | WP0      | ✅ Done 2026-10-20                                                                                      |
-| WP2  | Team and college data              | M    | WP1      | `teams.json`, `colleges.json`, schemas, every F-02 guardrail test green                                 |
+| WP2  | Team and college data              | M    | WP1      | ✅ Done 2026-10-21                                                                                       |
 | WP3  | Player data                        | M–L  | WP1      | Positions, OVR weights, archetypes, distributions, traits, jersey rules, names, hometowns, blocklists   |
 | WP4  | The player model and generator     | L    | WP2, WP3 | Distribution, golden, blocklist and contract tests green over many seeds                                |
 | WP5  | Schema and `CreateLeague`          | M    | WP4      | A generated league is written in one command in < 5 s, with progress                                    |
@@ -80,7 +80,7 @@
 
 **Results (2026-10-20):** the PRNG, seed derivation, typed IDs, enums and the cap-hit formula, with 42 Core tests; details and the review in [M1_WP1_GUIDE.md §6](M1_WP1_GUIDE.md#6-done-when). Changed from this plan: the typed IDs live in one file (`EntityIDs.cs`, one line each, owner's call), `Position.EDGE` is upper case so every name is its abbreviation, and the crest stripes are `Bar`/`TwinBars` (F-02 updated). Later, D-078 removes `StadiumID` (in WP5) and the correlated multivariate draws.
 
-### WP2 · Team and college data (M)
+### WP2 · Team and college data (M) ✅ Done 2026-10-21
 
 **Goal:** the league's identity, as data, with every guardrail proven. **Builder's guide:** [M1_WP2_GUIDE.md](M1_WP2_GUIDE.md).
 
@@ -92,14 +92,16 @@
 - **Tests (F-02 §4.3, §13):** the 2 × 4 × 4 structure, unique abbreviations, shared metros split across conferences, the blocklists, no echo of the metro's NFL colors (both colors within ΔE 12), primaries ≥ ΔE 20 apart within a division, every primary's on-color at ≥ 4.5:1, distinct crests within a division, no real college names. _The data is ready and approved (2026-10-20, recorded under D-064): four names, one stadium and eight primaries changed to pass, listed in F-02 Appendix A._
 - **Logging:** events 1200 (team set loaded) and 1201 (college list loaded).
 
+**Results (2026-10-21):** the definition records and `ISeedData` (Application), `EmbeddedSeedData` and `SeedLog` (Infrastructure), and 31 tests: the loader (8), the color checks (8), the team guardrails (12) and the college guardrails (3). Each guardrail was proven to fail on a planted problem. Details and the review in [M1_WP2_GUIDE.md §6](M1_WP2_GUIDE.md#6-done-when). Changed from this plan: Claude writes the tests from here on (§11).
+
 ### WP3 · Player data (M–L)
 
-**Goal:** every number the generator needs, as data with first-pass values.
+**Goal:** every number the generator needs, as data with first-pass values. **Builder's guide:** [M1_WP3_GUIDE.md](M1_WP3_GUIDE.md).
 
 - `data/players/positions.json`: roster averages, ranges and floors (F-03 §4.1); hand-set OVR weights (recalibrated by SimLab in M2); archetype profiles; age and measurable distributions by position.
 - `traits.json` (the six D-043 traits), `generation.json` (the tier targets, F-03 §4.10), `jersey-rules.json` (the current NFL numbering rule, **checked against the real rule** when written).
 - **Names and places** (approved 2026-10-20): `data/names/first.json`, `last.json` and `data/places/hometowns.json`, frequency-weighted from public-domain U.S. government data (SSA baby names, the Census surname list, the Census places gazetteer). Each download is named, with its source and size, for approval before it happens; the sources go in THIRD_PARTY_NOTICES.
-- `data/contracts/contracts.json` (F-12's M1 slice): the first-season cap, minimum salaries by experience, salary bands by position and tier, length, bonus and guarantee shares, rookie-style deals by draft round.
+- `data/contracts/contracts.json` (F-12's M1 slice): the first-season cap, minimum salaries by experience, salary bands by position and tier, length, bonus and guarantee shares, rookie-style deals by draft round. _Waits for F-12's M1 spec (WP0), which isn't written yet; it's WP3's last slice._
 - `data/blocklists/famous-people.json` (F-03 §4.11): Hall of Fame members, notable players of the last ~25 seasons, and a short list of other very famous people.
 - **Tests:** every file parses and validates; weights sum to 1; every attribute appears in at least one position's weights or archetypes.
 
@@ -243,11 +245,11 @@ From [ROADMAP.md §M1](../ROADMAP.md#m1--the-league-exists) and the specs' test 
 
 On `main` (D-076): a commit per work package (or per meaningful slice of a large one), `./build.ps1` before every commit, and the `m1-complete` tag when §10 passes.
 
-**The owner writes the code** (2026-10-20). For each work package:
+**The owner writes the production code** (2026-10-20), **and Claude writes the tests** (2026-10-21). For each work package:
 
 1. **Claude writes its builder's guide** (`M1_WPn_GUIDE.md`): what to build and where, the signatures, the tests that define "done", reference values, and the gotchas from earlier milestones.
 2. **Claude prepares the package's data files** (team and college JSON, blocklists, the downloaded name and place lists after approval), so the code has real inputs.
-3. **You build it**, test first where the guide gives tests.
+3. **You build the production code.** Claude writes the tests the guide specifies, and proves each one can fail.
 4. **Ask for a review:** Claude runs `./build.ps1`, reads the diff against the guide and the specs, and reports what to fix before you commit.
 
 ## 12. Questions for the owner (answered 2026-10-20)
