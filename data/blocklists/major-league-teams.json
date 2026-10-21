@@ -1,0 +1,171 @@
+{
+  "new-york": [
+    "Yankees",
+    "Mets",
+    "Knicks",
+    "Nets",
+    "Rangers",
+    "Islanders",
+    "Devils",
+    "Red Bulls",
+    "City",
+    "Liberty",
+    "Gotham"
+  ],
+  "philadelphia": [
+    "Phillies",
+    "76ers",
+    "Sixers",
+    "Flyers",
+    "Union"
+  ],
+  "washington": [
+    "Nationals",
+    "Wizards",
+    "Capitals",
+    "United",
+    "Mystics",
+    "Spirit"
+  ],
+  "baltimore": [
+    "Orioles"
+  ],
+  "chicago": [
+    "Cubs",
+    "White Sox",
+    "Bulls",
+    "Blackhawks",
+    "Fire",
+    "Sky",
+    "Stars"
+  ],
+  "green-bay": [],
+  "minneapolis": [
+    "Twins",
+    "Timberwolves",
+    "Wild",
+    "United",
+    "Lynx"
+  ],
+  "kansas-city": [
+    "Royals",
+    "Sporting",
+    "Current"
+  ],
+  "atlanta": [
+    "Braves",
+    "Hawks",
+    "United",
+    "Dream"
+  ],
+  "charlotte": [
+    "Hornets",
+    "FC"
+  ],
+  "nashville": [
+    "Predators",
+    "SC"
+  ],
+  "jacksonville": [],
+  "los-angeles": [
+    "Dodgers",
+    "Angels",
+    "Lakers",
+    "Clippers",
+    "Kings",
+    "Ducks",
+    "Galaxy",
+    "FC",
+    "Sparks",
+    "Angel City"
+  ],
+  "san-francisco": [
+    "Giants",
+    "Warriors",
+    "Sharks",
+    "Earthquakes",
+    "Valkyries",
+    "Bay"
+  ],
+  "seattle": [
+    "Mariners",
+    "Kraken",
+    "Sounders",
+    "Storm",
+    "Reign"
+  ],
+  "las-vegas": [
+    "Golden Knights",
+    "Aces",
+    "Athletics"
+  ],
+  "boston": [
+    "Red Sox",
+    "Celtics",
+    "Bruins",
+    "Revolution",
+    "Legacy"
+  ],
+  "buffalo": [
+    "Sabres"
+  ],
+  "pittsburgh": [
+    "Pirates",
+    "Penguins"
+  ],
+  "detroit": [
+    "Tigers",
+    "Pistons",
+    "Red Wings"
+  ],
+  "cleveland": [
+    "Guardians",
+    "Cavaliers"
+  ],
+  "cincinnati": [
+    "Reds",
+    "FC"
+  ],
+  "indianapolis": [
+    "Pacers",
+    "Fever"
+  ],
+  "miami": [
+    "Marlins",
+    "Heat",
+    "Panthers",
+    "Inter Miami"
+  ],
+  "tampa": [
+    "Rays",
+    "Lightning"
+  ],
+  "new-orleans": [
+    "Pelicans"
+  ],
+  "houston": [
+    "Astros",
+    "Rockets",
+    "Dynamo",
+    "Dash"
+  ],
+  "phoenix": [
+    "Diamondbacks",
+    "Suns",
+    "Mercury"
+  ],
+  "denver": [
+    "Rockies",
+    "Nuggets",
+    "Avalanche",
+    "Rapids",
+    "Summit"
+  ],
+  "dallas": [
+    "Rangers",
+    "Mavericks",
+    "Stars",
+    "FC",
+    "Wings"
+  ]
+}

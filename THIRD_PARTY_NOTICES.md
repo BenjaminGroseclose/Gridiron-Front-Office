@@ -4,7 +4,7 @@
 >
 > **How licenses were checked:** the `<license>` expression in each restored package's `.nuspec`, or the source repository's LICENSE file where the package declares none. Versions match `Directory.Packages.props`. At the M0 exit, the shipped list was also checked against every package in the Release publish (`GridironFrontOffice.Desktop.deps.json`), transitive ones included.
 >
-> Last updated: 2026-10-19 (M0 exit review).
+> Last updated: 2026-10-20 (M1 WP2: the college blocklist).
 
 ## Shipped with the app
 
@@ -41,6 +41,12 @@
 | bunit | 2.11.3 | MIT | UI tests | |
 | NetArchTest.Rules | 1.3.2 | MIT | Architecture tests | The package declares no license. MIT per its [repository LICENSE](https://github.com/BenMorris/NetArchTest/blob/master/LICENSE). |
 | Mono.Cecil (transitive) | 0.11.3 | MIT | Architecture tests | Via NetArchTest |
+
+## Data used only by tests (never shipped)
+
+| Data | Version | License | Location | Notes |
+|---|---|---|---|---|
+| IPEDS institutional directory (U.S. Department of Education, NCES) | HD2024 (2024–25), file dated 2025-09-21 | Public domain (a U.S. government work, 17 U.S.C. §105) | `data/blocklists/real-colleges.json` | Institution names and aliases, plus their sports-style short forms, merged with a hand-compiled list. The fictional colleges are tested against it (D-035). Downloaded 2026-10-20 from `nces.ed.gov/ipeds/datacenter/data/HD2024.zip` (1,088,372 bytes). Only the name and alias columns were read; the zip isn't in the repository. |
 
 ## Fonts, icons and other assets
 

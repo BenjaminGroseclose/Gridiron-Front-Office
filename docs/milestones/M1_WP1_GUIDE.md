@@ -188,4 +188,4 @@ public static class CapMath
 
 ## 7. While you build this
 
-I'll start preparing **WP2's data**: `teams.v1.json` from F-02's Appendix A, the fictional colleges, the blocklists, and the F-02 guardrail references (each metro's real NFL colors). I'll also draft **F-01's and F-12's M1 specs** for your review. The name and place downloads come with WP3, and I'll list each one (file, source, size) for your approval first.
+I'll start preparing **WP2's data**: `teams.json` from F-02's Appendix A, the fictional colleges, the blocklists, and the F-02 guardrail references (each metro's real NFL colors). I'll also draft **F-01's and F-12's M1 specs** for your review. The name and place downloads come with WP3, and I'll list each one (file, source, size) for your approval first.

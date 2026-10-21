@@ -106,7 +106,7 @@ flowchart TD
 
 **Scope**
 - **F-02:** 32 curated team identities in real cities with original nicknames ([D-033](DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)), conferences and divisions, **generated SVG crests**, stadiums.
-- **League data files:** teams and fictional colleges (with region and tier) load from **versioned JSON files with a published schema** ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). No user import yet (that's M11).
+- **League data files:** teams and fictional colleges (with region and tier) load from **JSON files with a published schema** ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). No user import yet (that's M11).
 - **F-03:** the player model (positions, attributes, hidden traits, measurables, bio), overall formulas, archetypes, the generator with distribution targets, the name blocklist.
 - **Real contracts** for every player ([D-074](DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4)): years, base salaries, a prorated signing bonus, guarantees and the real cap-hit formula, with team cap totals under a first-season cap. The contract **actions** (signing, releases and dead money, tags, extensions) come in M4.
 - **F-01:** the New League wizard **v0**: name and seed → generate (with progress) → pick a team. No rule steps yet; each arrives with its milestone. The league starts at Training Camp until M5.

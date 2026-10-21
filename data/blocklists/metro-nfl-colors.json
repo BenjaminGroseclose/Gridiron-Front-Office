@@ -1,0 +1,293 @@
+{
+  "new-york": [
+    {
+      "team": "Giants",
+      "colors": [
+        "#0B2265",
+        "#A71930"
+      ]
+    },
+    {
+      "team": "Jets",
+      "colors": [
+        "#125740",
+        "#FFFFFF"
+      ]
+    }
+  ],
+  "philadelphia": [
+    {
+      "team": "Eagles",
+      "colors": [
+        "#004C54",
+        "#A5ACAF"
+      ]
+    }
+  ],
+  "washington": [
+    {
+      "team": "Commanders",
+      "colors": [
+        "#5A1414",
+        "#FFB612"
+      ]
+    }
+  ],
+  "baltimore": [
+    {
+      "team": "Ravens",
+      "colors": [
+        "#241773",
+        "#000000"
+      ]
+    }
+  ],
+  "chicago": [
+    {
+      "team": "Bears",
+      "colors": [
+        "#0B162A",
+        "#C83803"
+      ]
+    }
+  ],
+  "green-bay": [
+    {
+      "team": "Packers",
+      "colors": [
+        "#203731",
+        "#FFB612"
+      ]
+    }
+  ],
+  "minneapolis": [
+    {
+      "team": "Vikings",
+      "colors": [
+        "#4F2683",
+        "#FFC62F"
+      ]
+    }
+  ],
+  "kansas-city": [
+    {
+      "team": "Chiefs",
+      "colors": [
+        "#E31837",
+        "#FFB81C"
+      ]
+    }
+  ],
+  "atlanta": [
+    {
+      "team": "Falcons",
+      "colors": [
+        "#A71930",
+        "#000000"
+      ]
+    }
+  ],
+  "charlotte": [
+    {
+      "team": "Panthers",
+      "colors": [
+        "#0085CA",
+        "#101820"
+      ]
+    }
+  ],
+  "nashville": [
+    {
+      "team": "Titans",
+      "colors": [
+        "#0C2340",
+        "#4B92DB"
+      ]
+    }
+  ],
+  "jacksonville": [
+    {
+      "team": "Jaguars",
+      "colors": [
+        "#006778",
+        "#D7A22A"
+      ]
+    }
+  ],
+  "los-angeles": [
+    {
+      "team": "Rams",
+      "colors": [
+        "#003594",
+        "#FFA300"
+      ]
+    },
+    {
+      "team": "Chargers",
+      "colors": [
+        "#0080C6",
+        "#FFC20E"
+      ]
+    }
+  ],
+  "san-francisco": [
+    {
+      "team": "49ers",
+      "colors": [
+        "#AA0000",
+        "#B3995D"
+      ]
+    }
+  ],
+  "seattle": [
+    {
+      "team": "Seahawks",
+      "colors": [
+        "#002244",
+        "#69BE28"
+      ]
+    }
+  ],
+  "las-vegas": [
+    {
+      "team": "Raiders",
+      "colors": [
+        "#000000",
+        "#A5ACAF"
+      ]
+    }
+  ],
+  "boston": [
+    {
+      "team": "Patriots",
+      "colors": [
+        "#002244",
+        "#C60C30"
+      ]
+    }
+  ],
+  "buffalo": [
+    {
+      "team": "Bills",
+      "colors": [
+        "#00338D",
+        "#C60C30"
+      ]
+    }
+  ],
+  "pittsburgh": [
+    {
+      "team": "Steelers",
+      "colors": [
+        "#FFB612",
+        "#101820"
+      ]
+    }
+  ],
+  "detroit": [
+    {
+      "team": "Lions",
+      "colors": [
+        "#0076B6",
+        "#B0B7BC"
+      ]
+    }
+  ],
+  "cleveland": [
+    {
+      "team": "Browns",
+      "colors": [
+        "#311D00",
+        "#FF3C00"
+      ]
+    }
+  ],
+  "cincinnati": [
+    {
+      "team": "Bengals",
+      "colors": [
+        "#FB4F14",
+        "#000000"
+      ]
+    }
+  ],
+  "indianapolis": [
+    {
+      "team": "Colts",
+      "colors": [
+        "#002C5F",
+        "#A2AAAD"
+      ]
+    }
+  ],
+  "miami": [
+    {
+      "team": "Dolphins",
+      "colors": [
+        "#008E97",
+        "#FC4C02"
+      ]
+    }
+  ],
+  "tampa": [
+    {
+      "team": "Buccaneers",
+      "colors": [
+        "#D50A0A",
+        "#34302B"
+      ]
+    }
+  ],
+  "new-orleans": [
+    {
+      "team": "Saints",
+      "colors": [
+        "#D3BC8D",
+        "#101820"
+      ]
+    }
+  ],
+  "houston": [
+    {
+      "team": "Texans",
+      "colors": [
+        "#03202F",
+        "#A71930"
+      ]
+    },
+    {
+      "team": "Oilers (former)",
+      "colors": [
+        "#4B92DB",
+        "#C8102E"
+      ]
+    }
+  ],
+  "phoenix": [
+    {
+      "team": "Cardinals",
+      "colors": [
+        "#97233F",
+        "#000000"
+      ]
+    }
+  ],
+  "denver": [
+    {
+      "team": "Broncos",
+      "colors": [
+        "#FB4F14",
+        "#002244"
+      ]
+    }
+  ],
+  "dallas": [
+    {
+      "team": "Cowboys",
+      "colors": [
+        "#041E42",
+        "#869397"
+      ]
+    }
+  ]
+}

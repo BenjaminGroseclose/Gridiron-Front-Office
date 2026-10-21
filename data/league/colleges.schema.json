@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gridiron Front Office college list",
+  "description": "The colleges that prospects come from (D-035). The region drives scouting coverage, the tier the quality of its prospects (F-03). Enum values are case-sensitive. Unique names are checked by the game's validator. The format only grows: a field added later is optional, so older files still load (D-077).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "colleges"],
+  "properties": {
+    "name": { "$ref": "#/$defs/text", "description": "The list's name, shown when a league is created." },
+    "colleges": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "region", "tier"],
+        "properties": {
+          "name": { "$ref": "#/$defs/text" },
+          "region": { "enum": ["Northeast", "Southeast", "Midwest", "Southwest", "West"] },
+          "tier": { "enum": ["Power", "Major", "Small"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 60, "pattern": "\\S" }
+  }
+}

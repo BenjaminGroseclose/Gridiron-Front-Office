@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gridiron Front Office team set",
+  "description": "A league's 32 teams in 2 conferences of 4 divisions of 4 (F-02 §5, D-014). Enum values are case-sensitive. Rules a schema can't express (every team in exactly one division, unique abbreviations) are checked by the game's validator. The format only grows: a field added later is optional, so older files still load (D-077).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "conferences", "teams"],
+  "properties": {
+    "name": { "$ref": "#/$defs/text", "description": "The set's name, shown when a league is created and stored in the save." },
+    "conferences": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "name", "divisions"],
+        "properties": {
+          "key": { "$ref": "#/$defs/key" },
+          "name": { "$ref": "#/$defs/text" },
+          "divisions": {
+            "type": "array", "minItems": 4, "maxItems": 4,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["key", "name", "teams"],
+              "properties": {
+                "key": { "$ref": "#/$defs/key" },
+                "name": { "$ref": "#/$defs/text" },
+                "teams": {
+                  "type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true,
+                  "items": { "$ref": "#/$defs/abbr" },
+                  "description": "The division's teams, by abbreviation."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "teams": {
+      "type": "array", "minItems": 32, "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["abbr", "city", "nickname", "metro", "colors", "crest", "stadium"],
+        "properties": {
+          "abbr": { "$ref": "#/$defs/abbr" },
+          "city": { "$ref": "#/$defs/text", "description": "The city label. Two teams in one metro share it (D-064)." },
+          "nickname": { "$ref": "#/$defs/text" },
+          "metro": {
+            "type": "string", "pattern": "^[a-z]+(-[a-z]+)*$",
+            "description": "A lowercase key for the metro area, shared by the teams of a two-team metro (new-york, los-angeles)."
+          },
+          "colors": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["primary", "secondary", "accent"],
+            "properties": {
+              "primary": { "$ref": "#/$defs/color" },
+              "secondary": { "$ref": "#/$defs/color" },
+              "accent": { "$ref": "#/$defs/color" }
+            }
+          },
+          "crest": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["shape", "monogram", "stripe"],
+            "properties": {
+              "shape": { "enum": ["Shield", "Roundel", "Hexagon", "Diamond", "Banner"] },
+              "monogram": { "type": "string", "minLength": 1, "maxLength": 3 },
+              "stripe": { "enum": ["None", "Bar", "TwinBars", "Chevron", "Sash"] }
+            }
+          },
+          "stadium": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "capacity", "roof", "surface", "climate"],
+            "properties": {
+              "name": { "$ref": "#/$defs/text" },
+              "capacity": { "type": "integer", "minimum": 1 },
+              "roof": { "enum": ["Open", "Dome", "Retractable"] },
+              "surface": { "enum": ["Grass", "Turf"] },
+              "climate": { "enum": ["Cold", "Temperate", "Hot"] }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 60, "pattern": "\\S" },
+    "key": { "type": "string", "pattern": "^[A-Z]+(-[A-Z]+)?$" },
+    "abbr": { "type": "string", "pattern": "^[A-Z]{2,3}$" },
+    "color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+  }
+}

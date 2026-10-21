@@ -132,7 +132,7 @@ Generation order for every player: **position → body (height, weight) → athl
 - Off-position skills get low baselines (a CB's Pass Block barely matters, and the sim rarely asks for it).
 
 ### 4.5 Overall (OVR)
-- `OVR(position) = scale(Σ wᵢ · attributeᵢ)`. Weights per position live in `data/players/positions.v1.json` (they sum to 1), and `scale` maps the weighted sum onto the 0–99 display curve so the tier targets hold (§4.10).
+- `OVR(position) = scale(Σ wᵢ · attributeᵢ)`. Weights per position live in `data/players/positions.json` (they sum to 1), and `scale` maps the weighted sum onto the 0–99 display curve so the tier targets hold (§4.10).
 - **Weights are calibrated to the sim in M2:** SimLab regresses each position's on-field contribution on its attributes, and the weights follow that regression. OVR is an honest summary of what the engine rewards (pillar 3), not a guess. *Starting weights are hand-set for M1.*
 - **Archetype label:** recomputed from the attribute profile (not stored at generation), so it stays true after development. Examples: QB Pocket Passer / Scrambler, WR Deep Threat / Possession / Slot, EDGE Speed Rusher / Power Rusher, CB Man / Zone / Slot.
 - Display: 0–99 integers with color bands ([D-034](../DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential), [VISUAL_DESIGN.md](../VISUAL_DESIGN.md)).
@@ -166,7 +166,7 @@ With uncertainty, a grade shows its likely spread ("Ceiling: B+, likely B to A�
 | Ego | Role demands (F-14/F-15 M9) |
 
 - Values are hidden 0–100 floats. **Shown as coarse descriptors:** Low (< 35), Average, High (> 65). Visibility follows D-032: your roster from acquisition, prospects through interviews, others only through reputation tags.
-- Traits are **defined in data** (`data/players/traits.v1.json`) and stored in a narrow `PlayerTraits` table (§5), so adding one later is data plus a deterministic backfill migration, with no schema change.
+- Traits are **defined in data** (`data/players/traits.json`) and stored in a narrow `PlayerTraits` table (§5), so adding one later is data plus a deterministic backfill migration, with no schema change.
 
 ### 4.8 Bio
 
@@ -174,10 +174,10 @@ With uncertainty, a grade shows its likely spread ("Ceiling: B+, likely B to A�
 |---|---|
 | **Name** | First and last names drawn from frequency-weighted lists (candidate sources: SSA baby-name data and the Census surname list, both U.S. government public domain; license verified at adoption). No demographic modeling. The full name is checked against the blocklist (§4.11). No two active players on the same team share a full name. |
 | **Birthdate, age** | `DateOnly`. Ages by position from data (e.g., RB mean 25, QB 28, K/P 30). Rookies are 21–23. |
-| **College** | From `colleges.v1.json` ([D-035](../DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). The college's **tier** shapes the prospect quality distribution, and its **region** drives scouting coverage ([D-058](../DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)). |
+| **College** | From `colleges.json` ([D-035](../DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). The college's **tier** shapes the prospect quality distribution, and its **region** drives scouting coverage ([D-058](../DECISIONS.md#d-058-scouting-department-standing--special-assignments-no-biases-in-10)). |
 | **Hometown** | A real U.S. place, weighted by population (public data). |
 | **Experience** | Accrued seasons (the definition lives in F-12). |
-| **Jersey number** | Per the current NFL numbering rules by position, encoded in `data/players/jersey-rules.v1.json` and **verified against the real rule when the data file is written** ([D-056](../DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040), league-rules default). Unique within a team. |
+| **Jersey number** | Per the current NFL numbering rules by position, encoded in `data/players/jersey-rules.json` and **verified against the real rule when the data file is written** ([D-056](../DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040), league-rules default). Unique within a team. |
 | **Draft info** | Season, round, pick and team. Undrafted players are flagged. |
 
 ### 4.9 Perception: the fog-of-war boundary
@@ -227,7 +227,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 - `PlayerTraits (PlayerID, Trait, Value)`: personality, extensible without schema changes (§4.7).
 - `RatingHistory (PlayerID, Season, Ovr, key attributes)`: one row per season.
 - `Colleges (CollegeID, Name, Region, Tier)`: copied from the data file at creation.
-- **Data files:** `data/players/positions.v1.json` (roster targets, OVR weights, archetypes, age distributions, measurable distributions), `traits.v1.json`, `jersey-rules.v1.json`, `generation.v1.json` (tier targets), `data/names/first.v1.json`, `last.v1.json`, `data/places/hometowns.v1.json`, `data/league/colleges.v1.json`, `data/blocklists/famous-people.json`.
+- **Data files:** `data/players/positions.json` (roster targets, OVR weights, archetypes, age distributions, measurable distributions), `traits.json`, `jersey-rules.json`, `generation.json` (tier targets), `data/names/first.json`, `last.json`, `data/places/hometowns.json`, `data/league/colleges.json`, `data/blocklists/famous-people.json`.
 - **Read models** (all built through `IPerception` for the user's team): `PlayerRowDto` (ID, name, position, age, team, OVR estimate + sigma, potential grade + spread, archetype), `PlayerDetailDto` (+ every attribute estimate + sigma, measurables, bio, personality descriptors where visible, contract summary).
 
 ## 6. Application services

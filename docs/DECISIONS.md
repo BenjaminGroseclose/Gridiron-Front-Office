@@ -42,7 +42,7 @@
 | D-032 | Fog of war: your roster exact, other pros slightly fuzzy, prospects scouted | **Accepted** |
 | D-033 | Default teams: 32 curated franchises, real cities, original nicknames | **Accepted** |
 | D-034 | Ratings display: 0–99 with ranges, letter grades for potential | **Accepted** |
-| D-035 | Fictional colleges; teams and colleges as data files, user import in M11 | **Accepted** |
+| D-035 | Fictional colleges; teams and colleges as data files, user import in M11 | **Accepted** (versioning amended by D-077) |
 | D-036 | League settings at creation are gameplay-only; one user team | **Accepted** |
 | D-037 | Injury frequency setting, locked at creation | **Accepted** |
 | D-038 | No preseason games in 1.0 | **Accepted** |
@@ -84,6 +84,7 @@
 | D-074 | Contracts are real from M1; contract actions arrive in M4 | **Accepted** |
 | D-075 | Color-blind tuning is reviewed before a public release | **Accepted** |
 | D-076 | Work happens on `main`; no milestone branches | **Accepted** |
+| D-077 | Data files carry no version numbers; they change only additively | **Accepted** |
 
 ---
 
@@ -332,7 +333,7 @@
 
 ## D-033: Default teams: 32 curated franchises, real cities, original nicknames
 - **Status:** **Accepted** (owner, 2026-10-14, chose "Real cities, original names"). Resolves Q-02.
-- **Decision:** the default league is 32 **hand-written** franchises in **real metro areas** (a mix of current pro football markets and plausible new ones) with **original nicknames**, colors, generated SVG crests and fictional stadium names. Every nickname is checked against a blocklist of real pro football team names, past and present (NFL, AFL, AAFC, WFL, USFL, XFL, UFL, CFL and arena leagues). The set lives in a versioned data file ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). The 32 identities are drafted in the F-02 spec for owner review.
+- **Decision:** the default league is 32 **hand-written** franchises in **real metro areas** (a mix of current pro football markets and plausible new ones) with **original nicknames**, colors, generated SVG crests and fictional stadium names. Every nickname is checked against a blocklist of real pro football team names, past and present (NFL, AFL, AAFC, WFL, USFL, XFL, UFL, CFL and arena leagues). The set lives in a data file ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). The 32 identities are drafted in the F-02 spec for owner review.
 - **Parked:** a "randomize identities" option ([IDEAS.md](IDEAS.md)). It needs a nickname generator and color-harmony logic for a rarely used feature.
 - **Consequences:** + A real-league feel and regional rivalries. − Real city names (not trademarks, but the M11 trademark check, [Q-22](OPEN_QUESTIONS.md#q-22-name--trademark-check), covers the shipped set too; not legal advice).
 - **Amended (owner, 2026-10-14, feature review):** *"Let mirror the NFL, but again they should be able to upload their own teams. Additionally I assume we cannot use the NFL teams direct due to copyright so we will need to account for this."*
@@ -346,13 +347,13 @@
 - **Decision:** attributes and OVR are shown as **0–99 integers** with color bands and, where uncertain, a range (`78  74–83`). Exact values show no range (your roster, combine-measured physicals). **Potential and scouting summaries use letter grades** ("Ceiling: B+", "Starter by Year 2 · B") and are never shown as a number, because a number implies false precision. Internally, ratings are 0–100 floats. Color is never the only signal (WCAG; see [VISUAL_DESIGN.md](VISUAL_DESIGN.md)).
 
 ## D-035: Fictional colleges; teams and colleges as data files, user import in M11
-- **Status:** **Accepted** (owner, 2026-10-14: *"Use Fictional, but I would like similar to teams a way to import a list to customize it"*, then chose "Schema in M1, import in M11"). Resolves Q-18.
+- **Status:** **Accepted** (owner, 2026-10-14: *"Use Fictional, but I would like similar to teams a way to import a list to customize it"*, then chose "Schema in M1, import in M11"). Resolves Q-18. The "versioned" part is **amended by [D-077](#d-077-data-files-carry-no-version-numbers-they-change-only-additively)** (no version numbers; formats only grow).
 - **Decision:**
   - **Fictional colleges by default:** about 130 major and 100 small programs (e.g., "Ridge State", "Coastal Tech"), each tagged with a **region** and **tier** for scouting, and checked against real institution names.
-  - **Teams ([D-033](#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)) and colleges are versioned JSON data files with a published schema from M1.** The defaults are just the built-in files, and the generators never hard-code lists.
+  - **Teams ([D-033](#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)) and colleges are JSON data files with a published schema from M1.** The defaults are just the built-in files, and the generators never hard-code lists.
   - **User import ships in M11**: a "League data" step in the New League wizard that loads a custom team set and/or college list, with clear validation errors. This moves team packs from F-28 (post-1.0) into 1.0. In-game editing stays in F-28.
   - Imported content is the user's own. Nothing real ships with the game.
-- **Consequences:** + A personal real-names list is possible without shipping one. − A schema to version from M1 (small).
+- **Consequences:** + A personal real-names list is possible without shipping one. − A schema to maintain from M1 (small).
 
 ## D-036: League settings at creation are gameplay-only; one user team
 - **Status:** **Accepted** (owner, 2026-10-14, chose "Fixed + no cap knobs"). Resolves Q-13 and confirms [D-014](#d-014-fixed-32-team-league-structure-for-10). Also resolves Q-14: a single user-controlled team was proposed in the same session as already implied by the one-pager's 1.0 scope, and the owner raised no objection.
@@ -541,10 +542,11 @@
 ## D-064: F-02 team set accepted; shared city labels
 - **Status:** **Accepted** (owner, 2026-10-15, reviewing [F-02](features/F-02_LEAGUE_AND_TEAMS.md)): *"Use New York and Los Angeles like the real league"*; on the Heritage and Frontier conference names, *"Yeah those work for the base version I think most users will import real ones"*; on changing any of the 32, *"For now no, those look good to me"*.
 - **Decision:**
-  - The two-team metros **share their city label**, as in the real league: **New York** Excelsiors (NYX) and **New York** Kings (NYK), **Los Angeles** Condors (LAC) and **Los Angeles** Navigators (LAN). Abbreviation, nickname, monogram and colors tell them apart, and the UI never shows the city alone where it would be ambiguous.
+  - The two-team metros **share their city label**, as in the real league: **New York** Excelsiors (NYX) and **New York** Shipwrights (NYS, drafted as the Kings, NYK), **Los Angeles** Condors (LAC) and **Los Angeles** Navigators (LAN). Abbreviation, nickname, monogram and colors tell them apart, and the UI never shows the city alone where it would be ambiguous.
   - Conference names are **Heritage** and **Frontier** for the base set.
   - The 32 drafted franchises are accepted as-is. They may still change only if the automated blocklist, color or contrast tests flag them ([F-02 §4.3](features/F-02_LEAGUE_AND_TEAMS.md#43-guardrails-each-one-is-a-test-against-the-data-file)).
 - **Note:** the owner expects most players to import a real-league set. The team-set schema already covers conference and division names, so an import can rename those too ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
+- *(Added later, 2026-10-20, M1 WP2: the first run of the §4.3 checks changed the set, as this decision allows, and the owner approved the result: "the names and colors are approved". Four nicknames already used in pro football became the Atlanta **Railmen** (was Aviators), the New York **Shipwrights** (was Kings; `NYK` → `NYS`, monogram `S`), the Houston **Riggers** (was Wildcatters) and the Phoenix **Javelinas** (was Scorpions). The Excelsiors' Empire Field became **Skyline Field**, and eight primary colors moved. [F-02 Appendix A](features/F-02_LEAGUE_AND_TEAMS.md#changes-from-the-first-draft-2026-10-20-m1-wp2) lists each change and why.)*
 
 ## D-065: F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages
 - **Status:** **Accepted** (owner, 2026-10-15, reviewing [F-03](features/F-03_PLAYERS.md)): on the attribute list, *"I am good with the 42 attributes"*; after the interval was explained, chose "80% interval"; on roster composition, *"Yes but don't make them strict some team might have more or less but that should be the average"*.
@@ -681,3 +683,13 @@
 - **Unchanged:** the commit format (`(type) *module* : summary`), a commit per work package (or per meaningful slice), `./build.ps1` before every commit, and a tag per milestone (`m1-complete`, …) when its exit checklist passes, which is also when the version's middle number goes up (D-072).
 - **History:** M0 used `feat/m0-foundations`, merged into `main` with `m0-complete` on the merge commit; M1's first commits came through PR #2.
 
+
+## D-077: Data files carry no version numbers; they change only additively
+- **Status:** **Accepted** (owner, 2026-10-20, on the data-file versions in the WP2 data: *"once we settle on a schema that will be pretty locked, and if we ever change it should be considered optional"*, then *"go ahead with the change"*). Amends [D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)'s "versioned".
+- **Decision:**
+  - The files in `data/` (the team set, the college list, and the player, name, place and contract data that follow) have **no version**: no `schemaVersion` or `version` field, and no `.v1` in the file name. The built-in files ship inside the app, so they can't fall out of step with it.
+  - **Formats only grow.** A field added later is optional, with a default, so an older file (an M11 import) still loads. A newer file read by an older app fails strict parsing with an error that names the unknown field.
+  - If a breaking change is ever unavoidable, a `schemaVersion` field is added then, and a file without one means today's format. Nothing is lost by waiting.
+  - A save records only the team set's **name** (`SaveInfo.TeamSetName`), not a version: its team data is copied into the save at creation.
+- **Unchanged:** the **save's** schema version (the number of EF migrations, [PERSISTENCE.md §3](architecture/PERSISTENCE.md)), which is what refuses a save from a newer app; the published JSON schemas (now unversioned); strict parsing.
+- **Consequences:** + No version fields, rules or file renames to maintain. − A breaking format change, if one ever comes, pays for its version field and conversion then.

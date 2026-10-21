@@ -1,0 +1,835 @@
+{
+  "name": "Default",
+  "conferences": [
+    {
+      "key": "HER",
+      "name": "Heritage Conference",
+      "divisions": [
+        {
+          "key": "HER-E",
+          "name": "East",
+          "teams": [
+            "NYX",
+            "PHI",
+            "WAS",
+            "BAL"
+          ]
+        },
+        {
+          "key": "HER-N",
+          "name": "North",
+          "teams": [
+            "CHI",
+            "GB",
+            "MIN",
+            "KC"
+          ]
+        },
+        {
+          "key": "HER-S",
+          "name": "South",
+          "teams": [
+            "ATL",
+            "CHA",
+            "NSH",
+            "JAX"
+          ]
+        },
+        {
+          "key": "HER-W",
+          "name": "West",
+          "teams": [
+            "LAC",
+            "SF",
+            "SEA",
+            "LV"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "FRO",
+      "name": "Frontier Conference",
+      "divisions": [
+        {
+          "key": "FRO-E",
+          "name": "East",
+          "teams": [
+            "NYS",
+            "BOS",
+            "BUF",
+            "PIT"
+          ]
+        },
+        {
+          "key": "FRO-N",
+          "name": "North",
+          "teams": [
+            "DET",
+            "CLE",
+            "CIN",
+            "IND"
+          ]
+        },
+        {
+          "key": "FRO-S",
+          "name": "South",
+          "teams": [
+            "MIA",
+            "TPA",
+            "NO",
+            "HOU"
+          ]
+        },
+        {
+          "key": "FRO-W",
+          "name": "West",
+          "teams": [
+            "LAN",
+            "PHX",
+            "DEN",
+            "DAL"
+          ]
+        }
+      ]
+    }
+  ],
+  "teams": [
+    {
+      "abbr": "NYX",
+      "city": "New York",
+      "nickname": "Excelsiors",
+      "metro": "new-york",
+      "colors": {
+        "primary": "#A6192E",
+        "secondary": "#2B2E34",
+        "accent": "#C9CDD2"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "NY",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Skyline Field",
+        "capacity": 82500,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "PHI",
+      "city": "Philadelphia",
+      "nickname": "Continentals",
+      "metro": "philadelphia",
+      "colors": {
+        "primary": "#1F3F7A",
+        "secondary": "#D8C39A",
+        "accent": "#FFFFFF"
+      },
+      "crest": {
+        "shape": "Roundel",
+        "monogram": "P",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "Founders Field",
+        "capacity": 68000,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "WAS",
+      "city": "Washington",
+      "nickname": "Statesmen",
+      "metro": "washington",
+      "colors": {
+        "primary": "#1F5B3F",
+        "secondary": "#ECE6D6",
+        "accent": "#9C7A4A"
+      },
+      "crest": {
+        "shape": "Banner",
+        "monogram": "W",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Federal Park",
+        "capacity": 67000,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "BAL",
+      "city": "Baltimore",
+      "nickname": "Privateers",
+      "metro": "baltimore",
+      "colors": {
+        "primary": "#4C4C4D",
+        "secondary": "#C2562B",
+        "accent": "#F0E6D2"
+      },
+      "crest": {
+        "shape": "Diamond",
+        "monogram": "B",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Harborview Stadium",
+        "capacity": 70500,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "CHI",
+      "city": "Chicago",
+      "nickname": "Zephyrs",
+      "metro": "chicago",
+      "colors": {
+        "primary": "#2A8FC4",
+        "secondary": "#D7263D",
+        "accent": "#FFFFFF"
+      },
+      "crest": {
+        "shape": "Hexagon",
+        "monogram": "C",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "Lakefront Field",
+        "capacity": 61500,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "GB",
+      "city": "Green Bay",
+      "nickname": "Voyageurs",
+      "metro": "green-bay",
+      "colors": {
+        "primary": "#7A1F1F",
+        "secondary": "#E9E0CC",
+        "accent": "#2E4A3A"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "GB",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Bayshore Field",
+        "capacity": 78000,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "MIN",
+      "city": "Minneapolis",
+      "nickname": "Millers",
+      "metro": "minneapolis",
+      "colors": {
+        "primary": "#343A40",
+        "secondary": "#F4F1EA",
+        "accent": "#D98E04"
+      },
+      "crest": {
+        "shape": "Roundel",
+        "monogram": "M",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Mill City Dome",
+        "capacity": 66800,
+        "roof": "Dome",
+        "surface": "Turf",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "KC",
+      "city": "Kansas City",
+      "nickname": "Drovers",
+      "metro": "kansas-city",
+      "colors": {
+        "primary": "#6B481D",
+        "secondary": "#E7D7B5",
+        "accent": "#2C5F8A"
+      },
+      "crest": {
+        "shape": "Banner",
+        "monogram": "KC",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Stockyard Stadium",
+        "capacity": 76400,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "ATL",
+      "city": "Atlanta",
+      "nickname": "Railmen",
+      "metro": "atlanta",
+      "colors": {
+        "primary": "#D9541E",
+        "secondary": "#2F3E46",
+        "accent": "#F2F2F2"
+      },
+      "crest": {
+        "shape": "Diamond",
+        "monogram": "A",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Terminus Dome",
+        "capacity": 71000,
+        "roof": "Retractable",
+        "surface": "Turf",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "CHA",
+      "city": "Charlotte",
+      "nickname": "Prospectors",
+      "metro": "charlotte",
+      "colors": {
+        "primary": "#B88A1B",
+        "secondary": "#1E3B2F",
+        "accent": "#F5F0E1"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "C",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Queen City Stadium",
+        "capacity": 74800,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "NSH",
+      "city": "Nashville",
+      "nickname": "Longhunters",
+      "metro": "nashville",
+      "colors": {
+        "primary": "#4E6B3A",
+        "secondary": "#C9A36B",
+        "accent": "#2B1E16"
+      },
+      "crest": {
+        "shape": "Hexagon",
+        "monogram": "N",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Cumberland Field",
+        "capacity": 69000,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "JAX",
+      "city": "Jacksonville",
+      "nickname": "Commodores",
+      "metro": "jacksonville",
+      "colors": {
+        "primary": "#1B2A4A",
+        "secondary": "#E8EDF2",
+        "accent": "#B22234"
+      },
+      "crest": {
+        "shape": "Roundel",
+        "monogram": "J",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "St. Johns Stadium",
+        "capacity": 67800,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "LAC",
+      "city": "Los Angeles",
+      "nickname": "Condors",
+      "metro": "los-angeles",
+      "colors": {
+        "primary": "#E07A2F",
+        "secondary": "#1F2E4A",
+        "accent": "#F4E1C1"
+      },
+      "crest": {
+        "shape": "Roundel",
+        "monogram": "LA",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Sunset Bowl",
+        "capacity": 70000,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "SF",
+      "city": "San Francisco",
+      "nickname": "Sea Lions",
+      "metro": "san-francisco",
+      "colors": {
+        "primary": "#2E6F8E",
+        "secondary": "#B8C4CC",
+        "accent": "#1B1F24"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "SF",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "Bayside Stadium",
+        "capacity": 68500,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "SEA",
+      "city": "Seattle",
+      "nickname": "Steelheads",
+      "metro": "seattle",
+      "colors": {
+        "primary": "#A33B57",
+        "secondary": "#D6DEE3",
+        "accent": "#23343F"
+      },
+      "crest": {
+        "shape": "Diamond",
+        "monogram": "S",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Sound Field",
+        "capacity": 68000,
+        "roof": "Open",
+        "surface": "Turf",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "LV",
+      "city": "Las Vegas",
+      "nickname": "Sidewinders",
+      "metro": "las-vegas",
+      "colors": {
+        "primary": "#1F9E94",
+        "secondary": "#E3C9A0",
+        "accent": "#2B2B2B"
+      },
+      "crest": {
+        "shape": "Hexagon",
+        "monogram": "LV",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Mojave Dome",
+        "capacity": 65000,
+        "roof": "Dome",
+        "surface": "Turf",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "NYS",
+      "city": "New York",
+      "nickname": "Shipwrights",
+      "metro": "new-york",
+      "colors": {
+        "primary": "#60452C",
+        "secondary": "#F3E9D7",
+        "accent": "#1A1A1A"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "S",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "Kings County Field",
+        "capacity": 72000,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "BOS",
+      "city": "Boston",
+      "nickname": "Ironsides",
+      "metro": "boston",
+      "colors": {
+        "primary": "#1C1C1C",
+        "secondary": "#F2F2F2",
+        "accent": "#B87333"
+      },
+      "crest": {
+        "shape": "Banner",
+        "monogram": "B",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Harbor Point Stadium",
+        "capacity": 65900,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "BUF",
+      "city": "Buffalo",
+      "nickname": "Canalers",
+      "metro": "buffalo",
+      "colors": {
+        "primary": "#3B6E4F",
+        "secondary": "#C9B37E",
+        "accent": "#1D2A33"
+      },
+      "crest": {
+        "shape": "Hexagon",
+        "monogram": "BUF",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Erie Field",
+        "capacity": 71600,
+        "roof": "Open",
+        "surface": "Turf",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "PIT",
+      "city": "Pittsburgh",
+      "nickname": "Forgemen",
+      "metro": "pittsburgh",
+      "colors": {
+        "primary": "#B23A1E",
+        "secondary": "#5A5F66",
+        "accent": "#EDEDED"
+      },
+      "crest": {
+        "shape": "Diamond",
+        "monogram": "P",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Confluence Field",
+        "capacity": 68400,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "DET",
+      "city": "Detroit",
+      "nickname": "Motormen",
+      "metro": "detroit",
+      "colors": {
+        "primary": "#2F2F36",
+        "secondary": "#E0A100",
+        "accent": "#C0C7CE"
+      },
+      "crest": {
+        "shape": "Hexagon",
+        "monogram": "D",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Motor City Dome",
+        "capacity": 65000,
+        "roof": "Dome",
+        "surface": "Turf",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "CLE",
+      "city": "Cleveland",
+      "nickname": "Freighters",
+      "metro": "cleveland",
+      "colors": {
+        "primary": "#2C5E7A",
+        "secondary": "#9E4A2F",
+        "accent": "#F0EDE6"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "C",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Lakeshore Stadium",
+        "capacity": 67400,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "CIN",
+      "city": "Cincinnati",
+      "nickname": "Rivermen",
+      "metro": "cincinnati",
+      "colors": {
+        "primary": "#2F5D3A",
+        "secondary": "#E8D9B5",
+        "accent": "#7A2E2E"
+      },
+      "crest": {
+        "shape": "Roundel",
+        "monogram": "CIN",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "Queensgate Field",
+        "capacity": 65500,
+        "roof": "Open",
+        "surface": "Turf",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "IND",
+      "city": "Indianapolis",
+      "nickname": "Drivers",
+      "metro": "indianapolis",
+      "colors": {
+        "primary": "#C1121F",
+        "secondary": "#111111",
+        "accent": "#FFFFFF"
+      },
+      "crest": {
+        "shape": "Banner",
+        "monogram": "I",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Crossroads Dome",
+        "capacity": 67000,
+        "roof": "Retractable",
+        "surface": "Turf",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "MIA",
+      "city": "Miami",
+      "nickname": "Tarpons",
+      "metro": "miami",
+      "colors": {
+        "primary": "#093B70",
+        "secondary": "#A9B8C3",
+        "accent": "#F26B4A"
+      },
+      "crest": {
+        "shape": "Roundel",
+        "monogram": "M",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Biscayne Stadium",
+        "capacity": 65300,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "TPA",
+      "city": "Tampa",
+      "nickname": "Captains",
+      "metro": "tampa",
+      "colors": {
+        "primary": "#E1AD21",
+        "secondary": "#1F4E3D",
+        "accent": "#FFFFFF"
+      },
+      "crest": {
+        "shape": "Banner",
+        "monogram": "T",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "Bayfront Stadium",
+        "capacity": 69200,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "NO",
+      "city": "New Orleans",
+      "nickname": "Crescents",
+      "metro": "new-orleans",
+      "colors": {
+        "primary": "#642683",
+        "secondary": "#2E8B57",
+        "accent": "#E3B505"
+      },
+      "crest": {
+        "shape": "Diamond",
+        "monogram": "NO",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Crescent Dome",
+        "capacity": 73000,
+        "roof": "Dome",
+        "surface": "Turf",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "HOU",
+      "city": "Houston",
+      "nickname": "Riggers",
+      "metro": "houston",
+      "colors": {
+        "primary": "#2A2A2A",
+        "secondary": "#E86A10",
+        "accent": "#F5F5F5"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "H",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Bayou Dome",
+        "capacity": 72200,
+        "roof": "Retractable",
+        "surface": "Turf",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "LAN",
+      "city": "Los Angeles",
+      "nickname": "Navigators",
+      "metro": "los-angeles",
+      "colors": {
+        "primary": "#136F72",
+        "secondary": "#F7F3EA",
+        "accent": "#0B2B30"
+      },
+      "crest": {
+        "shape": "Diamond",
+        "monogram": "N",
+        "stripe": "Bar"
+      },
+      "stadium": {
+        "name": "Harbor Gate Stadium",
+        "capacity": 62000,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Temperate"
+      }
+    },
+    {
+      "abbr": "PHX",
+      "city": "Phoenix",
+      "nickname": "Javelinas",
+      "metro": "phoenix",
+      "colors": {
+        "primary": "#B8651D",
+        "secondary": "#F0D9B5",
+        "accent": "#2B2B2B"
+      },
+      "crest": {
+        "shape": "Banner",
+        "monogram": "P",
+        "stripe": "TwinBars"
+      },
+      "stadium": {
+        "name": "Saguaro Dome",
+        "capacity": 63400,
+        "roof": "Retractable",
+        "surface": "Turf",
+        "climate": "Hot"
+      }
+    },
+    {
+      "abbr": "DEN",
+      "city": "Denver",
+      "nickname": "Bighorns",
+      "metro": "denver",
+      "colors": {
+        "primary": "#396EA5",
+        "secondary": "#EEF2F3",
+        "accent": "#2E5E4E"
+      },
+      "crest": {
+        "shape": "Shield",
+        "monogram": "D",
+        "stripe": "Chevron"
+      },
+      "stadium": {
+        "name": "Summit Field",
+        "capacity": 76100,
+        "roof": "Open",
+        "surface": "Grass",
+        "climate": "Cold"
+      }
+    },
+    {
+      "abbr": "DAL",
+      "city": "Dallas",
+      "nickname": "Marshals",
+      "metro": "dallas",
+      "colors": {
+        "primary": "#1E1E1E",
+        "secondary": "#C8A04B",
+        "accent": "#F2EFE6"
+      },
+      "crest": {
+        "shape": "Hexagon",
+        "monogram": "DAL",
+        "stripe": "Sash"
+      },
+      "stadium": {
+        "name": "Trinity Dome",
+        "capacity": 80000,
+        "roof": "Retractable",
+        "surface": "Turf",
+        "climate": "Hot"
+      }
+    }
+  ]
+}
