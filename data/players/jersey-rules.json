@@ -1,0 +1,184 @@
+{
+  "rules": [
+    {
+      "position": "QB",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 19
+        }
+      ]
+    },
+    {
+      "position": "RB",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        },
+        {
+          "from": 80,
+          "to": 89
+        }
+      ]
+    },
+    {
+      "position": "FB",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        },
+        {
+          "from": 80,
+          "to": 89
+        }
+      ]
+    },
+    {
+      "position": "WR",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        },
+        {
+          "from": 80,
+          "to": 89
+        }
+      ]
+    },
+    {
+      "position": "TE",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        },
+        {
+          "from": 80,
+          "to": 89
+        }
+      ]
+    },
+    {
+      "position": "OT",
+      "numbers": [
+        {
+          "from": 50,
+          "to": 79
+        }
+      ]
+    },
+    {
+      "position": "OG",
+      "numbers": [
+        {
+          "from": 50,
+          "to": 79
+        }
+      ]
+    },
+    {
+      "position": "C",
+      "numbers": [
+        {
+          "from": 50,
+          "to": 79
+        }
+      ]
+    },
+    {
+      "position": "EDGE",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 79
+        },
+        {
+          "from": 90,
+          "to": 99
+        }
+      ]
+    },
+    {
+      "position": "DT",
+      "numbers": [
+        {
+          "from": 50,
+          "to": 79
+        },
+        {
+          "from": 90,
+          "to": 99
+        }
+      ]
+    },
+    {
+      "position": "LB",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 59
+        },
+        {
+          "from": 90,
+          "to": 99
+        }
+      ]
+    },
+    {
+      "position": "CB",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        }
+      ]
+    },
+    {
+      "position": "S",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        }
+      ]
+    },
+    {
+      "position": "K",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        },
+        {
+          "from": 90,
+          "to": 99
+        }
+      ]
+    },
+    {
+      "position": "P",
+      "numbers": [
+        {
+          "from": 0,
+          "to": 49
+        },
+        {
+          "from": 90,
+          "to": 99
+        }
+      ]
+    },
+    {
+      "position": "LS",
+      "numbers": [
+        {
+          "from": 40,
+          "to": 49
+        }
+      ]
+    }
+  ]
+}

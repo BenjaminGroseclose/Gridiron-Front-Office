@@ -86,6 +86,7 @@
 | D-076 | Work happens on `main`; no milestone branches | **Accepted** |
 | D-077 | Data files carry no version numbers; they change only additively | **Accepted** |
 | D-078 | M1 builds for today's consumers: fifteen simplifications | **Accepted** |
+| D-079 | WP3 player data: traits in generation.json, measurable priors deferred, F-12 before contracts | **Accepted** |
 
 ---
 
@@ -715,3 +716,11 @@
   15. **The wizard has a Generate button and an optional seed** (random by default), with no regenerate-on-edit.
 - **Unchanged:** the command palette v0 stays in M1 (owner's call), and so does the fog-of-war rule that every read model carries an estimate and an uncertainty.
 - **Consequences:** + Fewer tables, classes and tests in M1, and nothing built before its consumer. − Each deferred piece is built when its milestone arrives; all are small.
+
+## D-079: WP3 player data: traits in generation.json, measurable priors deferred, F-12 before contracts
+- **Status:** **Accepted** (owner, 2026-10-21, answering the three questions in the [WP3 guide](milestones/M1_WP3_GUIDE.md): *"agree with all three, go ahead"*). Amends [F-03](features/F-03_PLAYERS.md) §4.3, §4.7 and §5.
+- **Decision:**
+  1. **No `traits.json`.** With the six trait columns ([D-078](#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)), the data is one distribution and the Low/High thresholds, which live in `data/players/generation.json`'s `personality`.
+  2. **The measurable "priors" are deferred.** All 11 measurables are generated and stored (the combine needs them in M6), but in M1 only four become ratings: the 40 (Speed), the 10-yard split (Acceleration), the 3-cone and shuttle (Agility) and the bench (Strength). Vertical, broad jump, arm length, hand size, height and weight nudge no skill yet. The nudges come back as a field added to `generation.json` if M2's SimLab shows players feel samey.
+  3. **F-12's M1 spec comes next,** drafted by Claude for the owner's review. `contracts.json` is WP3's last slice, after it.
+- **Consequences:** + One file fewer, and no prior tuning in M1. − Seven measurables carry no rating signal until the nudges return.

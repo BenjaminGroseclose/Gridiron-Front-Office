@@ -1,0 +1,259 @@
+{
+  "roster": {
+    "active": 53,
+    "practiceSquad": 16,
+    "freeAgents": 150
+  },
+  "tiers": {
+    "Starter": {
+      "skillShift": 10.5,
+      "spread": 9,
+      "athleticShift": 0.5,
+      "target": {
+        "mean": 74,
+        "sd": 7
+      }
+    },
+    "Backup": {
+      "skillShift": -3.5,
+      "spread": 6,
+      "athleticShift": 0,
+      "target": {
+        "mean": 64,
+        "sd": 6
+      }
+    },
+    "Fringe": {
+      "skillShift": -12.5,
+      "spread": 5,
+      "athleticShift": -0.5,
+      "target": {
+        "mean": 56,
+        "sd": 5
+      }
+    }
+  },
+  "skills": {
+    "common": {
+      "Stamina": 70,
+      "Toughness": 70,
+      "Awareness": 60,
+      "Discipline": 65
+    },
+    "offPosition": {
+      "mean": 25,
+      "sd": 8,
+      "min": 0,
+      "max": 100
+    },
+    "noiseSd": 4
+  },
+  "athletic": {
+    "drillCorrelation": 0.6,
+    "physicalNoiseSd": 3,
+    "ratings": [
+      {
+        "measurable": "Forty",
+        "attribute": "Speed",
+        "best": {
+          "value": 4.25,
+          "rating": 99
+        },
+        "worst": {
+          "value": 5.45,
+          "rating": 40
+        }
+      },
+      {
+        "measurable": "TenSplit",
+        "attribute": "Acceleration",
+        "best": {
+          "value": 1.45,
+          "rating": 99
+        },
+        "worst": {
+          "value": 1.95,
+          "rating": 40
+        }
+      },
+      {
+        "measurable": "ThreeCone",
+        "attribute": "Agility",
+        "best": {
+          "value": 6.55,
+          "rating": 99
+        },
+        "worst": {
+          "value": 8.2,
+          "rating": 40
+        }
+      },
+      {
+        "measurable": "Shuttle",
+        "attribute": "Agility",
+        "best": {
+          "value": 3.9,
+          "rating": 99
+        },
+        "worst": {
+          "value": 4.95,
+          "rating": 40
+        }
+      },
+      {
+        "measurable": "Bench",
+        "attribute": "Strength",
+        "best": {
+          "value": 38,
+          "rating": 99
+        },
+        "worst": {
+          "value": 5,
+          "rating": 40
+        }
+      }
+    ]
+  },
+  "hidden": {
+    "potentialGrowth": [
+      {
+        "throughAge": 22,
+        "growth": {
+          "mean": 8,
+          "sd": 5,
+          "min": 0
+        }
+      },
+      {
+        "throughAge": 25,
+        "growth": {
+          "mean": 4,
+          "sd": 4,
+          "min": 0
+        }
+      },
+      {
+        "throughAge": 27,
+        "growth": {
+          "mean": 1,
+          "sd": 2,
+          "min": 0
+        }
+      },
+      {
+        "throughAge": 99,
+        "growth": {
+          "mean": 0,
+          "sd": 0
+        }
+      }
+    ],
+    "potentialGrades": [
+      {
+        "grade": "APlus",
+        "minPeakOvr": 92
+      },
+      {
+        "grade": "A",
+        "minPeakOvr": 88
+      },
+      {
+        "grade": "AMinus",
+        "minPeakOvr": 85
+      },
+      {
+        "grade": "BPlus",
+        "minPeakOvr": 82
+      },
+      {
+        "grade": "B",
+        "minPeakOvr": 78
+      },
+      {
+        "grade": "BMinus",
+        "minPeakOvr": 75
+      },
+      {
+        "grade": "CPlus",
+        "minPeakOvr": 72
+      },
+      {
+        "grade": "C",
+        "minPeakOvr": 68
+      },
+      {
+        "grade": "CMinus",
+        "minPeakOvr": 64
+      },
+      {
+        "grade": "D",
+        "minPeakOvr": 58
+      },
+      {
+        "grade": "F",
+        "minPeakOvr": 0
+      }
+    ],
+    "developmentCurve": {
+      "Early": 0.2,
+      "Normal": 0.6,
+      "Late": 0.2
+    },
+    "bustRisk": {
+      "mean": 0.15,
+      "sd": 0.1,
+      "min": 0,
+      "max": 1
+    },
+    "peakAgeOffset": {
+      "mean": 0,
+      "sd": 1,
+      "min": -3,
+      "max": 3
+    },
+    "injuryProneness": {
+      "mean": 1,
+      "sd": 0.2,
+      "min": 0.5,
+      "max": 2
+    }
+  },
+  "personality": {
+    "value": {
+      "mean": 50,
+      "sd": 18,
+      "min": 0,
+      "max": 100
+    },
+    "lowBelow": 35,
+    "highAbove": 65
+  },
+  "collegeTiers": {
+    "Starter": {
+      "Power": 0.6,
+      "Major": 0.3,
+      "Small": 0.1
+    },
+    "Backup": {
+      "Power": 0.4,
+      "Major": 0.4,
+      "Small": 0.2
+    },
+    "Fringe": {
+      "Power": 0.25,
+      "Major": 0.4,
+      "Small": 0.35
+    }
+  },
+  "targets": {
+    "ovr90Plus": {
+      "min": 15,
+      "max": 25
+    },
+    "meanAge": {
+      "value": 26.5,
+      "tolerance": 1
+    },
+    "rosterMixTolerance": 0.3
+  }
+}

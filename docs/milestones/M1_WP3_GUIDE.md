@@ -1,6 +1,6 @@
 # M1 · WP3 builder's guide: player data
 
-> **Status:** Ready to build (the data files are prepared alongside, §7) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml) · **Size:** M–L · **Written:** 2026-10-21
+> **Status:** Ready to build (§7: four of the seven files are ready) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml) · **Size:** M–L · **Written:** 2026-10-21
 >
 > WP3 puts every number the player generator (WP4) needs into data files with first-pass values: each position's roster targets, body and athletic testing, OVR weights and archetypes; the league-wide generation settings; the jersey rule; the name and hometown lists; and the famous-people blocklist. Nothing generates players yet. WP3 only loads the numbers and proves them consistent, so WP4 can tune data instead of code.
 
@@ -79,9 +79,9 @@ Like WP2's files: camelCase field names, enum values **and enum dictionary keys*
 {
   "roster": { "active": 53, "practiceSquad": 16, "freeAgents": 150 },
   "tiers": {
-    "Starter": { "skillShift": 10, "spread": 7, "athleticShift": 0.5, "target": { "mean": 74, "sd": 7 } },
-    "Backup":  { "skillShift": 0,  "spread": 6, "athleticShift": 0,   "target": { "mean": 64, "sd": 6 } },
-    "Fringe":  { "skillShift": -8, "spread": 5, "athleticShift": -0.5, "target": { "mean": 56, "sd": 5 } }
+    "Starter": { "skillShift": 10.5, "spread": 9, "athleticShift": 0.5, "target": { "mean": 74, "sd": 7 } },
+    "Backup":  { "skillShift": -3.5, "spread": 6, "athleticShift": 0,   "target": { "mean": 64, "sd": 6 } },
+    "Fringe":  { "skillShift": -12.5, "spread": 5, "athleticShift": -0.5, "target": { "mean": 56, "sd": 5 } }
   },
   "skills": {
     "common": { "Stamina": 70, "Toughness": 70, "Awareness": 60, "Discipline": 65 },
@@ -276,10 +276,17 @@ In `tests/Infrastructure.Tests/Seed/`, against the shipped files. Each lists eve
 
 ## 7. Where the data stands
 
-Not written yet. It's prepared in §6's order, and each file is validated against §4's rules in a reference run before it's handed over. First-pass values come from public combine averages and F-03's targets; WP4's distribution tests will move them, which is why they live in data.
+**Ready (2026-10-21):** `positions.json`, `generation.json`, `jersey-rules.json` and `famous-people.json`. Every §4 rule passes against them in a reference run.
+- **Measurables:** public NFL combine averages by position. **OVR weights and archetypes:** hand-set, so SimLab can replace the weights in M2.
+- **A rough reference simulation of §2.2's model** already lands near F-03's targets after two small tuning passes (tier shifts and spreads; tight ends and linebackers +5 and +3, kickers, punters and long snappers −2). Over four seeds: Starter OVR 75.4–75.6 (target 74), Backup 64.1–64.5 (64), Fringe 56.2–56.7 (56), 14–24 players at 90+ (15–25), mean age 26.7 (26.5 ± 1). WP4's distribution tests do the real tuning.
+- **The jersey rule** is the 2026 NFL rulebook's (Rule 5, Section 1): QB 0–19; RB, FB, TE, WR 0–49 and 80–89; offensive line 50–79; defensive line 50–79 and 90–99; linebackers 0–59 and 90–99; defensive backs 0–49; kickers and punters 0–49 and 90–99. The rulebook doesn't name two of our positions. **EDGE** players are listed as linemen or linebackers, so they get both (0–79 and 90–99). **Long snappers** are listed as tight ends or linebackers and nearly all wear the 40s, so they get 40–49.
+- **`famous-people.json`:** 1,063 names, compiled from memory: Hall of Famers, stars, coaches and broadcasters of roughly the last 25 seasons, every president, and very famous athletes and entertainers. Common-name stars ("Josh Allen", "Chris Johnson", "Mike Williams") are in it on purpose.
 
-## 8. Questions for you
+**Next:** the three downloads for `first.json`, `last.json` and `hometowns.json` (each asked first), then `contracts.json` after F-12's M1 spec.
 
-1. **Fold `traits.json` into `generation.json`?** *(Recommended: yes.)* With D-078's six trait columns, a trait is defined by its enum and column; the data only needs one distribution and the Low/High thresholds, which fit in `generation.json`'s `personality`. One file fewer. F-03 §4.7 would be updated to match.
-2. **Defer the measurable "priors"?** *(Recommended: yes.)* F-03 §4.3 has vertical, broad jump, arm length, hand size, height and weight nudge some skills (Contested Catch, Pass Block, Hands…). WP3 still generates and stores every measurable (the combine needs them in M6), but in M1 only the four maps above turn measurables into ratings. If players feel samey in M2's SimLab, the nudges come back as a field added to `generation.json`. F-03 §4.3 would be updated.
-3. **F-12's M1 spec next?** *(Recommended: yes.)* WP0 planned it and it was never written; `contracts.json` and WP4's contracts need it. I'll draft it from the real CBA structure for your review, then prepare `contracts.json` as WP3's last slice. F-01's M1 spec (the wizard) can wait until WP8.
+## 8. Questions for you (answered 2026-10-21)
+
+All three as recommended ([D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts)): *"agree with all three, go ahead"*.
+1. ~~Fold `traits.json` into `generation.json`?~~ → **Yes.** F-03 §4.7 updated.
+2. ~~Defer the measurable "priors"?~~ → **Yes.** F-03 §4.3 updated.
+3. ~~F-12's M1 spec next?~~ → **Yes.** `contracts.json` follows it as WP3's last slice.

@@ -38,6 +38,7 @@
 | D-070                                           | Read models are `sealed record …Dto` next to their query services                                         |
 | D-077                                           | Data files carry no version number and only grow: a field added later is optional                         |
 | D-078                                           | Fifteen simplifications: each piece arrives with its first consumer (see the WPs)                         |
+| D-079                                           | No traits.json; measurable priors deferred; F-12's M1 spec before contracts.json                          |
 | D-071                                           | No screen-reader work; keyboard, contrast and color-blind safety stay                                     |
 | D-072                                           | This milestone is `0.1.x`                                                                                 |
 
@@ -99,9 +100,9 @@
 **Goal:** every number the generator needs, as data with first-pass values. **Builder's guide:** [M1_WP3_GUIDE.md](M1_WP3_GUIDE.md).
 
 - `data/players/positions.json`: roster averages, ranges and floors (F-03 §4.1); hand-set OVR weights (recalibrated by SimLab in M2); archetype profiles; age and measurable distributions by position.
-- `traits.json` (the six D-043 traits), `generation.json` (the tier targets, F-03 §4.10), `jersey-rules.json` (the current NFL numbering rule, **checked against the real rule** when written).
+- `generation.json` (the tiers, the athletic maps, hidden ratings, the personality distribution and the test targets, F-03 §4.10; no `traits.json`, D-079), `jersey-rules.json` (the current NFL numbering rule, **checked against the real rule** when written).
 - **Names and places** (approved 2026-10-20): `data/names/first.json`, `last.json` and `data/places/hometowns.json`, frequency-weighted from public-domain U.S. government data (SSA baby names, the Census surname list, the Census places gazetteer). Each download is named, with its source and size, for approval before it happens; the sources go in THIRD_PARTY_NOTICES.
-- `data/contracts/contracts.json` (F-12's M1 slice): the first-season cap, minimum salaries by experience, salary bands by position and tier, length, bonus and guarantee shares, rookie-style deals by draft round. _Waits for F-12's M1 spec (WP0), which isn't written yet; it's WP3's last slice._
+- `data/contracts/contracts.json` (F-12's M1 slice): the first-season cap, minimum salaries by experience, salary bands by position and tier, length, bonus and guarantee shares, rookie-style deals by draft round. _Waits for F-12's M1 spec, which comes next (D-079); it's WP3's last slice._
 - `data/blocklists/famous-people.json` (F-03 §4.11): Hall of Fame members, notable players of the last ~25 seasons, and a short list of other very famous people.
 - **Tests:** every file parses and validates; weights sum to 1; every attribute appears in at least one position's weights or archetypes.
 
@@ -181,7 +182,7 @@
 ```
 data/
 ├─ league/      teams.json, teams.schema.json, colleges.json, colleges.schema.json
-├─ players/     positions.json, traits.json, generation.json, jersey-rules.json
+├─ players/     positions.json, generation.json, jersey-rules.json
 ├─ names/       first.json, last.json
 ├─ places/      hometowns.json
 └─ blocklists/  football-teams.json, major-league-teams.json, stadiums.json, metro-nfl-colors.json, real-colleges.json,

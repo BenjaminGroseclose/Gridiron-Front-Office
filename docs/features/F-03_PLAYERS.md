@@ -117,11 +117,13 @@ Generation order for every player: **position → body (height, weight) → athl
 | 40-yard dash | **Speed** | Position-specific distributions (e.g., CB mean 4.48, OT 5.25) |
 | 10-yard split | **Acceleration** | Correlated with the 40 |
 | 3-cone, short shuttle | **Agility** | |
-| Bench press reps, weight | **Strength** | |
-| Vertical, broad jump | Priors for Contested Catch, Ball Skills, Acceleration | Not ratings themselves |
-| Arm length | Priors for Pass Block, Press, Pass Rush | |
-| Hand size | Priors for Hands, Ball Security (QBs: fumbles) | |
-| Height, weight | Priors across positions (e.g., Break Tackle, Strength) | |
+| Bench press reps | **Strength** | |
+| Vertical, broad jump | Priors for Contested Catch, Ball Skills, Acceleration | Not ratings themselves. Deferred: stored, not read in M1 (D-079) |
+| Arm length | Priors for Pass Block, Press, Pass Rush | Deferred (D-079) |
+| Hand size | Priors for Hands, Ball Security (QBs: fumbles) | Deferred (D-079) |
+| Height, weight | Priors across positions (e.g., Break Tackle, Strength) | Deferred (D-079) |
+
+**M1 ([D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts)):** only the first four rows become ratings, each through a straight line between a best and a worst value in `data/players/generation.json`. The priors return as a field added there if M2's SimLab shows players feel samey.
 
 - `Physical = f(measurable) + hiddenNoise`, with `hiddenNoise ~ N(0, 3)` rating points ("football speed vs. track speed"). That's why the combine makes physical ratings **near-exact** (±3) rather than exact. It falls out of the model with no special case.
 - Stamina and Toughness don't come from measurables.
@@ -166,7 +168,7 @@ With uncertainty, a grade shows its likely spread ("Ceiling: B+, likely B to A�
 | Ego | Role demands (F-14/F-15 M9) |
 
 - Values are hidden 0–100 floats. **Shown as coarse descriptors:** Low (< 35), Average, High (> 65). Visibility follows D-032: your roster from acquisition, prospects through interviews, others only through reputation tags.
-- Traits are **defined in data** (`data/players/traits.json`) and stored as six columns on `Players`, like the attributes ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)). Adding one later is a column, its data and a deterministic backfill migration.
+- Traits are six columns on `Players`, like the attributes ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)). Their values come from one distribution in `data/players/generation.json`, which also holds the Low/High thresholds ([D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts)). Adding one later is a column and a deterministic backfill migration.
 
 ### 4.8 Bio
 
@@ -226,7 +228,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 - `Players`: `PlayerID`, `TeamID?`, `Status` (Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired), `Position`, names, `BirthDate`, `CollegeID`, `Hometown`, `ExperienceSeasons`, draft info, `JerseyNumber`; **measurables** (wide columns); **42 true attribute columns** (wide; floats); **hidden ratings** (`Potential`, `DevCurve`, `BustRisk`, `PeakAgeOffset`, `InjuryProneness`); **personality** (six trait columns, §4.7).
 - `RatingHistory (PlayerID, Season, Ovr, key attributes)`: one row per season, from M5 with player development (F-20, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - `Colleges (CollegeID, Name, Region, Tier)`: copied from the data file at creation.
-- **Data files:** `data/players/positions.json` (roster targets, OVR weights, archetypes, age distributions, measurable distributions), `traits.json`, `jersey-rules.json`, `generation.json` (tier targets), `data/names/first.json`, `last.json`, `data/places/hometowns.json`, `data/league/colleges.json`, `data/blocklists/famous-people.json`.
+- **Data files:** `data/players/positions.json` (roster targets, OVR weights, archetypes, age distributions, measurable distributions), `jersey-rules.json`, `generation.json` (tiers, the athletic maps, hidden ratings, personality and the test targets), `data/names/first.json`, `last.json`, `data/places/hometowns.json`, `data/league/colleges.json`, `data/blocklists/famous-people.json`.
 - **Read models** (all built through `IPerception` for the user's team): `PlayerRowDto` (ID, name, position, age, team, OVR estimate + sigma, potential grade + spread, archetype), `PlayerDetailDto` (+ every attribute estimate + sigma, measurables, bio, personality descriptors where visible, contract summary).
 
 ## 6. Application services
