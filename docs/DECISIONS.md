@@ -85,6 +85,7 @@
 | D-075 | Color-blind tuning is reviewed before a public release | **Accepted** |
 | D-076 | Work happens on `main`; no milestone branches | **Accepted** |
 | D-077 | Data files carry no version numbers; they change only additively | **Accepted** |
+| D-078 | M1 builds for today's consumers: fifteen simplifications | **Accepted** |
 
 ---
 
@@ -690,6 +691,27 @@
   - The files in `data/` (the team set, the college list, and the player, name, place and contract data that follow) have **no version**: no `schemaVersion` or `version` field, and no `.v1` in the file name. The built-in files ship inside the app, so they can't fall out of step with it.
   - **Formats only grow.** A field added later is optional, with a default, so an older file (an M11 import) still loads. A newer file read by an older app fails strict parsing with an error that names the unknown field.
   - If a breaking change is ever unavoidable, a `schemaVersion` field is added then, and a file without one means today's format. Nothing is lost by waiting.
-  - A save records only the team set's **name** (`SaveInfo.TeamSetName`), not a version: its team data is copied into the save at creation.
+  - A save never records a team-set version: its team data is copied into the save at creation. (The set's name joins the save with M11's import, [D-078](#d-078-m1-builds-for-todays-consumers-fifteen-simplifications).)
 - **Unchanged:** the **save's** schema version (the number of EF migrations, [PERSISTENCE.md §3](architecture/PERSISTENCE.md)), which is what refuses a save from a newer app; the published JSON schemas (now unversioned); strict parsing.
 - **Consequences:** + No version fields, rules or file renames to maintain. − A breaking format change, if one ever comes, pays for its version field and conversion then.
+
+## D-078: M1 builds for today's consumers: fifteen simplifications
+- **Status:** **Accepted** (owner, 2026-10-21, after asking for an over-engineering review of M1: *"approve 1-15, keep the command palette in M1"*). Amends [F-02](features/F-02_LEAGUE_AND_TEAMS.md) and [F-03](features/F-03_PLAYERS.md), [D-077](#d-077-data-files-carry-no-version-numbers-they-change-only-additively)'s save note, and the roadmap's M1 scope (the range display moves to M6).
+- **Decision:** M1 builds what M1 itself uses; each piece arrives with its first consumer.
+  1. **No reusable data validator yet.** Tests check the shipped data (structure, unique abbreviations and college names). `SeedDataRules` and its located errors arrive with M11's import, which shows them to the player.
+  2. **Skills = archetype + shared quality + noise**, not a correlated multivariate normal: the archetype sets each skill's mean, one shared draw (by tier) lifts a player's skills together, and independent noise goes on top. No correlation matrices, no Cholesky.
+  3. **The name re-roll is unit-tested** instead of a 100-league blocklist sweep.
+  4. **Only the budgets a player feels are checked:** a new league in under 5 s (Release, measured at the exit) and the 2,000-row grid. Component targets (loading, generation, perception) are logged, not asserted.
+  5. **No UI golden snapshots in M1:** design changes keep landing. Verify stays for the generator's golden test.
+  6. **The stadium is columns on `Teams`:** no `Stadiums` table and no `StadiumID`.
+  7. **The user's team is stored once,** in `SaveInfo.UserTeamID` (no `Teams.IsUserTeam`).
+  8. **`RatingHistory` arrives with player development** (F-20, M5).
+  9. **Personality traits are six columns on `Players`,** like the attributes, instead of a narrow `PlayerTraits` table.
+  10. **The team picker shows crest, name, roster strength and cap space;** needs come with the AI's needs model (M5).
+  11. **No distribution warnings at runtime;** the distribution tests cover the targets.
+  12. **No save columns without a reader:** `SaveInfo.TeamSetName` arrives with M11's import, and the save's `Teams` has no `Metro` (the data file keeps it for its tests).
+  13. **Rating ranges render from M6.** Every read model still carries an estimate and a sigma through `IPerception` (σ = 0), so M6 adds the range display without touching read models.
+  14. **`GameStateStore` v0 loads when the save opens;** refreshing from domain events arrives with the moving calendar (M3).
+  15. **The wizard has a Generate button and an optional seed** (random by default), with no regenerate-on-edit.
+- **Unchanged:** the command palette v0 stays in M1 (owner's call), and so does the fog-of-war rule that every read model carries an estimate and an uncertainty.
+- **Consequences:** + Fewer tables, classes and tests in M1, and nothing built before its consumer. − Each deferred piece is built when its milestone arrives; all are small.

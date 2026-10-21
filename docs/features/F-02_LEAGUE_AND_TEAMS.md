@@ -109,9 +109,8 @@ A small parametric SVG, so 32 crests look like one family and can be read at 16 
 
 **Save tables** (copied from the data file at creation, [PERSISTENCE.md §5.2](../architecture/PERSISTENCE.md#52-league-structure)):
 - `Conferences (ConferenceID, Key, Name)`, `Divisions (DivisionID, ConferenceID, Key, Name)`
-- `Teams (TeamID, DivisionID, Abbreviation, City, Nickname, Metro, PrimaryColor, SecondaryColor, AccentColor, CrestShape, CrestMonogram, CrestStripe, StadiumID, IsUserTeam)`
-- `Stadiums (StadiumID, Name, Capacity, Roof, Surface, ClimateZone)`
-- `SaveInfo.TeamSetName` (which data set the league came from: "Default", or an imported set's name in M11)
+- `Teams (TeamID, DivisionID, Abbreviation, City, Nickname, PrimaryColor, SecondaryColor, AccentColor, CrestShape, CrestMonogram, CrestStripe, StadiumName, StadiumCapacity, StadiumRoof, StadiumSurface, StadiumClimate)`: the stadium is part of the team, with no table of its own
+- The user's team is `SaveInfo.UserTeamID`. `SaveInfo.TeamSetName` joins the save with M11's import, and `metro` stays in the data file for its tests ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications))
 
 **Read models:** `TeamIdentityDto` (ID, abbreviation, city, nickname, colors, crest), `TeamSummaryDto` (+ conference, division, record later), `LeagueStructureDto` (conferences → divisions → teams).
 
@@ -121,7 +120,7 @@ A small parametric SVG, so 32 crests look like one family and can be read at 16 
 |---|---|---|---|
 | `Leagues/LeagueGenerator` (part of `CreateLeague`) | Copies the team set into the save, inside the creation command | — | `LeagueCreated` |
 | `Leagues/LeagueStructureQueries` | — | `GetLeagueStructure()`, `GetTeamIdentity(teamID)`, `GetAllTeamIdentities()` (cached per session; identities never change in 1.0) | — |
-| `Leagues/TeamSetLoader` (Infrastructure port `ISeedData`) | — | Loads and validates `teams.json` against the schema (the same validator M11 import uses) | — |
+| `Leagues/TeamSetLoader` (Infrastructure port `ISeedData`) | — | Loads `teams.json` with strict parsing. Tests check the shipped data; a reusable validator arrives with M11's import ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)) | — |
 
 ## 7. AI counterpart
 None. Structure and identity are static data. (Every team, user or AI, is defined the same way.)
@@ -149,14 +148,15 @@ None. Identity is fixed at creation.
 - Event IDs: 1200–1219.
 
 ## 12. Performance
-- Loading and validating the team set: < 20 ms. Identities are cached per session and served from memory.
+- Loading the team set: < 20 ms. Identities are cached per session and served from memory.
+- These are targets read from the timed log, not test assertions ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - `TeamMark` renders as inline SVG from parameters with no image requests. 32 crests on the League page render in < 16 ms.
 
 ## 13. Test plan
 - **Unit (Core):** structure invariants (§4.1).
-- **Data tests:** every guardrail in §4.3 runs against `teams.json`, plus schema validation.
+- **Data tests:** every guardrail in §4.3 runs against `teams.json`, plus the structure checks (2 × 4 × 4, unique abbreviations, colors).
 - **bUnit:** `TeamMark` renders each shape and stripe, falls back to the on-color when the accent fails contrast, and exposes an accessible name ("New York Excelsiors").
-- **Golden:** the League page snapshot (Verify) in both themes.
+- **No UI golden snapshot in M1** ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)): design changes keep landing, and the gallery is the visual check.
 - **Autoplay:** no impact.
 
 ## 14. Open questions (for owner review)

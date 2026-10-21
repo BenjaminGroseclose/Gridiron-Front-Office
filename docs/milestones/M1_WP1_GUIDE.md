@@ -64,7 +64,7 @@ NextUInt64(): result = RotateLeft(s1 * 5, 7) * 9
 | `bool Chance(double p)` | `NextDouble() < p` | |
 | `double Normal(double mean = 0, double sd = 1)` | **Box–Muller:** `u1 = 1.0 − NextDouble()` (so it's never 0), `u2 = NextDouble()`, `z = Math.Sqrt(−2 · Math.Log(u1)) · Math.Cos(2π · u2)`; return `mean + sd · z` | Don't cache the second value: the state stays just the four `ulong`s, which keeps "same seed, same draws" simple to reason about. |
 
-Not in WP1: weighted picks and correlated multivariate normal draws (Cholesky). WP4's guide adds them when the generator needs them.
+Not in WP1: weighted picks. WP4's guide adds them when the generator needs them. (Correlated multivariate draws were dropped, D-078.)
 
 **One instance per purpose, never shared across threads.** `GfoRandom` isn't thread-safe, and sharing one between, say, two teams' generation makes the results depend on order. Derive a seed per unit of work instead (§2.4).
 

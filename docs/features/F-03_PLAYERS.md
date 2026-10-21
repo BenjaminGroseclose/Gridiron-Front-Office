@@ -128,7 +128,7 @@ Generation order for every player: **position → body (height, weight) → athl
 - Measurables are stored. For prospects, the combine (or a pro day) **reveals** them exactly (F-17). For your own players they're always known.
 
 ### 4.4 Skill attributes
-- Each position has a few **archetype profiles** in data (§4.8) that shape which skills are high or low. Generation samples an archetype, then draws skills from a correlated multivariate normal (e.g., Route Running ~ Release, Man Coverage ~ Press) conditioned on the target **tier** (starter, backup, fringe, §4.10).
+- Each position has a few **archetype profiles** in data (§4.8) that shape which skills are high or low. Generation samples an archetype, then draws each skill as the archetype's mean for it, plus one **shared quality draw** for the player conditioned on the target **tier** (starter, backup, fringe, §4.10), plus independent noise. The shared draw makes a player's skills rise and fall together; the archetype gives the pattern (a route runner's Route Running and Release are high together). No correlation matrices ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - Off-position skills get low baselines (a CB's Pass Block barely matters, and the sim rarely asks for it).
 
 ### 4.5 Overall (OVR)
@@ -166,7 +166,7 @@ With uncertainty, a grade shows its likely spread ("Ceiling: B+, likely B to A�
 | Ego | Role demands (F-14/F-15 M9) |
 
 - Values are hidden 0–100 floats. **Shown as coarse descriptors:** Low (< 35), Average, High (> 65). Visibility follows D-032: your roster from acquisition, prospects through interviews, others only through reputation tags.
-- Traits are **defined in data** (`data/players/traits.json`) and stored in a narrow `PlayerTraits` table (§5), so adding one later is data plus a deterministic backfill migration, with no schema change.
+- Traits are **defined in data** (`data/players/traits.json`) and stored as six columns on `Players`, like the attributes ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)). Adding one later is a column, its data and a deterministic backfill migration.
 
 ### 4.8 Bio
 
@@ -198,7 +198,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 - **Error model (numbers owned by F-17):** `error = σ_player · z_player + σ_attr · z_attr`. A shared player-level term (a team misjudges the *whole* player) plus a small attribute-level term. The shared term dominates, so the OVR range behaves like the "about ±3" in D-032 instead of averaging away. All `z` values come from `Hash(leagueSeed, "perception", viewer, player, season)`, redrawn once per league year.
 - **Displayed range** = an **80% interval** (estimate ± 1.28σ), so the truth falls outside the range about 1 time in 5. That's what makes surprises and busts honest.
 - **OVR range** = the OVR formula over perceived attributes, with σ propagated through the weights.
-- **M1–M5:** `IPerception` returns σ = 0 for everything, but **every read model already carries an estimate *and* a sigma**, so M6 changes data, not screens.
+- **M1–M5:** `IPerception` returns σ = 0 for everything, but **every read model already carries an estimate *and* a sigma**, so M6 changes data and adds the range display without touching read models ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - The sim never calls `IPerception`. It always uses true ratings.
 
 ### 4.10 Generation targets (initial values, tuned by tests)
@@ -219,13 +219,12 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ### 4.11 The name blocklist
 - `data/blocklists/famous-people.json`: normalized full names. **Sources to compile:** Pro Football Hall of Fame members, notable NFL players of the last ~25 seasons (e.g., Pro Bowl selections), plus a short list of other very famous people (presidents, globally famous athletes and entertainers). Names are facts. Compiling the list is a one-time effort of a few hours, kept in the spec's scope.
-- **Rule:** a generated full name that matches (case- and accent-insensitive) is re-rolled. **Test:** a 100-league generation sweep produces zero matches.
+- **Rule:** a generated full name that matches (case- and accent-insensitive) is re-rolled. **Test:** a unit test feeds a blocklisted name first and checks that it's re-rolled ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 
 ## 5. Data model
 
-- `Players`: `PlayerID`, `TeamID?`, `Status` (Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired), `Position`, names, `BirthDate`, `CollegeID`, `Hometown`, `ExperienceSeasons`, draft info, `JerseyNumber`; **measurables** (wide columns); **42 true attribute columns** (wide; floats); **hidden ratings** (`Potential`, `DevCurve`, `BustRisk`, `PeakAgeOffset`, `InjuryProneness`).
-- `PlayerTraits (PlayerID, Trait, Value)`: personality, extensible without schema changes (§4.7).
-- `RatingHistory (PlayerID, Season, Ovr, key attributes)`: one row per season.
+- `Players`: `PlayerID`, `TeamID?`, `Status` (Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired), `Position`, names, `BirthDate`, `CollegeID`, `Hometown`, `ExperienceSeasons`, draft info, `JerseyNumber`; **measurables** (wide columns); **42 true attribute columns** (wide; floats); **hidden ratings** (`Potential`, `DevCurve`, `BustRisk`, `PeakAgeOffset`, `InjuryProneness`); **personality** (six trait columns, §4.7).
+- `RatingHistory (PlayerID, Season, Ovr, key attributes)`: one row per season, from M5 with player development (F-20, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - `Colleges (CollegeID, Name, Region, Tier)`: copied from the data file at creation.
 - **Data files:** `data/players/positions.json` (roster targets, OVR weights, archetypes, age distributions, measurable distributions), `traits.json`, `jersey-rules.json`, `generation.json` (tier targets), `data/names/first.json`, `last.json`, `data/places/hometowns.json`, `data/league/colleges.json`, `data/blocklists/famous-people.json`.
 - **Read models** (all built through `IPerception` for the user's team): `PlayerRowDto` (ID, name, position, age, team, OVR estimate + sigma, potential grade + spread, archetype), `PlayerDetailDto` (+ every attribute estimate + sigma, measurables, bio, personality descriptors where visible, contract summary).
@@ -245,8 +244,8 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ## 8. UI
 - **Roster** (DataGrid v1): name, position, age, OVR chip, potential grade, archetype, contract. Sticky name column. Every name opens the `PlayerPeekSheet`.
-- **Player page:** a header (photo-less silhouette, name, position, number, team colors), an attributes panel grouped as in §4.2 with `RatingBar` (estimate + range), measurables, bio, personality descriptors (or "Unknown"), and the contract.
-- **`RatingChip` / `RatingBar`:** an estimate plus an 80% range when σ > 0, a plain value when σ = 0. Potential uses a grade chip with its spread.
+- **Player page:** a header (photo-less silhouette, name, position, number, team colors), an attributes panel grouped as in §4.2 with `RatingBar` (a range from M6), measurables, bio, personality descriptors (or "Unknown"), and the contract.
+- **`RatingChip` / `RatingBar`:** a plain value while σ = 0 (M1–M5). From M6, an estimate plus its 80% range when σ > 0, and the potential grade chip shows its spread ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - Keyboard: the grid has arrow-key navigation, and Enter opens the peek sheet.
 
 ## 9. Calendar and phase integration
@@ -261,19 +260,19 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ## 11. Logging
 - Information: `LeagueGenerated {Seed} {Players} {ElapsedMs}`, `DraftClassGenerated {Season} {Count}`.
-- Warning: a distribution target missed by more than its tolerance during generation (a tuning issue).
 - Event IDs: 1300–1329.
 
 ## 12. Performance
 - Generating ~2,300 players (rosters, practice squads, free agents) < 2 s, inside the < 5 s league budget.
 - `IPerception` for a 2,000-row grid < 20 ms (pure math, cached per league year).
+- These are targets read from the timed log, not test assertions; the < 5 s league budget is measured at the M1 exit ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 
 ## 13. Test plan
 - **Unit (Core):** the OVR calculator per position, potential grade bands, the measurable → physical mapping (monotonic, near-exact within the noise), archetype labeling.
 - **Golden:** `GenerateLeague(seed: 42)` summary snapshot (Verify).
 - **Distribution:** per-position tier means and SDs within tolerance over 20 seeds. Count of 90+ players. Age mean.
-- **Blocklist sweep:** 100 seeds produce zero blocklisted names.
-- **Perception:** own roster exact, σ = 0 before M6, the 80% interval math, and determinism per (viewer, player, season).
+- **Blocklist:** a blocklisted name is re-rolled (a unit test, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
+- **Perception:** own roster exact and σ = 0 before M6. The 80% interval math and determinism per (viewer, player, season) arrive with σ > 0 in M6.
 - **Consumer test (M2):** every attribute is referenced by `SimTuning.json`.
 - **Autoplay (M5):** generation + progression hold the health bands for 30 seasons.
 

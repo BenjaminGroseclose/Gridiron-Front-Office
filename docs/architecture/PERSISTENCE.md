@@ -151,13 +151,13 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 | `LiveEventState` | `EventType`, `Status`, `StateJson`, `ClockRemainingMs`, `LastHeartbeatUtc` | See [LIVE_EVENTS.md](LIVE_EVENTS.md) |
 
 ### 5.2 League structure
-`Conferences`, `Divisions`, `Teams` (identity: city, nickname, abbreviation, colors, mark spec, stadium), `Stadiums`, `TeamSeasons` (W/L/T, points for and against, seed, playoff result per season), `Coaches` (M10), `Owners` (M10).
+`Conferences`, `Divisions`, `Teams` (identity: city, nickname, abbreviation, colors, mark spec, and the stadium as columns, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)), `TeamSeasons` (W/L/T, points for and against, seed, playoff result per season), `Coaches` (M10), `Owners` (M10).
 
 ### 5.3 People
 | Table | Key columns |
 |---|---|
 | `Players` | `PlayerID`, `TeamID?`, `Status`, `Position`, names, `BirthDate`, `College`, `Hometown`, `DraftSeason/Round/Pick/TeamID`, `ExperienceSeasons`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
-| `RatingHistory` | `PlayerID`, `Season`, overall + key attributes (one snapshot per season) |
+| `RatingHistory` | `PlayerID`, `Season`, overall + key attributes (one snapshot per season). From M5, with player development ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)) |
 | `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `SignedOn`, `Type` (Rookie, Veteran, Tag, Minimum, …), `TotalValue`, `SigningBonus`, `IsActive` |
 | `ContractYears` | `ContractID`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
 | `DeadMoney` | `TeamID`, `Season`, `PlayerID`, `Amount`, `Reason` |
