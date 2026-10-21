@@ -1,0 +1,24 @@
+/* The title backdrop fills its (positioned) parent and never takes a click. */
+.gfo-title-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/*
+  Colors by role (VISUAL_DESIGN.md §3.1–3.3). The per-path opacities in the markup make the depth fade toward the
+  horizon; these classes only set the paint.
+*/
+.field-line { stroke: var(--colorNeutralStroke1); }   /* Border strong */
+
+.los,
+.defense { stroke: var(--colorNeutralForeground3); }  /* Faint */
+
+.offense { stroke: var(--colorNeutralForeground2); }  /* Muted */
+
+/* The routes take the accent, so they follow the user's team color. */
+.route { stroke: var(--gfo-accent); }
+.route-head { fill: var(--gfo-accent); }

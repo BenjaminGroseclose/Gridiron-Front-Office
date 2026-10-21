@@ -1,3 +1,8 @@
 {
-  "dotnet.defaultSolution": "GridironFrontOffice.slnx"
+  "dotnet.defaultSolution": "GridironFrontOffice.slnx",
+
+  // Hot reload under the debugger (F5 "DevHost (browser)"): a saved .cs or .razor change is applied to the running
+  // app. CSS changes and the browser refresh come only from dotnet watch (the "watch: DevHost" task).
+  "csharp.experimental.debug.hotReload": true,
+  "csharp.debug.hotReloadOnSave": true
 }

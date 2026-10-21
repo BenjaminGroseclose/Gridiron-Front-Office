@@ -1,14 +1,16 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Windows.Threading;
 using GridironFrontOffice.Application.Platform;
 
 namespace GridironFrontOffice.Desktop.Platform;
 
 /// <summary>
 /// <see cref="IPlatformServices"/> on Windows: the shell's Recycle Bin (<c>SHFileOperationW</c>, which needs no
-/// package) and Explorer.
+/// package), Explorer, and the window's own close for Quit (the main menu's Exit).
 /// </summary>
 internal sealed class WindowsPlatformServices : IPlatformServices
 {
@@ -51,6 +53,28 @@ internal sealed class WindowsPlatformServices : IPlatformServices
 
     public void ShowInFolder(string path) =>
         Process.Start(new ProcessStartInfo("explorer.exe") { Arguments = $"/select,\"{path}\"", UseShellExecute = false })?.Dispose();
+
+    /// <summary>
+    /// Closes the main window, which goes through its OnClosing: the open league is closed and the placement saved,
+    /// then the window closes for real and the app exits. Marshalled, since the caller may be off the UI thread.
+    /// </summary>
+    [SuppressMessage("Usage", "VSTHRD001:Avoid legacy thread switching APIs",
+        Justification = "A plain WPF app has no JoinableTaskFactory; the Dispatcher with an explicit priority is how it reaches the UI thread.")]
+    public void Quit()
+    {
+        var app = System.Windows.Application.Current;   // qualified: GridironFrontOffice.Application is a sibling namespace
+        _ = app.Dispatcher.InvokeAsync(() =>
+        {
+            if (app.MainWindow is { } window)
+            {
+                window.Close();
+            }
+            else
+            {
+                app.Shutdown();
+            }
+        }, DispatcherPriority.Normal);
+    }
 
     private static bool Recycle(IReadOnlyList<string> paths)
     {

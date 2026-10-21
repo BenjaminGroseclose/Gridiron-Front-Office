@@ -180,6 +180,7 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 - **Fluent System Icons** (Microsoft, MIT), which ship with Fluent UI Blazor's icons package. **Regular** weight for UI, **Filled** for the active nav item and selected states. Their rounded terminals match Stadium's geometry.
 - Through GFO's `Icon` wrapper ([UI_DESIGN_SYSTEM.md §6.1](architecture/UI_DESIGN_SYSTEM.md#61-wrap-selectively-not-everything)), so the set can still be swapped.
 - Sizes: 16 px (inline), 18 px (nav, toolbar), 20 px (buttons), 24 px (empty states).
+- **Color:** an icon draws in the text color around it. `Icon`'s `Color` picks a role instead, each a token: Accent (§3.3, a mark at ≥ 3:1), Muted or Faint (§3.1), or a status color (§3.4: Positive, Warning, Negative). Color is never the only signal, so a status-colored icon sits next to text that says the same thing. Icons handed to Fluent parameters (`IconStart`) get the same roles through `IconCatalog.Create(…, color:)`.
 - **Status:** **confirmed** by the owner after Spike S0b showed them next to Archivo ([D-067](DECISIONS.md#d-067-spike-s0b-fluent-ui-v5-fits-datagridt-keeps-fluentdatagrid)).
 
 ---

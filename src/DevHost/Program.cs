@@ -52,6 +52,10 @@ try
     builder.Services.AddFluentUIComponents();
     builder.Services.AddGfoUi();
 
+    // Exit on the main menu stops this host (DevPlatformServices.Quit). The default 30 s drain would keep the process
+    // alive while the open Blazor circuits linger; a dev host can just go.
+    builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(2));
+
     var app = builder.Build();
 
     if (!app.Environment.IsDevelopment())

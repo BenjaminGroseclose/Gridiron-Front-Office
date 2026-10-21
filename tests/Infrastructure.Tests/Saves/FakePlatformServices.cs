@@ -42,6 +42,8 @@ internal sealed class FakePlatformServices(string trash) : IPlatformServices
     }
 
     public void ShowInFolder(string path) => throw new NotSupportedException("Tests never open Explorer.");
+
+    public void Quit() => throw new NotSupportedException("Tests never quit the app.");
 }
 
 /// <summary>A live event that's running (or not) when a test says so.</summary>

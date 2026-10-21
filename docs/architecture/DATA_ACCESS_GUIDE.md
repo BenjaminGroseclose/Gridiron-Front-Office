@@ -107,7 +107,7 @@ In SQLite's default (rollback journal) mode, an open `DataReader` or read transa
 > | `Core/IDs/IStronglyTypedID.cs`, `Core/Leagues/SaveInfo.cs` | The typed-ID marker; the `SaveInfo` entity and the creation-setting enums |
 > | `Application/Data/DataContracts.cs` | `ILeagueDb`, `ILeagueReadDb`, `IUnitOfWork`, `ISaveWriter`, `ISaveReader`, `IDomainEvent`, `IDomainEventDispatcher` |
 > | `Application/Saves/` | `ISaveManager` (create, open, close, restore, delete), `OpenSave`, `SaveOpened`/`SaveClosed`/`SaveDeleted`, `SaveErrors`; and from WP7 `ISaveCatalog` + `SaveCard`, `ISnapshotService` + `SnapshotTrigger` + `SnapshotPolicy`, `SaveRules` |
-> | `Application/Platform/`, `Application/LiveEvents/` | `IAppPaths`; from WP7 `IPlatformServices` (the Recycle Bin, Explorer) and `ILiveEventStatus` |
+> | `Application/Platform/`, `Application/LiveEvents/` | `IAppPaths`; from WP7 `IPlatformServices` (the Recycle Bin, Explorer; from M1 also Quit, for the main menu's Exit) and `ILiveEventStatus` |
 > | `Infrastructure/Data/` | `LeagueDbContext`, `Configurations/`, `TypedIDs`, `LeagueSession` + accessor + `SqlitePragmaInterceptor`, `SaveWriter` + `UnitOfWork` + `SaveReader`, `DomainEventDispatcher`, `DataLog`, `Migrations/` |
 > | `Infrastructure/Saves/` | `SaveManager`, `SaveCatalog`, `SnapshotService`, `SqliteFile` (the residue-free read-only connection, the format check, creation pragmas, `VACUUM INTO`, checkpoint and release) |
 > | `Infrastructure/InfrastructureServices.cs` | `AddGfoInfrastructure(paths, app)` |

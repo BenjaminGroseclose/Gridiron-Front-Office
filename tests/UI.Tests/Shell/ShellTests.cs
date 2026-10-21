@@ -66,6 +66,18 @@ public sealed class AppShellTests : GfoTestContext
         cut.FindAll(".gfo-caption-gap").Count.ShouldBe(gaps);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, true)]
+    public void A_bleeding_page_owns_the_whole_content_area(bool bleed, bool expected)
+    {
+        Services.AddGfoUi();
+
+        var cut = Render<AppShell>(p => p.Add(s => s.Bleed, bleed).AddChildContent("<p>Page</p>"));
+
+        cut.Find("main.gfo-shell-content").ClassList.Contains("is-bleed").ShouldBe(expected);
+    }
+
     [Fact]
     public void A_brand_replaces_the_wordmark()
     {

@@ -18,5 +18,31 @@
     <Icon Name="IconName.Home" Label="Home, 20 px" />
     <Icon Name="IconName.Home" Size="24" Label="Home, 24 px" />
     <Icon Name="IconName.Home" Size="24" Filled="true" Label="Home, 24 px, filled" />
-    <span class="accent"><Icon Name="IconName.Trophy" Size="24" Filled="true" Label="Trophy in the accent" /></span>
 </GallerySection>
+
+<GallerySection Title="Colors" Check="Inherit takes the text color around it. Accent is the team color (a mark, ≥ 3:1); the status colors are §3.4's and always sit next to text that says the same thing. Readable in both modes with every tint.">
+    @foreach (var color in Enum.GetValues<IconColor>())
+    {
+        <span class="color-cell"><Icon Name="@IconFor(color)" Size="24" Color="@color" Label="@($"{color} icon")" /><span>@color</span></span>
+    }
+</GallerySection>
+
+<GallerySection Title="On Fluent parameters" Check="Where Fluent takes an icon instance rather than markup (IconStart, IconRest), IconCatalog.Create carries the same color roles. A primary button keeps the on-accent text color.">
+    <FluentButton Appearance="ButtonAppearance.Primary" IconStart="@IconCatalog.Create(IconName.Play, 20, filled: true)">Play Week 7</FluentButton>
+    <FluentButton IconStart="@IconCatalog.Create(IconName.Add, color: IconColor.Accent)">New league</FluentButton>
+    <FluentButton IconStart="@IconCatalog.Create(IconName.Warning, color: IconColor.Warning)">2 questionable</FluentButton>
+    <FluentButton IconStart="@IconCatalog.Create(IconName.ErrorCircle, color: IconColor.Negative)">Over the cap</FluentButton>
+</GallerySection>
+
+@code {
+    private static IconName IconFor(IconColor color) => color switch
+    {
+        IconColor.Accent => IconName.Trophy,
+        IconColor.Muted => IconName.Info,
+        IconColor.Faint => IconName.MoreHorizontal,
+        IconColor.Positive => IconName.CheckmarkCircle,
+        IconColor.Warning => IconName.Warning,
+        IconColor.Negative => IconName.ErrorCircle,
+        _ => IconName.Home,
+    };
+}

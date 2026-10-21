@@ -1,8 +1,7 @@
 .gfo-menu-title {
   margin: 8px 0;
-  font-size: 40px;
+  font-size: 80px;
   line-height: 1;
-  text-align: center;
 }
 
 .gfo-menu-actions {
@@ -17,8 +16,34 @@
   text-align: center;
 }
 
+.gfo-menu-title-color {
+  color: var(--colorBrandForeground1);
+}
+
 .gfo-menu-version {
   margin: -8px 0 0;
   color: var(--colorNeutralForeground3);
   font-size: 12px;
+}
+
+.gfo-sub-menu {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+/* The actions are rows: icon, label, and an optional detail at the far end. Fluent's button is the flex container
+   itself, so the alignment goes on the class the button is given; the icon and the detail use its start and end slots. */
+.gfo-menu-actions ::deep .gfo-menu-action {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.gfo-menu-action-detail {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--colorNeutralForeground3);
+  font-size: 13px;
+  font-weight: 400;
 }

@@ -34,7 +34,7 @@
         {
             <nav class="gfo-shell-nav" aria-label="Main">@Navigation</nav>
         }
-        <main class="gfo-shell-content">@ChildContent</main>
+        <main class="gfo-shell-content @(Bleed ? "is-bleed" : "")">@ChildContent</main>
     </div>
 </div>
 
@@ -57,4 +57,7 @@
     [Parameter] public RenderFragment? Navigation { get; set; }
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>No page padding: the page owns the whole content area (the menu screens, which paint their own backdrop).</summary>
+    [Parameter] public bool Bleed { get; set; }
 }

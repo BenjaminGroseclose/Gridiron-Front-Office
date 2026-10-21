@@ -26,8 +26,12 @@
       "stopAtEntry": false
     },
     {
-      // The browser host for UI work, against its own dev data folder. Opens the browser once it's listening; the
-      // component gallery is at /_gallery. Stop it before building again: it locks its DLLs.
+      // The browser host under the debugger, against its own dev data folder. Opens the browser once it's listening;
+      // the component gallery is at /_gallery. Saved .cs and .razor changes are applied by C# Dev Kit's hot reload
+      // (settings.json); CSS isn't, and the browser doesn't refresh. For UI work without breakpoints, run the
+      // "watch: DevHost" task instead: dotnet watch applies CSS too and refreshes the browser. The two can't run at
+      // once (one port, one output folder), and the debugger can't attach to the watcher's app: with a debugger
+      // attached the runtime refuses the watcher's code patches. Stop this before building: it locks its DLLs.
       "name": "DevHost (browser)",
       "type": "coreclr",
       "request": "launch",

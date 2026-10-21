@@ -20,6 +20,7 @@ public sealed class MainLayoutTests : SaveScreenContext
         cut.Find("header.gfo-appbar").HasAttribute("data-drag-region").ShouldBeTrue("It's still the title bar.");
         cut.FindAll(".gfo-wordmark").ShouldBeEmpty();
         cut.FindAll("nav.gfo-shell-nav, [data-testid=close-league], [data-testid=league-name]").ShouldBeEmpty();
+        cut.Find("main.gfo-shell-content").ClassList.ShouldContain("is-bleed", "The menu screens paint their own backdrop to the edges.");
     }
 
     [Fact]
@@ -33,6 +34,7 @@ public sealed class MainLayoutTests : SaveScreenContext
         cut.Find("nav.gfo-shell-nav");
         cut.Find("[data-testid=close-league]");
         cut.Find("main .page").TextContent.ShouldBe("Page");
+        cut.Find("main.gfo-shell-content").ClassList.ShouldNotContain("is-bleed");
     }
 
     [Fact]

@@ -20,6 +20,27 @@ public sealed class MainMenuTests : SaveScreenContext
         cut.Find("[data-testid=continue]").HasAttribute("disabled").ShouldBeTrue();
         cut.FindAll("[data-testid=continue-target]").ShouldBeEmpty();
         cut.FindAll("[data-testid=new-league], [data-testid=load], [data-testid=settings]").Count.ShouldBe(3);
+        cut.FindAll("[data-testid=load] [slot=end]").ShouldBeEmpty("No count until there is a save.");
+    }
+
+    [Fact]
+    public void Exit_asks_the_host_to_quit()
+    {
+        var cut = Render<MainMenu>();
+
+        cut.Find("[data-testid=exit]").Click();
+
+        Platform.Quits.ShouldBe(1);
+    }
+
+    [Fact]
+    public void Load_says_how_many_saves_there_are()
+    {
+        Catalog.Add("Older League", daysAgo: 3);
+        Catalog.Add("Saturday League", daysAgo: 1);
+        var cut = Render<MainMenu>();
+
+        cut.Find("[data-testid=load] [slot=end]").TextContent.Trim().ShouldBe("2 saves");
     }
 
     [Fact]
@@ -28,6 +49,16 @@ public sealed class MainMenuTests : SaveScreenContext
         var cut = Render<MainMenu>();
 
         cut.Find("[data-testid=version]").TextContent.ShouldBe("v0.0.1");
+    }
+
+    [Fact]
+    public void The_title_backdrop_sits_behind_the_panel()
+    {
+        var cut = Render<MainMenu>();
+
+        var frame = cut.Find(".gfo-menu");
+        frame.FirstElementChild!.ClassList.ShouldContain("gfo-title-bg");
+        frame.QuerySelector(".gfo-menu-panel")!.CompareDocumentPosition(frame.FirstElementChild!).ShouldBe(AngleSharp.Dom.DocumentPositions.Preceding);
     }
 
     [Fact]

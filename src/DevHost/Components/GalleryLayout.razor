@@ -4,7 +4,8 @@
    layout that names itself would loop forever.
    The component gallery (UI_DESIGN_SYSTEM.md §6.2, VISUAL_DESIGN.md §10): every v0 component, switchable between Dark
    and Light, with team tint off (neutral) or in one of three sample team colors, and in either density. The switches
-   drive GfoThemeService directly and never touch settings.json. *@
+   drive GfoThemeService directly and never touch settings.json. A link can open a page in a given look for QA and
+   screenshots: ?mode=dark|light and ?accent=%23RRGGBB (or neutral). *@
 <div class="gallery">
     <header class="gallery-bar">
         <a class="gallery-home gfo-display" href="_gallery">Gallery</a>
@@ -51,6 +52,7 @@
         ("_gallery/stat", "Stat"),
         ("_gallery/empty-state", "EmptyState"),
         ("_gallery/kbd", "Kbd"),
+        ("_gallery/title-background", "TitleBackground"),
         ("_gallery/app-shell", "AppShell"),
     ];
 
@@ -73,6 +75,12 @@
     private string? _accent;
     private GfoDensity _density = GfoDensity.Comfortable;
 
+    /// <summary>?mode=dark or light: the mode to open the page in.</summary>
+    [SupplyParameterFromQuery] public string? Mode { get; set; }
+
+    /// <summary>?accent=%23RRGGBB or neutral: the team tint to open the page in.</summary>
+    [SupplyParameterFromQuery] public string? Accent { get; set; }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -80,6 +88,16 @@
             if (Theme.Current is { } current)
             {
                 (_mode, _accent, _density) = (current.Appearance.Mode, current.Appearance.AccentColor, current.Appearance.Density);
+            }
+
+            if (Mode is not null)
+            {
+                _mode = Mode.Equals("light", StringComparison.OrdinalIgnoreCase) ? GfoThemeMode.Light : GfoThemeMode.Dark;
+            }
+
+            if (Accent is not null)
+            {
+                _accent = Accent.Equals("neutral", StringComparison.OrdinalIgnoreCase) ? null : AccentColors.Normalize(Accent);
             }
 
             await ApplyAsync();

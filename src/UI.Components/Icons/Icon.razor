@@ -1,5 +1,6 @@
 @namespace GridironFrontOffice.UI.Components.Icons
-@* A GFO icon (VISUAL_DESIGN.md §7). Decorative unless it has a Label, which becomes its accessible name. *@
+@* A GFO icon (VISUAL_DESIGN.md §7). Decorative unless it has a Label, which becomes its accessible name. It draws in the
+   text color around it unless Color picks a role (a gfo-icon-* class, each a token in gfo-tokens.css). *@
 <FluentIcon Value="@_icon" Width="@($"{(Width ?? Size)}px")" Title="@Label" Class="@CssClass"
             aria-hidden="@(Label is null ? "true" : null)" role="@(Label is null ? null : "img")" @attributes="AdditionalAttributes" />
 
@@ -17,6 +18,9 @@
     /// <summary>The Filled style, for the active nav item and selected states.</summary>
     [Parameter] public bool Filled { get; set; }
 
+    /// <summary>A color role (the accent, a text level or a status color); by default the text color around the icon.</summary>
+    [Parameter] public IconColor Color { get; set; }
+
     /// <summary>The accessible name. Leave it null for a decorative icon next to text.</summary>
     [Parameter] public string? Label { get; set; }
 
@@ -24,7 +28,14 @@
 
     [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
-    private string CssClass => string.IsNullOrEmpty(Class) ? "gfo-icon" : $"gfo-icon {Class}";
+    private string CssClass
+    {
+        get
+        {
+            var classes = Color == IconColor.Inherit ? "gfo-icon" : $"gfo-icon gfo-icon-{Color.ToString().ToLowerInvariant()}";
+            return string.IsNullOrEmpty(Class) ? classes : $"{classes} {Class}";
+        }
+    }
 
     protected override void OnParametersSet() => _icon = IconCatalog.Create(Name, Size, Filled);
 }

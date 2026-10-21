@@ -1,0 +1,65 @@
+.stage-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.stage-hint {
+  font-size: 12.5px;
+  color: var(--colorNeutralForeground3);
+}
+
+/* The title screen's shape. The page paints the Ground; the backdrop sits on it, the content above (z-index 1). */
+.stage {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+  border: 1px solid var(--colorNeutralStroke2);
+  border-radius: var(--gfo-radius-m);
+  background: var(--colorNeutralBackground3);
+  outline: none;
+}
+
+.stage.is-fill {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  aspect-ratio: auto;
+  border: none;
+  border-radius: 0;
+}
+
+.stand-in {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2.5cqw;
+  width: max-content;
+  padding: 7cqw 0 0 6cqw;
+  color: var(--colorNeutralForeground1);
+}
+
+.stand-in-kicker {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--colorNeutralForeground3);
+}
+
+.stand-in-title {
+  font-size: 7cqw;
+  line-height: 0.92;
+}
+
+.stand-in-menu {
+  display: grid;
+  gap: 1cqw;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 1.6cqw;
+  font-weight: 600;
+  color: var(--colorNeutralForeground2);
+}

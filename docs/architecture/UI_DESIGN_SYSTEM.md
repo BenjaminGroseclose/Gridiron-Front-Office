@@ -219,7 +219,7 @@ Fonts are bundled locally as `woff2` (the app is offline). Both are SIL OFL.
 | **Navigation**: nav, tabs, breadcrumb | App shell, sub-pages | — |
 | **Display**: badge, avatar, progress, spinner, card, divider, skeleton/placeholder | Status, loading states, KPI containers | `FluentSkeleton` exists in v5 |
 | **DataGrid** (`FluentDataGrid`) | Every table screen | Wrapped by GFO's `DataGrid<T>` (§5.3) |
-| **Icons** (the Fluent System Icons package, MIT) | UI icons | Confirmed in [VISUAL_DESIGN.md §7](../VISUAL_DESIGN.md#7-iconography) (D-067): Regular weight, Filled for active states. `<FluentIcon Value="@(new Icons.Regular.Size20.Home())" />` (the parameter is `Value`, not `Icon`). GFO's `Icon` component maps names so a swap is cheap. The package adds about 22 MB of per-style DLLs. |
+| **Icons** (the Fluent System Icons package, MIT) | UI icons | Confirmed in [VISUAL_DESIGN.md §7](../VISUAL_DESIGN.md#7-iconography) (D-067): Regular weight, Filled for active states. `<FluentIcon Value="@(new Icons.Regular.Size20.Home())" />` (the parameter is `Value`, not `Icon`). GFO's `Icon` component maps names so a swap is cheap. The package adds about 22 MB of per-style DLLs. **As built (M1):** `Icon`'s `Color` (`IconColor`: Accent, Muted, Faint, Positive, Warning, Negative) adds a `gfo-icon-*` class, each a token in gfo-tokens.css; the default inherits the surrounding text color. Where Fluent takes an icon instance instead of markup (`IconStart`, `IconRest`), `IconCatalog.Create(name, size, filled, color)` carries the same role as the token string (`IconColor.Token()`, a `var()` of the token). |
 
 **Overlay API names (verified in S0b).** v5 has no `FluentDrawer` component and no `IToastService`.
 
@@ -237,6 +237,7 @@ Fonts are bundled locally as `woff2` (the app is offline). Both are SIL OFL.
 | `MoneyField` | P1 | Wraps a Fluent number input with `$12.5M` parsing and formatting |
 | `SegmentedControl` | P0 | v5 has no equivalent (verified), so build it from `FluentToggleButton`s. **As built:** a radio group for assistive technology (the chosen option is `aria-checked` and the only one in the Tab order), and focus follows the choice through `gfo-dom.js`, because Fluent's button `Element` can't be focused from .NET. |
 | `CountdownRing` | P1 | Trade phone offers, the mini draft clock |
+| `TitleBackground` | P0 | The title screen's backdrop: a field in perspective and a play diagram, one inline SVG that fills its parent. **As built (M1):** decorative (`aria-hidden`, no pointer events, static), colored only through tokens in its scoped stylesheet (Border strong for the lines, Faint and Muted for the play, the accent for the routes, so they follow the team color), and each instance owns its arrowhead marker id. In the app, `MenuFrame` renders it behind the menu panel (main menu, New League, Load). Gallery: `/_gallery/title-background`, with a stage that fills the window to check 1280 × 720 and 1920 × 1080. |
 | **Charts:** `Sparkline`, `BarChart`, `LineChart`, `RadarChart`, `WinProbabilityChart` | P1 | Pure SVG, themed with Fluent tokens, accessible (`<title>` + a data-table fallback). Fluent UI Blazor isn't a charting library. |
 | **Football composites** (in `GridironFrontOffice.UI`) | — | See §5.4 |
 
@@ -324,6 +325,7 @@ The earlier plan said "screens only use GFO component names" ([D-008](../DECISIO
 
 ### 6.3 Setup notes
 - Register Fluent UI services in **both** hosts (`GridironFrontOffice.Desktop` and `GridironFrontOffice.DevHost`). The DevHost is where UI work happens day to day.
+- **Hot reload (M1):** two ways to run the DevHost, never both at once (one port, one output folder). For UI work, `dotnet watch --project src/DevHost` (in VS Code the `watch: DevHost` task, which first checks port 5180; the Claude preview uses it too): saving a `.razor`, `.razor.css` or `.cs` file applies the change to the running app and the browser refreshes without a restart, and an edit hot reload can't apply (a new interface on a component, say) restarts the app. For breakpoints, F5 "DevHost (browser)" launches it under the debugger, and C# Dev Kit's hot reload (`csharp.experimental.debug.hotReload`, experimental for Razor) applies `.cs` and `.razor` changes; CSS isn't applied and the browser doesn't refresh. The two don't combine: with a debugger attached, the runtime refuses the watcher's code patches (verified: CSS still arrived, Razor never did).
 - Add the Fluent provider/root setup required by v5 to the shared root component in `GridironFrontOffice.UI`, so both hosts get it.
 - Pin the Fluent UI Blazor version in `Directory.Packages.props`. Upgrade deliberately (read the release notes; v5.x is new).
 
@@ -384,8 +386,8 @@ The earlier plan said "screens only use GFO component names" ([D-008](../DECISIO
   - Each item is a `NavEntry`: a Regular icon at rest and a Filled one when active.
 - **As built (M0 WP9 screens): the shell has two modes**, chosen by `MainLayout` from `ISaveManager.Current` and kept current by `SaveOpened`/`SaveClosed`:
   - **A league is open:** the wordmark (the team crest from M1), the league name in the `Context` slot, a Close league action, and the nav (Home is `/league`).
-  - **The main menu (no league):** the app bar stays (it's the title bar) but carries nothing, the menu screens own the page, and there's no nav. Screens reachable from the menu (New League, Load, Settings) offer "Main menu" back. Menu routes redirect to `/league` while a league is open, and league routes redirect to `/` when none is.
-  - The menu screens' layout is a placeholder (`MenuFrame`, a panel centered on the Ground) until the design review decides the main menu (WP9, option c).
+  - **The main menu (no league):** the app bar stays (it's the title bar) but carries nothing, the menu screens own the page, and there's no nav. Screens reachable from the menu (New League, Load, Settings) offer "Main menu" back. Menu routes redirect to `/league` while a league is open, and league routes redirect to `/` when none is. **M1:** Exit quits through `IPlatformServices.Quit`: on the desktop the window's own close (the league closes and the placement is saved first), in the DevHost a stop of its server.
+  - The menu screens' layout is a placeholder (`MenuFrame`, a panel centered on the Ground) until the design review decides the main menu (WP9, option c). **M1:** the shell gives the menu screens no page padding (`AppShell`'s `Bleed`), and `MenuFrame` paints the title backdrop (`TitleBackground`) to the edges of the content area, behind the panel and anything a screen puts under it.
 - **The primary action button** is context-aware: "Play Week 7", "Advance to Free Agency", "Enter the Draft Room". It's always in the same place, and `Ctrl+Enter` triggers it.
 - **Routing:** Blazor `Router` with deep-linkable entity routes (`/player/{id}`, `/team/{id}`, `/game/{id}`, `/draft`, …). Mouse back and forward buttons (XButton1/2) and `Alt+←/→` are wired to history.
 - **Peek sheets:** `PeekService.OpenPlayer(id)` opens the `PlayerPeekSheet` (a Fluent drawer) over any page. "Open full profile" navigates.

@@ -113,6 +113,14 @@
 
   .gfo-num { font-variant-numeric: tabular-nums; }
 
+  /* Icon colors by role (Icon's Color parameter; VISUAL_DESIGN.md §3.3–3.4). Icons draw in currentColor. */
+  .gfo-icon-accent   { color: var(--gfo-accent); }
+  .gfo-icon-muted    { color: var(--colorNeutralForeground2); }
+  .gfo-icon-faint    { color: var(--colorNeutralForeground3); }
+  .gfo-icon-positive { color: var(--gfo-status-positive); }
+  .gfo-icon-warning  { color: var(--gfo-status-warning); }
+  .gfo-icon-negative { color: var(--gfo-status-negative); }
+
   /* Display type (VISUAL_DESIGN.md §4): sizes come from the component using it. */
   .gfo-display {
     font-family: var(--gfo-font-display);

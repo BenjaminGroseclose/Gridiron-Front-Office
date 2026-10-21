@@ -15,4 +15,11 @@ public interface IPlatformServices
 
     /// <summary>Opens the containing folder with the file selected (the "Show in folder" button).</summary>
     void ShowInFolder(string path);
+
+    /// <summary>
+    /// Quits the app the way its window's close button does (the main menu's Exit): the open league is closed and the
+    /// window placement saved first. Returns at once; the close finishes on the host's own thread. The DevHost stops
+    /// its server instead.
+    /// </summary>
+    void Quit();
 }

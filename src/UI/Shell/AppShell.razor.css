@@ -79,3 +79,6 @@
   overflow: auto;
   padding: 20px 24px;
 }
+
+/* A page that owns the whole content area (the menu screens' frame paints the title backdrop to the edges). */
+.gfo-shell-content.is-bleed { padding: 0; }

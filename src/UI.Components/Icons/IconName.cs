@@ -12,6 +12,7 @@ public enum IconName
 {
     Add,
     Alert,
+    ArrowExit,
     ArrowLeft,
     ArrowSortDown,
     ArrowSortUp,
@@ -55,7 +56,10 @@ public enum IconName
     WeatherSunny,
 }
 
-/// <summary>Resolves a GFO icon name to a Fluent System Icons instance (Regular, or Filled for active states).</summary>
+/// <summary>
+/// Resolves a GFO icon name to a Fluent System Icons instance (Regular, or Filled for active states), for the Fluent
+/// parameters that take one (<c>IconStart</c>, <c>IconEnd</c>, <c>IconRest</c>). In markup, use <see cref="Icon"/>.
+/// </summary>
 public static class IconCatalog
 {
     /// <summary>The sizes GFO uses: 16 inline, 20 for buttons (and 18 px nav icons drawn from it), 24 for empty states.</summary>
@@ -63,7 +67,8 @@ public static class IconCatalog
 
     private static readonly ConcurrentDictionary<(IconName Name, int Size, bool Filled), Type> Types = new();
 
-    public static FluentIconBase Create(IconName name, int size = 20, bool filled = false)
+    /// <param name="color">A color role; by default the icon draws in the text color around it.</param>
+    public static FluentIconBase Create(IconName name, int size = 20, bool filled = false, IconColor color = IconColor.Inherit)
     {
         if (!Sizes.Contains(size))
         {
@@ -77,6 +82,7 @@ public static class IconCatalog
             return Type.GetType(typeName, throwOnError: true)!;
         });
 
-        return (FluentIconBase)Activator.CreateInstance(type)!;
+        var icon = (FluentIconBase)Activator.CreateInstance(type)!;
+        return color == IconColor.Inherit ? icon : icon.WithColor(color.Token());
     }
 }

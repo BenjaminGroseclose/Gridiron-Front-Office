@@ -4,7 +4,7 @@
     {
       "name": "DevHost",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/DevHost", "--no-launch-profile", "--", "--environment", "Development", "--urls", "http://localhost:5180"],
+      "runtimeArgs": ["watch", "--project", "src/DevHost", "--no-launch-profile", "--non-interactive", "run", "--", "--environment", "Development", "--urls", "http://localhost:5180"],
       "port": 5180
     }
   ]

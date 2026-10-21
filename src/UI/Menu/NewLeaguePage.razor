@@ -8,10 +8,6 @@
 <PageTitle>New league · Gridiron Front Office</PageTitle>
 
 <MenuFrame LabelledBy="new-title">
-    <div>
-        <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
-                      OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
-    </div>
     <h1 id="new-title" class="gfo-new-title gfo-display">New league</h1>
     <p class="gfo-new-hint">Just a name for now. Teams and players come with the league wizard.</p>
 
@@ -20,6 +16,8 @@
                      ChangeAfterKeyPress="SubmitKeys" OnChangeAfterKeyPress="OnEnterAsync" data-testid="league-name" />
 
     <div class="gfo-new-actions">
+				<FluentButton Appearance="ButtonAppearance.Outline" Color="var(--gfo-status-negative)" Loading="_busy" 
+						OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Back</FluentButton>
         <FluentButton Appearance="ButtonAppearance.Primary" Loading="_busy" OnClick="CreateAsync" data-testid="create">Create league</FluentButton>
     </div>
 </MenuFrame>

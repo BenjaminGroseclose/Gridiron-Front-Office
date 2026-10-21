@@ -56,4 +56,6 @@ internal sealed class NoPlatform : IPlatformServices
     public bool SendToRecycleBin(IReadOnlyList<string> paths) => throw new NotSupportedException();
 
     public void ShowInFolder(string path) => throw new NotSupportedException();
+
+    public void Quit() => throw new NotSupportedException();
 }

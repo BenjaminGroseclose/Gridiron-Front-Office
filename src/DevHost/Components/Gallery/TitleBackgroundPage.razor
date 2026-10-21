@@ -1,0 +1,65 @@
+@page "/_gallery/title-background"
+@* The title backdrop on a stage that keeps the title screen's 16:9 shape, and can fill the window to check it at the
+   real 1280 × 720 and 1920 × 1080 sizes (?fill=true opens it that way, for screenshots). The title stack on it is a
+   stand-in: the real one is a screen in GridironFrontOffice.UI. *@
+<PageTitle>TitleBackground · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">TitleBackground</h1>
+
+<GallerySection Title="The title screen's field and play diagram" Plain="true"
+                Check="Yard lines in Border strong fading toward the horizon, the play in Faint and Muted, the routes and arrowheads in the accent. Subtle in Light, never heavy. The stand-in title stack sits above it and the Ground shows through.">
+    <div class="stage-tools">
+        <FluentButton OnClick="FillAsync">Fill the window</FluentButton>
+        <span class="stage-hint">Esc returns to the gallery. Resize the window to try 1280 × 720 and 1920 × 1080.</span>
+    </div>
+    <div class="stage @(_fill ? "is-fill" : "")" tabindex="-1" @ref="_stage" @onkeydown="OnKeyDownAsync">
+        <TitleBackground />
+        <div class="stand-in">
+            <span class="stand-in-kicker">Stand-in title stack</span>
+            <span class="stand-in-title gfo-display">Gridiron<br />Front Office</span>
+            <ul class="stand-in-menu">
+                <li>New league</li>
+                <li>Load league</li>
+                <li>Settings</li>
+                <li>Quit</li>
+            </ul>
+        </div>
+    </div>
+</GallerySection>
+
+@code {
+    private ElementReference _stage;
+    private bool _fill;
+    private bool _focusStage;
+
+    /// <summary>?fill=true: start with the stage filling the window.</summary>
+    [SupplyParameterFromQuery] public bool Fill { get; set; }
+
+    protected override void OnInitialized() => _fill = Fill;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusStage)
+        {
+            _focusStage = false;
+            await _stage.FocusAsync();   // so Esc works straight away
+        }
+    }
+
+    private Task FillAsync()
+    {
+        _fill = true;
+        _focusStage = true;
+        return Task.CompletedTask;
+    }
+
+    private Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            _fill = false;
+        }
+
+        return Task.CompletedTask;
+    }
+}

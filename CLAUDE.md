@@ -12,7 +12,7 @@ Gridiron Front Office (GFO) is a single-player pro football GM simulation for Wi
 ./build.ps1                       # restore → build (warnings as errors) → fast tests (not Category=Slow), incl. architecture rules
 ./build.ps1 -Full                 # + slow tests and a Release ReadyToRun publish of the desktop app → ./artifacts/
 dotnet test --project tests/Architecture.Tests --filter-class "*PackageRules*"   # one test class (also: --filter-method "*Name*")
-dotnet run --project src/DevHost                                                  # browser host on http://localhost:5180
+dotnet watch --project src/DevHost                                                # browser host with hot reload on http://localhost:5180 (VS Code: task "watch: DevHost")
 dotnet run --project src/Desktop -- --diag-test=crash                             # Debug: prove a failure path (page|js|task|crash|ui)
 dotnet run --project tools/SimLab -- calibrate --seasons 200 --seed 42           # SimLab commands arrive in M2
 dotnet ef migrations add <Name> --project src/Infrastructure --output-dir Data/Migrations   # a schema change (dotnet tool restore first)
@@ -91,7 +91,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - A folder `_Imports.razor` with `@layout X` also applies to `X` if it's in that folder, and the router then loops silently. Keep layouts outside the folder.
   - `::deep` needs an element of the component's own to anchor on. Style Fluent elements only through classes GFO adds via parameters (`Class`, `ActiveClass`).
   - Fluent's `IDialogService`/`INotificationService` can't be faked (internal members): test the overlay wrappers against real `FluentProviders` in bUnit.
-  - The running DevHost locks its DLLs: stop it before building.
+  - The running DevHost locks its DLLs: stop it before building. Two ways to run it, never both at once (one port, one output folder): the `watch: DevHost` task (`dotnet watch`, also what the Claude preview uses) applies saved `.razor`, `.razor.css` and `.cs` changes to the running app and refreshes the browser, and restarts it for an edit hot reload can't apply; F5 "DevHost (browser)" is the debugger, where C# Dev Kit applies `.cs` and `.razor` changes but not CSS. A debugger can't be attached to the watcher's app: the runtime then refuses the watcher's code patches.
 - **Desktop window (WP9, UI_DESIGN_SYSTEM.md §7):**
   - The page talks to the window through WebView2's own `chrome.webview.postMessage` (JSON strings from `gfo-host.js`, read by `PageMessages`), not Blazor interop. Pages mark drag areas with `data-drag-region`, and custom controls inside them with `data-no-drag`.
   - Page zoom stays off: the hit test assumes CSS px = DIPs.
@@ -101,7 +101,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - The composition control is invisible to UI Automation (only an `Image`), so screen readers aren't supported in 1.0 (D-071). To script the running page, launch with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9222` and use the DevTools protocol. The page's origin is `https://0.0.0.1/`.
 - **Core (M1 WP1):**
   - Never use `string.GetHashCode()` or `HashCode.Combine` for anything that must repeat: .NET randomizes them per process. Seeds come from `Seeds.Derive` (FNV-1a 64 + SplitMix64's `Mix`).
-  - Naming analyzers fail the build: CA1720 rejects members named after types (`Single`, `Double`), and CA1711 reserves the `Attribute` suffix (`PlayerAttribute` carries a justified suppression).
+  - Naming analyzers fail the build: CA1720 rejects members named after types (`Single`, `Double`), CA1711 reserves the `Attribute` suffix (`PlayerAttribute` carries a justified suppression), and CA1716 rejects members named after Visual Basic keywords (`Exit`: the platform port's member is `Quit`).
   - Typed IDs are one line each in `Core/IDs/EntityIDs.cs`. A typed-ID key only gets `AUTOINCREMENT` when it's marked generated: EF treats a converted key as not generated (see WP5 in the M1 plan).
 - **League data (M1 WP2):**
   - The built-in team set and college list are embedded in Infrastructure (`league/teams.json`, `league/colleges.json`) and parsed by `EmbeddedSeedData.JsonOptions`, which rejects unknown, missing and null fields. A field added later needs a default value, or every older file fails (D-077).

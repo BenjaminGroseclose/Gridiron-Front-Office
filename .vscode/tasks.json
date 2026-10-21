@@ -1,7 +1,43 @@
 {
-  // Build tasks for launch.json, plus the commit gate. Ctrl+Shift+B runs build.ps1 (CLAUDE.md: before every commit).
+  // Build tasks for launch.json, the DevHost with hot reload, plus the commit gate. Ctrl+Shift+B runs build.ps1
+  // (CLAUDE.md: before every commit).
   "version": "2.0.0",
   "tasks": [
+    {
+      // The browser host with full hot reload, no debugger (Terminal → Run Task). dotnet watch builds, starts the
+      // DevHost from its launch profile (Development, http://localhost:5180, opens the browser), then applies every
+      // saved .razor, .razor.css or .cs change to the running app and refreshes the browser. An edit hot reload can't
+      // apply restarts the app. For breakpoints use F5 "DevHost (browser)" instead (C# and Razor hot reload only).
+      "label": "watch: DevHost",
+      "dependsOn": "check: port 5180 is free",
+      "type": "process",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "--project", "${workspaceFolder}/src/DevHost",
+        "--non-interactive"
+      ],
+      "isBackground": true,
+      "problemMatcher": {
+        "base": "$msCompile",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^dotnet watch .*(File updated|Files updated|Restart is needed|Building)",
+          "endsPattern": "Now listening on|changes applied|No managed code changes|Fix the error to continue"
+        }
+      },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
+    {
+      // The watcher can't share port 5180 (or the DevHost's output folder) with another DevHost (an F5 session, say).
+      // Its own app is fine, so running the task again while it's up just says so.
+      "label": "check: port 5180 is free",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/.vscode/devhost-port.ps1"],
+      "problemMatcher": [],
+      "presentation": { "reveal": "silent", "panel": "shared", "clear": true }
+    },
     {
       "label": "build: Desktop",
       "type": "process",

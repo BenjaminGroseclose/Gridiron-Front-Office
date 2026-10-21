@@ -146,9 +146,14 @@ internal sealed class FakePlatformServices : IPlatformServices
 {
     public List<string> ShownInFolder { get; } = [];
 
+    /// <summary>How many times a screen asked the host to quit.</summary>
+    public int Quits { get; private set; }
+
     public bool SendToRecycleBin(IReadOnlyList<string> paths) => true;
 
     public void ShowInFolder(string path) => ShownInFolder.Add(path);
+
+    public void Quit() => Quits++;
 }
 
 /// <summary>Answers every confirmation with <see cref="Answer"/> and records the question.</summary>

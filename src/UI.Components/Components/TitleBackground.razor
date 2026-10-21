@@ -1,0 +1,77 @@
+@namespace GridironFrontOffice.UI.Components
+@* The title screen's backdrop: a football field in perspective and a play diagram, one inline SVG that fills its
+   parent (VISUAL_DESIGN.md §6). Purely decorative and static: pointer events pass through it, assistive technology
+   skips it, and the page's own content (title, menu, news, footer) sits above it. The parent paints the Ground behind
+   it. Every color is a theme token applied in the scoped stylesheet (var() never resolves in SVG presentation
+   attributes), so the routes follow the team accent and the field stays subtle in both modes. *@
+<svg class="gfo-title-bg @Class" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false" @attributes="AdditionalAttributes">
+    <defs>
+        <marker id="@_markerID" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+            <path class="route-head" d="M0 0 L10 5 L0 10 z" />
+        </marker>
+    </defs>
+
+    @* The field in perspective: the sidelines, then yard lines fading toward the horizon. *@
+    <g class="field-line field-lines" stroke-width="2" fill="none">
+        <path d="M620 700 L60 1080" opacity="0.7" />
+        <path d="M1300 700 L1860 1080" opacity="0.7" />
+        <path d="M602 712 L1318 712" opacity="0.2" />
+        <path d="M576 730 L1344 730" opacity="0.28" />
+        <path d="M538 756 L1382 756" opacity="0.36" />
+        <path d="M484 792 L1436 792" opacity="0.45" />
+        <path d="M414 840 L1506 840" opacity="0.55" />
+        <path d="M319 904 L1601 904" opacity="0.65" />
+        <path d="M202 984 L1718 984" opacity="0.75" />
+    </g>
+    @* Hash marks *@
+    <g class="field-line hash-marks" stroke-width="2" opacity="0.6">
+        <path d="M890 721 L898 721 M1022 721 L1030 721" />
+        <path d="M886 743 L896 743 M1024 743 L1034 743" />
+        <path d="M880 774 L892 774 M1028 774 L1040 774" />
+        <path d="M870 816 L886 816 M1034 816 L1050 816" />
+        <path d="M856 872 L876 872 M1044 872 L1064 872" />
+        <path d="M836 944 L862 944 M1058 944 L1084 944" />
+    </g>
+    @* The play diagram (upper right): the line of scrimmage, the defense as X's, the offense as O's, four routes. *@
+    <path class="los" d="M1160 420 L1850 420" stroke-width="2" stroke-dasharray="6 8" opacity="0.5" fill="none" />
+    <g class="defense" stroke-width="3" stroke-linecap="round" opacity="0.55" fill="none">
+        @* Each X is 20 × 20, centred on a player. *@
+        <path d="M1430 385 L1450 405 M1450 385 L1430 405" />
+        <path d="M1470 385 L1490 405 M1490 385 L1470 405" />
+        <path d="M1510 385 L1530 405 M1530 385 L1510 405" />
+        <path d="M1550 385 L1570 405 M1570 385 L1550 405" />
+        <path d="M1410 320 L1430 340 M1430 320 L1410 340" />
+        <path d="M1490 320 L1510 340 M1510 320 L1490 340" />
+        <path d="M1570 320 L1590 340 M1590 320 L1570 340" />
+        <path d="M1210 360 L1230 380 M1230 360 L1210 380" />
+        <path d="M1770 360 L1790 380 M1790 360 L1770 380" />
+        <path d="M1370 210 L1390 230 M1390 210 L1370 230" />
+        <path d="M1630 210 L1650 230 M1650 210 L1630 230" />
+    </g>
+    <g class="offense" stroke-width="3" opacity="0.55" fill="none">
+        @* OL × 5, TE, two WRs, QB, RB *@
+        <circle cx="1420" cy="450" r="13" /><circle cx="1460" cy="450" r="13" />
+        <circle cx="1500" cy="450" r="13" /><circle cx="1540" cy="450" r="13" />
+        <circle cx="1580" cy="450" r="13" /><circle cx="1620" cy="450" r="13" />
+        <circle cx="1220" cy="450" r="13" /><circle cx="1780" cy="450" r="13" />
+        <circle cx="1500" cy="510" r="13" /><circle cx="1500" cy="570" r="13" />
+    </g>
+    <g class="route" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.8" marker-end="url(#@_markerID)">
+        <path d="M1220 434 L1220 290 L1316 194" />              @* left WR: post *@
+        <path d="M1780 434 L1780 278 L1756 290" />              @* right WR: curl *@
+        <path d="M1620 434 L1620 196" />                        @* TE: seam *@
+        <path d="M1486 578 Q1400 592 1350 540 L1306 496" />     @* RB: swing *@
+    </g>
+</svg>
+
+@code {
+    // Each instance owns its arrowhead marker: two backgrounds on one page would otherwise share (and fight over) one id.
+    private readonly string _markerID = $"gfo-arrow-{Guid.NewGuid():N}"[..18];
+
+    [Parameter] public string? Class { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    /// <summary>The id of this instance's arrowhead marker (for tests and anything that needs to reference it).</summary>
+    internal string MarkerID => _markerID;
+}

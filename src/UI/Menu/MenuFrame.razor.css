@@ -1,9 +1,21 @@
+/* The frame fills the content area (the shell gives it no padding) and paints the backdrop behind everything in it. */
 .gfo-menu {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  justify-items: center;
+  justify-items: left;
   align-content: center;
   gap: 24px;
+  box-sizing: border-box;
   min-height: 100%;
+  padding: 20px 24px;
+}
+
+/* The backdrop is absolute at z-index 0, so everything else in the frame (the panel, and whatever a screen puts under
+   it) is positioned above it. */
+.gfo-menu > ::deep :not(.gfo-title-bg) {
+  position: relative;
+  z-index: 1;
 }
 
 /* A panel (VISUAL_DESIGN.md §5): Surface 1, Radius M, flat with a border. */
@@ -12,7 +24,5 @@
   gap: 16px;
   width: min(100%, var(--gfo-menu-width));
   padding: 24px 32px 32px;
-  border: 1px solid var(--colorNeutralStroke2);
-  border-radius: var(--gfo-radius-m);
-  background: var(--colorNeutralBackground1);
+  margin-left: 48px;
 }

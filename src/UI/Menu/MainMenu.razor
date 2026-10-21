@@ -4,18 +4,27 @@
 @inject SaveActions Actions
 @inject NavigationManager Navigation
 @inject AppIdentity App
+@inject IPlatformServices Platform
 @* The main menu (M0 WP9). A plain centered panel for now: the design review decides the final look (option c).
    Continue opens the most recently played save that can be opened. With a league open, this route goes to its home.
+   Exit quits through the host (IPlatformServices): on the desktop that is the window's own close, so the open league
+   is closed and the placement saved; the DevHost stops its server.
    The version under the panel is the short one; Settings → About has the full one for bug reports (D-072). *@
 
 <PageTitle>Gridiron Front Office</PageTitle>
 
 <MenuFrame Width="400px" LabelledBy="menu-title">
     <ChildContent>
-        <h1 id="menu-title" class="gfo-menu-title gfo-display">Gridiron Front Office</h1>
+        <h1 id="menu-title" class="gfo-menu-title gfo-display"><span class="gfo-menu-title-color">Gridiron</span> Front Office</h1>
 
+				<FluentText Block="true" Size="TextSize.Size300">
+					Run one franchise across many seasons: the roster, contracts, the draft, trades and the game plan.
+				</FluentText>
+
+        @* Each action is a row: the icon at the start, the label, and a detail at the far end where there is one. On the
+           primary button the icon keeps the on-accent text color; on the others it takes the accent. *@
         <div class="gfo-menu-actions">
-            <FluentButton Appearance="ButtonAppearance.Primary" Size="ButtonSize.Large" Disabled="@(_continue is null || _busy)"
+            <FluentButton Appearance="ButtonAppearance.Primary" Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="@(_continue is null || _busy)"
                           IconStart="@IconCatalog.Create(IconName.Play, 20, filled: true)" OnClick="ContinueAsync" data-testid="continue">
                 Continue
             </FluentButton>
@@ -26,16 +35,36 @@
                 </p>
             }
 
-            <FluentButton Size="ButtonSize.Large" Disabled="_busy" IconStart="@IconCatalog.Create(IconName.Add)"
-                          OnClick="@(() => Navigation.NavigateTo("/new"))" data-testid="new-league">New league</FluentButton>
-            <FluentButton Size="ButtonSize.Large" Disabled="_busy" IconStart="@IconCatalog.Create(IconName.FolderOpen)"
-                          OnClick="@(() => Navigation.NavigateTo("/load"))" data-testid="load">Load</FluentButton>
-            <FluentButton Size="ButtonSize.Large" Disabled="_busy" IconStart="@IconCatalog.Create(IconName.Settings)"
-                          OnClick="@(() => Navigation.NavigateTo("/settings"))" data-testid="settings">Settings</FluentButton>
+            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Navigation.NavigateTo("/new"))" data-testid="new-league">
+                <Icon Name="IconName.Add" Color="IconColor.Inherit" slot="start" />
+                Start new league
+            </FluentButton>
+            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Navigation.NavigateTo("/load"))" data-testid="load">
+                <Icon Name="IconName.FolderOpen" Color="IconColor.Inherit" slot="start" />
+                Load league
+                @if (_saveCount > 0)
+                {
+                    <span slot="end" class="gfo-menu-action-detail gfo-num">@(_saveCount == 1 ? "1 save" : $"{_saveCount} saves")</span>
+                }
+            </FluentButton>
+            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Navigation.NavigateTo("/settings"))" data-testid="settings">
+                <Icon Name="IconName.Settings" Color="IconColor.Inherit" slot="start" />
+                Settings
+            </FluentButton>
+            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Platform.Quit())" data-testid="exit">
+                <Icon Name="IconName.ArrowExit" Color="IconColor.Inherit" slot="start" />
+                Exit
+            </FluentButton>
+
         </div>
+
+				
+				<div class="gfo-sub-menu">
+					<FluentBadge Color="BadgeColor.Important">Early Access</FluentBadge>
+					<FluentBadge Color="BadgeColor.Warning" data-testid="version">v@(App.Version)</FluentBadge>
+				</div>
     </ChildContent>
     <After>
-        <p class="gfo-menu-version" data-testid="version">v@(App.Version)</p>
         @if (DiagnosticsTestPanel.Enabled)
         {
             <DiagnosticsTestPanel />
@@ -45,6 +74,7 @@
 
 @code {
     private SaveCard? _continue;
+    private int _saveCount;
     private bool _busy;
 
     protected override async Task OnInitializedAsync()
@@ -55,7 +85,9 @@
             return;
         }
 
-        _continue = (await Catalog.ListAsync()).ContinueTarget();
+        var cards = await Catalog.ListAsync();
+        _continue = cards.ContinueTarget();
+        _saveCount = cards.Count;
     }
 
     private async Task ContinueAsync()
@@ -69,7 +101,9 @@
         if (!await Actions.OpenAsync(target))
         {
             // The file may have changed since the list was read (deleted, damaged): read it again.
-            _continue = (await Catalog.ListAsync()).ContinueTarget();
+            var cards = await Catalog.ListAsync();
+            _continue = cards.ContinueTarget();
+            _saveCount = cards.Count;
             _busy = false;
         }
     }
