@@ -1,6 +1,6 @@
 # M1 · WP3 builder's guide: player data
 
-> **Status:** Ready to build (§7: six of the seven files are ready) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml) · **Size:** M–L · **Written:** 2026-10-21
+> **Status:** Ready to build (§7: every file except `contracts.json`, which follows F-12) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml) · **Size:** M–L · **Written:** 2026-10-21
 >
 > WP3 puts every number the player generator (WP4) needs into data files with first-pass values: each position's roster targets, body and athletic testing, OVR weights and archetypes; the league-wide generation settings; the jersey rule; the name and hometown lists; and the famous-people blocklist. Nothing generates players yet. WP3 only loads the numbers and proves them consistent, so WP4 can tune data instead of code.
 
@@ -149,9 +149,9 @@ The current NFL rule by position, **checked against the real rule when the file 
 
 | File | Shape | Source |
 |---|---|---|
-| `data/names/first.json` | `{ "source": "…", "names": [ { "name": "Michael", "weight": 886370 } ] }` | SSA baby names (public domain): male births 1986–2005 (the birth years of today's players), the top 1,500 names given to boys at least as often as to girls, placeholders like "Baby" removed, weighted by births |
-| `data/names/last.json` | Same shape | Census 2010 surnames (public domain): the top ~10,000, weighted by count |
-| `data/places/hometowns.json` | `{ "source": "…", "places": [ { "name": "Akron", "state": "OH", "population": 190469 } ] }` | Census city and town population estimates (public domain), weighted by population. *(The Gazetteer was the plan, but its current editions carry no population.)* |
+| `data/names/first.json` | `{ "source": "…", "names": [ { "name": "Michael", "weight": 886370 } ] }` | SSA baby names (public domain): male births 1986–2005 (the birth years of today's players), the top 2,000 names given to boys at least as often as to girls, placeholders like "Baby" removed, weighted by births |
+| `data/names/last.json` | Same shape | Census 2010 surnames (public domain): the top 5,000, weighted by count |
+| `data/places/hometowns.json` | `{ "source": "…", "places": [ { "name": "Akron", "state": "OH", "population": 190469 } ] }` | Census city and town population estimates (public domain): places of 10,000 people or more, weighted by population. *(The Gazetteer was the plan, but its current editions carry no population.)* |
 | `data/blocklists/famous-people.json` | `["Jerry Rice", …]`, like the other blocklists | Compiled: Pro Football Hall of Fame members, notable players of the last ~25 seasons, presidents, and other very famous athletes and entertainers (F-03 §4.11) |
 
 `famous-people.json` is the one blocklist that **ships**: the generator needs it at runtime to re-roll a famous name. Names are facts, so the list is fine to ship.
@@ -282,10 +282,10 @@ In `tests/Infrastructure.Tests/Seed/`, against the shipped files. Each lists eve
 - **The jersey rule** is the 2026 NFL rulebook's (Rule 5, Section 1): QB 0–19; RB, FB, TE, WR 0–49 and 80–89; offensive line 50–79; defensive line 50–79 and 90–99; linebackers 0–59 and 90–99; defensive backs 0–49; kickers and punters 0–49 and 90–99. The rulebook doesn't name two of our positions. **EDGE** players are listed as linemen or linebackers, so they get both (0–79 and 90–99). **Long snappers** are listed as tight ends or linebackers and nearly all wear the 40s, so they get 40–49.
 - **`famous-people.json`:** 1,063 names, compiled from memory: Hall of Famers, stars, coaches and broadcasters of roughly the last 25 seasons, every president, and very famous athletes and entertainers. Common-name stars ("Josh Allen", "Chris Johnson", "Mike Williams") are in it on purpose.
 
-- **`first.json` and `last.json` (2026-10-21):** 1,500 first names (SSA, male births 1986–2005; female-majority names like Ashley and Madison and placeholders like "Baby" dropped, which also drops a few unisex names such as Peyton) and 10,000 surnames (Census 2010, "MCDONALD" → "McDonald"). Sources in THIRD_PARTY_NOTICES.
-- **`hometowns.json`:** waits for one more approved download. The Census Gazetteer has no population in its current editions, so hometowns come from the Census city and town population estimates instead.
+- **`first.json` and `last.json` (2026-10-21):** 2,000 first names (SSA, male births 1986–2005, 94.6% of eligible boys' births; female-majority names like Ashley and Madison and placeholders like "Baby" dropped, which also drops a few unisex names such as Peyton) and 5,000 surnames (Census 2010, 60% of Americans; "MCDONALD" → "McDonald"). Sized by the owner (2026-10-21) after a reference run: about 2.4 repeated surnames per 53-man roster, close to real rosters; 1,000 surnames would give 4.6. Sources in THIRD_PARTY_NOTICES.
+- **`hometowns.json` (2026-10-21):** 3,489 places of 10,000 people or more from the Census population estimates (the Gazetteer, the first plan, no longer carries population): incorporated places, New England towns (their local governments) and Hawaii's counties (it has no incorporated places), with the government types stripped ("Nashville-Davidson metropolitan government (balance)" → Nashville). Every state and DC.
 
-**Next:** that download, then `contracts.json` after F-12's M1 spec.
+**Next:** `contracts.json`, after F-12's M1 spec.
 
 ## 8. Questions for you (answered 2026-10-21)
 
