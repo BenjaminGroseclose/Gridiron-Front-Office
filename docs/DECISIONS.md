@@ -84,12 +84,13 @@
 | D-074 | Contracts are real from M1; contract actions arrive in M4 | **Accepted** |
 | D-075 | Color-blind tuning is reviewed before a public release | **Accepted** |
 | D-076 | Work happens on `main`; no milestone branches | **Accepted** |
-| D-077 | Data files carry no version numbers; they change only additively | **Accepted** |
+| D-077 | Data files carry no version numbers; they change only additively | **Accepted** (scope of the defaults clarified by D-083) |
 | D-078 | M1 builds for today's consumers: fifteen simplifications | **Accepted** |
 | D-079 | WP3 player data: traits in generation.json, measurable priors deferred, F-12 before contracts | **Accepted** |
 | D-080 | F-12's M1 slice: no practice squad in 1.0; pay by league-wide quality, with wiggle | **Accepted** |
 | D-081 | WP4 generation: trades fit the cap, ranked draft classes, player rules in Application | **Accepted** |
 | D-082 | Team strength from a ladder, carried by the young core | **Accepted** |
+| D-083 | Optional fields with defaults are for importable data formats only | **Accepted** |
 
 ---
 
@@ -690,7 +691,7 @@
 
 
 ## D-077: Data files carry no version numbers; they change only additively
-- **Status:** **Accepted** (owner, 2026-10-20, on the data-file versions in the WP2 data: *"once we settle on a schema that will be pretty locked, and if we ever change it should be considered optional"*, then *"go ahead with the change"*). Amends [D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)'s "versioned".
+- **Status:** **Accepted** (owner, 2026-10-20, on the data-file versions in the WP2 data: *"once we settle on a schema that will be pretty locked, and if we ever change it should be considered optional"*, then *"go ahead with the change"*). Amends [D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)'s "versioned". The defaults rule's scope is clarified by [D-083](#d-083-optional-fields-with-defaults-are-for-importable-data-formats-only).
 - **Decision:**
   - The files in `data/` (the team set, the college list, and the player, name, place and contract data that follow) have **no version**: no `schemaVersion` or `version` field, and no `.v1` in the file name. The built-in files ship inside the app, so they can't fall out of step with it.
   - **Formats only grow.** A field added later is optional, with a default, so an older file (an M11 import) still loads. A newer file read by an older app fails strict parsing with an error that names the unknown field.
@@ -760,3 +761,13 @@
   4. **The strength isn't saved or shown.** Screens show roster strength computed from the players (WP8's team picker).
 - **Reference run:** starters about 9 OVR apart best to worst after the trades (5 without the ladder), 35–44 trades per league, all 20 leagues in band. How much OVR makes a contender is a question of wins, so `range` is tuned when games exist (M2/M3).
 - **Consequences:** + Every league has its story on day one, and the team picker is a real choice. − Three more numbers to tune; the cap trades still take back about a third of the spread.
+
+## D-083: Optional fields with defaults are for importable data formats only
+- **Status:** **Accepted** (owner, 2026-10-22, walking through the [WP4 guide](milestones/M1_WP4_GUIDE.md)'s decisions: *"Keep it, next"*, on keeping `generation.json`'s new fields required and making the rule say so). Clarifies [D-077](#d-077-data-files-carry-no-version-numbers-they-change-only-additively).
+- **Why:** D-077 says a field added later is optional, with a default, *"so an older file (an M11 import) still loads"*. Read literally, that covers every file in `data/`. But only the team set and the college list are ever imported (D-035). The built-in-only files are embedded in the app and change in the same commit as their records, so an older copy can't exist, and a default would be a second copy of the number that nothing ever reads.
+- **Decision:**
+  - **Importable formats** (the team set and the college list, imported from M11): a field added later is optional, with a default, as D-077 says.
+  - **Built-in-only formats** (the player, generation, jersey, name, place and contract data, and `famous-people.json`): a new field is **required**, added in the same commit as its record. Strict parsing turns a missing field into a failing data test at build time.
+  - A format that later becomes importable (a modding feature, say) joins the first group from then on, and its later fields get defaults.
+- **Unchanged:** no version numbers, formats only grow, strict parsing (D-077).
+- **Consequences:** + No dead defaults, and no number kept in two places. − Two rules instead of one, so CLAUDE.md states both.

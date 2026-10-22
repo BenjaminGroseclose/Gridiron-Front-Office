@@ -98,7 +98,7 @@ public sealed record TeamStrengthSettings(double Range, double YoungWeight, doub
 // GenerationSettings gains two last parameters: DraftSettings Draft, TeamStrengthSettings TeamStrength
 ```
 
-These fields are **required**, not optional. D-077's defaults let an M11 import read older team sets and colleges, but `generation.json` ships only inside the app and is never imported, so no older copy can exist.
+These fields are **required**, not optional. D-077's defaults let an M11 import read older team sets and colleges, but `generation.json` ships only inside the app and is never imported, so no older copy can exist ([D-083](../DECISIONS.md#d-083-optional-fields-with-defaults-are-for-importable-data-formats-only)). The header comment in `PlayerData.cs` (and `ContractData.cs`) still says every later field gets a default; reword it to D-083's rule when you add these.
 
 ### 3.3 The output records (`Application/Players/GeneratedLeague.cs`, `Application/Contracts/GeneratedContract.cs`)
 
@@ -439,6 +439,7 @@ Generation should take well under the plan's 2 s (the reference run in Python, f
 - **`PlayerGenerator` knows nothing about teams:** names and jerseys come after the trades.
 - **Strict JSON:** `generation.json` and its records change in one commit.
 - **Seed purposes are constants:** never write `"gen.names"` inline.
+- **Ages are measured on July 1** (§2), because M1–M4 leagues open at Training Camp in late July. M5's offseason start opens before July 1, so the reference date moves with it then, or some players show a year younger than drawn.
 - **The DevHost locks the DLLs:** stop it before building (CLAUDE.md).
 
 ## 9. The reference runs (2026-10-22)
@@ -483,3 +484,6 @@ All three as recommended, with one confirmation ([D-081](../DECISIONS.md#d-081-w
 3. ~~Where do OVR, the grade and the archetype label live?~~ → **`Application/Players`.**
 4. ~~Will every team come out the same?~~ (the owner, walking through the guide: *"Is there a way to have it exist from day one?"*) → **A strength ladder carried by the young core** ([D-082](../DECISIONS.md#d-082-team-strength-from-a-ladder-carried-by-the-young-core)).
 5. ~~Should cap space follow strength?~~ → **Not now:** one band for every team; parked in IDEAS.md for M4.
+6. ~~Must the new `generation.json` fields be optional (D-077)?~~ → **No, required:** defaults are for the formats M11 imports ([D-083](../DECISIONS.md#d-083-optional-fields-with-defaults-are-for-importable-data-formats-only)).
+
+The owner walked through every choice in §2 one by one on 2026-10-22 and kept them all; D-082 and D-083 came out of that walkthrough.
