@@ -28,7 +28,7 @@
 | F-13 | Player valuation model | 🟥 | M4 | M7 |
 | F-14 | Re-signing & negotiation | 🟥 | M5 | M9 |
 | F-15 | Free agency | 🟥 | M5 | M9 |
-| F-16 | Waivers, cuts & practice squad | 🟥 | M5 | — |
+| F-16 | Waivers & cuts | 🟥 | M5 | — |
 | F-17 | Scouting (fog of war) | 🟧 | M6 | — |
 | F-18 | The draft (real-time) | 🟧 | M5 (headless) | M6 (live) |
 | F-19 | Trades | 🟨 | M7 | — |
@@ -147,11 +147,11 @@ flowchart LR
 ## 🟥 F-04: Roster & depth chart
 **Player value:** shape the team, and see the consequences on Sunday.
 - **MVP**
-  - **Roster:** 53 active, practice squad of 16, IR. A roster grid (saved views arrive with the stats screens in M3). Player peek sheets everywhere. (No non-football injury list: nothing generates non-football injuries.)
+  - **Roster:** 53 active, IR (no practice squad in 1.0, [D-080](DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle)). A roster grid (saved views arrive with the stats screens in M3). Player peek sheets everywhere. (No non-football injury list: nothing generates non-football injuries.)
   - **Limits:** 53/16 enforced at the right phases (90 in the offseason, 53 after final cuts).
   - **Depth chart by position** ([D-052](DECISIONS.md#d-052-depth-chart-position-depth-drives-every-package-with-optional-overrides)): you order players per position (QB1, QB2, RB1…, WR1–WR5, CB1–CB4, …) and set K, P, LS, KR and PR. **Every package is derived automatically** (offense 11/12/21/22/10/goal line, defense base/nickel/dime/goal line, special teams coverage units). **Optional per-package overrides** for power users. Drag-and-drop **and** keyboard reordering. Locks. **Auto depth chart** (best available, aware of injuries and fatigue).
   - **Gameday inactives** (auto by default, with an override).
-- **Later:** practice squad elevations, position changes (e.g., CB → S with a learning curve), jersey number management.
+- **Later:** position changes (e.g., CB → S with a learning curve), jersey number management.
 - **AI counterpart:** the AI sets position depth (and any overrides) and inactives every week, through the same model.
 - **Depends on:** F-03.
 
@@ -247,9 +247,9 @@ flowchart LR
 - **M9:** the **FA Frenzy** live event (F-26, committed by [D-046](DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)). No RFA tenders or compensatory picks in 1.0.
 - **Depends on:** F-12, F-13.
 
-## 🟥 F-16: Waivers, cuts & practice squad
-- **MVP (M5):** waiver claims by priority (reverse standings; in the offseason, the draft order), cut-down day to 53, practice squad signing and poaching (no protections), veterans with 4+ accrued seasons bypassing waivers (simplified rule).
-- **AI counterpart:** claims, cuts, practice squad decisions.
+## 🟥 F-16: Waivers & cuts
+- **MVP (M5):** waiver claims by priority (reverse standings; in the offseason, the draft order), cut-down day to 53 (the practice squad left 1.0, D-080), veterans with 4+ accrued seasons bypassing waivers (simplified rule).
+- **AI counterpart:** claims and cuts.
 
 ## 🟧 F-17: Scouting (fog of war)
 **Player value:** information is an asset. Your scouts' judgment *is* your edge.
@@ -294,7 +294,7 @@ flowchart LR
 **Player value:** 31 believable rivals. The game is only as good as its AI.
 - **Principles:** the AI uses **the same commands and validation as the user**, **doesn't cheat** (it knows its own roster exactly and sees everyone else through its own perception, [D-032](DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)), **judges your offers exactly as it judges another AI team's** (no difficulty fudging, [D-042](DECISIONS.md#d-042-no-difficulty-presets-in-10)), and is **pure**: a state snapshot goes in, intents come out, and Application executes them.
 - **GM personalities:** Analytics, Old School, Win-Now, Patient Builder, Gambler. Each weights needs vs. best available, youth vs. veterans, and cap risk tolerance differently.
-- **Phase behaviors:** depth charts and game plans (via the head coach), development focus, re-sign/tag/cut, FA bidding, the draft board and trades, waivers, practice squad, extensions, trade deadline buying and selling.
+- **Phase behaviors:** depth charts and game plans (via the head coach), development focus, re-sign/tag/cut, FA bidding, the draft board and trades, waivers, extensions, trade deadline buying and selling.
 - **League health** is monitored by the 30-season autoplay (see [TESTING_AND_QUALITY.md §5](architecture/TESTING_AND_QUALITY.md#5-league-health-metrics-from-m5)).
 - **MVP (M5):** competent, cap-healthy, rule-abiding. **M7:** personalities, trades, rival memory. **Ongoing:** tuning.
 

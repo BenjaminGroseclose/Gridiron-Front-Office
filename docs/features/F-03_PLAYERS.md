@@ -56,7 +56,7 @@ Players are the game's raw material: believable, distinct people whose ratings m
 | P | 1 | 1 | 1 | P |
 | LS | 1 | 1 | 1 | LS |
 
-- **These are league averages, not rules** (owner, 2026-10-15: *"don't make them strict some team might have more or less but that should be the average"*). Generation draws each team's mix within the typical ranges so the **league-wide average** hits the targets and every roster totals exactly 53. Practice squads (16) vary the same way.
+- **These are league averages, not rules** (owner, 2026-10-15: *"don't make them strict some team might have more or less but that should be the average"*). Generation draws each team's mix within the typical ranges so the **league-wide average** hits the targets and every roster totals exactly 53.
 - **Floors** are what generation and the AI always keep so every package can be fielded. The only *hard* rule is the F-05 blocker that every required depth chart slot is filled ([CALENDAR_AND_PHASES.md §4](../architecture/CALENDAR_AND_PHASES.md#4-blocking-issues-and-warnings)).
 - **The AI** (F-21) treats the averages as soft targets, shifted by its needs, and later by GM personality (M7) and scheme (M10). Two AI teams won't carry identical rosters.
 - **Test:** `Generation_RosterMix_LeagueAverageWithinTolerance` (league means within ±0.3 per position over 20 seeds) and `Generation_RosterMix_RespectsFloors`.
@@ -207,11 +207,11 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 | Target | Initial value |
 |---|---|
-| Players per team at creation (M1–M4, Training Camp start) | 53 active + 16 practice squad |
+| Players per team at creation (M1–M4, Training Camp start) | 53 active (no practice squad in 1.0, [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle)) |
 | Unsigned free agents at creation | ~150 (injury replacements) |
 | Starter OVR | Mean ~74, SD ~7, by position |
 | Backup OVR | Mean ~64, SD ~6 |
-| Fringe / practice squad OVR | Mean ~56, SD ~5 |
+| Fringe (free agent) OVR | Mean ~56, SD ~5 |
 | 90+ OVR players league-wide | ~15–25 (the baseline the M5 health gate holds within ±25%) |
 | Mean age, league-wide | 26.5 (the health band is 25.5–27.5) |
 | **Yearly draft class (M5)** | ~300 prospects, each with college production stats generated from true ratings + noise + college tier |
@@ -225,7 +225,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ## 5. Data model
 
-- `Players`: `PlayerID`, `TeamID?`, `Status` (Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired), `Position`, names, `BirthDate`, `CollegeID`, `Hometown`, `ExperienceSeasons`, draft info, `JerseyNumber`; **measurables** (wide columns); **42 true attribute columns** (wide; floats); **hidden ratings** (`Potential`, `DevCurve`, `BustRisk`, `PeakAgeOffset`, `InjuryProneness`); **personality** (six trait columns, §4.7).
+- `Players`: `PlayerID`, `TeamID?`, `Status` (Prospect, Active, InjuredReserve, FreeAgent, Retired), `Position`, names, `BirthDate`, `CollegeID`, `Hometown`, `ExperienceSeasons`, draft info, `JerseyNumber`; **measurables** (wide columns); **42 true attribute columns** (wide; floats); **hidden ratings** (`Potential`, `DevCurve`, `BustRisk`, `PeakAgeOffset`, `InjuryProneness`); **personality** (six trait columns, §4.7).
 - `RatingHistory (PlayerID, Season, Ovr, key attributes)`: one row per season, from M5 with player development (F-20, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - `Colleges (CollegeID, Name, Region, Tier)`: copied from the data file at creation.
 - **Data files:** `data/players/positions.json` (roster targets, OVR weights, archetypes, age distributions, measurable distributions), `jersey-rules.json`, `generation.json` (tiers, the athletic maps, hidden ratings, personality and the test targets), `data/names/first.json`, `last.json`, `data/places/hometowns.json`, `data/league/colleges.json`, `data/blocklists/famous-people.json`.
@@ -265,7 +265,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 - Event IDs: 1300–1329.
 
 ## 12. Performance
-- Generating ~2,300 players (rosters, practice squads, free agents) < 2 s, inside the < 5 s league budget.
+- Generating ~1,850 players (rosters and free agents) < 2 s, inside the < 5 s league budget.
 - `IPerception` for a 2,000-row grid < 20 ms (pure math, cached per league year).
 - These are targets read from the timed log, not test assertions; the < 5 s league budget is measured at the M1 exit ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 

@@ -148,7 +148,7 @@ The same for `PlayerID`, `ConferenceID`, `DivisionID`, `StadiumID`, `CollegeID` 
 | Enum | Members | Why this way |
 |---|---|---|
 | `Position` | `QB, RB, FB, WR, TE, OT, OG, C, EDGE, DT, LB, CB, S, K, P, LS` | Each name is its abbreviation, so `ToString()` is the screen label and no display map is needed |
-| `PlayerStatus` | `Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired` | `TeamID` is set for the middle three and null for the rest |
+| `PlayerStatus` | `Prospect, Active, InjuredReserve, FreeAgent, Retired` | `TeamID` is set for Active and InjuredReserve and null for the rest (`PracticeSquad` left with D-080) |
 | `PotentialGrade` | `F, D, CMinus, C, CPlus, BMinus, B, BPlus, AMinus, A, APlus` | **Worst to best**, so `grade >= PotentialGrade.B` means "B or better"; "A+" and "A−" come from a display map. The bands that map peak OVR to a grade come in WP4. |
 | `AttributeGroup` | `Physical, Mental, Passing, BallCarrying, Receiving, Blocking, Defense, SpecialTeams` | F-03 §4.2's groups, the Player page's order (WP9). Mapping each attribute to its group comes with that page. |
 | `PlayerAttribute` | The 42 from F-03 §4.2, in its order | Not `Attribute` (collides with `System.Attribute`). The name trips CA1711 (types ending in `Attribute` are reserved for attribute classes), so the enum carries a justified suppression rather than renaming the concept every doc calls an attribute. |

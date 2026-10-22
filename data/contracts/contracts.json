@@ -1,0 +1,58 @@
+{
+  "cap": 300000000,
+  "utilization": { "min": 0.85, "max": 0.97 },
+  "minimumSalaries": [
+    { "creditedSeasons": 0, "salary": 885000 },
+    { "creditedSeasons": 1, "salary": 1005000 },
+    { "creditedSeasons": 2, "salary": 1075000 },
+    { "creditedSeasons": 3, "salary": 1145000 },
+    { "creditedSeasons": 4, "salary": 1215000 },
+    { "creditedSeasons": 7, "salary": 1300000 }
+  ],
+  "rookieScale": {
+    "years": 4,
+    "baseWeights": [0.10, 0.20, 0.30, 0.40],
+    "rounds": [
+      { "round": 1, "firstPick": 54400000, "lastPick": 16100000, "bonusShare": 0.60, "guaranteeShare": 1.00 },
+      { "round": 2, "firstPick": 11000000, "lastPick": 6500000, "bonusShare": 0.30, "guaranteeShare": 0.75 },
+      { "round": 3, "firstPick": 6300000, "lastPick": 5300000, "bonusShare": 0.18, "guaranteeShare": 0.45 },
+      { "round": 4, "firstPick": 4900000, "lastPick": 4700000, "bonusShare": 0.10, "guaranteeShare": 0 },
+      { "round": 5, "firstPick": 4600000, "lastPick": 4500000, "bonusShare": 0.08, "guaranteeShare": 0 },
+      { "round": 6, "firstPick": 4500000, "lastPick": 4400000, "bonusShare": 0.05, "guaranteeShare": 0 },
+      { "round": 7, "firstPick": 4400000, "lastPick": 4300000, "bonusShare": 0.03, "guaranteeShare": 0 }
+    ]
+  },
+  "undrafted": { "years": 3, "bonus": 20000 },
+  "veterans": {
+    "curve": 3.5,
+    "wiggle": { "sd": 0.08, "max": 0.20 },
+    "maxApy": {
+      "QB": 45000000, "RB": 13000000, "FB": 3000000, "WR": 30000000, "TE": 13000000,
+      "OT": 22000000, "OG": 17000000, "C": 12000000,
+      "EDGE": 35000000, "DT": 22000000, "LB": 15000000, "CB": 22000000, "S": 15000000,
+      "K": 5500000, "P": 3200000, "LS": 1500000
+    },
+    "lengths": {
+      "Starter": [
+        { "throughAge": 26, "min": 4, "max": 5 },
+        { "throughAge": 29, "min": 3, "max": 4 },
+        { "throughAge": 32, "min": 2, "max": 3 },
+        { "throughAge": 99, "min": 1, "max": 2 }
+      ],
+      "Backup": [
+        { "throughAge": 26, "min": 2, "max": 3 },
+        { "throughAge": 29, "min": 1, "max": 2 },
+        { "throughAge": 99, "min": 1, "max": 1 }
+      ]
+    },
+    "bonusShare": {
+      "Starter": { "min": 0.25, "max": 0.40 },
+      "Backup": { "min": 0.00, "max": 0.15 }
+    },
+    "guaranteeShare": {
+      "Starter": { "min": 0.45, "max": 0.65 },
+      "Backup": { "min": 0.10, "max": 0.40 }
+    },
+    "baseEscalation": 0.08
+  }
+}

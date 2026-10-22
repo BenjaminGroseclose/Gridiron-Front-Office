@@ -95,7 +95,7 @@ Full design: [STANDOUT_FEATURES.md](STANDOUT_FEATURES.md).
 ### In scope for 1.0
 - Single-player, one user-controlled franchise, in a fictional 32-team league (2 conferences × 4 divisions).
 - Full annual cycle: training camp → 17-game regular season → 14-team playoffs → offseason (no preseason games, [D-038](DECISIONS.md#d-038-no-preseason-games-in-10)).
-- Rosters (53 active + practice squad + IR), depth charts, weekly game plans.
+- Rosters (53 active + IR), depth charts, weekly game plans.
 - Contracts and salary cap (core rules), re-signing, free agency, waivers, trades.
 - Scouting with fog of war, and the real-time draft.
 - Player development, aging and retirement, plus injuries.

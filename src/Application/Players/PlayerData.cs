@@ -45,7 +45,8 @@ public sealed record GenerationSettings(
     IReadOnlyDictionary<PlayerTier, IReadOnlyDictionary<CollegeTier, double>> CollegeTiers,
     GenerationTargets Targets);
 
-public sealed record RosterSizes(int Active, int PracticeSquad, int FreeAgents);
+/// <summary>The 53 and the unsigned pool (no practice squad in 1.0, D-080).</summary>
+public sealed record RosterSizes(int Active, int FreeAgents);
 
 /// <summary>How a tier shifts skills and athleticism, and the OVR distribution WP4's tests expect from it.</summary>
 public sealed record TierSettings(double SkillShift, double Spread, double AthleticShift, Distribution Target);

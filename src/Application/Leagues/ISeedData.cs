@@ -1,10 +1,11 @@
+using GridironFrontOffice.Application.Contracts;
 using GridironFrontOffice.Application.Players;
 
 namespace GridironFrontOffice.Application.Leagues;
 
 /// <summary>
-/// The built-in data, loaded once (D-035): the league's teams and colleges (WP2) and everything the player generator
-/// needs (WP3). Generators read only this; nothing hard-codes a list.
+/// The built-in data, loaded once (D-035): the league's teams and colleges (WP2) and everything the player and contract
+/// generators need (WP3). Generators read only this; nothing hard-codes a list.
 /// </summary>
 public interface ISeedData
 {
@@ -28,4 +29,7 @@ public interface ISeedData
 
     /// <summary>Names the generator re-rolls (F-03 §4.11): the one blocklist that ships.</summary>
     IReadOnlyList<string> FamousPeople { get; }
+
+    /// <summary>The cap, the minimums, the rookie scale and the veteran pay model (F-12 §4.9).</summary>
+    ContractData Contracts { get; }
 }

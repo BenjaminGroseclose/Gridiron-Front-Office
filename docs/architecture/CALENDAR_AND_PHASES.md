@@ -23,7 +23,7 @@ The fictional league mirrors the real one so it feels familiar. Dates are approx
 
 | # | Phase | Anchor (approx.) | Stops inside the phase | Key processing |
 |---|---|---|---|---|
-| 1 | **Training Camp** | Late July | Camp open → Final cuts | Annual progression applied at camp open, development focus, **cut to 53**, waivers, practice squad. No preseason games ([D-038](../DECISIONS.md#d-038-no-preseason-games-in-10)). |
+| 1 | **Training Camp** | Late July | Camp open → Final cuts | Annual progression applied at camp open, development focus, **cut to 53**, waivers |
 | 2 | **Regular Season** | Early Sept → early Jan | Weeks 1–18 (17 games + 1 bye) | Weekly: AI prep → sim → stats → injuries → waivers → news. **Trade deadline** after Week 9 (Deadline Day live event later, if built, [D-046](../DECISIONS.md#d-046-live-events-fa-frenzy-committed-deadline-day-conditional)). |
 | 3 | **Playoffs** | Mid Jan → early Feb | Wild Card → Divisional → Conference → (bye week) → Championship | 7 seeds per conference, #1 gets a bye, reseeding |
 | 4 | **Season Wrap** | Feb | Awards → Retirements → Owner review → (Coaching carousel, M10) | Records, Hall of Fame vote, season-end snapshot. (Play-by-play pruning only if the [D-039](../DECISIONS.md#d-039-play-by-play-is-kept-measure-before-pruning) fallback is switched on.) |
@@ -157,7 +157,7 @@ Long advances (a week, an offseason phase with 31 AI teams acting) are split int
 
 | Phase / stop | AI teams do |
 |---|---|
-| Training camp | Development focus, depth charts, cut to 53, claim waivers, sign practice squads |
+| Training camp | Development focus, depth charts, cut to 53, claim waivers |
 | Each regular-season week | Depth chart, game plan, IR moves, waiver claims, FA fill-ins, trade talks (until the deadline) |
 | Trade deadline | Buyer/seller decisions, trades |
 | Season wrap | Coaching changes (M10), retirements (players decide) |

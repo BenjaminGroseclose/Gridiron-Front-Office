@@ -7,7 +7,7 @@
 | Term | Meaning |
 |---|---|
 | **53-man roster** | The active roster limit during the regular season. Offseason limit: 90. |
-| **Practice squad (PS)** | Up to 16 players who practice but don't play. Other teams can sign them away ("poaching"). |
+| **Practice squad (PS)** | Up to 16 players who practice but don't play. Other teams can sign them away ("poaching"). **Not in 1.0** ([D-080](DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle)). |
 | **IR (injured reserve)** | A list for injured players. They don't count against the 53, but must stay out a minimum number of games. |
 | **Depth chart** | The ordered list of players at each position and slot, which determines who plays. |
 | **Personnel package** | Offensive grouping by the number of RBs and TEs (11 = 1 RB + 1 TE + 3 WR, 12 = 1 RB + 2 TE, 21, 22, 10…). Defensive packages: Base, Nickel (5 DBs), Dime (6 DBs). |

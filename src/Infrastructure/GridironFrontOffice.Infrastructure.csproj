@@ -34,5 +34,6 @@
     <EmbeddedResource Include="..\..\data\names\last.json" LogicalName="names/last.json" />
     <EmbeddedResource Include="..\..\data\places\hometowns.json" LogicalName="places/hometowns.json" />
     <EmbeddedResource Include="..\..\data\blocklists\famous-people.json" LogicalName="blocklists/famous-people.json" />
+    <EmbeddedResource Include="..\..\data\contracts\contracts.json" LogicalName="contracts/contracts.json" />
   </ItemGroup>
 </Project>

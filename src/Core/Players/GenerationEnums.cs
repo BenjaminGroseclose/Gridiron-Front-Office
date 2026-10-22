@@ -9,7 +9,7 @@ public enum Measurable
     Height, Weight, Forty, TenSplit, ThreeCone, Shuttle, Bench, Vertical, BroadJump, ArmLength, HandSize,
 }
 
-/// <summary>Where a generated player sits on the depth chart, worst to best (F-03 §4.10).</summary>
+/// <summary>Where a generated player sits, worst to best (F-03 §4.10): Fringe is the unsigned pool.</summary>
 public enum PlayerTier
 {
     Fringe, Backup, Starter,

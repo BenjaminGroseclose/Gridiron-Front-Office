@@ -12,12 +12,12 @@ public enum Position
 }
 
 /// <summary>
-/// Where a player stands. TeamID follows it: set for Active, PracticeSquad and InjuredReserve; null for Prospect,
-/// FreeAgent and Retired.
+/// Where a player stands. TeamID follows it: set for Active and InjuredReserve; null for Prospect, FreeAgent and
+/// Retired. (No practice squad in 1.0, D-080.)
 /// </summary>
 public enum PlayerStatus
 {
-    Prospect, Active, PracticeSquad, InjuredReserve, FreeAgent, Retired,
+    Prospect, Active, InjuredReserve, FreeAgent, Retired,
 }
 
 /// <summary>

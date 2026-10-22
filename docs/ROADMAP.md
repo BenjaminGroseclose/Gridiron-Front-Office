@@ -207,7 +207,7 @@ flowchart TD
 - **F-20:** annual progression, aging and decline, development focus, retirement.
 - **F-14 (basic):** re-signing with ask/offer/counter and the interest meter.
 - **F-15 (basic):** turn-based free agency with AI bidding.
-- **F-16:** waivers, cut-down day, practice squad.
+- **F-16:** waivers, cut-down day.
 - **F-18 (headless draft):** draft order, AI picks, tradable future picks (owned, not yet tradable in the UI), rookie contracts, the UDFA window (one turn-based round of blind offers, [D-059](DECISIONS.md#d-059-the-udfa-window-is-one-turn-based-round-of-blind-offers)). The user picks from a simple list with **no clock yet**.
 - **F-10:** awards, career stats, champions history, the transaction log, draft history.
 - **F-21 v1:** AI re-signs, tags, cuts, bids, drafts, claims. Cap-healthy and rule-abiding.

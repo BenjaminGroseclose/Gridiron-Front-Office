@@ -1,6 +1,6 @@
 # M1 · WP3 builder's guide: player data
 
-> **Status:** Ready to build (§7: every file except `contracts.json`, which follows F-12) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml) · **Size:** M–L · **Written:** 2026-10-21
+> **Status:** Built 2026-10-21 (§3 scaffolded by Claude for the owner's review; §4 tests green; `contracts.json` built against F-12's M1 slice, D-080) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml) · **Size:** M–L · **Written:** 2026-10-21
 >
 > WP3 puts every number the player generator (WP4) needs into data files with first-pass values: each position's roster targets, body and athletic testing, OVR weights and archetypes; the league-wide generation settings; the jersey rule; the name and hometown lists; and the famous-people blocklist. Nothing generates players yet. WP3 only loads the numbers and proves them consistent, so WP4 can tune data instead of code.
 
@@ -10,9 +10,9 @@
 
 | | |
 |---|---|
-| **Claude prepares** (§2, §7) | The data files: `positions.json`, `generation.json`, `jersey-rules.json` (checked against the real NFL rule), `famous-people.json`, and, after each download is approved, `first.json`, `last.json` and `hometowns.json`. `contracts.json` follows F-12's M1 spec (§8). |
-| **You build** (§3) | Three Core enums, the definition records, `ISeedData`'s new properties, the loader's new files and one log event |
-| **Claude writes the tests** (§4) | Every file parses; the numbers are consistent (weights sum to 1, roster targets add up to 53, every attribute is used) |
+| **Claude prepares** (§2, §7) | The data files: `positions.json`, `generation.json`, `jersey-rules.json` (checked against the real NFL rule), `famous-people.json`, and, after each download is approved, `first.json`, `last.json` and `hometowns.json`. `contracts.json` follows F-12's M1 spec (§8): its shape and rules are [F-12 §4.9–4.10](../features/F-12_CONTRACTS.md). |
+| **You build** (§3) | Three Core enums (plus `ContractType`), the definition records, `ISeedData`'s new properties, the loader's new files and one log event |
+| **Claude writes the tests** (§4) | Every file parses; the numbers are consistent (weights sum to 1, roster targets add up to 53, every attribute is used; the contract rules R1–R10 of F-12 §4.10) |
 
 **Read first:** F-03 §4.1–4.11 and §5, [D-043](../DECISIONS.md#d-043-limited-personality-model-only-traits-with-a-consumer), [D-050](../DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim), [D-077](../DECISIONS.md#d-077-data-files-carry-no-version-numbers-they-change-only-additively), [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) (#2: skills are archetype + shared quality + noise), and the [WP2 guide](M1_WP2_GUIDE.md) §3.4 (the loader you're extending).
 
@@ -23,15 +23,18 @@ data/
 ├─ players/      positions.json, generation.json, jersey-rules.json      (Claude)
 ├─ names/        first.json, last.json                                     (Claude, after approved downloads)
 ├─ places/       hometowns.json                                            (Claude, after an approved download)
-└─ blocklists/   famous-people.json   (ships in the app: the generator re-rolls a famous name)
+├─ blocklists/   famous-people.json   (ships in the app: the generator re-rolls a famous name)
+└─ contracts/    contracts.json       (Claude, from F-12 §4.9)
 src/
-├─ Core/Players/                   + Measurable, PlayerTier, DevelopmentCurve (next to PlayerEnums.cs)
+├─ Core/Players/GenerationEnums.cs     Measurable, PlayerTier, DevelopmentCurve (next to PlayerEnums.cs)
+├─ Core/Contracts/ContractType.cs      Rookie, Veteran, Minimum (F-12 §4.9)
 ├─ Application/Players/PlayerData.cs   the definition records (§3.2)
-├─ Application/Leagues/ISeedData.cs    + six properties
+├─ Application/Contracts/ContractData.cs   the contract records (F-12 §4.9)
+├─ Application/Leagues/ISeedData.cs    + eight properties
 └─ Infrastructure/
-   ├─ GridironFrontOffice.Infrastructure.csproj   + seven embedded files
+   ├─ GridironFrontOffice.Infrastructure.csproj   + eight embedded files
    └─ Seed/EmbeddedSeedData.cs, SeedLog.cs        + one Lazy per file, event 1202
-tests/Infrastructure.Tests/Seed/   PlayerDataTests, NameDataTests   (Claude)
+tests/Infrastructure.Tests/Seed/   PlayerDataTests, NameDataTests, ContractDataTests   (Claude)
 ```
 
 ## 2. The data formats
@@ -77,7 +80,7 @@ Like WP2's files: camelCase field names, enum values **and enum dictionary keys*
 
 ```json
 {
-  "roster": { "active": 53, "practiceSquad": 16, "freeAgents": 150 },
+  "roster": { "active": 53, "freeAgents": 150 },
   "tiers": {
     "Starter": { "skillShift": 10.5, "spread": 9, "athleticShift": 0.5, "target": { "mean": 74, "sd": 7 } },
     "Backup":  { "skillShift": -3.5, "spread": 6, "athleticShift": 0,   "target": { "mean": 64, "sd": 6 } },
@@ -126,7 +129,7 @@ Like WP2's files: camelCase field names, enum values **and enum dictionary keys*
 
 | Step | Rule |
 |---|---|
-| Tier | The top `roster.starters` at a position are **Starter**, the rest of the 53 **Backup**, practice squads and free agents **Fringe** |
+| Tier | The top `roster.starters` at a position are **Starter**, the rest of the 53 **Backup**, free agents **Fringe** (no practice squad in 1.0, D-080) |
 | Quality | One draw `q ~ N(0, 1)` per player: how good they are within their tier |
 | Measurables | Each from its position's `mean` and `sd`, shifted by the tier's `athleticShift` (in SDs, toward "better"; for timed drills better is lower). The six drills (Forty, TenSplit, ThreeCone, Shuttle, Vertical, BroadJump) share one athletic draw with `drillCorrelation`, so a fast player also tests well elsewhere |
 | Physical ratings | Speed, Acceleration, Agility and Strength: the straight line through `best` and `worst`, averaged when two measurables feed one rating (Agility), plus `N(0, physicalNoiseSd)` (F-03 §4.3's ±3), clamped to 0–100 |
@@ -191,7 +194,7 @@ public sealed record Distribution(double Mean, double Sd, double? Min = null, do
 public sealed record GenerationSettings(RosterSizes Roster, IReadOnlyDictionary<PlayerTier, TierSettings> Tiers,
     SkillSettings Skills, AthleticSettings Athletic, HiddenSettings Hidden, PersonalitySettings Personality,
     IReadOnlyDictionary<PlayerTier, IReadOnlyDictionary<CollegeTier, double>> CollegeTiers, GenerationTargets Targets);
-public sealed record RosterSizes(int Active, int PracticeSquad, int FreeAgents);
+public sealed record RosterSizes(int Active, int FreeAgents);
 public sealed record TierSettings(double SkillShift, double Spread, double AthleticShift, Distribution Target);
 public sealed record SkillSettings(IReadOnlyDictionary<PlayerAttribute, double> Common, Distribution OffPosition, double NoiseSd);
 public sealed record AthleticSettings(double DrillCorrelation, double PhysicalNoiseSd, IReadOnlyList<PhysicalRating> Ratings);
@@ -231,14 +234,15 @@ public interface ISeedData
     NameList LastNames { get; }
     HometownList Hometowns { get; }
     IReadOnlyList<string> FamousPeople { get; }
+    ContractData Contracts { get; }     // F-12 §4.9, WP3's last slice
 }
 ```
 
-One port for all built-in data, so the generator still reads only `ISeedData`.
+One port for all built-in data, so the generators still read only `ISeedData`.
 
 ### 3.4 The loader (`EmbeddedSeedData`)
 
-- **Embed** the seven files with logical names, as WP2 did: `players/positions.json`, `players/generation.json`, `players/jersey-rules.json`, `names/first.json`, `names/last.json`, `places/hometowns.json`, `blocklists/famous-people.json`.
+- **Embed** the eight files with logical names, as WP2 did: `players/positions.json`, `players/generation.json`, `players/jersey-rules.json`, `names/first.json`, `names/last.json`, `places/hometowns.json`, `blocklists/famous-people.json`, `contracts/contracts.json`.
 - **One `Lazy<T>` per file**, read with the existing `Read<T>` and `JsonOptions`. Nothing changes in the strict parsing; enum dictionary keys are covered by the same converter (a test proves a misspelled key fails).
 - **Log each load** with one new event: **1202**, Information, `Loaded {Resource} in {ElapsedMs} ms`. Teams and colleges keep 1200 and 1201.
 - The name files are the largest (a few hundred KB), and they load only when a league is generated.
@@ -261,18 +265,19 @@ In `tests/Infrastructure.Tests/Seed/`, against the shipped files. Each lists eve
 | Names and places are usable | No empty or duplicate names; weights and populations > 0; two-letter states; at least 1,000 first names, 5,000 last names and 1,000 places |
 | Famous people are blocked | The list is non-empty and holds known names (Jerry Rice, Tom Brady) |
 | A misspelled enum key fails | `"RoutRunning"` in an archetype is a `JsonException` |
+| The contract data is consistent | F-12 §4.10's R1–R10 (`ContractDataTests`): the ladder ascends, the rookie rounds descend and cover the minimums, every position has a maximum, the curve pays a Starter well above the minimum, and a roster at the curve's expected values lands within 0.8–1.3 × cap |
 
 ## 5. Done when
 
-- [ ] The three enums, the records, `ISeedData`'s properties, the seven embedded files and event 1202.
-- [ ] Every §4 test passes; `./build.ps1` is green.
+- [ ] The three enums (and `ContractType`), the records, `ISeedData`'s eight properties, the eight embedded files and event 1202. _Scaffolded by Claude 2026-10-21; your review is the tick._
+- [ ] Every §4 test passes (50, including `ContractDataTests`, each proven on a planted problem); `./build.ps1` is green.
 - [ ] **Ask for a review**, then commit with the message I give you.
 
 ## 6. Order of work
 
 1. **Now:** I prepare `positions.json`, `generation.json`, `jersey-rules.json` and `famous-people.json` (no downloads). You can build §3 against them.
 2. **Downloads:** for the name and place lists, I ask before each download, with its file name, source and size: the SSA national baby-name file, the Census 2010 surname file, and the Census Gazetteer places file. Their sources go in THIRD_PARTY_NOTICES.
-3. **After F-12's M1 spec** (§8, question 3): `contracts.json`, its records and its tests, as WP3's last slice.
+3. **After F-12's M1 spec** (§8, question 3): `contracts.json`, its records and its tests, as WP3's last slice. _Done 2026-10-21, the same day the spec was revised on your answers (D-080)._
 
 ## 7. Where the data stands
 
@@ -285,7 +290,9 @@ In `tests/Infrastructure.Tests/Seed/`, against the shipped files. Each lists eve
 - **`first.json` and `last.json` (2026-10-21):** 2,000 first names (SSA, male births 1986–2005, 94.6% of eligible boys' births; female-majority names like Ashley and Madison and placeholders like "Baby" dropped, which also drops a few unisex names such as Peyton) and 5,000 surnames (Census 2010, 60% of Americans; "MCDONALD" → "McDonald"). Sized by the owner (2026-10-21) after a reference run: about 2.4 repeated surnames per 53-man roster, close to real rosters; 1,000 surnames would give 4.6. Sources in THIRD_PARTY_NOTICES.
 - **`hometowns.json` (2026-10-21):** 3,489 places of 10,000 people or more from the Census population estimates (the Gazetteer, the first plan, no longer carries population): incorporated places, New England towns (their local governments) and Hawaii's counties (it has no incorporated places), with the government types stripped ("Nashville-Davidson metropolitan government (balance)" → Nashville). Every state and DC.
 
-**Next:** `contracts.json`, after F-12's M1 spec.
+- **`contracts.json` (2026-10-21):** the numbers of [F-12 §4.3–4.7](../features/F-12_CONTRACTS.md), revised on the owner's answers (D-080): a $300M cap, the 2026 minimum ladder, a rookie scale by round, one APY maximum per position with `curve` 3.5 and a ±20% wiggle, lengths and shares by contract tier. A roster at the curve's expected values prices at 0.98 × cap (R10).
+
+**Next:** nothing in WP3. The owner reviews the §3 code and commits; WP4 generates from it.
 
 ## 8. Questions for you (answered 2026-10-21)
 

@@ -87,6 +87,7 @@
 | D-077 | Data files carry no version numbers; they change only additively | **Accepted** |
 | D-078 | M1 builds for today's consumers: fifteen simplifications | **Accepted** |
 | D-079 | WP3 player data: traits in generation.json, measurable priors deferred, F-12 before contracts | **Accepted** |
+| D-080 | F-12's M1 slice: no practice squad in 1.0; pay by league-wide quality, with wiggle | **Accepted** |
 
 ---
 
@@ -173,7 +174,7 @@
 
 ## D-014: Fixed 32-team league structure for 1.0
 - **Status:** **Accepted** (owner, 2026-10-14, by choosing "Fixed + no cap knobs" for Q-13; see [D-036](#d-036-league-settings-at-creation-are-gameplay-only-one-user-team))
-- **Decision:** 32 teams, 2 conferences, 4 divisions of 4, 17 games across 18 weeks, 7 playoff seeds per conference, 53-man rosters + a 16-player practice squad. Not configurable in 1.0.
+- **Decision:** 32 teams, 2 conferences, 4 divisions of 4, 17 games across 18 weeks, 7 playoff seeds per conference, 53-man rosters + a 16-player practice squad. *(The practice squad left 1.0 in [D-080](#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle); rosters are the 53.)* Not configurable in 1.0.
 - **Why:** configurability breaks the schedule formula and tiebreakers and multiplies test cases. See [Q-13](OPEN_QUESTIONS.md#q-13-league-customization).
 
 ## D-015: Integer keys with strongly typed IDs
@@ -372,7 +373,7 @@
 
 ## D-038: No preseason games in 1.0
 - **Status:** **Accepted** (owner, 2026-10-14, chose "None in 1.0"). Resolves Q-20.
-- **Decision:** Training Camp is annual progression at camp open, development focus, cut-down to 53, waivers and the practice squad. **There are no preseason games**, preseason stats or preseason schedule weeks. Parked in [IDEAS.md](IDEAS.md).
+- **Decision:** Training Camp is annual progression at camp open, development focus, cut-down to 53, waivers and the practice squad *(no practice squad in 1.0 since [D-080](#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle))*. **There are no preseason games**, preseason stats or preseason schedule weeks. Parked in [IDEAS.md](IDEAS.md).
 - **Why:** their main justification was feeding fog of war, which no longer applies under [D-032](#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) (your roster is exact, other pros never sharpen, prospects are already drafted). What's left is flavor, at the cost of snap-limit rules, separate stats, about 48 extra games and more calendar weeks.
 
 ## D-039: Play-by-play is kept; measure before pruning
@@ -724,3 +725,15 @@
   2. **The measurable "priors" are deferred.** All 11 measurables are generated and stored (the combine needs them in M6), but in M1 only four become ratings: the 40 (Speed), the 10-yard split (Acceleration), the 3-cone and shuttle (Agility) and the bench (Strength). Vertical, broad jump, arm length, hand size, height and weight nudge no skill yet. The nudges come back as a field added to `generation.json` if M2's SimLab shows players feel samey.
   3. **F-12's M1 spec comes next,** drafted by Claude for the owner's review. `contracts.json` is WP3's last slice, after it.
 - **Consequences:** + One file fewer, and no prior tuning in M1. − Seven measurables carry no rating signal until the nudges return.
+
+## D-080: F-12's M1 slice: no practice squad in 1.0; pay by league-wide quality, with wiggle
+- **Status:** **Accepted** (owner, 2026-10-21, reviewing the first draft of [F-12](features/F-12_CONTRACTS.md)). Amends [D-014](#d-014-fixed-32-team-league-structure-for-10) (the 16-player practice squad) and [D-038](#d-038-no-preseason-games-in-10) (Training Camp's practice-squad step); moves the practice-squad part of F-16 out of 1.0.
+- **The owner's words:** *"Lets move practice squad to the next major release of this application that is too complex for version 1 and not impactful enough to dig into"*; on the veteran bands: *"I don't want to be too strict on the min / max, I think these are general rules to follow but there should be wiggle room if possible"*; and to the six questions: *"300M is good"*; practice squad: *"remove practice squad for initial release unless you believe they are necessary to the application"*; guarantees: *"Yes keep them in M1"*; bands: *"I think it can hold a only a max, no need to have min for a backup but I think knowing if a player is a backup is a bit vague. For example a WR might be 5th best on team X but 3rd best on team Y. Team Y buy the rule would pay more since it would be rated as a starter"*; rookie rounds: *"Yes linear is fine"*; experience: *"Yes experience can be 1 number"*.
+- **Decision:**
+  1. **No practice squad in 1.0.** Claude's answer to "unless you believe they are necessary": they aren't. Rosters are the 53; injury replacements (M3) come from the free-agent pool, which stays at about 150; cut-down day and waivers (F-16, M5) stay. The practice squad, elevations and poaching are parked in [IDEAS.md](IDEAS.md) for the next major release. `PlayerStatus` loses `PracticeSquad`, `generation.json` its `practiceSquad` count, and the player counts drop from ~2,300 to ~1,850 per league.
+  2. **The first-season cap is $300,000,000.**
+  3. **Guaranteed money is generated and shown in M1** (the Player page); nothing acts on it until M4.
+  4. **Pay follows the player, not the depth chart.** A veteran's APY comes from his **league-wide rank at his position** through one curve per position with only a **maximum** in the data (the minimum is his minimum salary), plus a **wiggle** (a clamped random nudge of up to ±20%) so the bands are rules of thumb, not walls. "Starter" and "Backup" for contract length and shares are also league-wide (the top `32 × roster.starters` at a position). F-03's per-team generation tier is unchanged for skills.
+  5. **Rookie rounds are linear** between a round's first and last pick.
+  6. **Experience is one number** in M1, serving as both accrued and credited seasons; the CBA's two definitions apply from M3.
+- **Consequences:** + Fewer rules and tables for 1.0, and a pay model no depth chart can distort. − A deeper team's good backup is paid like the Starter he'd be elsewhere, which is the realistic outcome; the cap-fitting pass absorbs it.
