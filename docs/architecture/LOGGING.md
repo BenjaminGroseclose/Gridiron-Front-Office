@@ -193,7 +193,7 @@ M0 checked every path in both hosts. Each one landed in the log with its stack t
 
 ### 8.2 Event IDs in use
 - **1000–1017, App/Host (`HostLog`):** banner, settings unreadable, settings file created (1006), window shown, WebView2 ready, host page loaded, exiting, the unhandled background-thread, unobserved-task and UI-thread exceptions, the crash dialog choice, the window placement used at startup (1014: saved, default, or default because the saved one is off every monitor) a placement that couldn't be saved (1015), the first themed screen with its time since process start (1016, the startup budget's end point), and an open league that couldn't be closed cleanly on exit (1017).
-- **1200–1201, League data (`SeedLog`):** the team set loaded (1200) and the college list loaded (1201), each with its count and load time. The < 20 ms loading target is read here, not asserted (D-078).
+- **1200–1202, Built-in data (`SeedLog`):** the team set loaded (1200) and the college list loaded (1201), each with its count and load time; every other embedded file (the WP3 player data: positions, generation settings, jersey rules, names, hometowns, famous people) logs 1202 with its resource name and load time. The < 20 ms loading target is read here, not asserted (D-078).
 - **2000–2022, Persistence (`DataLog`):**
   - commands: committed (Debug), rejected, rolled back, slow (> 1 s), rollback failed;
   - saves: created, opened, upgraded, closed, refused (2014), restored (2017), deleted (2018), a restore or delete refused (2021, 2022);

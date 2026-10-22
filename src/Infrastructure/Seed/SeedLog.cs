@@ -10,4 +10,8 @@ internal static partial class SeedLog
 
     [LoggerMessage(EventId = 1201, Level = LogLevel.Information, Message = "College list {Name} loaded: {CollegeCount} colleges in {ElapsedMs} ms")]
     public static partial void CollegeListLoaded(ILogger logger, string name, int collegeCount, long elapsedMs);
+
+    /// <summary>Every other built-in file (the player data, WP3), by its embedded resource name.</summary>
+    [LoggerMessage(EventId = 1202, Level = LogLevel.Information, Message = "Loaded {Resource} in {ElapsedMs} ms")]
+    public static partial void ResourceLoaded(ILogger logger, string resource, long elapsedMs);
 }
