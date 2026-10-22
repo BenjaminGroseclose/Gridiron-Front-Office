@@ -255,5 +255,18 @@
       "tolerance": 1
     },
     "rosterMixTolerance": 0.3
+  },
+  "draft": {
+    "draftedShare": 0.7,
+    "rankNoiseSd": 6,
+    "entryAge": {
+      "min": 21,
+      "max": 23
+    }
+  },
+  "teamStrength": {
+    "range": 0.7,
+    "youngWeight": 1.6,
+    "veteranWeight": 0.7
   }
 }

@@ -43,7 +43,9 @@ public sealed record GenerationSettings(
 	HiddenSettings Hidden,
 	PersonalitySettings Personality,
 	IReadOnlyDictionary<PlayerTier, IReadOnlyDictionary<CollegeTier, double>> CollegeTiers,
-	GenerationTargets Targets);
+	GenerationTargets Targets,
+	DraftSettings Draft,
+	TeamStrengthSettings TeamStrength);
 
 /// <summary>The 53 and the unsigned pool (no practice squad in 1.0, D-080).</summary>
 public sealed record RosterSizes(int Active, int FreeAgents, int MixSwaps);
