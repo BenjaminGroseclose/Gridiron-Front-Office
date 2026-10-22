@@ -15,12 +15,12 @@ public sealed record PositionData(IReadOnlyList<PositionProfile> Positions);
 /// first pass until SimLab replaces them in M2) and the archetypes a player draws from (D-078 #2).
 /// </summary>
 public sealed record PositionProfile(
-    Position Position,
-    RosterTarget Roster,
-    Distribution Age,
-    IReadOnlyDictionary<Measurable, Distribution> Measurables,
-    IReadOnlyDictionary<PlayerAttribute, double> OvrWeights,
-    IReadOnlyList<Archetype> Archetypes);
+	Position Position,
+	RosterTarget Roster,
+	Distribution Age,
+	IReadOnlyDictionary<Measurable, Distribution> Measurables,
+	IReadOnlyDictionary<PlayerAttribute, double> OvrWeights,
+	IReadOnlyList<Archetype> Archetypes);
 
 /// <summary>
 /// The league <see cref="Average"/> of 53, a team's typical <see cref="Min"/>–<see cref="Max"/>, the <see cref="Floor"/>
@@ -36,17 +36,28 @@ public sealed record Distribution(double Mean, double Sd, double? Min = null, do
 
 /// <summary>data/players/generation.json: the league-wide settings the generator (WP4) reads.</summary>
 public sealed record GenerationSettings(
-    RosterSizes Roster,
-    IReadOnlyDictionary<PlayerTier, TierSettings> Tiers,
-    SkillSettings Skills,
-    AthleticSettings Athletic,
-    HiddenSettings Hidden,
-    PersonalitySettings Personality,
-    IReadOnlyDictionary<PlayerTier, IReadOnlyDictionary<CollegeTier, double>> CollegeTiers,
-    GenerationTargets Targets);
+	RosterSizes Roster,
+	IReadOnlyDictionary<PlayerTier, TierSettings> Tiers,
+	SkillSettings Skills,
+	AthleticSettings Athletic,
+	HiddenSettings Hidden,
+	PersonalitySettings Personality,
+	IReadOnlyDictionary<PlayerTier, IReadOnlyDictionary<CollegeTier, double>> CollegeTiers,
+	GenerationTargets Targets);
 
 /// <summary>The 53 and the unsigned pool (no practice squad in 1.0, D-080).</summary>
-public sealed record RosterSizes(int Active, int FreeAgents);
+public sealed record RosterSizes(int Active, int FreeAgents, int MixSwaps);
+
+/// <summary>How generated players got their draft history (D-081 #3): ranked entry classes, the top share drafted.</summary>
+public sealed record DraftSettings(double DraftedShare, double RankNoiseSd, AgeRange EntryAge);
+public sealed record AgeRange(int Min, int Max);
+
+/// <summary>
+/// The league's strength ladder (D-082): evenly spaced from −Range to +Range, in units of the quality draw. A player's
+/// shift is his team's strength times YoungWeight within rookie-deal experience, else times VeteranWeight.
+/// </summary>
+public sealed record TeamStrengthSettings(double Range, double YoungWeight, double VeteranWeight);
+
 
 /// <summary>How a tier shifts skills and athleticism, and the OVR distribution WP4's tests expect from it.</summary>
 public sealed record TierSettings(double SkillShift, double Spread, double AthleticShift, Distribution Target);
@@ -64,12 +75,12 @@ public sealed record RatingPoint(double Value, double Rating);
 
 /// <summary>The hidden ratings (F-03 §4.6): potential growth by age, the grade bands, and the per-player distributions.</summary>
 public sealed record HiddenSettings(
-    IReadOnlyList<PotentialGrowth> PotentialGrowth,
-    IReadOnlyList<GradeBand> PotentialGrades,
-    IReadOnlyDictionary<DevelopmentCurve, double> DevelopmentCurve,
-    Distribution BustRisk,
-    Distribution PeakAgeOffset,
-    Distribution InjuryProneness);
+	IReadOnlyList<PotentialGrowth> PotentialGrowth,
+	IReadOnlyList<GradeBand> PotentialGrades,
+	IReadOnlyDictionary<DevelopmentCurve, double> DevelopmentCurve,
+	Distribution BustRisk,
+	Distribution PeakAgeOffset,
+	Distribution InjuryProneness);
 
 /// <summary>The OVR growth a player of up to <see cref="ThroughAge"/> still has ahead.</summary>
 public sealed record PotentialGrowth(int ThroughAge, Distribution Growth);

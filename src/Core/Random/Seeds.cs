@@ -11,44 +11,44 @@ namespace GridironFrontOffice.Core.Random;
 /// </summary>
 public static class Seeds
 {
-    private const ulong FnvOffsetBasis = 0xCBF29CE484222325;
-    private const ulong FnvPrime = 0x100000001B3;
-    private const byte PartSeparator = 0x1F;   // ASCII "unit separator": marks where the purpose text ends
+	private const ulong FnvOffsetBasis = 0xCBF29CE484222325;
+	private const ulong FnvPrime = 0x100000001B3;
+	private const byte PartSeparator = 0x1F;   // ASCII "unit separator": marks where the purpose text ends
 
-    /// <summary>A seed for <paramref name="purpose"/> and <paramref name="parts"/>, derived from the league seed.</summary>
-    public static ulong Derive(ulong leagueSeed, string purpose, params ReadOnlySpan<long> parts)
-    {
-        ArgumentException.ThrowIfNullOrEmpty(purpose);
+	/// <summary>A seed for <paramref name="purpose"/> and <paramref name="parts"/>, derived from the league seed.</summary>
+	public static ulong Derive(ulong leagueSeed, string purpose, params ReadOnlySpan<long> parts)
+	{
+		ArgumentException.ThrowIfNullOrEmpty(purpose);
 
-        Span<byte> word = stackalloc byte[sizeof(ulong)];
-        var hash = FnvOffsetBasis;
+		Span<byte> word = stackalloc byte[sizeof(ulong)];
+		var hash = FnvOffsetBasis;
 
-        BinaryPrimitives.WriteUInt64LittleEndian(word, leagueSeed);
-        hash = Fnv1a(hash, word);
-        hash = Fnv1a(hash, Encoding.UTF8.GetBytes(purpose));
+		BinaryPrimitives.WriteUInt64LittleEndian(word, leagueSeed);
+		hash = Fnv1a(hash, word);
+		hash = Fnv1a(hash, Encoding.UTF8.GetBytes(purpose));
 
-        foreach (var part in parts)
-        {
-            hash = Fnv1a(hash, PartSeparator);
-            BinaryPrimitives.WriteInt64LittleEndian(word, part);
-            hash = Fnv1a(hash, word);
-        }
+		foreach (var part in parts)
+		{
+			hash = Fnv1a(hash, PartSeparator);
+			BinaryPrimitives.WriteInt64LittleEndian(word, part);
+			hash = Fnv1a(hash, word);
+		}
 
-        // FNV-1a alone spreads nearby inputs poorly (slot 0 and slot 1 differ in few bits); Mix scrambles them apart.
-        return SplitMix64.Mix(hash);
-    }
+		// FNV-1a alone spreads nearby inputs poorly (slot 0 and slot 1 differ in few bits); Mix scrambles them apart.
+		return SplitMix64.Mix(hash);
+	}
 
-    private static ulong Fnv1a(ulong hash, ReadOnlySpan<byte> bytes)
-    {
-        foreach (var b in bytes)
-        {
-            hash = Fnv1a(hash, b);
-        }
+	private static ulong Fnv1a(ulong hash, ReadOnlySpan<byte> bytes)
+	{
+		foreach (var b in bytes)
+		{
+			hash = Fnv1a(hash, b);
+		}
 
-        return hash;
-    }
+		return hash;
+	}
 
-    private static ulong Fnv1a(ulong hash, byte b) => (hash ^ b) * FnvPrime;
+	private static ulong Fnv1a(ulong hash, byte b) => (hash ^ b) * FnvPrime;
 }
 
 /// <summary>
@@ -57,6 +57,12 @@ public static class Seeds
 /// </summary>
 public static class SeedPurpose
 {
-    public const string Generation = "gen";
-    public const string Perception = "perception";
+	public const string Generation = "gen";
+	public const string Perception = "perception";
+	public const string RosterMix = "gen.mix";     // (season, pair)
+	public const string TeamStrength = "gen.strength";  // (season)
+	public const string Names = "gen.names";       // (season, slot)
+	public const string Draft = "gen.draft";       // (season, entry season)
+	public const string Jerseys = "gen.jersey";    // (season, team index)
+	public const string Contract = "contract";     // (season, slot), F-12 §4.8
 }

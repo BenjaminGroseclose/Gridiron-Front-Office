@@ -1,7 +1,8 @@
 {
   "roster": {
     "active": 53,
-    "freeAgents": 150
+    "freeAgents": 150,
+    "mixSwaps": 3
   },
   "tiers": {
     "Starter": {

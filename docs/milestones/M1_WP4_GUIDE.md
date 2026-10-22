@@ -69,6 +69,8 @@ D-081 settled the four big questions, and D-082 added the strength ladder. These
 ### 3.1 Already done by Claude
 
 - `data/players/positions.json`: every archetype skill mean shifted by position: **WR −3.5, CB −3, RB −3, QB +1, TE +1**. Speed-heavy OVR weights put receivers, corners and backs 3–4 points over every tier target, and quarterbacks and tight ends ran slightly under (§9).
+- `data/players/positions.json` again, for [D-084](../DECISIONS.md#d-084-ovr-is-one-yardstick-per-position-archetypes-are-balanced-in-the-data): each archetype's skill means shifted by one constant (−2.5 to +4) so every archetype at a position has the same expected OVR. Gaps of up to 3.8 (CB Zone, WR Deep Threat, TE Blocking, FB H-Back, LB Blitzer, QB Scrambler) are now at most 0.3 expected and 0.5 simulated; the position averages didn't move.
+- `data/players/generation.json`: the Starter tier's `spread` 9 → **8.5** (D-082's ladder had pushed players at 90+ over 25 per league).
 - `data/contracts/contracts.json`: `curve` 3.5 → **2.5** (D-081 #2). R10 is now 1.21 × cap, still inside its 0.8–1.3 band.
 
 ### 3.2 `generation.json` grows (you, with the records)
@@ -182,7 +184,7 @@ public const string Contract = "contract";     // (season, slot), F-12 §4.8
 
 **`Draw`** (`Application/Players`, an extension next to `Distribution`): `random.Draw(distribution)` is `Normal(Mean, Sd)` clamped to `Min`–`Max` when they're given.
 
-**`OverallCalculator`** (`Application/Players`, static, D-081 #4):
+**`OverallCalculator`** (`Application/Players`, static, D-081 #4). `Overall` takes **no archetype** ([D-084](../DECISIONS.md#d-084-ovr-is-one-yardstick-per-position-archetypes-are-balanced-in-the-data)): one yardstick per position, so a Scrambler and a Pocket Passer are rated on the same scale. Fairness between styles lives in the data, and a slice 1 test guards it.
 
 ```csharp
 /// <summary>OVR on the internal 0–100 scale: Σ wᵢ · attributeᵢ over the position's weights, in the file's order (F-03 §4.5).</summary>
@@ -373,7 +375,7 @@ Each list of offenders is reported in full, as in WP3. The 20-seed tests share o
 | `WeightedPickerTests` (Core) | Frequencies follow the weights over 100,000 picks; a zero weight is never picked; one item is always picked; negative or all-zero weights throw; same seed, same picks |
 | `OverallCalculatorTests` | A hand-built QB's OVR equals Σ w · a; all-50 ratings give 50 at every position (the weights sum to 1); raising a weighted attribute raises OVR and an unweighted one doesn't; `Display` rounds 74.5 → 75, 99.6 → 99, −0.4 → 0; every F-03 §4.6 band boundary (92 → A+, 91 → A, 57 → F) |
 | `ArchetypeLabelTests` | For every archetype in `positions.json`, a player built exactly at its expected profile, at levels −10, 0 and +15, gets its label |
-| `PlayerDataTests` (+ rules) | The roster averages are whole numbers (the mirrored mix needs them); no archetype lists Speed, Acceleration, Agility or Strength (they come only from measurables); `0 < draftedShare ≤ 1`; `rankNoiseSd ≥ 0`; `entryAge.min ≤ entryAge.max` and `entryAge.min` ≤ every position's `age.min`; `mixSwaps ≥ 0`; `teamStrength`'s range and weights ≥ 0 |
+| `PlayerDataTests` (+ rules) | The roster averages are whole numbers (the mirrored mix needs them); no archetype lists Speed, Acceleration, Agility or Strength (they come only from measurables); `0 < draftedShare ≤ 1`; `rankNoiseSd ≥ 0`; `entryAge.min ≤ entryAge.max` and `entryAge.min` ≤ every position's `age.min`; `mixSwaps ≥ 0`; `teamStrength`'s range and weights ≥ 0. **Archetypes are fair (D-084):** at every position, each archetype's expected Starter OVR is within ±1 of the others'. The expected profile is its own skill means, else `skills.common`, plus the Starter `skillShift`, else `offPosition.mean`; physical ratings are the same for every archetype, so they're left out |
 
 **Slice 2**
 
@@ -486,4 +488,6 @@ All three as recommended, with one confirmation ([D-081](../DECISIONS.md#d-081-w
 5. ~~Should cap space follow strength?~~ → **Not now:** one band for every team; parked in IDEAS.md for M4.
 6. ~~Must the new `generation.json` fields be optional (D-077)?~~ → **No, required:** defaults are for the formats M11 imports ([D-083](../DECISIONS.md#d-083-optional-fields-with-defaults-are-for-importable-data-formats-only)).
 
-The owner walked through every choice in §2 one by one on 2026-10-22 and kept them all; D-082 and D-083 came out of that walkthrough.
+7. ~~Does `OverallCalculator` need the archetype to rate a mobile QB fairly?~~ (the owner, reviewing slice 1) → **No: one yardstick per position, with the archetypes balanced in the data;** archetypes don't shape the combine numbers yet ([D-084](../DECISIONS.md#d-084-ovr-is-one-yardstick-per-position-archetypes-are-balanced-in-the-data)).
+
+The owner walked through every choice in §2 one by one on 2026-10-22 and kept them all; D-082 and D-083 came out of that walkthrough, and D-084 out of the slice 1 review.

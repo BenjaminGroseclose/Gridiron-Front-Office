@@ -91,6 +91,7 @@
 | D-081 | WP4 generation: trades fit the cap, ranked draft classes, player rules in Application | **Accepted** |
 | D-082 | Team strength from a ladder, carried by the young core | **Accepted** |
 | D-083 | Optional fields with defaults are for importable data formats only | **Accepted** |
+| D-084 | OVR is one yardstick per position; archetypes are balanced in the data | **Accepted** |
 
 ---
 
@@ -771,3 +772,13 @@
   - A format that later becomes importable (a modding feature, say) joins the first group from then on, and its later fields get defaults.
 - **Unchanged:** no version numbers, formats only grow, strict parsing (D-077).
 - **Consequences:** + No dead defaults, and no number kept in two places. − Two rules instead of one, so CLAUDE.md states both.
+
+## D-084: OVR is one yardstick per position; archetypes are balanced in the data
+- **Status:** **Accepted** (owner, 2026-10-22, reviewing `OverallCalculator`: *"don't I need to provide the player archetype so that I can accurately rate them (Pocket passer vs mobile)"*; then chose "One yardstick, fair data" over a best-fit OVR per archetype, and "Not now" for archetypes shaping the combine numbers). Refines [F-03](features/F-03_PLAYERS.md) §4.5.
+- **Why:** with one weight set per position, the archetypes' skill means weren't on equal footing. In the reference model, Starters averaged up to 3.8 OVR apart by archetype alone (CB Zone 72.8 against Man 76.5; WR Deep Threat 3.3 under Possession; TE Blocking, FB H-Back and LB Blitzer about 3 under; QB Scrambler 2.1 under Pocket Passer). Pay follows OVR rank (F-12) and so does the draft order ([D-081](#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application)), so a player's style alone would have cut his pay and his pick.
+- **Decision:**
+  1. **OVR takes no archetype.** `OverallCalculator.Overall` is one weighted sum per position: how much a player helps at that position, whatever his style. Archetype-dependent weights would make OVR jump when a recomputed label flips, and grade every player on his own curve. How much one style is worth to one team is scheme fit (M10), not OVR.
+  2. **The data keeps archetypes fair.** Each archetype's skill means are shifted by one constant so that every archetype at a position has the same expected OVR, computed from the data's means and weights. The position's share-weighted average is unchanged, so the tier targets hold. Done 2026-10-22: the largest expected gap is 0.28 and the largest simulated gap 0.5. A data test keeps every archetype within ±1 of its position's others.
+  3. **How much an individual trait is worth** (a QB's legs: Elusiveness and Vision carry no QB weight today) **is SimLab's call in M2,** when the weights are regressed on what the engine rewards.
+  4. **Archetypes don't shape the combine numbers yet** ("Not now"): a Deep Threat runs no faster than a Possession receiver. It stays with [D-079](#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts)'s deferred priors, revisited with M2's SimLab.
+- **Consequences:** + A player's style never costs him rating, pay or draft position; `Overall` stays a plain weighted sum. − Archetype means are shifted values rather than hand-picked round numbers, and a tuning change to the weights or means needs the balance test to pass again.
