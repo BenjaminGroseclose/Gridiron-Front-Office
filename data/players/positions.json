@@ -81,32 +81,32 @@
           "name": "Pocket Passer",
           "share": 0.6,
           "skills": {
-            "ShortAccuracy": 68,
-            "MediumAccuracy": 66,
-            "DeepAccuracy": 62,
-            "ArmStrength": 66,
-            "DecisionMaking": 66,
-            "PocketPresence": 68,
-            "ThrowOnTheRun": 56,
-            "BallSecurity": 60,
-            "Awareness": 66
+            "ShortAccuracy": 69,
+            "MediumAccuracy": 67,
+            "DeepAccuracy": 63,
+            "ArmStrength": 67,
+            "DecisionMaking": 67,
+            "PocketPresence": 69,
+            "ThrowOnTheRun": 57,
+            "BallSecurity": 61,
+            "Awareness": 67
           }
         },
         {
           "name": "Scrambler",
           "share": 0.4,
           "skills": {
-            "ShortAccuracy": 64,
-            "MediumAccuracy": 62,
-            "DeepAccuracy": 60,
-            "ArmStrength": 66,
-            "DecisionMaking": 62,
-            "PocketPresence": 60,
-            "ThrowOnTheRun": 68,
-            "BallSecurity": 58,
-            "Elusiveness": 62,
-            "Vision": 58,
-            "Awareness": 62
+            "ShortAccuracy": 65,
+            "MediumAccuracy": 63,
+            "DeepAccuracy": 61,
+            "ArmStrength": 67,
+            "DecisionMaking": 63,
+            "PocketPresence": 61,
+            "ThrowOnTheRun": 69,
+            "BallSecurity": 59,
+            "Elusiveness": 63,
+            "Vision": 59,
+            "Awareness": 63
           }
         }
       ]
@@ -192,40 +192,40 @@
           "name": "Power Back",
           "share": 0.35,
           "skills": {
-            "Vision": 64,
-            "BreakTackle": 70,
-            "BallSecurity": 66,
-            "Elusiveness": 56,
-            "Hands": 52,
-            "PassBlock": 56,
-            "RouteRunning": 48
+            "Vision": 61,
+            "BreakTackle": 67,
+            "BallSecurity": 63,
+            "Elusiveness": 53,
+            "Hands": 49,
+            "PassBlock": 53,
+            "RouteRunning": 45
           }
         },
         {
           "name": "Elusive Back",
           "share": 0.4,
           "skills": {
-            "Vision": 66,
-            "Elusiveness": 70,
-            "BreakTackle": 58,
-            "BallSecurity": 62,
-            "Hands": 58,
-            "RouteRunning": 52,
-            "Return": 58,
-            "PassBlock": 48
+            "Vision": 63,
+            "Elusiveness": 67,
+            "BreakTackle": 55,
+            "BallSecurity": 59,
+            "Hands": 55,
+            "RouteRunning": 49,
+            "Return": 55,
+            "PassBlock": 45
           }
         },
         {
           "name": "Receiving Back",
           "share": 0.25,
           "skills": {
-            "Vision": 62,
-            "Elusiveness": 64,
-            "Hands": 66,
-            "RouteRunning": 62,
-            "BallSecurity": 62,
-            "BreakTackle": 56,
-            "PassBlock": 54
+            "Vision": 59,
+            "Elusiveness": 61,
+            "Hands": 63,
+            "RouteRunning": 59,
+            "BallSecurity": 59,
+            "BreakTackle": 53,
+            "PassBlock": 51
           }
         }
       ]
@@ -411,38 +411,38 @@
           "name": "Deep Threat",
           "share": 0.3,
           "skills": {
-            "RouteRunning": 62,
-            "Hands": 62,
-            "Release": 64,
-            "ContestedCatch": 60,
-            "Elusiveness": 60,
-            "BallSecurity": 62
+            "RouteRunning": 58.5,
+            "Hands": 58.5,
+            "Release": 60.5,
+            "ContestedCatch": 56.5,
+            "Elusiveness": 56.5,
+            "BallSecurity": 58.5
           }
         },
         {
           "name": "Possession",
           "share": 0.4,
           "skills": {
-            "RouteRunning": 68,
-            "Hands": 70,
-            "Release": 62,
-            "ContestedCatch": 66,
-            "Elusiveness": 54,
-            "BallSecurity": 66,
-            "BreakTackle": 54
+            "RouteRunning": 64.5,
+            "Hands": 66.5,
+            "Release": 58.5,
+            "ContestedCatch": 62.5,
+            "Elusiveness": 50.5,
+            "BallSecurity": 62.5,
+            "BreakTackle": 50.5
           }
         },
         {
           "name": "Slot",
           "share": 0.3,
           "skills": {
-            "RouteRunning": 68,
-            "Hands": 66,
-            "Release": 60,
-            "ContestedCatch": 54,
-            "Elusiveness": 66,
-            "BallSecurity": 62,
-            "Return": 62
+            "RouteRunning": 64.5,
+            "Hands": 62.5,
+            "Release": 56.5,
+            "ContestedCatch": 50.5,
+            "Elusiveness": 62.5,
+            "BallSecurity": 58.5,
+            "Return": 58.5
           }
         }
       ]
@@ -528,41 +528,41 @@
           "name": "Receiving",
           "share": 0.35,
           "skills": {
-            "Hands": 71,
-            "RouteRunning": 69,
-            "ContestedCatch": 69,
-            "Release": 65,
-            "RunBlock": 59,
-            "PassBlock": 57,
-            "BreakTackle": 63,
-            "BallSecurity": 67
+            "Hands": 72,
+            "RouteRunning": 70,
+            "ContestedCatch": 70,
+            "Release": 66,
+            "RunBlock": 60,
+            "PassBlock": 58,
+            "BreakTackle": 64,
+            "BallSecurity": 68
           }
         },
         {
           "name": "Blocking",
           "share": 0.35,
           "skills": {
-            "RunBlock": 73,
-            "PassBlock": 69,
-            "LeadBlock": 67,
-            "Hands": 63,
-            "RouteRunning": 57,
-            "ContestedCatch": 61,
-            "BallSecurity": 67
+            "RunBlock": 74,
+            "PassBlock": 70,
+            "LeadBlock": 68,
+            "Hands": 64,
+            "RouteRunning": 58,
+            "ContestedCatch": 62,
+            "BallSecurity": 68
           }
         },
         {
           "name": "Balanced",
           "share": 0.3,
           "skills": {
-            "Hands": 67,
-            "RouteRunning": 65,
-            "ContestedCatch": 65,
-            "RunBlock": 67,
-            "PassBlock": 65,
-            "Release": 61,
-            "BallSecurity": 67,
-            "BreakTackle": 61
+            "Hands": 68,
+            "RouteRunning": 66,
+            "ContestedCatch": 66,
+            "RunBlock": 68,
+            "PassBlock": 66,
+            "Release": 62,
+            "BallSecurity": 68,
+            "BreakTackle": 62
           }
         }
       ]
@@ -1243,34 +1243,34 @@
           "name": "Man",
           "share": 0.4,
           "skills": {
-            "ManCoverage": 70,
-            "Press": 68,
-            "ZoneCoverage": 58,
-            "BallSkills": 62,
-            "Tackling": 55
+            "ManCoverage": 67,
+            "Press": 65,
+            "ZoneCoverage": 55,
+            "BallSkills": 59,
+            "Tackling": 52
           }
         },
         {
           "name": "Zone",
           "share": 0.35,
           "skills": {
-            "ZoneCoverage": 70,
-            "Awareness": 66,
-            "ManCoverage": 58,
-            "BallSkills": 65,
-            "Tackling": 58
+            "ZoneCoverage": 67,
+            "Awareness": 63,
+            "ManCoverage": 55,
+            "BallSkills": 62,
+            "Tackling": 55
           }
         },
         {
           "name": "Slot",
           "share": 0.25,
           "skills": {
-            "ManCoverage": 66,
-            "ZoneCoverage": 64,
-            "Tackling": 60,
-            "Press": 58,
-            "BallSkills": 60,
-            "Return": 60
+            "ManCoverage": 63,
+            "ZoneCoverage": 61,
+            "Tackling": 57,
+            "Press": 55,
+            "BallSkills": 57,
+            "Return": 57
           }
         }
       ]

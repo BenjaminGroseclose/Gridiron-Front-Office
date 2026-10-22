@@ -24,7 +24,7 @@
   },
   "undrafted": { "years": 3, "bonus": 20000 },
   "veterans": {
-    "curve": 3.5,
+    "curve": 2.5,
     "wiggle": { "sd": 0.08, "max": 0.20 },
     "maxApy": {
       "QB": 45000000, "RB": 13000000, "FB": 3000000, "WR": 30000000, "TE": 13000000,

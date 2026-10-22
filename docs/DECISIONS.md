@@ -88,6 +88,7 @@
 | D-078 | M1 builds for today's consumers: fifteen simplifications | **Accepted** |
 | D-079 | WP3 player data: traits in generation.json, measurable priors deferred, F-12 before contracts | **Accepted** |
 | D-080 | F-12's M1 slice: no practice squad in 1.0; pay by league-wide quality, with wiggle | **Accepted** |
+| D-081 | WP4 generation: trades fit the cap, ranked draft classes, player rules in Application | **Accepted** |
 
 ---
 
@@ -737,3 +738,13 @@
   5. **Rookie rounds are linear** between a round's first and last pick.
   6. **Experience is one number** in M1, serving as both accrued and credited seasons; the CBA's two definitions apply from M3.
 - **Consequences:** + Fewer rules and tables for 1.0, and a pay model no depth chart can distort. − A deeper team's good backup is paid like the Starter he'd be elsewhere, which is the realistic outcome; the cap-fitting pass absorbs it.
+
+## D-081: WP4 generation: trades fit the cap, ranked draft classes, player rules in Application
+- **Status:** **Accepted** (owner, 2026-10-22, answering the questions before the [WP4 guide](milestones/M1_WP4_GUIDE.md): *"Trade to fit sounds right, this is during the initial creation of the league only right?"* (yes: once, inside league generation), then "Ranked classes" and "Application/Players", both as recommended). Amends [F-12](features/F-12_CONTRACTS.md) §4.7, §4.8 and §10–13, and [F-03](features/F-03_PLAYERS.md) §4.5, §4.8 and §6.
+- **Why:** a reference run of F-12 as drafted (20 seeds, outside the repo) put teams' cap totals at 37–119% of the cap before fitting, mean 78%. Scaling would have changed about 80% of teams' veteran deals, a third of them by more than 20% (up to ×3.4), so the same player would earn very different money by team, against D-080 #4.
+- **Decision:**
+  1. **Trades fit the cap.** After every contract is drawn, while a team is outside the 85–97% band, the team furthest over and the team furthest under swap two veterans of the same position and depth tier: the pair whose cap hits best close half the gap between them. Pay stays tied to the player, and the cap shapes rosters. It runs once, at league creation; M4's rules take over from there. Replaces F-12 §4.8 step 4's scaling.
+  2. **The pay curve drops from 3.5 to 2.5,** so the league's mean sits inside the band: 92% in the reference run, about 25 trades per league, all 640 teams in the band, spread evenly from 85% to 96%.
+  3. **Draft history comes from ranked classes.** For each entry season, the class is ranked by OVR plus noise; the top 70% (at most 7 × 32) were drafted, in that order, spread evenly over the picks. A player still on his rookie deal was drafted by his own team; anyone else by a random team. Two numbers in `generation.json`.
+  4. **OVR, the potential grade and the archetype label live in `Application/Players`,** beside the data records they read (weights, grade bands, archetypes). Nothing outside Application needs them: the sim reads raw attributes, and the read models, the AI and SimLab go through Application.
+- **Consequences:** + No contract depends on its team; draft picks are unique and track quality; no records move to Core. − The trades move good veterans from teams that can't afford them to teams that can, a little parity the real cap also produces. A team no trade can fix is logged, and the tests fail on it.

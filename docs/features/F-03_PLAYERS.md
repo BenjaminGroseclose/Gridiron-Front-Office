@@ -1,6 +1,6 @@
 # F-03: Players: Model & Generation
 
-> **Status:** Accepted (owner review 2026-10-15, [D-065](../DECISIONS.md#d-065-f-03-player-model-accepted-42-attributes-80-ranges-roster-mix-as-averages)) · **Milestone:** M1 (model + generation), M5 (yearly prospect classes), M6 (fog-of-war data) · **Owner:** Ben · **Last updated:** 2026-10-15
+> **Status:** Accepted (owner review 2026-10-15, [D-065](../DECISIONS.md#d-065-f-03-player-model-accepted-42-attributes-80-ranges-roster-mix-as-averages)) · **Milestone:** M1 (model + generation), M5 (yearly prospect classes), M6 (fog-of-war data) · **Owner:** Ben · **Last updated:** 2026-10-22 ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application): draft history, where the rules live)
 >
 > Decisions this spec implements: [D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) (fog of war), [D-034](../DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential) (display scale), [D-035](../DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11) (data files), [D-043](../DECISIONS.md#d-043-limited-personality-model-only-traits-with-a-consumer) (personality), [D-049](../DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired) (start point), [D-050](../DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim) (every attribute has a consumer).
 
@@ -134,9 +134,9 @@ Generation order for every player: **position → body (height, weight) → athl
 - Off-position skills get low baselines (a CB's Pass Block barely matters, and the sim rarely asks for it).
 
 ### 4.5 Overall (OVR)
-- `OVR(position) = scale(Σ wᵢ · attributeᵢ)`. Weights per position live in `data/players/positions.json` (they sum to 1), and `scale` maps the weighted sum onto the 0–99 display curve so the tier targets hold (§4.10).
+- `OVR(position) = scale(Σ wᵢ · attributeᵢ)`. Weights per position live in `data/players/positions.json` (they sum to 1), and `scale` maps the weighted sum onto the 0–99 display curve so the tier targets hold (§4.10). **In M1 `scale` is the identity:** the weights sum to 1 and the tier targets hold without a curve (the WP4 reference run). Screens show it rounded half away from zero and capped at 99.
 - **Weights are calibrated to the sim in M2:** SimLab regresses each position's on-field contribution on its attributes, and the weights follow that regression. OVR is an honest summary of what the engine rewards (pillar 3), not a guess. *Starting weights are hand-set for M1.*
-- **Archetype label:** recomputed from the attribute profile (not stored at generation), so it stays true after development. Examples: QB Pocket Passer / Scrambler, WR Deep Threat / Possession / Slot, EDGE Speed Rusher / Power Rusher, CB Man / Zone / Slot.
+- **Archetype label:** recomputed from the attribute profile (not stored at generation), so it stays true after development: the position's archetype whose profile, lifted to the player's level, fits his skills best (least squares over every skill the position's archetypes list; the [WP4 guide](../milestones/M1_WP4_GUIDE.md) has the formula). Examples: QB Pocket Passer / Scrambler, WR Deep Threat / Possession / Slot, EDGE Speed Rusher / Power Rusher, CB Man / Zone / Slot.
 - Display: 0–99 integers with color bands ([D-034](../DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential), [VISUAL_DESIGN.md](../VISUAL_DESIGN.md)).
 
 ### 4.6 Hidden ratings and potential
@@ -180,7 +180,7 @@ With uncertainty, a grade shows its likely spread ("Ceiling: B+, likely B to A�
 | **Hometown** | A real U.S. place, weighted by population (public data). |
 | **Experience** | Accrued seasons (the definition lives in F-12). |
 | **Jersey number** | Per the current NFL numbering rules by position, encoded in `data/players/jersey-rules.json` and **verified against the real rule when the data file is written** ([D-056](../DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040), league-rules default). Unique within a team. |
-| **Draft info** | Season, round, pick and team. Undrafted players are flagged. |
+| **Draft info** | Season, round, pick and team. Undrafted players are flagged. At creation it comes from **ranked classes** ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application)): each entry season's players are ranked by OVR plus noise, and the top 70% (at most 7 × 32) were drafted in that order, spread evenly over the picks. A player still on his rookie deal was drafted by his own team, anyone else by a random team. From M5 the real draft writes it. |
 
 ### 4.9 Perception: the fog-of-war boundary
 
@@ -238,7 +238,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 | `Players/PlayerGenerator` | Used inside `CreateLeague` (and the yearly draft class step from M5) | — | `PlayersGenerated` |
 | `Players/PlayerQueries` | — | `GetRoster(teamID)`, `GetPlayer(playerID)`, `SearchPlayers(filter)`, all for the user's team as the viewer | — |
 | `Players/Perception` (`IPerception`) | — | Used by every query above and by the AI with its own team as the viewer | — |
-| `Players/OverallCalculator` (Core, pure) | — | OVR, archetype label and the potential grade from ratings | — |
+| `Players/OverallCalculator` (Application, pure; beside the data it reads, D-081) | — | OVR, archetype label and the potential grade from ratings | — |
 
 ## 7. AI counterpart
 - The AI reads players **through the same `IPerception`**, with its own team as the viewer: exact for its own roster, fuzzy for everyone else. That's the whole fog-of-war guarantee in one place.
@@ -262,7 +262,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ## 11. Logging
 - Information: `LeagueGenerated {Seed} {Players} {ElapsedMs}`, `DraftClassGenerated {Season} {Count}`.
-- Event IDs: 1300–1329.
+- Event IDs: 1300–1329. M1 uses 1300 (the league generated), 1301 (the cap trades) and 1302 (a team outside the cap band, a Warning); the [WP4 guide](../milestones/M1_WP4_GUIDE.md) §6 has the messages.
 
 ## 12. Performance
 - Generating ~1,850 players (rosters and free agents) < 2 s, inside the < 5 s league budget.

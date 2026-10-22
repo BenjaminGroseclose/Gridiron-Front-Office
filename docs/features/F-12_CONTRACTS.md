@@ -1,8 +1,8 @@
 # F-12: Contracts & salary cap
 
-> **Status:** Proposed (drafted by Claude 2026-10-21 for owner review; revised the same day on the owner's feedback, [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle); the **M1 slice only**) · **Milestone:** M1 (structure, cap-hit formula, generated contracts), M4 (actions, rules, the cap sheet), M9 (v2) · **Owner:** Ben · **Last updated:** 2026-10-21
+> **Status:** Proposed (drafted by Claude 2026-10-21 for owner review; revised the same day on the owner's feedback, [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle); the **M1 slice only**; the cap fit and the pay curve revised by [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) on 2026-10-22) · **Milestone:** M1 (structure, cap-hit formula, generated contracts), M4 (actions, rules, the cap sheet), M9 (v2) · **Owner:** Ben · **Last updated:** 2026-10-22
 >
-> Decisions this slice implements: [D-040](../DECISIONS.md#d-040-salary-cap-realism-tiers) (realism tiers), [D-056](../DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040) (league-rules default), [D-074](../DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4) (real contracts from M1), [D-077](../DECISIONS.md#d-077-data-files-carry-no-version-numbers-they-change-only-additively) (additive data files), [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) (build for today's consumers), [D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts) (this spec before `contracts.json`), [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle) (the owner's answers to this spec's questions). The M4 MVP (actions, dead money, tags, extensions, Top 51, the cap sheet) and the M9 v2 are listed in [FEATURES.md](../FEATURES.md#-f-12-contracts--salary-cap) and get their sections when M4 is planned.
+> Decisions this slice implements: [D-040](../DECISIONS.md#d-040-salary-cap-realism-tiers) (realism tiers), [D-056](../DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040) (league-rules default), [D-074](../DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4) (real contracts from M1), [D-077](../DECISIONS.md#d-077-data-files-carry-no-version-numbers-they-change-only-additively) (additive data files), [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) (build for today's consumers), [D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts) (this spec before `contracts.json`), [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle) (the owner's answers to this spec's questions), [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) (trades fit the cap; the curve is 2.5). The M4 MVP (actions, dead money, tags, extensions, Top 51, the cap sheet) and the M9 v2 are listed in [FEATURES.md](../FEATURES.md#-f-12-contracts--salary-cap) and get their sections when M4 is planned.
 >
 > **Real references** are the 2026 NFL league year, the last one before this was written: the cap ([NFL.com](https://www.nfl.com/news/nfl-announces-2026-salary-cap-set-at-301-2-million-per-team)), the minimum-salary ladder ([Yahoo Sports](https://sports.yahoo.com/articles/nfl-veteran-minimum-salary-2026-070038653.html)), the rookie scale ([DAZN](https://www.dazn.com/en-US/news/football/2026-nfl-draft-rookie-salaries-pay-scale-first-round/buqiyhho5tvi1tk3d2gjd4ce1), [Yahoo Sports](https://sports.yahoo.com/articles/nfl-draft-salary-pick-much-054002783.html)), the top of the market by position ([CBS Sports](https://www.cbssports.com/nfl/news/highest-paid-players-at-every-nfl-position-2026/), [Yahoo Sports](https://sports.yahoo.com/articles/nfls-highest-paid-players-position-170446357.html)), and the CBA's season definitions ([NFL Operations](https://operations.nfl.com/inside-football-ops/nfl-operations/nfl-free-agency/types-of-free-agents), [Over The Cap's CBA text](https://overthecap.com/collective-bargaining-agreement/article/8/section/1)). Where a number is GFO's own choice rather than the league's, §4 says so.
 
@@ -118,9 +118,9 @@ A veteran is anyone on the 53 not covered by §4.5–4.6. His pay follows **wher
 
 **The pay curve.** Each position has one band in the file: a `max` APY in dollars; the `min` is always the player's minimum salary (§4.4), so there's nothing to set (D-080: "no need to have a min"). Then
 
-`apy = min + (max − min) × t^curve`, with **`curve` = 3.5** for every position (one number in the file),
+`apy = min + (max − min) × t^curve`, with **`curve` = 2.5** for every position (one number in the file; 3.5 in the first draft, lowered by D-081),
 
-and the **wiggle** the owner asked for: `apy × (1 + w)`, `w ~ N(0, wiggle.sd)` clamped to `± wiggle.max` (**0.08** and **0.20**), so a deal can land up to 20% outside the shape of its band and the bands read as rules of thumb, not walls. The power keeps the top of a band rare: with 3.5, a position's median player earns about 10% of the way from his minimum to the max, the lowest Starter at a three-deep position about 30%, and only the top few percent come near the max.
+and the **wiggle** the owner asked for: `apy × (1 + w)`, `w ~ N(0, wiggle.sd)` clamped to `± wiggle.max` (**0.08** and **0.20**), so a deal can land up to 20% outside the shape of its band and the bands read as rules of thumb, not walls. The power keeps the top of a band rare: with 2.5, a position's median player earns about 18% of the way from his minimum to the max, a player at the 90th percentile about 77%, and only the top few percent come near the max.
 
 A veteran whose `apy` lands within 5% of his minimum gets the §4.6 minimum deal instead (type `Minimum`).
 
@@ -130,7 +130,7 @@ First-pass maxima, in $M, around 70% of the 2026 top of the market ([CBS Sports]
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | 45 | 13 | 3 | 30 | 13 | 22 | 17 | 12 | 35 | 22 | 15 | 22 | 15 | 5.5 | 3.2 | 1.5 |
 
-With these maxima and `curve` 3.5, a roster of 53 at the curve's expected values costs about 0.98 × cap before rookie deals replace a quarter of it (the R10 check below), which is why the scaling in §4.8 stays modest.
+With these maxima and `curve` 2.5, a roster of 53 at the curve's expected values costs about 1.21 × cap (the R10 check below). Rookie and minimum deals fill about 45% of a generated roster, which brings the league's mean to about 92% of the cap (D-081's reference run), so the trades in §4.8 stay few.
 
 **Length**, by tier and age (the file's `lengths`; `min`–`max` drawn uniformly):
 
@@ -148,8 +148,8 @@ The shares are GFO's first pass. The references are anecdotal (a top-of-market d
 1. **Elapsed seasons.** A veteran deal was signed `elapsed` seasons ago, `elapsed` uniform in `0 … min(years − 1, experience)`, so a contract never predates the player's entry and always has a season left. A rookie deal has `elapsed = experience`. The signed season is `currentSeason − elapsed`, and this season's cap hit is `CapHit(base[elapsed], bonus, years, elapsed)`.
 2. **Every ContractYear is written**, past seasons included (D-074: proration and history span earlier seasons).
 3. **The team total** = Σ current-season cap hits over the 53 (§4.3).
-4. **Into the band.** If the total is above `utilization.max × cap`, every **Veteran** contract on the team (never Rookie or Minimum) is scaled by the one factor that brings the total to the maximum: APY, bonus and guarantees together, bases re-derived and re-floored at the minimums; if the floors leave the team still over, the factor is applied again (at most three passes; a team that can't get under after three is a test failure, not a runtime case). If the total is below `utilization.min × cap`, the same scaling goes up, with no contract rising above `max × (1 + wiggle.max)` for its position. Scaling is logged (§11).
-5. **Determinism:** every draw comes from the player's generation seed (`Hash(leagueSeed, "gen", season, slot)`, F-03 §4.10) through the contract purpose, so the same seed gives the same cap table. The league-wide rank is computed once, after every player exists and before any contract is drawn.
+4. **Into the band, by trades** ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application)). No contract is changed to fit a team. While any team's total is outside `utilization.min`–`max` × cap, the team with the highest total and the team with the lowest swap two players: **both on Veteran contracts, at the same position and in the same generation tier** (F-03 §4.10, so each team keeps a starter where it had one), the higher cap hit going to the lower team, choosing the pair whose difference in cap hits comes closest to half the gap between the two teams. The players keep their contracts. It runs once, at league creation (M4's rules take over afterwards); a reference run needed about 25 trades per league. A team no trade can bring into the band stays outside it and is logged (§11); the tests require that it never happens.
+5. **Determinism:** every draw comes from the player's generation seed (`Hash(leagueSeed, "gen", season, slot)`, F-03 §4.10) through the contract purpose, so the same seed gives the same cap table. The league-wide rank is computed once, after every player exists and before any contract is drawn. The trades draw nothing; ties go to the lower team index, then the lower slot.
 
 ### 4.9 The data file: `data/contracts/contracts.json`
 
@@ -176,7 +176,7 @@ _Built 2026-10-21 (WP3's last slice), with `ContractData`, `ContractType`, `ISee
   },
   "undrafted": { "years": 3, "bonus": 20000 },
   "veterans": {
-    "curve": 3.5,
+    "curve": 2.5,
     "wiggle": { "sd": 0.08, "max": 0.20 },
     "maxApy": { "QB": 45000000, "RB": 13000000, "FB": 3000000, "WR": 30000000, "TE": 13000000, "OT": 22000000, "OG": 17000000, "C": 12000000, "EDGE": 35000000, "DT": 22000000, "LB": 15000000, "CB": 22000000, "S": 15000000, "K": 5500000, "P": 3200000, "LS": 1500000 },
     "lengths": {
@@ -226,7 +226,7 @@ Each lists every offender, as the WP3 tests do.
 | R7 | Lengths: Starter and Backup each have bands with `throughAge` ascending to 99, `1 ≤ min ≤ max ≤ CapMath.MaxContractYears` |
 | R8 | Bonus and guarantee shares: a band per Starter and Backup, `0 ≤ min ≤ max ≤ 1`; `baseEscalation ≥ 0` |
 | R9 | The curve pays Starters more than Backups: for every position **with backups** (`average > starters`), `apy` at the lowest Starter rank (`t = 1 − starters / average`) is at least 1.5 × the minimum, so a Starter is never a minimum deal by construction. One-deep positions (K, P, LS) are exempt: their worst player in the league is meant to earn the minimum (§10) |
-| R10 | **The maxima are the right size:** a 53-man roster at the curve's expected values (`minimum(3) + (max − minimum(3)) / (curve + 1)`, the mean of `t^curve` over a uniform percentile), with `positions.json`'s `roster.average` players per position, costs between **0.8 and 1.3 × cap**, so §4.8's scaling stays modest |
+| R10 | **The maxima are the right size:** a 53-man roster at the curve's expected values (`minimum(3) + (max − minimum(3)) / (curve + 1)`, the mean of `t^curve` over a uniform percentile), with `positions.json`'s `roster.average` players per position, costs between **0.8 and 1.3 × cap**, so §4.8's trades stay few |
 
 ## 5. Data model
 
@@ -247,7 +247,7 @@ Per [PERSISTENCE.md](../architecture/PERSISTENCE.md) and the [WP5 migration](../
 | `Contracts/ContractGenerator` (WP4, pure) | — | — | — |
 | `Contracts/ContractQueries` (WP6) | — | `ContractSummaryDto`, `TeamCapDto` | — |
 
-`ContractGenerator` is a pure function from (player, his league-wide rank at the position, draft info, `ContractData`, seed) to a contract with its years; the cap-fitting pass (§4.8 step 4) is a pure function over a team's contracts. Both run outside the write transaction, like the rest of generation.
+`ContractGenerator` is a pure function from (player, his league-wide rank at the position, draft info, `ContractData`, seed) to a contract with its years; the cap trades (§4.8 step 4) are a pure pass over the league's rosters. Both run outside the write transaction, like the rest of generation.
 
 ## 7. AI counterpart
 
@@ -269,12 +269,12 @@ None in M1. The cap year equals the season; the league starts at Training Camp w
 - A 35-year-old Starter gets a 1–2 year deal (§4.7) and never a signing bonus prorated past his years.
 - The minimum floor can push a short, cheap contract's total above its drawn APY × years; the total is then the sum of what was written, not the draw.
 - A kicker, punter or long snapper is one of 32 at his position, so his rank spans the whole curve: the worst kicker earns the minimum, the best about the max. That is the real shape of those markets.
-- Scaling down (§4.8) can push a cheap veteran under his minimum: the floor holds and the next pass takes more from the expensive ones.
+- A team that no same-position trade can bring into the band (§4.8) stays outside it and is logged (§11); over 20 seeds the tests require that it never happens. If it does, the data is tuned (the maxima or the curve), not the rule.
 - Two players tied on OVR at a position take adjacent ranks in seed order, so the rank is still deterministic.
 
 ## 11. Logging
 
-Within WP4's `LeagueGenerated` range (1300–1329): one Information event per league with the mean utilization and the number of teams scaled up and down; one **Warning** per team scaled by more than 20% in either direction (the curve is off for that roster mix), with the team and the factor. Event numbers are assigned in WP4's guide.
+Within WP4's `LeagueGenerated` range (1300–1329, numbers from the [WP4 guide](../milestones/M1_WP4_GUIDE.md)): one Information event per league with the number of trades and the lowest, highest and mean utilization (1301); one **Warning** per team still outside the band after the trades (1302).
 
 ## 12. Performance
 
@@ -284,7 +284,7 @@ About 1,700 contracts and 6,500 `ContractYears` rows per league, written in the 
 
 - **Core:** `CapMath` is covered (WP1). `ContractType` needs nothing.
 - **Data (`ContractDataTests`, Claude):** R1–R10 above, each listing every offender; plus "a misspelled enum key fails", as for the WP3 files.
-- **Application (WP4):** for every drafted player with experience 0–3 the contract is `Rookie`, four years, signed in the draft season, total on the round's line; undrafted with experience 0–2 are three-year `Minimum` deals; every base ≥ the season's minimum; Σ(bases) + bonus = total; guarantees ≤ total; every `CapHit` = `CapMath.CapHit`; `elapsed ≤ experience` and the contract has a season left; **pay follows rank:** across the league, APY is non-decreasing in `t` at every position before wiggle, and the same player's APY would be the same on any team; **every team between `utilization.min` and `max`**, over 20 seeds; the golden league's cap totals (Verify).
+- **Application (WP4):** for every drafted player with experience 0–3 the contract is `Rookie`, four years, signed in the draft season, total on the round's line; undrafted with experience 0–2 are three-year `Minimum` deals; every base ≥ the season's minimum; Σ(bases) + bonus = total; guarantees ≤ total; every `CapHit` = `CapMath.CapHit`; `elapsed ≤ experience` and the contract has a season left; **pay follows rank:** across the league, APY is non-decreasing in `t` at every position before wiggle, and the same player's APY would be the same on any team; **every team between `utilization.min` and `max`**, over 20 seeds, after trades that only ever swap Veteran contracts at the same position and tier; the golden league's cap totals (Verify).
 - **UI (WP7, bUnit):** the Player page's contract block and the Team page's tiles read the DTOs.
 - **Autoplay:** none in M1.
 
@@ -295,3 +295,4 @@ All six questions of the first draft were answered by the owner on 2026-10-21: s
 ## 15. Decisions made while specifying
 
 - [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle): no practice squad in 1.0; the $300M cap; guarantees generated and shown in M1; pay by league-wide rank with one max per position and a wiggle; linear rookie rounds; experience as one number.
+- [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) (WP4, 2026-10-22): teams reach the band by trading veterans, not by scaling contracts (scaling would have changed most teams' deals, many by more than 20%); the curve drops to 2.5 so the league's mean sits inside the band.

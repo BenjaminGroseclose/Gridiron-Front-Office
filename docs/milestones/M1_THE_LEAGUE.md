@@ -108,14 +108,15 @@
 
 ### WP4 · The player model and generator (L)
 
-**Goal:** a generator that makes believable, deterministic players.
+**Goal:** a generator that makes believable, deterministic players. **Builder's guide:** [M1_WP4_GUIDE.md](M1_WP4_GUIDE.md).
 
-- **Core (pure):** `OverallCalculator` (OVR by position from the weights, onto the 0–99 curve), the potential grade bands, archetype labels from the attribute profile.
+- **Core (pure):** `PersonalityTrait`, a weighted picker, the new seed purposes.
+- **`Players/OverallCalculator` (Application, pure; D-081 moved it from Core, beside the data it reads):** OVR by position from the weights (the identity onto 0–99 in M1), the potential grade bands, archetype labels from the attribute profile.
 - **Application (`Players/PlayerGenerator`):** position → body → athletic testing → physical ratings (with the ±3 "football speed vs. track speed" noise) → archetype → skills (the archetype's means, a shared quality draw by tier, and noise) → hidden ratings → personality → bio. Each player's seed is `Hash(leagueSeed, "gen", season, slot)`.
-- **Contracts (D-074):** a contract per player from the bands: mid-contract at creation (signed in an earlier season, so proration started then), rookie-style deals for players drafted in the last four seasons, minimum deals for fringe players, and each team's total kept under the first-season cap.
-- **League generation:** 32 rosters of 53 (no practice squad in 1.0, D-080), with the league-wide roster mix averaging to the targets and every floor kept; about 150 unsigned free agents; unique jersey numbers per team; names re-rolled on a blocklist hit or a same-team duplicate.
+- **Contracts (D-074):** a contract per player from the bands: mid-contract at creation (signed in an earlier season, so proration started then), rookie-style deals for players drafted in the last four seasons, minimum deals for fringe players, and each team's total brought into the 85–97% band by trading veterans between teams, never by changing a contract (D-081).
+- **League generation:** 32 rosters of 53 (no practice squad in 1.0, D-080), with the league-wide roster mix averaging to the targets and every floor kept; about 150 unsigned free agents; draft history from ranked classes (D-081); unique jersey numbers per team; names re-rolled on a blocklist hit or a same-team duplicate.
 - **Tests (F-03 §13):** the OVR calculator per position, grade bands, measurable → physical mapping (monotonic, within the noise), archetypes; **distributions** over 20 seeds (tier means and SDs, ~15–25 players at 90+, mean age 26.5 ± 1, roster mix within ±0.3 of each average, floors kept); **golden** `GenerateLeague(seed: 42)` summary (Verify); the **blocklist re-roll** (a unit test); **contracts** (every team under the cap, cap hits from the formula, salaries shaped by position within tolerance). Generating ~1,850 players targets < 2 s (read from the log, not asserted).
-- **Logging:** `LeagueGenerated` (1300–1329).
+- **Logging:** `LeagueGenerated` (1300), the cap trades (1301) and a team outside the band (1302), in the 1300–1329 range.
 
 ### WP5 · Schema and `CreateLeague` (M)
 
@@ -188,8 +189,9 @@ data/
 └─ blocklists/  football-teams.json, major-league-teams.json, stadiums.json, metro-nfl-colors.json, real-colleges.json,
                 famous-people.json (all test-only except famous-people, which the name generator needs)
 src/
-├─ Core/        IDs/ (TeamID, PlayerID, …), Random/ (PRNG, seed derivation), Players/ (Position, Attribute, OverallCalculator, grades, archetypes)
-├─ Application/ Leagues/ (CreateLeague, LeagueStructureQueries, ISeedData), Players/ (PlayerGenerator, IPerception, PlayerQueries)
+├─ Core/        IDs/ (TeamID, PlayerID, …), Random/ (PRNG, seed derivation, weighted picker), Players/ (Position, PlayerAttribute, PersonalityTrait, …)
+├─ Application/ Leagues/ (CreateLeague, LeagueStructureQueries, ISeedData), Players/ (OverallCalculator, PlayerGenerator, LeagueGenerator,
+│               IPerception, PlayerQueries), Contracts/ (ContractGenerator, CapTrades)
 ├─ Infrastructure/ Data/ (the new entities and migration), Seed/ (EmbeddedSeedData, SeedLog)
 ├─ UI/          Football/ (TeamMark, PositionPill, RatingChip, RatingBar), League/ (Home, League, Team, Roster, Player, PlayerPeekSheet),
 │               Menu/ (the wizard), Shell/ (GameStateStore, CommandPalette)
