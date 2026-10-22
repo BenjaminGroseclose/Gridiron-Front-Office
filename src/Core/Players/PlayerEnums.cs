@@ -8,7 +8,7 @@ namespace GridironFrontOffice.Core.Players;
 /// </summary>
 public enum Position
 {
-    QB, RB, FB, WR, TE, OT, OG, C, EDGE, DT, LB, CB, S, K, P, LS,
+	QB, RB, FB, WR, TE, OT, OG, C, EDGE, DT, LB, CB, S, K, P, LS,
 }
 
 /// <summary>
@@ -17,7 +17,15 @@ public enum Position
 /// </summary>
 public enum PlayerStatus
 {
-    Prospect, Active, InjuredReserve, FreeAgent, Retired,
+	Prospect, Active, InjuredReserve, FreeAgent, Retired,
+}
+
+/// <summary>
+/// The personaity traits F-03 §4.3 assigns to every player.
+/// </summary>
+public enum PersonalityTrait
+{
+	WorkEthic, Coachability, Greed, Loyalty, Competitiveness, Ego
 }
 
 /// <summary>
@@ -26,13 +34,13 @@ public enum PlayerStatus
 /// </summary>
 public enum PotentialGrade
 {
-    F, D, CMinus, C, CPlus, BMinus, B, BPlus, AMinus, A, APlus,
+	F, D, CMinus, C, CPlus, BMinus, B, BPlus, AMinus, A, APlus,
 }
 
 /// <summary>The groups F-03 §4.2 sorts the attributes into; the Player page shows them in this order.</summary>
 public enum AttributeGroup
 {
-    Physical, Mental, Passing, BallCarrying, Receiving, Blocking, Defense, SpecialTeams,
+	Physical, Mental, Passing, BallCarrying, Receiving, Blocking, Defense, SpecialTeams,
 }
 
 /// <summary>
@@ -42,28 +50,28 @@ public enum AttributeGroup
 [SuppressMessage("Naming", "CA1711", Justification = "A football attribute (F-03's word for it), not a .NET attribute class.")]
 public enum PlayerAttribute
 {
-    // Physical
-    Speed, Acceleration, Agility, Strength, Stamina, Toughness,
+	// Physical
+	Speed, Acceleration, Agility, Strength, Stamina, Toughness,
 
-    // Mental
-    Awareness, Discipline,
+	// Mental
+	Awareness, Discipline,
 
-    // Passing
-    ArmStrength, ShortAccuracy, MediumAccuracy, DeepAccuracy, ThrowOnTheRun, PocketPresence, DecisionMaking,
+	// Passing
+	ArmStrength, ShortAccuracy, MediumAccuracy, DeepAccuracy, ThrowOnTheRun, PocketPresence, DecisionMaking,
 
-    // Ball carrying
-    BallSecurity, Vision, Elusiveness, BreakTackle,
+	// Ball carrying
+	BallSecurity, Vision, Elusiveness, BreakTackle,
 
-    // Receiving
-    Hands, RouteRunning, Release, ContestedCatch,
+	// Receiving
+	Hands, RouteRunning, Release, ContestedCatch,
 
-    // Blocking
-    PassBlock, RunBlock, LeadBlock,
+	// Blocking
+	PassBlock, RunBlock, LeadBlock,
 
-    // Defense
-    PassRushPower, PassRushFinesse, BlockShedding, Tackling, Pursuit, HitPower, ManCoverage, ZoneCoverage, Press,
-    BallSkills,
+	// Defense
+	PassRushPower, PassRushFinesse, BlockShedding, Tackling, Pursuit, HitPower, ManCoverage, ZoneCoverage, Press,
+	BallSkills,
 
-    // Special teams
-    KickPower, KickAccuracy, PuntPower, PuntAccuracy, Return, SnapAccuracy,
+	// Special teams
+	KickPower, KickAccuracy, PuntPower, PuntAccuracy, Return, SnapAccuracy,
 }

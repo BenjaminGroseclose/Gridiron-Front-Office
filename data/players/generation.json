@@ -6,7 +6,7 @@
   "tiers": {
     "Starter": {
       "skillShift": 10.5,
-      "spread": 9,
+      "spread": 8.5,
       "athleticShift": 0.5,
       "target": {
         "mean": 74,

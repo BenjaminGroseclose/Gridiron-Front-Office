@@ -1,6 +1,6 @@
 # F-03: Players: Model & Generation
 
-> **Status:** Accepted (owner review 2026-10-15, [D-065](../DECISIONS.md#d-065-f-03-player-model-accepted-42-attributes-80-ranges-roster-mix-as-averages)) · **Milestone:** M1 (model + generation), M5 (yearly prospect classes), M6 (fog-of-war data) · **Owner:** Ben · **Last updated:** 2026-10-22 ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application): draft history, where the rules live)
+> **Status:** Accepted (owner review 2026-10-15, [D-065](../DECISIONS.md#d-065-f-03-player-model-accepted-42-attributes-80-ranges-roster-mix-as-averages)) · **Milestone:** M1 (model + generation), M5 (yearly prospect classes), M6 (fog-of-war data) · **Owner:** Ben · **Last updated:** 2026-10-22 ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application): draft history, where the rules live; [D-082](../DECISIONS.md#d-082-team-strength-from-a-ladder-carried-by-the-young-core): team strength)
 >
 > Decisions this spec implements: [D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) (fog of war), [D-034](../DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential) (display scale), [D-035](../DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11) (data files), [D-043](../DECISIONS.md#d-043-limited-personality-model-only-traits-with-a-consumer) (personality), [D-049](../DECISIONS.md#d-049-a-new-league-starts-at-the-offseason-the-previous-gm-was-fired) (start point), [D-050](../DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim) (every attribute has a consumer).
 
@@ -131,6 +131,7 @@ Generation order for every player: **position → body (height, weight) → athl
 
 ### 4.4 Skill attributes
 - Each position has a few **archetype profiles** in data (§4.8) that shape which skills are high or low. Generation samples an archetype, then draws each skill as the archetype's mean for it, plus one **shared quality draw** for the player conditioned on the target **tier** (starter, backup, fringe, §4.10), plus independent noise. The shared draw makes a player's skills rise and fall together; the archetype gives the pattern (a route runner's Route Running and Release are high together). No correlation matrices ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
+- **Team strength** ([D-082](../DECISIONS.md#d-082-team-strength-from-a-ladder-carried-by-the-young-core)): at creation each team takes a place on a strength ladder (evenly spaced, shuffled by the seed), which moves its players' shared quality draw: mostly for players still within rookie-deal experience, less for veterans. Every league starts with contenders, a middle and bottom teams, and the strength sits where real contenders afford it. Free agents have none.
 - Off-position skills get low baselines (a CB's Pass Block barely matters, and the sim rarely asks for it).
 
 ### 4.5 Overall (OVR)
@@ -214,6 +215,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 | Fringe (free agent) OVR | Mean ~56, SD ~5 |
 | 90+ OVR players league-wide | ~15–25 (the baseline the M5 health gate holds within ±25%) |
 | Mean age, league-wide | 26.5 (the health band is 25.5–27.5) |
+| Team strength spread (D-082) | The ladder's top quarter of teams has Starters at least 3 OVR better than its bottom quarter (about 4 in the reference run); tuned for wins once games exist (M2/M3) |
 | **Yearly draft class (M5)** | ~300 prospects, each with college production stats generated from true ratings + noise + college tier |
 
 - **From M5 (offseason start, D-049):** generate rosters as of the *previous* season's opening day (53 + 16), simulate that season, then run Season Wrap, which produces the inherited situation at the Re-sign window.

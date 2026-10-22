@@ -2,7 +2,7 @@
 
 > **Status:** 📝 **Ready to build** (2026-10-22) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP4](M1_THE_LEAGUE.md#wp4--the-player-model-and-generator-l) · **Size:** L · **Written:** 2026-10-22
 >
-> WP4 turns WP3's numbers into a league: 32 rosters of 53 and about 150 free agents, each player with measurables, 42 ratings, hidden ratings, personality, a bio, draft history and a real contract, and every team inside the cap band. It's all pure Application code that returns plain records. Nothing is saved yet: WP5 writes the result in one command. The same seed and season always give the same league.
+> WP4 turns WP3's numbers into a league: 32 rosters of 53 and about 150 free agents, each player with measurables, 42 ratings, hidden ratings, personality, a bio, draft history and a real contract. Every team sits somewhere on a strength ladder from contender to bottom-feeder, and inside the cap band. It's all pure Application code that returns plain records. Nothing is saved yet: WP5 writes the result in one command. The same seed and season always give the same league.
 
 ---
 
@@ -10,26 +10,26 @@
 
 | | |
 |---|---|
-| **Claude prepared** ✅ | [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) (your answers of 2026-10-22) and the doc updates (F-03, F-12, the plan). The data tuning from the reference runs (§9): `positions.json`'s archetype means (WR −3.5, CB −3, RB −3, QB +1, TE +1) and `contracts.json`'s `curve` 2.5. WP3's data tests still pass. |
+| **Claude prepared** ✅ | [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) and [D-082](../DECISIONS.md#d-082-team-strength-from-a-ladder-carried-by-the-young-core) (your answers of 2026-10-22) and the doc updates (F-03, F-12, the plan). The data tuning from the reference runs (§9): `positions.json`'s archetype means (WR −3.5, CB −3, RB −3, QB +1, TE +1) and `contracts.json`'s `curve` 2.5. WP3's data tests still pass. |
 | **You build** (§3, §4) | Four slices: the Core pieces and the rules; one player; the league; contracts and the cap trades. The `generation.json` additions (§3.2) go in with your record change, since strict parsing needs both at once. |
 | **Claude writes the tests** (§5) | Per slice, as each one lands, each proven to fail on a planted problem. Also the test plumbing: `InternalsVisibleTo` for `Application.Tests` in Infrastructure (to build `EmbeddedSeedData`) and `Verify.XunitV3` in `Application.Tests`. |
 
-**Read first:** F-03 §4 (all of it), F-12 §4.1–4.8, the [WP3 guide](M1_WP3_GUIDE.md) §2.2 (the data contract this guide implements), [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) #2, [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle), D-081, and CLAUDE.md's "Determinism".
+**Read first:** F-03 §4 (all of it), F-12 §4.1–4.8, the [WP3 guide](M1_WP3_GUIDE.md) §2.2 (the data contract this guide implements), [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) #2, [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle), D-081, D-082, and CLAUDE.md's "Determinism".
 
 **AI counterpart:** none. Every team, including the one the user will pick, comes from the same rules.
 
 ## 1. What you'll build
 
 ```
-data/players/generation.json        + roster.mixSwaps, draft { draftedShare, rankNoiseSd, entryAge }     (§3.2)
+data/players/generation.json        + roster.mixSwaps, draft { … }, teamStrength { … }                    (§3.2)
 src/Core/
 ├─ Players/PlayerEnums.cs            + PersonalityTrait (D-043)
 └─ Random/
    ├─ WeightedPicker.cs              picks by weight (names, hometowns, archetypes, shares)
-   └─ Seeds.cs                       + five purpose names
+   └─ Seeds.cs                       + six purpose names
 src/Application/
 ├─ Players/
-│  ├─ PlayerData.cs                  + MixSwaps, DraftSettings, AgeRange (§3.2)
+│  ├─ PlayerData.cs                  + MixSwaps, DraftSettings, AgeRange, TeamStrengthSettings (§3.2)
 │  ├─ OverallCalculator.cs           OVR, its display, the potential grade, the archetype label (D-081 #4)
 │  ├─ GeneratedLeague.cs             the output records (§3.3)
 │  ├─ PlayerGenerator.cs             one player from his slot's seed (§4.2)
@@ -47,10 +47,11 @@ Names are suggestions; keep them if you have no reason not to. If `LeagueGenerat
 
 ## 2. Decisions this guide makes
 
-D-081 settled the four big questions. These are the smaller choices the guide makes, so the code, the tests and WP5 agree:
+D-081 settled the four big questions, and D-082 added the strength ladder. These are the smaller choices the guide makes, so the code, the tests and WP5 agree:
 
 | Choice | Rule | Why |
 |---|---|---|
+| **Team strength** (D-082) | 32 values evenly spaced from −0.7 to +0.7, shuffled across the teams. Each rostered player's quality draw moves by `strength × 1.6` if he's within rookie-deal experience, else `strength × 0.7` | Independent players average out: without it, the best and worst teams' starters are 5 OVR apart. Strength carried by the young core is cheap (rookie deals), so the cap trades keep most of it |
 | **Roster mix** | Team *i* is paired with team *i* + 16. Each pair makes `mixSwaps` (3) ±1 position swaps in opposite directions, inside each position's min–max | Every team varies, and the league average equals the target exactly for every seed (F-03 §4.1's "averages, not rules") |
 | **Output** | Plain records that refer to each other (`TeamDefinition`, `CollegeDefinition`), with no IDs | WP5 assigns IDs while it writes; generation stays free of persistence |
 | **Numbers** | Ratings, measurables and traits are `IReadOnlyDictionary<TEnum, double>` filled in enum order, like WP3's records. `double` everywhere | One numeric type from the data to the save (SQLite's REAL is a double). F-03 §4.9's `float` becomes `double` in WP6 |
@@ -74,10 +75,11 @@ D-081 settled the four big questions. These are the smaller choices the guide ma
 
 ```json
 "roster": { "active": 53, "freeAgents": 150, "mixSwaps": 3 },
-"draft": { "draftedShare": 0.70, "rankNoiseSd": 6, "entryAge": { "min": 21, "max": 23 } }
+"draft": { "draftedShare": 0.70, "rankNoiseSd": 6, "entryAge": { "min": 21, "max": 23 } },
+"teamStrength": { "range": 0.7, "youngWeight": 1.6, "veteranWeight": 0.7 }
 ```
 
-`draft` goes after `targets`, at the end of the file. The records in `PlayerData.cs`:
+`draft` and `teamStrength` go after `targets`, at the end of the file. The records in `PlayerData.cs`:
 
 ```csharp
 public sealed record RosterSizes(int Active, int FreeAgents, int MixSwaps);
@@ -87,7 +89,13 @@ public sealed record DraftSettings(double DraftedShare, double RankNoiseSd, AgeR
 
 public sealed record AgeRange(int Min, int Max);
 
-// GenerationSettings gains a last parameter: DraftSettings Draft
+/// <summary>
+/// The league's strength ladder (D-082): evenly spaced from −Range to +Range, in units of the quality draw. A player's
+/// shift is his team's strength times YoungWeight within rookie-deal experience, else times VeteranWeight.
+/// </summary>
+public sealed record TeamStrengthSettings(double Range, double YoungWeight, double VeteranWeight);
+
+// GenerationSettings gains two last parameters: DraftSettings Draft, TeamStrengthSettings TeamStrength
 ```
 
 These fields are **required**, not optional. D-077's defaults let an M11 import read older team sets and colleges, but `generation.json` ships only inside the app and is never imported, so no older copy can exist.
@@ -98,8 +106,11 @@ These fields are **required**, not optional. D-077's defaults let an M11 import 
 /// <summary>A whole generated league before it's saved (WP5 writes it in one command). Same seed and season, same league.</summary>
 public sealed record GeneratedLeague(ulong Seed, int Season, IReadOnlyList<GeneratedTeam> Teams, IReadOnlyList<GeneratedPlayer> FreeAgents);
 
-/// <summary>A team's 53 in depth order: positions in enum order, the generation tier's Starters first.</summary>
-public sealed record GeneratedTeam(TeamDefinition Definition, IReadOnlyList<GeneratedPlayer> Players);
+/// <summary>
+/// A team's 53 in depth order: positions in enum order, the generation tier's Starters first. Strength is its place on
+/// the ladder (D-082), for tests and the golden snapshot; it isn't saved.
+/// </summary>
+public sealed record GeneratedTeam(TeamDefinition Definition, double Strength, IReadOnlyList<GeneratedPlayer> Players);
 
 public sealed record GeneratedPlayer(
     int Slot,                      // his seed identity: Seeds.Derive(seed, SeedPurpose.Generation, season, Slot)
@@ -162,6 +173,7 @@ The running totals `c₀ ≤ c₁ ≤ …`; draw `x = NextDouble() × total` and
 
 ```csharp
 public const string RosterMix = "gen.mix";     // (season, pair)
+public const string TeamStrength = "gen.strength";  // (season)
 public const string Names = "gen.names";       // (season, slot)
 public const string Draft = "gen.draft";       // (season, entry season)
 public const string Jerseys = "gen.jersey";    // (season, team index)
@@ -206,8 +218,11 @@ Comparing over all of `U`, not just A's own skills, matters. A center's two arch
 ```csharp
 public sealed class PlayerGenerator(ISeedData data)
 {
-    /// <summary>One player, everything but his names, draft history, jersey and contract (the league fills those).</summary>
-    public GeneratedPlayer Generate(ulong leagueSeed, int season, int slot, Position position, PlayerTier tier);
+    /// <summary>
+    /// One player, everything but his names, draft history, jersey and contract (the league fills those).
+    /// <paramref name="teamStrength"/> is his team's place on the ladder (D-082); 0 for a free agent.
+    /// </summary>
+    public GeneratedPlayer Generate(ulong leagueSeed, int season, int slot, Position position, PlayerTier tier, double teamStrength);
 
     /// <summary>A measurable's straight line to a physical rating, through the map's best and worst points (no noise).</summary>
     public static double PhysicalLine(PhysicalRating map, double value);
@@ -223,7 +238,7 @@ Build the pickers once, in the constructor: archetypes per position (by `share`)
 | 1 | Quality `q` | `Normal()`: how good he is within his tier |
 | 2 | Age | `Draw(profile.Age)`, rounded half away from zero (the distribution clamps it to min–max) |
 | 3 | Birthday | July 1 of the season, minus `age` years, minus `Next(0, 365)` days |
-| 4 | Entry age | `Next(entryAge.Min, Min(age, entryAge.Max) + 1)`; `experience = age − entry age` |
+| 4 | Entry age | `Next(entryAge.Min, Min(age, entryAge.Max) + 1)`; `experience = age − entry age`. Then the team's strength moves `q` (D-082, no draw): `q += teamStrength × (experience < rookieScale.years ? youngWeight : veteranWeight)` |
 | 5 | Athletic draw `A` | `Normal()` |
 | 6 | Measurables | In enum order, one `Normal()` each, called ε. The six drills (Forty, TenSplit, ThreeCone, Shuttle, Vertical, BroadJump) use `z = √ρ·A + √(1 − ρ)·ε` with ρ = `drillCorrelation`, so any two drills correlate at ρ; the others use `z = ε`. The tier's `athleticShift` (s) applies to the six drills and Bench, not to the body (Height, Weight, ArmLength, HandSize). `value = mean + sign · sd · (z + s)`, with `sign = −1` for the four timed drills (lower is better), else +1 |
 | 7 | Physical ratings | Speed, Acceleration, Agility, Strength in enum order: the average of `PhysicalLine` over the maps that feed it (Agility has two), plus `Normal(0, physicalNoiseSd)`, clamped to 0–100 |
@@ -265,20 +280,21 @@ Nothing registers it yet: WP5's `CreateLeague` is its first caller, and the test
 | # | Step | Rule |
 |---|---|---|
 | 1 | **Roster mix** | Every team starts at each position's `roster.average` (whole numbers; a data test checks). For pair *k* (teams *k* and *k* + 16), `random = Derive(seed, RosterMix, season, k)`, repeated `mixSwaps` times: *up* = a random position (enum order, `Next`) where team *k* is under `max` and its partner over `min`; *down* = a random other position where team *k* is over `min` and its partner under `max`. Team *k* gets +1 *up* and −1 *down*, and its partner the opposite. If either list is empty, that swap is skipped |
-| 2 | **Slots and tiers** | Team *t*'s players: positions in enum order, the first `roster.starters` at each **Starter**, the rest **Backup**; `slot = t × active + i`. Free agents: the 150 split by `average / 53` (largest remainder, ties in enum order), all **Fringe**, `slot = teams × active + j` |
-| 3 | **Players** | `PlayerGenerator.Generate` for every slot |
-| 4 | **Draft classes** (D-081 #3) | Per entry season `E = season − experience`, ascending, over every player (free agents too), in slot order: `random = Derive(seed, Draft, season, E)`; `score = Overall + Normal(0, rankNoiseSd)`; order by score descending, then slot. With `picks = rounds × teams` (7 × 32 = 224) and `n = Min(picks, round(draftedShare × class size))`, the *k*-th (from 0, while *k* < *n*) gets `Pick = k × picks / n + 1` (integer division) and `Round = (Pick − 1) / teams + 1`. The drafting team is his own if he's on a roster and `experience < rookieScale.years`; otherwise `Teams[random.Next(0, teams)]`, drawn in this order. The rest are undrafted |
-| 5 | **Contracts** | Slice 4 (§4.4) |
-| 6 | **Cap trades** | Slice 4 (§4.4) |
-| 7 | **Jersey numbers** | Per team *t*, `random = Derive(seed, Jerseys, season, t)`. Positions go fewest allowed numbers first (LS, QB, the line …), then in enum order, players in roster order. Each player takes `free[random.Next(0, free.Count)]` from his rule's untaken numbers, ascending. If none is free, throw `InvalidOperationException` (a data bug; a test proves it never happens). Free agents get no number |
-| 8 | **Names** | Teams in order, players in roster order: `PlayerNames.Pick(new GfoRandom(Derive(seed, Names, season, slot)), taken)`, with `taken` the team's names so far (comparer `PlayerNames.FullNames`). Then the free agents, with an empty `taken` |
-| 9 | **Log** | Event 1300 with the player count and the elapsed time |
+| 2 | **Team strength** (D-082) | `random = Derive(seed, TeamStrength, season)`. The ladder `range × (2(i + 0.5) / teams − 1)` for i = 0–31 (−0.68 to +0.68, mean exactly 0), shuffled across the teams in their file order by Fisher–Yates (`Next(0, i + 1)` from the last index down). Free agents have none |
+| 3 | **Slots and tiers** | Team *t*'s players: positions in enum order, the first `roster.starters` at each **Starter**, the rest **Backup**; `slot = t × active + i`. Free agents: the 150 split by `average / 53` (largest remainder, ties in enum order), all **Fringe**, `slot = teams × active + j` |
+| 4 | **Players** | `PlayerGenerator.Generate` for every slot, with his team's strength (0 for free agents) |
+| 5 | **Draft classes** (D-081 #3) | Per entry season `E = season − experience`, ascending, over every player (free agents too), in slot order: `random = Derive(seed, Draft, season, E)`; `score = Overall + Normal(0, rankNoiseSd)`; order by score descending, then slot. With `picks = rounds × teams` (7 × 32 = 224) and `n = Min(picks, round(draftedShare × class size))`, the *k*-th (from 0, while *k* < *n*) gets `Pick = k × picks / n + 1` (integer division) and `Round = (Pick − 1) / teams + 1`. The drafting team is his own if he's on a roster and `experience < rookieScale.years`; otherwise `Teams[random.Next(0, teams)]`, drawn in this order. The rest are undrafted |
+| 6 | **Contracts** | Slice 4 (§4.4) |
+| 7 | **Cap trades** | Slice 4 (§4.4) |
+| 8 | **Jersey numbers** | Per team *t*, `random = Derive(seed, Jerseys, season, t)`. Positions go fewest allowed numbers first (LS, QB, the line …), then in enum order, players in roster order. Each player takes `free[random.Next(0, free.Count)]` from his rule's untaken numbers, ascending. If none is free, throw `InvalidOperationException` (a data bug; a test proves it never happens). Free agents get no number |
+| 9 | **Names** | Teams in order, players in roster order: `PlayerNames.Pick(new GfoRandom(Derive(seed, Names, season, slot)), taken)`, with `taken` the team's names so far (comparer `PlayerNames.FullNames`). Then the free agents, with an empty `taken` |
+| 10 | **Log** | Event 1300 with the player count and the elapsed time |
 
-Until slice 4 lands, steps 5 and 6 are empty and every contract is null.
+Until slice 4 lands, steps 6 and 7 are empty and every contract is null.
 
 ### 4.4 Slice 4: contracts and the cap trades
 
-**Who gets which deal** (step 5). First the **league-wide rank** (F-12 §4.7): per position, the rostered players sorted by `Overall` ascending, then by slot. With `N` players, the one at index *i* has `t = i / (N − 1)`, and his **contract tier** is Starter if `i ≥ N − teams × roster.starters`, else Backup. Then, for each rostered player:
+**Who gets which deal** (step 6). First the **league-wide rank** (F-12 §4.7): per position, the rostered players sorted by `Overall` ascending, then by slot. With `N` players, the one at index *i* has `t = i / (N − 1)`, and his **contract tier** is Starter if `i ≥ N − teams × roster.starters`, else Backup. Then, for each rostered player:
 
 | Player | Deal |
 |---|---|
@@ -311,7 +327,7 @@ public sealed record VeteranTerms(long Apy, int Years, int Elapsed, double Bonus
 | **Veteran** (§4.7) | If `Apy ≤ 1.05 × Minimum(experience)`: a **minimum deal**, one season (this one), base = his minimum, no bonus, nothing guaranteed, type `Minimum`. Otherwise `total = Apy × years`; `bonus = round(total × bonusShare)`; `baseᵢ = split(total − bonus, 1 + i × baseEscalation)ᵢ`; raise every base under `Minimum(experience − elapsed + i)` to it, then take the sum of the raises back out of the last season, but not below its own minimum; `total = bonus + Σ base` (F-12 §10: the floor can push it over the draw); signed in `season − elapsed` |
 | **Every deal** | Guarantees: `left = max(0, round(total × guaranteeShare) − bonus)`; season by season from the first, `guaranteedᵢ = min(baseᵢ, left)`, `left −= guaranteedᵢ`; `GuaranteedTotal = bonus + Σ guaranteed`. Each season's `ProratedBonus = CapMath.ProratedBonus(bonus, years, i)` and `CapHit = CapMath.CapHit(baseᵢ, bonus, years, i)`, with `Season = signed + i` |
 
-**`CapTrades`** (`Application/Contracts`, step 6, D-081 #1, F-12 §4.8):
+**`CapTrades`** (`Application/Contracts`, step 7, D-081 #1, F-12 §4.8):
 
 ```csharp
 /// <summary>
@@ -357,7 +373,7 @@ Each list of offenders is reported in full, as in WP3. The 20-seed tests share o
 | `WeightedPickerTests` (Core) | Frequencies follow the weights over 100,000 picks; a zero weight is never picked; one item is always picked; negative or all-zero weights throw; same seed, same picks |
 | `OverallCalculatorTests` | A hand-built QB's OVR equals Σ w · a; all-50 ratings give 50 at every position (the weights sum to 1); raising a weighted attribute raises OVR and an unweighted one doesn't; `Display` rounds 74.5 → 75, 99.6 → 99, −0.4 → 0; every F-03 §4.6 band boundary (92 → A+, 91 → A, 57 → F) |
 | `ArchetypeLabelTests` | For every archetype in `positions.json`, a player built exactly at its expected profile, at levels −10, 0 and +15, gets its label |
-| `PlayerDataTests` (+ rules) | The roster averages are whole numbers (the mirrored mix needs them); no archetype lists Speed, Acceleration, Agility or Strength (they come only from measurables); `0 < draftedShare ≤ 1`; `rankNoiseSd ≥ 0`; `entryAge.min ≤ entryAge.max` and `entryAge.min` ≤ every position's `age.min`; `mixSwaps ≥ 0` |
+| `PlayerDataTests` (+ rules) | The roster averages are whole numbers (the mirrored mix needs them); no archetype lists Speed, Acceleration, Agility or Strength (they come only from measurables); `0 < draftedShare ≤ 1`; `rankNoiseSd ≥ 0`; `entryAge.min ≤ entryAge.max` and `entryAge.min` ≤ every position's `age.min`; `mixSwaps ≥ 0`; `teamStrength`'s range and weights ≥ 0 |
 
 **Slice 2**
 
@@ -368,6 +384,7 @@ Each list of offenders is reported in full, as in WP3. The 20-seed tests share o
 | The combine | `PhysicalLine` hits the map's best and worst points and is monotonic. Over 5,000 players, Speed minus `PhysicalLine(Forty)` has mean 0 ± 0.3 and SD 3 ± 0.3 (F-03 §4.3's near-exact ±3), and Agility the same with its two maps averaged. Any two drills' z-scores correlate at 0.6 ± 0.05. A Starter's 40 averages faster than a Fringe player's at the same position |
 | Tiers and colleges | College tiers follow `collegeTiers` within ±3 percentage points per player tier; players 22 or younger average about +8 of growth |
 | The label | The recomputed archetype matches the drawn one for ≥ 90% of players at positions with two or more archetypes (97.5% in the reference run) |
+| Team strength | The same slot with strength +0.5 has a higher OVR than with 0, and the same draws otherwise; the lift is `youngWeight / veteranWeight` times larger for a player within rookie-deal experience |
 | `PlayerNamesTests` | First names [Tom], last names [Brady (weight 1,000,000), Smith (1)], blocklist [Tom Brady]: always Tom Smith (D-078 #3); "Tom Brädy" and "TOM BRADY" are blocked too; a name in `taken` is re-rolled; an empty `taken` lets a team duplicate through |
 
 **Slice 3**
@@ -376,6 +393,7 @@ Each list of offenders is reported in full, as in WP3. The 20-seed tests share o
 |---|---|
 | Shape (seed 42) | 32 teams of exactly 53; 150 free agents, split by largest remainder; every team within each position's min–max and at or above its floor; each team's Starters per position equal `roster.starters` |
 | Roster mix | Every seed's league average per position equals the target exactly (stricter than F-03 §4.1's ±0.3) |
+| The ladder | Sorted, the 32 strengths are the evenly spaced values, with mean 0; another seed shuffles them differently. Averaged over 20 seeds, the teams in the ladder's top quarter have Starters at least 3 OVR better than the bottom quarter's, after the cap trades (4.2 in the reference run, 2.9–5.3 by seed): D-082's point, that the trades don't erase the ladder |
 | Draft classes | Picks unique per class; each class drafted at `round(0.7 × size)` (at most 224); better players go earlier: over the classes of 30 or more, the mean Spearman correlation of OVR to pick is below −0.6 (−0.73 in the reference run; small classes go as low as −0.5, which is why it's a mean); anyone on his rookie deal was drafted by his own team |
 | Jerseys and names | Unique numbers per team, each allowed by the rule; free agents have none; no two teammates share a full name; no blocklisted name anywhere; 20 seeds without the jersey exception |
 | Determinism | The same seed and season give identical leagues (serialized and compared); another seed or another season gives a different one |
@@ -388,14 +406,14 @@ Each list of offenders is reported in full, as in WP3. The 20-seed tests share o
 | `ContractGeneratorTests` (units) | **Rookie:** 4 years signed in the draft season; pick 1 of round 1 totals $54.4M, pick 32 $16.1M, pick 16 on the line; bonus = share × total; bases ≥ the minimums for career seasons 0–3; round 1 fully guaranteed, rounds 4–7 the bonus only. **Undrafted:** 3 years, `Minimum`, bases = the minimums, bonus $20,000. **Veteran:** Σ bases + bonus = total; each base ≥ its season's minimum; bases rise except where a floor lifts one; guarantees ≤ total and front-loaded (no guaranteed season after an unguaranteed one); within 5% of the minimum it's a one-year minimum deal; the curve without the wiggle never decreases in `t` |
 | Every contract (20 seeds) | Every rostered player has one and no free agent does; the deal type follows §4.4's table; every `CapHit = CapMath.CapHit`; `elapsed ≤ experience`, and the contract has this season or later left |
 | **The cap band** (20 seeds) | Every team between 85% and 97% after the trades; no 1302 Warning; every trade swapped two Veteran contracts at the same position and tier |
-| **Golden** (`Verify`) | `Generate(seed: 42, season: 2026)` as a summary: per team its abbreviation, position counts, Starters' mean OVR, cap total and space; the league's player count, 90+ count and mean age, and the five highest cap hits (name, team, position, type); team one's first five players in full |
+| **Golden** (`Verify`) | `Generate(seed: 42, season: 2026)` as a summary: per team its abbreviation, strength, position counts, Starters' mean OVR, cap total and space; the league's player count, 90+ count and mean age, and the five highest cap hits (name, team, position, type); team one's first five players in full |
 
 ## 6. Done when
 
 - [ ] Slice 1: `PersonalityTrait`, `WeightedPicker`, the seed purposes, `Draw`, `OverallCalculator`, and the `generation.json` additions with their records.
 - [ ] Slice 2: `PlayerGenerator` and `PlayerNames`.
-- [ ] Slice 3: `LeagueGenerator` through step 9 (contracts empty), and event 1300.
-- [ ] Slice 4: `ContractGenerator`, `CapTrades`, steps 5–6, and events 1301–1302.
+- [ ] Slice 3: `LeagueGenerator` through step 10 (contracts empty), and event 1300.
+- [ ] Slice 4: `ContractGenerator`, `CapTrades`, steps 6–7, and events 1301–1302.
 - [ ] Every §5 test passes, each proven to fail on a planted problem.
 - [ ] Reviewed by Claude against this guide, F-03 and F-12; `./build.ps1` green.
 - [ ] LOGGING.md §8.2's 1300–1302 line and CLAUDE.md's gotchas updated; the plan's WP4 marked done; committed by you.
@@ -446,9 +464,22 @@ Players at 90+ averaged 20.9 per league (6–31); the mean age was 26.9; the arc
 
 With D-081 a roster is about 26% rookie deals, 19% minimum deals and 55% veteran deals. The best quarterback's cap hit is about $47M, and the median Starter's about $5M.
 
+**Team strength** (D-082), as the gap between the best and worst teams' Starters (mean OVR) after the cap trades:
+
+| Model | Best vs. worst | Trades per league |
+|---|---|---|
+| No ladder | 5 OVR (6 before the trades) | ~24 |
+| Ladder only | 8 | ~43 |
+| **Ladder ±0.7 + young core** (D-082) | **9** (12 before the trades) | ~39 |
+| Ladder + bargains (a team-biased wiggle; not chosen, it bends pay) | 9.5 | ~32 |
+
+All 20 leagues fitted the band in each. The ladder widens each tier's OVR spread by about 0.5, still inside §5's tolerances, but it pushed players at 90+ to 26 per league, so the Starter tier's `spread` went from 9 to **8.5** (back to 21.6). Evenly spaced strengths gave the same result as normal-curve ones, without an inverse-normal function.
+
 ## 10. Questions (answered 2026-10-22)
 
 All three as recommended, with one confirmation ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application)):
 1. ~~How do teams land in the cap band?~~ → **Trades, with the curve at 2.5.** *"Trade to fit sounds right, this is during the initial creation of the league only right?"* Yes: once, at creation; M4's rules take over afterwards.
 2. ~~Where does draft history come from?~~ → **Ranked classes.**
 3. ~~Where do OVR, the grade and the archetype label live?~~ → **`Application/Players`.**
+4. ~~Will every team come out the same?~~ (the owner, walking through the guide: *"Is there a way to have it exist from day one?"*) → **A strength ladder carried by the young core** ([D-082](../DECISIONS.md#d-082-team-strength-from-a-ladder-carried-by-the-young-core)).
+5. ~~Should cap space follow strength?~~ → **Not now:** one band for every team; parked in IDEAS.md for M4.

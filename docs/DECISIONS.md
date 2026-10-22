@@ -89,6 +89,7 @@
 | D-079 | WP3 player data: traits in generation.json, measurable priors deferred, F-12 before contracts | **Accepted** |
 | D-080 | F-12's M1 slice: no practice squad in 1.0; pay by league-wide quality, with wiggle | **Accepted** |
 | D-081 | WP4 generation: trades fit the cap, ranked draft classes, player rules in Application | **Accepted** |
+| D-082 | Team strength from a ladder, carried by the young core | **Accepted** |
 
 ---
 
@@ -748,3 +749,14 @@
   3. **Draft history comes from ranked classes.** For each entry season, the class is ranked by OVR plus noise; the top 70% (at most 7 × 32) were drafted, in that order, spread evenly over the picks. A player still on his rookie deal was drafted by his own team; anyone else by a random team. Two numbers in `generation.json`.
   4. **OVR, the potential grade and the archetype label live in `Application/Players`,** beside the data records they read (weights, grade bands, archetypes). Nothing outside Application needs them: the sim reads raw attributes, and the read models, the AI and SimLab go through Application.
 - **Consequences:** + No contract depends on its team; draft picks are unique and track quality; no records move to Core. − The trades move good veterans from teams that can't afford them to teams that can, a little parity the real cap also produces. A team no trade can fix is logged, and the tests fail on it.
+
+## D-082: Team strength from a ladder, carried by the young core
+- **Status:** **Accepted** (owner, 2026-10-22, walking through the [WP4 guide](milestones/M1_WP4_GUIDE.md): *"In a normal league there are contenders, mid level, fringe, and tanking teams. I know as time goes on this will naturally form. Is there a way to have it exist from day one?"*; then chose "Ladder + young core" and one cap band for every team ("Not now"), adding *"I won't want to over complicate is so if this is making it difficult to manage we can skip"*. It costs three numbers, a shuffle and one line of generation, so it stays.) Amends [F-03](features/F-03_PLAYERS.md) §4.4 and §4.10.
+- **Why:** players drawn independently average out. Across 20 reference leagues, the best and worst teams' starters were only about 6 OVR apart before the cap trades ([D-081](#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application)) and 5 after: no contenders, no tanking teams.
+- **Decision:**
+  1. **A strength ladder per league:** 32 values evenly spaced from −`range` to +`range` (`generation.json`'s `teamStrength.range`, 0.7), shuffled across the teams by the seed. Every league has the same shape: real contenders, a middle and real bottom teams.
+  2. **Carried by the young core:** a team's strength shifts its players' shared quality draw (F-03 §4.4) by `strength × weight`, with `youngWeight` (1.6) for players still within rookie-deal experience (`experience < rookieScale.years`) and `veteranWeight` (0.7) for the rest. A strong team mostly drafted well, which is how real contenders afford their edge: those players are on rookie deals. Free agents have no team and no shift. **Pay is untouched** (D-080 #4).
+  3. **The cap is unchanged:** one 85–97% band for every team and the same trades. Cap space that follows strength (contenders at the cap, rebuilding teams with room) is parked in [IDEAS.md](IDEAS.md) for free agency (M4).
+  4. **The strength isn't saved or shown.** Screens show roster strength computed from the players (WP8's team picker).
+- **Reference run:** starters about 9 OVR apart best to worst after the trades (5 without the ladder), 35–44 trades per league, all 20 leagues in band. How much OVR makes a contender is a question of wins, so `range` is tuned when games exist (M2/M3).
+- **Consequences:** + Every league has its story on day one, and the team picker is a real choice. − Three more numbers to tune; the cap trades still take back about a third of the spread.
