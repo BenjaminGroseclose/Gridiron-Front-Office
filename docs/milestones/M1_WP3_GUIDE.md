@@ -1,8 +1,10 @@
 # M1 · WP3 builder's guide: player data
 
-> **Status:** Built 2026-10-21 (§3 scaffolded by Claude for the owner's review; §4 tests green; `contracts.json` built against F-12's M1 slice, D-080) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml) · **Size:** M–L · **Written:** 2026-10-21
+> **Status:** ✅ **Done 2026-10-21** (§5 has the review) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP3](M1_THE_LEAGUE.md#wp3--player-data-ml--done-2026-10-21) · **Size:** M–L · **Written:** 2026-10-21
 >
 > WP3 puts every number the player generator (WP4) needs into data files with first-pass values: each position's roster targets, body and athletic testing, OVR weights and archetypes; the league-wide generation settings; the jersey rule; the name and hometown lists; and the famous-people blocklist. Nothing generates players yet. WP3 only loads the numbers and proves them consistent, so WP4 can tune data instead of code.
+>
+> **Nothing is left.** The code was reviewed, `./build.ps1` passed (453 tests, 2026-10-21), the slices are committed, and WP3 is marked done in the plan. WP4 builds from here.
 
 ---
 
@@ -10,9 +12,9 @@
 
 | | |
 |---|---|
-| **Claude prepares** (§2, §7) | The data files: `positions.json`, `generation.json`, `jersey-rules.json` (checked against the real NFL rule), `famous-people.json`, and, after each download is approved, `first.json`, `last.json` and `hometowns.json`. `contracts.json` follows F-12's M1 spec (§8): its shape and rules are [F-12 §4.9–4.10](../features/F-12_CONTRACTS.md). |
-| **You build** (§3) | Three Core enums (plus `ContractType`), the definition records, `ISeedData`'s new properties, the loader's new files and one log event |
-| **Claude writes the tests** (§4) | Every file parses; the numbers are consistent (weights sum to 1, roster targets add up to 53, every attribute is used; the contract rules R1–R10 of F-12 §4.10) |
+| **Claude prepares** (§2, §7) ✅ | The eight data files, `contracts.json` last, from [F-12 §4.9–4.10](../features/F-12_CONTRACTS.md). |
+| **You build** (§3) ✅ scaffolded, review pending | Three Core enums (plus `ContractType`), the definition records, `ISeedData`'s eight properties, the loader's eight files and event 1202. Scaffolded by Claude at your request (2026-10-21); your read of it is what's left. |
+| **Claude writes the tests** (§4) ✅ | 50 tests: every file parses; the numbers are consistent; the contract rules R1–R10; each rule proven on a planted problem. |
 
 **Read first:** F-03 §4.1–4.11 and §5, [D-043](../DECISIONS.md#d-043-limited-personality-model-only-traits-with-a-consumer), [D-050](../DECISIONS.md#d-050-every-player-attribute-must-be-read-by-the-sim), [D-077](../DECISIONS.md#d-077-data-files-carry-no-version-numbers-they-change-only-additively), [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) (#2: skills are archetype + shared quality + noise), and the [WP2 guide](M1_WP2_GUIDE.md) §3.4 (the loader you're extending).
 
@@ -269,19 +271,21 @@ In `tests/Infrastructure.Tests/Seed/`, against the shipped files. Each lists eve
 
 ## 5. Done when
 
-- [ ] The three enums (and `ContractType`), the records, `ISeedData`'s eight properties, the eight embedded files and event 1202. _Scaffolded by Claude 2026-10-21; your review is the tick._
-- [ ] Every §4 test passes (50, including `ContractDataTests`, each proven on a planted problem); `./build.ps1` is green.
-- [ ] **Ask for a review**, then commit with the message I give you.
+- [x] The three enums (and `ContractType`), the records, `ISeedData`'s eight properties, the eight embedded files and event 1202 (built 2026-10-21).
+- [x] Every §4 test passes: 50 across `PlayerDataTests`, `NameDataTests` and `ContractDataTests`, each proven to fail on a planted problem (a roster average of 4, a skill mean of 170, weights summing to 1.1, a grade band ending at 5, three jersey numbers for seven receivers; a dip in the minimum ladder, a round-2 bonus that can't pay four minimums, a position with no maximum, an 8-year length band, a guarantee share of 1.2), each caught by its own rule, then removed.
+- [x] **Reviewed by you** (2026-10-21, *"review looks good to me"*): the §3 code (Claude scaffolded it; the guide's split had you writing it).
+- [x] `./build.ps1` green (2026-10-21: 453 tests, 0 warnings, 31 s).
+- [x] Committed by the owner (2026-10-21), §5 ticked, WP3 marked done in the M1 plan.
+- **What was built:** `Core/Players/GenerationEnums.cs`, `Core/Contracts/ContractType.cs`; `Application/Players/PlayerData.cs`, `Application/Contracts/ContractData.cs`, `Application/Leagues/ISeedData.cs` (+8); `Infrastructure/Seed/` (`EmbeddedSeedData` +8 lazies, `SeedLog` 1202) and the eight embedded files; `tests/Infrastructure.Tests/Seed/` (`PlayerDataTests`, `NameDataTests`, `ContractDataTests`); LOGGING.md's 1200–1202 line.
+- **Changed from this guide:** Claude scaffolded §3 at the owner's request (2026-10-21). The practice squad left 1.0 with [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle), so `generation.json` has no `practiceSquad` count, `RosterSizes` no field for it, and Fringe means the unsigned pool. `contracts.json` follows F-12 as revised on the owner's answers, not the first draft's bands.
 
 ## 6. Order of work
 
-1. **Now:** I prepare `positions.json`, `generation.json`, `jersey-rules.json` and `famous-people.json` (no downloads). You can build §3 against them.
-2. **Downloads:** for the name and place lists, I ask before each download, with its file name, source and size: the SSA national baby-name file, the Census 2010 surname file, and the Census Gazetteer places file. Their sources go in THIRD_PARTY_NOTICES.
-3. **After F-12's M1 spec** (§8, question 3): `contracts.json`, its records and its tests, as WP3's last slice. _Done 2026-10-21, the same day the spec was revised on your answers (D-080)._
+All three steps are done (2026-10-21): the four hand-written files, the three approved downloads (sources in THIRD_PARTY_NOTICES), and `contracts.json` after F-12's M1 spec ([D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts), [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle)).
 
-## 7. Where the data stands
+## 7. The data, for reference
 
-**Ready (2026-10-21):** `positions.json`, `generation.json`, `jersey-rules.json` and `famous-people.json`. Every §4 rule passes against them in a reference run.
+All eight files are shipped and every §4 rule passes against them. What's in them and where the numbers came from:
 - **Measurables:** public NFL combine averages by position. **OVR weights and archetypes:** hand-set, so SimLab can replace the weights in M2.
 - **A rough reference simulation of §2.2's model** already lands near F-03's targets after two small tuning passes (tier shifts and spreads; tight ends and linebackers +5 and +3, kickers, punters and long snappers −2). Over four seeds: Starter OVR 75.4–75.6 (target 74), Backup 64.1–64.5 (64), Fringe 56.2–56.7 (56), 14–24 players at 90+ (15–25), mean age 26.7 (26.5 ± 1). WP4's distribution tests do the real tuning.
 - **The jersey rule** is the 2026 NFL rulebook's (Rule 5, Section 1): QB 0–19; RB, FB, TE, WR 0–49 and 80–89; offensive line 50–79; defensive line 50–79 and 90–99; linebackers 0–59 and 90–99; defensive backs 0–49; kickers and punters 0–49 and 90–99. The rulebook doesn't name two of our positions. **EDGE** players are listed as linemen or linebackers, so they get both (0–79 and 90–99). **Long snappers** are listed as tight ends or linebackers and nearly all wear the 40s, so they get 40–49.
@@ -292,7 +296,7 @@ In `tests/Infrastructure.Tests/Seed/`, against the shipped files. Each lists eve
 
 - **`contracts.json` (2026-10-21):** the numbers of [F-12 §4.3–4.7](../features/F-12_CONTRACTS.md), revised on the owner's answers (D-080): a $300M cap, the 2026 minimum ladder, a rookie scale by round, one APY maximum per position with `curve` 3.5 and a ±20% wiggle, lengths and shares by contract tier. A roster at the curve's expected values prices at 0.98 × cap (R10).
 
-**Next:** nothing in WP3. The owner reviews the §3 code and commits; WP4 generates from it.
+WP4 generates from these; WP4's distribution tests, then SimLab in M2, do the tuning.
 
 ## 8. Questions for you (answered 2026-10-21)
 

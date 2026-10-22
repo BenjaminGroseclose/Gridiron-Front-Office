@@ -49,7 +49,7 @@
 | WP0  | Decisions and docs prep            | S    | —        | §12 answered ✅; F-01 and F-12 M1 specs written                                                         |
 | WP1  | Core: IDs, positions and the PRNG  | M    | WP0      | ✅ Done 2026-10-20                                                                                      |
 | WP2  | Team and college data              | M    | WP1      | ✅ Done 2026-10-21                                                                                       |
-| WP3  | Player data                        | M–L  | WP1      | Positions, OVR weights, archetypes, distributions, traits, jersey rules, names, hometowns, blocklists   |
+| WP3  | Player data                        | M–L  | WP1      | ✅ Done 2026-10-21                                                                                       |
 | WP4  | The player model and generator     | L    | WP2, WP3 | Distribution, golden, blocklist and contract tests green over many seeds                                |
 | WP5  | Schema and `CreateLeague`          | M    | WP4      | A generated league is written in one command in < 5 s, with progress                                    |
 | WP6  | Perception and read models         | M    | WP5      | `IPerception` (σ = 0), the DTOs and query services, `GameStateStore` v0                                 |
@@ -95,7 +95,7 @@
 
 **Results (2026-10-21):** the definition records and `ISeedData` (Application), `EmbeddedSeedData` and `SeedLog` (Infrastructure), and 31 tests: the loader (8), the color checks (8), the team guardrails (12) and the college guardrails (3). Each guardrail was proven to fail on a planted problem. Details and the review in [M1_WP2_GUIDE.md §6](M1_WP2_GUIDE.md#6-done-when). Changed from this plan: Claude writes the tests from here on (§11).
 
-### WP3 · Player data (M–L)
+### WP3 · Player data (M–L) ✅ Done 2026-10-21
 
 **Goal:** every number the generator needs, as data with first-pass values. **Builder's guide:** [M1_WP3_GUIDE.md](M1_WP3_GUIDE.md).
 
