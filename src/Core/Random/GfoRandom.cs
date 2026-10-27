@@ -87,4 +87,15 @@ public sealed class GfoRandom
 		var z = Math.Sqrt(-2.0 * Math.Log(u1)) * Math.Cos(2.0 * Math.PI * u2);
 		return mean + (standardDeviation * z);
 	}
+
+	/// <summary>
+	/// A draw from <paramref name="distribution"/>: always exactly one <see cref="Normal"/> (even when its Sd is 0, so the
+	/// data never changes how many draws follow), clamped to its Min–Max when they're given.
+	/// </summary>
+	public double Draw(Distribution distribution)
+	{
+		ArgumentNullException.ThrowIfNull(distribution);
+		var value = Normal(distribution.Mean, distribution.Sd);
+		return Math.Clamp(value, distribution.Min ?? double.NegativeInfinity, distribution.Max ?? double.PositiveInfinity);
+	}
 }

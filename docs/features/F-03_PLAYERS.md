@@ -221,6 +221,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 - **From M5 (offseason start, D-049):** generate rosters as of the *previous* season's opening day (53 + 16), simulate that season, then run Season Wrap, which produces the inherited situation at the Re-sign window.
 - **Determinism:** each player's seed is `Hash(leagueSeed, "gen", season, slotIndex)`. Same seed, same league (a golden test).
+- **The yearly draft class reuses the generator, not its seed (M5; noted 2026-10-24).** `PlayerGenerator.Generate` seeds every player with `SeedPurpose.Generation` and `(season, slot)`, so a class numbered from 0 under that purpose would rebuild league-creation players exactly. The class gets its own seed purpose. The generator's combine-to-hometown steps carry over as they are ([WP4 guide §4.2](../milestones/M1_WP4_GUIDE.md#42-slice-2-one-player), rows 5–14). Age, experience, team strength and the depth tier are league-creation rules: prospects need their own (ages 21–23, no experience, a prospect quality spread).
 
 ### 4.11 The name blocklist
 - `data/blocklists/famous-people.json`: normalized full names. **Sources to compile:** Pro Football Hall of Fame members, notable NFL players of the last ~25 seasons (e.g., Pro Bowl selections), plus a short list of other very famous people (presidents, globally famous athletes and entertainers). Names are facts. Compiling the list is a one-time effort of a few hours, kept in the spec's scope.

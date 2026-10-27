@@ -25,6 +25,8 @@ data/players/generation.json        + roster.mixSwaps, draft { … }, teamStreng
 src/Core/
 ├─ Players/PlayerEnums.cs            + PersonalityTrait (D-043)
 └─ Random/
+   ├─ Distribution.cs                moved here from PlayerData.cs (§4.1)
+   ├─ GfoRandom.cs                   + Draw(distribution)
    ├─ WeightedPicker.cs              picks by weight (names, hometowns, archetypes, shares)
    └─ Seeds.cs                       + six purpose names
 src/Application/
@@ -33,7 +35,7 @@ src/Application/
 │  ├─ OverallCalculator.cs           OVR, its display, the potential grade, the archetype label (D-081 #4)
 │  ├─ GeneratedLeague.cs             the output records (§3.3)
 │  ├─ PlayerGenerator.cs             one player from his slot's seed (§4.2)
-│  ├─ PlayerNames.cs                 names, with the blocklist and same-team re-rolls
+│  ├─ PersonNames.cs                 names, with the blocklist and same-team re-rolls
 │  ├─ LeagueGenerator.cs             the pipeline (§4.3)
 │  └─ GenerationLog.cs               events 1300–1302
 └─ Contracts/
@@ -182,7 +184,7 @@ public const string Jerseys = "gen.jersey";    // (season, team index)
 public const string Contract = "contract";     // (season, slot), F-12 §4.8
 ```
 
-**`Draw`** (`Application/Players`, an extension next to `Distribution`): `random.Draw(distribution)` is `Normal(Mean, Sd)` clamped to `Min`–`Max` when they're given.
+**`Draw`** (`Core/Random`, a method on `GfoRandom`): `random.Draw(distribution)` is one `Normal(Mean, Sd)`, clamped to `Min`–`Max` when they're given. It always draws exactly once, even when `Sd` is 0, so a data change never shifts the draws after it. `Distribution` moved with it from `PlayerData.cs` to `Core/Random` (2026-10-23): Core references no other project, so `GfoRandom` can't see a type in Application, and a clamped normal has nothing football-specific in it, like `WeightedPicker`. The data records use it unchanged, and Simulation can use it too.
 
 **`OverallCalculator`** (`Application/Players`, static, D-081 #4). `Overall` takes **no archetype** ([D-084](../DECISIONS.md#d-084-ovr-is-one-yardstick-per-position-archetypes-are-balanced-in-the-data)): one yardstick per position, so a Scrambler and a Pocket Passer are rated on the same scale. Fairness between styles lives in the data, and a slice 1 test guards it.
 
@@ -252,10 +254,10 @@ Build the pickers once, in the constructor: archetypes per position (by `share`)
 | 13 | College | The college-tier picker for his tier, then `Next(0, count)` among that tier's colleges |
 | 14 | Hometown | The population picker |
 
-**`PlayerNames`** (`Application/Players`):
+**`PersonNames`** (`Application/Players`). Named for people, not players (2026-10-24): nothing in it is player-specific, so M10's coaches and new AI GMs reuse it with their own name lists ([IDEAS.md](../IDEAS.md)).
 
 ```csharp
-public sealed class PlayerNames(NameList firstNames, NameList lastNames, IReadOnlyList<string> famousPeople)
+public sealed class PersonNames(NameList firstNames, NameList lastNames, IReadOnlyList<string> famousPeople)
 {
     /// <summary>A first and last name; re-rolls a famous name (F-03 §4.11) or one already in <paramref name="taken"/>.</summary>
     public (string First, string Last) Pick(GfoRandom random, ISet<string> taken);
@@ -289,7 +291,7 @@ Nothing registers it yet: WP5's `CreateLeague` is its first caller, and the test
 | 6 | **Contracts** | Slice 4 (§4.4) |
 | 7 | **Cap trades** | Slice 4 (§4.4) |
 | 8 | **Jersey numbers** | Per team *t*, `random = Derive(seed, Jerseys, season, t)`. Positions go fewest allowed numbers first (LS, QB, the line …), then in enum order, players in roster order. Each player takes `free[random.Next(0, free.Count)]` from his rule's untaken numbers, ascending. If none is free, throw `InvalidOperationException` (a data bug; a test proves it never happens). Free agents get no number |
-| 9 | **Names** | Teams in order, players in roster order: `PlayerNames.Pick(new GfoRandom(Derive(seed, Names, season, slot)), taken)`, with `taken` the team's names so far (comparer `PlayerNames.FullNames`). Then the free agents, with an empty `taken` |
+| 9 | **Names** | Teams in order, players in roster order: `PersonNames.Pick(new GfoRandom(Derive(seed, Names, season, slot)), taken)`, with `taken` the team's names so far (comparer `PersonNames.FullNames`). Then the free agents, with an empty `taken` |
 | 10 | **Log** | Event 1300 with the player count and the elapsed time |
 
 Until slice 4 lands, steps 6 and 7 are empty and every contract is null.
@@ -387,7 +389,7 @@ Each list of offenders is reported in full, as in WP3. The 20-seed tests share o
 | Tiers and colleges | College tiers follow `collegeTiers` within ±3 percentage points per player tier; players 22 or younger average about +8 of growth |
 | The label | The recomputed archetype matches the drawn one for ≥ 90% of players at positions with two or more archetypes (97.5% in the reference run) |
 | Team strength | The same slot with strength +0.5 has a higher OVR than with 0, and the same draws otherwise; the lift is `youngWeight / veteranWeight` times larger for a player within rookie-deal experience |
-| `PlayerNamesTests` | First names [Tom], last names [Brady (weight 1,000,000), Smith (1)], blocklist [Tom Brady]: always Tom Smith (D-078 #3); "Tom Brädy" and "TOM BRADY" are blocked too; a name in `taken` is re-rolled; an empty `taken` lets a team duplicate through |
+| `PersonNamesTests` | First names [Tom], last names [Brady (weight 1,000,000), Smith (1)], blocklist [Tom Brady]: always Tom Smith (D-078 #3); "Tom Brädy" and "TOM BRADY" are blocked too; a name in `taken` is re-rolled; an empty `taken` lets a team duplicate through |
 
 **Slice 3**
 
@@ -412,8 +414,8 @@ Each list of offenders is reported in full, as in WP3. The 20-seed tests share o
 
 ## 6. Done when
 
-- [ ] Slice 1: `PersonalityTrait`, `WeightedPicker`, the seed purposes, `Draw`, `OverallCalculator`, and the `generation.json` additions with their records.
-- [ ] Slice 2: `PlayerGenerator` and `PlayerNames`.
+- [ ] Slice 1: `PersonalityTrait`, `WeightedPicker`, the seed purposes, `GfoRandom.Draw` (with `Distribution` moved to Core), `OverallCalculator`, and the `generation.json` additions with their records.
+- [ ] Slice 2: `PlayerGenerator` and `PersonNames`.
 - [ ] Slice 3: `LeagueGenerator` through step 10 (contracts empty), and event 1300.
 - [ ] Slice 4: `ContractGenerator`, `CapTrades`, steps 6–7, and events 1301–1302.
 - [ ] Every §5 test passes, each proven to fail on a planted problem.

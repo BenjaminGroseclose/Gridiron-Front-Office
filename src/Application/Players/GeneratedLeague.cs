@@ -9,7 +9,7 @@ namespace GridironFrontOffice.Application.Players;
 public sealed record GeneratedLeague(ulong Seed, int Season, IReadOnlyList<GeneratedTeam> Teams, IReadOnlyList<GeneratedPlayer> FreeAgents);
 
 /// <summary>A team's 53 in depth order: positions in enum order, the generation tier's Starters first.</summary>
-public sealed record GeneratedTeam(TeamDefinition Definition, IReadOnlyList<GeneratedPlayer> Players);
+public sealed record GeneratedTeam(TeamDefinition Definition, double Strength, IReadOnlyList<GeneratedPlayer> Players);
 
 
 public sealed record GeneratedPlayer(

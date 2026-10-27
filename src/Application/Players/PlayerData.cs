@@ -1,5 +1,6 @@
 using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.Core.Players;
+using GridironFrontOffice.Core.Random;
 
 namespace GridironFrontOffice.Application.Players;
 
@@ -30,9 +31,6 @@ public sealed record RosterTarget(double Average, int Min, int Max, int Floor, i
 
 /// <summary>A profile within a position: how often it appears, and each listed skill's mean for a Backup-tier player.</summary>
 public sealed record Archetype(string Name, double Share, IReadOnlyDictionary<PlayerAttribute, double> Skills);
-
-/// <summary>A normal distribution, clamped to <see cref="Min"/>–<see cref="Max"/> when they're given.</summary>
-public sealed record Distribution(double Mean, double Sd, double? Min = null, double? Max = null);
 
 /// <summary>data/players/generation.json: the league-wide settings the generator (WP4) reads.</summary>
 public sealed record GenerationSettings(
