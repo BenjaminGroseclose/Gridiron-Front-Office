@@ -19,14 +19,15 @@ public sealed class WeightedPicker<T>
 			throw new ArgumentException("Weights must be non-negative.", nameof(items));
 		}
 
-		if (items.Count(i => i.Weight == 0) > 1)
+		if (!items.Any(i => i.Weight != 0))
 		{
-			throw new ArgumentException("Only allowed one zero weight.", nameof(items));
+			throw new ArgumentException("Cannot be a list of zeros", nameof(items));
 		}
 
 		_totalWeight = items.Sum(i => i.Weight);
 		_items = items.ToList();
 	}
+
 	public T Pick(GfoRandom random)
 	{
 		if (_totalWeight == 0)

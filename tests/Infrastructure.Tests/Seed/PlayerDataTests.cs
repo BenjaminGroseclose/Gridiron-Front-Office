@@ -308,6 +308,100 @@ public sealed class PlayerDataTests
         offenders.ShouldBeEmpty();
     }
 
+    // ---- WP4's generation rules (M1 WP4 guide §5, slice 1) ----
+
+    [Fact]
+    public void Roster_averages_are_whole_numbers()
+    {
+        // The mirrored roster mix and the free-agent split both start from whole counts.
+        Positions
+            .Where(p => p.Roster.Average != Math.Floor(p.Roster.Average))
+            .Select(p => $"{p.Position}: average {p.Roster.Average}")
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void No_archetype_lists_a_physical_rating()
+    {
+        // Speed, Acceleration, Agility and Strength come only from the measurables (F-03 §4.3).
+        var offenders =
+            from profile in Positions
+            from archetype in profile.Archetypes
+            from attribute in PhysicalRatings
+            where archetype.Skills.ContainsKey(attribute)
+            select $"{profile.Position} {archetype.Name} lists {attribute}";
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void The_draft_settings_are_possible()
+    {
+        var draft = Generation.Draft;
+        var offenders = new List<string>();
+
+        if (draft.DraftedShare is <= 0 or > 1)
+        {
+            offenders.Add($"draftedShare {draft.DraftedShare} isn't within (0, 1]");
+        }
+
+        if (draft.RankNoiseSd < 0)
+        {
+            offenders.Add($"rankNoiseSd {draft.RankNoiseSd} is negative");
+        }
+
+        if (draft.EntryAge.Min > draft.EntryAge.Max)
+        {
+            offenders.Add($"entryAge {draft.EntryAge.Min}–{draft.EntryAge.Max} is backwards");
+        }
+
+        // A player can't enter the league older than the youngest age his position allows.
+        offenders.AddRange(Positions
+            .Where(p => draft.EntryAge.Min > p.Age.Min)
+            .Select(p => $"{p.Position}: age min {p.Age.Min} is under entryAge.min {draft.EntryAge.Min}"));
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void The_roster_mix_and_the_strength_ladder_are_not_negative()
+    {
+        var strength = Generation.TeamStrength;
+
+        Generation.Roster.MixSwaps.ShouldBeGreaterThanOrEqualTo(0);
+        new[] { ("range", strength.Range), ("youngWeight", strength.YoungWeight), ("veteranWeight", strength.VeteranWeight) }
+            .Where(setting => setting.Item2 < 0)
+            .Select(setting => $"teamStrength.{setting.Item1} is {setting.Item2}")
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Every_archetype_at_a_position_has_the_same_expected_starter_ovr()
+    {
+        // D-084: style alone never costs OVR, pay or draft position. The physical ratings are the same for every
+        // archetype, so they're left out of the comparison.
+        var shift = Generation.Tiers[PlayerTier.Starter].SkillShift;
+        var skills = Generation.Skills;
+
+        var offenders = new List<string>();
+        foreach (var profile in Positions.Where(p => p.Archetypes.Count > 1))
+        {
+            var expected = profile.Archetypes.ToDictionary(a => a.Name, a => profile.OvrWeights
+                .Where(w => !PhysicalRatings.Contains(w.Key))
+                .Sum(w => w.Value * (a.Skills.TryGetValue(w.Key, out var mean) ? mean + shift
+                    : skills.Common.TryGetValue(w.Key, out var common) ? common + shift
+                    : skills.OffPosition.Mean)));
+
+            var gap = expected.Values.Max() - expected.Values.Min();
+            if (gap > 1)
+            {
+                offenders.Add($"{profile.Position}: {string.Join(", ", expected.Select(e => $"{e.Key} {e.Value.ToString("0.00", CultureInfo.InvariantCulture)}"))}");
+            }
+        }
+
+        offenders.ShouldBeEmpty();
+    }
+
     // ---- Jersey numbers exist ----
 
     [Fact]

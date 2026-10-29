@@ -104,4 +104,28 @@ public sealed class GfoRandomTests
             return (average, Math.Sqrt(values.Average(v => (v - average) * (v - average))));
         }
     }
+
+    [Fact]
+    public void Draw_stays_within_the_distributions_bounds()
+    {
+        var random = new GfoRandom(5);
+        var values = Enumerable.Range(0, Draws).Select(_ => random.Draw(new Distribution(50, 30, Min: 40, Max: 60))).ToList();
+
+        values.ShouldAllBe(v => v >= 40 && v <= 60);
+        values.ShouldContain(40);
+        values.ShouldContain(60);
+    }
+
+    [Fact]
+    public void Draw_is_exactly_one_Normal_even_with_no_spread()
+    {
+        // WP4 guide §4.1: a data change to a spread must never shift the draws after it.
+        var drawn = new GfoRandom(9);
+        var plain = new GfoRandom(9);
+
+        drawn.Draw(new Distribution(10, 2)).ShouldBe(plain.Normal(10, 2));
+        drawn.Draw(new Distribution(5, 0)).ShouldBe(5);
+        plain.Normal();
+        drawn.NextUInt64().ShouldBe(plain.NextUInt64());
+    }
 }

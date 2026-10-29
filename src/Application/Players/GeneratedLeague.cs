@@ -42,4 +42,7 @@ public sealed record HiddenRatings(double Potential, DevelopmentCurve Developmen
 public sealed record GeneratedContract(ContractType Type, int SignedSeason, long TotalValue, long SigningBonus,
 	long GuaranteedTotal, IReadOnlyList<ContractSeason> Seasons);
 
+/// <summary>A veteran deal's drawn terms (F-12 §4.7). Apy already includes the wiggle.</summary>
+public sealed record VeteranTerms(long Apy, int Years, int Elapsed, double BonusShare, double GuaranteeShare);
+
 public sealed record ContractSeason(int Season, long BaseSalary, long ProratedBonus, long GuaranteedAmount, long CapHit);

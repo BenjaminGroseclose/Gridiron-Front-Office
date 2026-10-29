@@ -21,6 +21,8 @@
   <ItemGroup>
     <!-- The torture tests reach the internals (LeagueDbContext, TypedIDs, SqliteFile). -->
     <InternalsVisibleTo Include="GridironFrontOffice.Infrastructure.Tests" />
+    <!-- The generator tests build the shipped seed data (EmbeddedSeedData). -->
+    <InternalsVisibleTo Include="GridironFrontOffice.Application.Tests" />
   </ItemGroup>
 
   <ItemGroup>

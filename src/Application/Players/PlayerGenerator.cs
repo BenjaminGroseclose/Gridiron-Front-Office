@@ -164,5 +164,4 @@ public sealed class PlayerGenerator(ISeedData seedData)
 		var t = (value - map.Worst.Value) / (map.Best.Value - map.Worst.Value);
 		return map.Worst.Rating + t * (map.Best.Rating - map.Worst.Rating);
 	}
-
 }
