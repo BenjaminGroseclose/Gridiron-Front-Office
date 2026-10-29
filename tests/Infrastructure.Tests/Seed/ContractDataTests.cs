@@ -29,12 +29,14 @@ public sealed class ContractDataTests
     // ---- R1 ----
 
     [Fact]
-    public void The_file_loads_with_a_cap_and_a_utilization_band()
+    public void The_file_loads_with_a_cap_a_utilization_band_and_a_premium_share()
     {
         Contracts.Cap.ShouldBeGreaterThan(0);
         Contracts.Utilization.Min.ShouldBeGreaterThan(0);
         Contracts.Utilization.Min.ShouldBeLessThan(Contracts.Utilization.Max);
         Contracts.Utilization.Max.ShouldBeLessThanOrEqualTo(1);
+        Contracts.PremiumShare.ShouldBeGreaterThan(0);
+        Contracts.PremiumShare.ShouldBeLessThanOrEqualTo(1);
     }
 
     // ---- R2 ----

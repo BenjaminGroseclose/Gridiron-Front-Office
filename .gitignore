@@ -492,3 +492,6 @@ artifacts/
 *.gfo-wal
 *.gfo-shm
 !tests/**/Fixtures/*.gfo
+
+# A snapshot test's output on a mismatch (D-085); approve it by renaming it over the .verified file
+*.received.*

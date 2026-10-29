@@ -38,7 +38,7 @@ Listed in priority order. When goals conflict, the higher one wins.
 | DI / config | `Microsoft.Extensions.DependencyInjection`, `Options` | Built in. | — |
 | Time | `System.TimeProvider` (built-in abstraction) | Makes the real-time draft testable with `FakeTimeProvider`. | — |
 | Randomness | **Custom PRNG** (xoshiro256** or PCG32) in `GridironFrontOffice.Simulation` | Determinism that won't change across .NET versions. | [D-012](DECISIONS.md#d-012-deterministic-simulation-with-an-in-house-prng) |
-| Tests | **xUnit v3**, **bUnit**, **Shouldly**, **Verify**, `Microsoft.Extensions.TimeProvider.Testing`, NetArchTest | Permissive licenses (see the note below). | [D-018](DECISIONS.md#d-018-testing-stack) |
+| Tests | **xUnit v3**, **bUnit**, **Shouldly**, `Microsoft.Extensions.TimeProvider.Testing`, NetArchTest, hand-rolled JSON snapshots | Permissive licenses (see the note below). Verify was dropped: its binaries carry a revenue-based fee. | [D-018](DECISIONS.md#d-018-testing-stack), [D-085](DECISIONS.md#d-085-the-golden-league-is-a-hand-rolled-json-snapshot-verify-is-dropped) |
 | Benchmarks | BenchmarkDotNet | For engine performance budgets. | — |
 | Packaging | **Self-contained, unpackaged** WPF app (no MSIX), **Velopack** installer and updater | A simple installer and delta updates. Steam replaces Velopack later. | [D-019](DECISIONS.md#d-019-distribution-unpackaged--velopack-steam-later) |
 | Build & CI | Local `build.ps1` now. GitHub Actions later (**F-30**). | One script runs the same gates locally and later in CI. No workloads needed. | [D-030](DECISIONS.md#d-030-source-hosting-and-ci-deferred-to-f-30) |

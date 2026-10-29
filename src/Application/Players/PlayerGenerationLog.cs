@@ -14,4 +14,8 @@ internal static partial class PlayerGenerationLog
 
 	[LoggerMessage(EventId = 1302, Level = LogLevel.Warning, Message = "{Team} is outside the cap band after the trades: {Percent}% of the cap")]
 	public static partial void TeamOutsideCapBand(ILogger logger, string team, double percent);
+
+	/// <summary>D-087's fallback, before the trades: the league's whole pay was outside the band, which no trade can fix.</summary>
+	[LoggerMessage(EventId = 1303, Level = LogLevel.Information, Message = "League pay scaled by {Factor} to fit the cap band: the teams' mean went from {BeforePercent}% to {AfterPercent}% of the cap")]
+	public static partial void LeaguePayScaled(ILogger logger, double factor, double beforePercent, double afterPercent);
 }

@@ -10,13 +10,17 @@ namespace GridironFrontOffice.Application.Tests.Contracts;
 /// <summary>
 /// The cap trades (M1 WP4 guide §4.4, D-081 #1, F-12 §4.8) on hand-built leagues with a $100 cap, so a team's total
 /// reads as its percentage and the band is 85 to 97. A kicker on a minimum deal, which never moves, sets each team's
-/// total. The band over 20 generated leagues is checked once steps 6–7 are in LeagueGenerator.
+/// total. No deal is premium in the hand-built leagues except where a test says so, so D-086's guard stays out of the
+/// other rules' way; the drawn leagues have it at 10, and each of their trades is checked against D-087's choice of
+/// teams. LeagueGeneratorTests checks the band over 20 generated leagues.
 /// </summary>
 public sealed class CapTradesTests
 {
 	private const int Season = 2026;
 
-	private static readonly ContractData Band = ShippedSeedData.Instance.Contracts with { Cap = 100, Utilization = new Utilization(0.85, 0.97) };
+	private static readonly ContractData Band = ShippedSeedData.Instance.Contracts with { Cap = 100, Utilization = new Utilization(0.85, 0.97), PremiumShare = 1 };
+	private static readonly ContractData PremiumOver30 = Band with { PremiumShare = 0.30 };
+	private static readonly ContractData PremiumOver10 = Band with { PremiumShare = 0.10 };
 	private static readonly GeneratedPlayer Template = new PlayerGenerator(ShippedSeedData.Instance).Generate(1, Season, 0, Position.QB, PlayerTier.Starter, 0);
 	private static readonly Position[] DrawnPositions = [Position.QB, Position.WR, Position.WR, Position.OT, Position.OT, Position.CB];
 
@@ -47,6 +51,34 @@ public sealed class CapTradesTests
 
 		Layout(rosters).ShouldBe("100 1 | 0 101");
 		Totals(rosters).ShouldBe([95, 95]);
+	}
+
+	[Fact]
+	public void When_the_highest_and_lowest_teams_can_t_trade_the_widest_pair_that_can_does()
+	{
+		// D-087. Team 0 (110) has only a quarterback and team 1 (80) only a receiver, so they can't trade with each other.
+		// Both are 15 from team 2 (95), and the tie goes to the lower index: team 0's quarterback for team 2's.
+		var rosters = League(
+			[Player(0, Position.QB, PlayerTier.Starter, 50), Filler(1, 60)],
+			[Player(100, Position.WR, PlayerTier.Starter, 30), Filler(101, 50)],
+			[Player(200, Position.QB, PlayerTier.Starter, 42), Player(201, Position.WR, PlayerTier.Starter, 40), Filler(202, 13)]);
+
+		CapTrades.Balance(rosters, Season, Band, maxTrades: 1).ShouldBe(1);
+		Layout(rosters).ShouldBe("200 1 | 100 101 | 0 201 202");
+	}
+
+	[Fact]
+	public void Two_teams_inside_the_band_never_trade_with_each_other()
+	{
+		// Team 0 (110) has only a tight end and team 1 (80) only a receiver, so neither can trade. Teams 2 (95) and 3 (90)
+		// could swap quarterbacks, but the trade would bring no team nearer the band.
+		var rosters = League(
+			[Player(0, Position.TE, PlayerTier.Starter, 50), Filler(1, 60)],
+			[Player(100, Position.WR, PlayerTier.Starter, 30), Filler(101, 50)],
+			[Player(200, Position.QB, PlayerTier.Starter, 45), Filler(201, 50)],
+			[Player(300, Position.QB, PlayerTier.Starter, 44), Filler(301, 46)]);
+
+		CapTrades.Balance(rosters, Season, Band).ShouldBe(0);
 	}
 
 	[Fact]
@@ -100,6 +132,22 @@ public sealed class CapTradesTests
 		{
 			Layout(rosters).ShouldBe(before);
 		}
+	}
+
+	[Theory]
+	[InlineData(31, 5, 0)]   // the low team would hold the 50 and its own 31
+	[InlineData(30, 5, 1)]   // 30 is the line itself, not over it
+	[InlineData(5, 31, 0)]   // the high team would hold the 35 and its own 31
+	[InlineData(5, 30, 1)]
+	public void No_trade_leaves_a_team_with_two_premium_deals_at_one_position(long lowBackup, long highBackup, int expected)
+	{
+		// D-086, with a hit over 30 premium. The starters' 15 is half the spread, and no other pair may stand in for them.
+		// The low team's kicker is over 30 too, which counts for nothing: he's at another position.
+		var rosters = League(
+			[Player(0, Position.QB, PlayerTier.Starter, 50), Player(1, Position.QB, PlayerTier.Backup, highBackup), Filler(2, 60 - highBackup)],
+			[Player(100, Position.QB, PlayerTier.Starter, 35), Player(101, Position.QB, PlayerTier.Backup, lowBackup), Filler(102, 45 - lowBackup)]);
+
+		CapTrades.Balance(rosters, Season, PremiumOver30).ShouldBe(expected);
 	}
 
 	[Fact]
@@ -190,7 +238,7 @@ public sealed class CapTradesTests
 
 		for (ulong seed = 1; seed <= 20; seed++)
 		{
-			var trades = CapTrades.Balance(DrawnLeague(seed), Season, Band);
+			var trades = CapTrades.Balance(DrawnLeague(seed), Season, PremiumOver10);
 			allTrades += trades;
 
 			// Balance stopped after k trades is the full run's first k (it draws nothing), so each trade can be seen
@@ -199,19 +247,19 @@ public sealed class CapTradesTests
 			for (var k = 1; k <= trades; k++)
 			{
 				var next = DrawnLeague(seed);
-				CapTrades.Balance(next, Season, Band, maxTrades: k).ShouldBe(k);
+				CapTrades.Balance(next, Season, PremiumOver10, maxTrades: k).ShouldBe(k);
 				offenders.AddRange(Trade(previous, next).Select(o => $"seed {seed}, trade {k}: {o}"));
 				previous = next;
 			}
 
-			// It stopped for a reason: every team in the band, no pair left to trade, or the cap on trades
+			// It stopped for a reason: every team in the band, no two teams left that can trade, or the cap on trades
 			if (Totals(previous).All(t => t is >= 85 and <= 97))
 			{
 				balanced++;
 			}
-			else if (trades < 200 && Eligible(previous).Any())
+			else if (trades < 200 && NextTeams(previous) is not null)
 			{
-				offenders.Add($"seed {seed}: stopped outside the band with a pair left to trade");
+				offenders.Add($"seed {seed}: stopped outside the band with two teams left that can trade");
 			}
 		}
 
@@ -268,12 +316,29 @@ public sealed class CapTradesTests
 	private static string Layout(List<List<GeneratedPlayer>> rosters) =>
 		string.Join(" | ", rosters.Select(r => string.Join(" ", r.Select(p => p.Slot.ToString(CultureInfo.InvariantCulture)))));
 
-	/// <summary>The pairs the rules allow between the league's highest and lowest team, ties to the lower index.</summary>
-	private static IEnumerable<(GeneratedPlayer Leaving, GeneratedPlayer Arriving)> Eligible(List<List<GeneratedPlayer>> rosters)
+	/// <summary>
+	/// D-087: the two teams the next trade is between. The furthest apart that have a pair the rules allow, where the
+	/// higher is over the band or the lower under it, ties to the lower indexes. Null when there are none.
+	/// </summary>
+	private static (int Hi, int Lo)? NextTeams(List<List<GeneratedPlayer>> rosters)
 	{
 		var totals = Totals(rosters);
-		var hi = Array.IndexOf(totals, totals.Max());
-		var lo = Array.IndexOf(totals, totals.Min());
+		var teams = Enumerable.Range(0, totals.Length).ToList();
+
+		return (
+			from hi in teams
+			from lo in teams
+			where totals[hi] > totals[lo] && (totals[hi] > 97 || totals[lo] < 85)
+			orderby totals[hi] - totals[lo] descending, hi, lo
+			where Eligible(rosters, hi, lo).Any()
+			select ((int Hi, int Lo)?)(hi, lo)).FirstOrDefault();
+	}
+
+	/// <summary>The pairs the rules allow from team <paramref name="hi"/> to team <paramref name="lo"/>, with a hit over 10 premium (the drawn leagues' hits run 1 to 14).</summary>
+	private static IEnumerable<(GeneratedPlayer Leaving, GeneratedPlayer Arriving)> Eligible(List<List<GeneratedPlayer>> rosters, int hi, int lo)
+	{
+		var premium = PremiumOver10.PremiumShare * PremiumOver10.Cap;
+		var totals = Totals(rosters);
 
 		return
 			from leaving in rosters[hi]
@@ -282,19 +347,30 @@ public sealed class CapTradesTests
 			where leaving.Contract!.Type == ContractType.Veteran && arriving.Contract!.Type == ContractType.Veteran
 				&& leaving.Position == arriving.Position && leaving.Tier == arriving.Tier
 				&& difference > 0 && difference < totals[hi] - totals[lo]
+				&& !Doubles(rosters[lo], leaving, arriving) && !Doubles(rosters[hi], arriving, leaving)
 			select (leaving, arriving);
+
+		// D-086: the team gives up one player for the other and then holds two premium deals at his position
+		bool Doubles(List<GeneratedPlayer> team, GeneratedPlayer gaining, GeneratedPlayer losing) =>
+			Hit(gaining) > premium && team.Any(p => p.Slot != losing.Slot && p.Position == gaining.Position && Hit(p) > premium);
 	}
 
 	/// <summary>
-	/// What one trade broke, from the league before it to the league after: one place changed on the highest team and
-	/// one on the lowest, the two players swapped, a pair the rules allow, and a league more even than before. The two
+	/// What one trade broke, from the league before it to the league after: one place changed on each of the two teams
+	/// the rules pick, the two players swapped, a pair the rules allow, and a league more even than before. The two
 	/// leagues are separate draws of the same seed, so players are matched by slot.
 	/// </summary>
 	private static IEnumerable<string> Trade(List<List<GeneratedPlayer>> before, List<List<GeneratedPlayer>> after)
 	{
 		var totals = Totals(before);
-		var hi = Array.IndexOf(totals, totals.Max());
-		var lo = Array.IndexOf(totals, totals.Min());
+
+		if (NextTeams(before) is not { } teams)
+		{
+			yield return "a trade when no two teams could make one";
+			yield break;
+		}
+
+		var (hi, lo) = teams;
 		var changed = Enumerable.Range(0, before.Count)
 			.SelectMany(t => Enumerable.Range(0, before[t].Count).Where(i => before[t][i].Slot != after[t][i].Slot).Select(i => (Team: t, Index: i)))
 			.ToList();
@@ -314,7 +390,7 @@ public sealed class CapTradesTests
 			yield return "the two players weren't swapped";
 		}
 
-		if (!Eligible(before).Any(p => p.Leaving.Slot == leaving.Slot && p.Arriving.Slot == arriving.Slot))
+		if (!Eligible(before, hi, lo).Any(p => p.Leaving.Slot == leaving.Slot && p.Arriving.Slot == arriving.Slot))
 		{
 			yield return $"slots {leaving.Slot} and {arriving.Slot} aren't a pair the rules allow";
 		}

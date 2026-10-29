@@ -6,10 +6,15 @@ namespace GridironFrontOffice.Application.Contracts;
 // not read models, so no Dto suffix (D-070). Money is long dollars; enum dictionary keys are the C# names; a field added
 // later gets a default value, so older files still load (D-077).
 
-/// <summary>Everything the contract generator (WP4) reads: the cap, the minimums, the rookie scale and the veteran pay model.</summary>
+/// <summary>
+/// Everything the contract generator (WP4) reads: the cap, the band and the premium line the creation trades keep to,
+/// the minimums, the rookie scale and the veteran pay model.
+/// </summary>
+/// <param name="PremiumShare">A cap hit over this share of the cap is a premium deal: the creation trades never give a team a second one at one position (F-12 §4.8, D-086).</param>
 public sealed record ContractData(
     long Cap,
     Utilization Utilization,
+    double PremiumShare,
     IReadOnlyList<MinimumSalary> MinimumSalaries,
     RookieScale RookieScale,
     UndraftedDeal Undrafted,

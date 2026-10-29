@@ -20,6 +20,7 @@ public sealed class ContractGeneratorTests
 	private static readonly ContractData Fixture = new(
 		Cap: 300_000_000,
 		Utilization: new Utilization(0.85, 0.97),
+		PremiumShare: 0.10,
 		MinimumSalaries: [new(0, 885_000), new(1, 1_005_000), new(2, 1_075_000), new(3, 1_145_000), new(4, 1_215_000), new(7, 1_300_000)],
 		RookieScale: new RookieScale(4, [0.10, 0.20, 0.30, 0.40], [new(1, 54_400_000, 16_100_000, 0.60, 1.00), new(2, 11_000_000, 6_500_000, 0.30, 0.75)]),
 		Undrafted: new UndraftedDeal(3, 20_000),

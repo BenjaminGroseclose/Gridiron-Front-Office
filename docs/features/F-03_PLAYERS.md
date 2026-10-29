@@ -275,7 +275,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ## 13. Test plan
 - **Unit (Core):** the OVR calculator per position, potential grade bands, the measurable → physical mapping (monotonic, near-exact within the noise), archetype labeling.
-- **Golden:** `GenerateLeague(seed: 42)` summary snapshot (Verify).
+- **Golden:** `GenerateLeague(seed: 42)` summary snapshot (a hand-rolled JSON file, D-085).
 - **Distribution:** per-position tier means and SDs within tolerance over 20 seeds. Count of 90+ players. Age mean.
 - **Blocklist:** a blocklisted name is re-rolled (a unit test, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - **Perception:** own roster exact and σ = 0 before M6. The 80% interval math and determinism per (viewer, player, season) arrive with σ > 0 in M6.

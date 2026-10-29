@@ -71,4 +71,4 @@ Fonts were downloaded 2026-10-15 from `cdn.jsdelivr.net/npm/@fontsource-variable
 
 ## Declared but not yet referenced
 
-`Verify.XunitV3` 33.3.3 and `Microsoft.Data.Sqlite` 10.0.13 have versions pinned in `Directory.Packages.props` for later work packages. Their licenses get checked and recorded here when a project first references them.
+`Microsoft.Data.Sqlite` 10.0.13 has its version pinned in `Directory.Packages.props` for a later work package. Its license gets checked and recorded here when a project first references it. `Verify.XunitV3` was pinned too, until its license was checked: its binaries carry a fee for users with US$10,000 or more of annual revenue, so it was dropped for hand-rolled snapshots (D-085).

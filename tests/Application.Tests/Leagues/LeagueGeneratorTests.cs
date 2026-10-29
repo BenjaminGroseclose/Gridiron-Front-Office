@@ -1,3 +1,4 @@
+using System.Text.Json;
 using GridironFrontOffice.Application.Contracts;
 using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Application.Players;
@@ -105,6 +106,52 @@ public sealed class LeagueGeneratorTests
 
 	// ---- The cap trades ----
 
+	[Theory]
+	[InlineData(311, false)]   // the highest and lowest teams ran out of pairs after 24 trades
+	[InlineData(463, true)]    // the whole league's pay came to 84.7% of the cap
+	public void The_two_leagues_that_once_missed_the_band_fit_it(ulong seed, bool scaled)
+	{
+		// D-087's two fixes, on the two leagues of 500 seeds that missed the band before them (2026-10-29)
+		var (_, league, events) = GeneratedLeagues.Generate(Data, seed);
+
+		league.Teams.Where(t => !Inside(Total(t.Players), Contracts.Utilization)).Select(t => $"{t.Definition.Abbr} at {Percent(Total(t.Players))}%").ShouldBeEmpty();
+		events.Count(e => e.EventID == 1302).ShouldBe(0);
+		events.Count(e => e.EventID == 1303).ShouldBe(scaled ? 1 : 0);
+	}
+
+	[Theory]
+	[InlineData(1.05, 1.15)]   // every league's pay is under this band
+	[InlineData(0.70, 0.80)]   // and over this one
+	public void A_league_whose_pay_is_outside_the_band_has_its_veteran_deals_scaled_to_the_middle(double min, double max)
+	{
+		// D-087's fallback, forced by moving the band: seed 1's league, against the shared one made with the shipped band
+		var band = new Utilization(min, max);
+		var (_, league, events) = GeneratedLeagues.Generate(new SeedDataWith(Data, Contracts with { Utilization = band }), 1);
+		var shipped = Twenty[0].League;
+		var scaled = events.Single(e => e.EventID == 1303).Values;
+		var mean = league.Teams.Average(t => Total(t.Players));
+
+		// Up for a band above the league's pay, down for one below, and the middle reached within a point. The trades
+		// never change the league's total, so the mean after them is the scaled one.
+		var factor = (double)scaled["Factor"]!;
+		(factor > 1).ShouldBe(min > 0.9);
+		Math.Abs(mean / Contracts.Cap - (min + max) / 2).ShouldBeLessThan(0.01);
+		league.Teams.Where(t => !Inside(Total(t.Players), band)).Select(t => t.Definition.Abbr).ShouldBeEmpty();
+		events.Count(e => e.EventID == 1302).ShouldBe(0);
+
+		// Only the veteran deals change, by the factor: the rookie and undrafted ones are the shipped league's, slot for slot
+		Deals(league, veteran: false).ShouldBe(Deals(shipped, veteran: false));
+		(Pay(league) / (double)Pay(shipped)).ShouldBe(factor, 0.03);
+
+		static List<string> Deals(GeneratedLeague league, bool veteran) =>
+			[.. league.Teams.SelectMany(t => t.Players).Where(p => VeteranDeal(p) == veteran).OrderBy(p => p.Slot).Select(p => $"{p.Slot}: {JsonSerializer.Serialize(p.Contract)}")];
+
+		static long Pay(GeneratedLeague league) => league.Teams.SelectMany(t => t.Players).Where(VeteranDeal).Sum(p => p.Contract!.TotalValue);
+
+		// §4.4's table: anyone past his rookie or undrafted deal gets a veteran one, which may come back as a minimum deal
+		static bool VeteranDeal(GeneratedPlayer p) => p.Experience >= (p.Draft is null ? Contracts.Undrafted.Years : Contracts.RookieScale.Years);
+	}
+
 	[Fact]
 	public void Every_team_ends_inside_the_cap_band_with_one_1301_and_no_1302()
 	{
@@ -122,9 +169,10 @@ public sealed class LeagueGeneratorTests
 				}
 			}
 
-			if (events.Count(e => e.EventID == 1301) != 1 || events.Any(e => e.EventID == 1302))
+			// The shipped band fits every one of these leagues' pay, so none is scaled (1303)
+			if (events.Count(e => e.EventID == 1301) != 1 || events.Any(e => e.EventID is 1302 or 1303))
 			{
-				offenders.Add($"seed {seed}: {events.Count(e => e.EventID == 1301)} × 1301, {events.Count(e => e.EventID == 1302)} × 1302");
+				offenders.Add($"seed {seed}: {events.Count(e => e.EventID == 1301)} × 1301, {events.Count(e => e.EventID == 1302)} × 1302, {events.Count(e => e.EventID == 1303)} × 1303");
 			}
 		}
 
@@ -176,6 +224,34 @@ public sealed class LeagueGeneratorTests
 	}
 
 	[Fact]
+	public void No_trade_puts_a_premium_deal_beside_another_at_its_position()
+	{
+		// D-086: a cap hit over premiumShare of the cap ($30M) is a premium deal. A team can be generated with two (the
+		// trades usually move one away), but no trade may bring one in beside another. A player is traded in when his slot
+		// is another team's; one who left and came home counts as home, and couldn't have come back beside another either.
+		var premium = Contracts.PremiumShare * Contracts.Cap;
+		var offenders = new List<string>();
+
+		foreach (var (seed, league, _) in Twenty)
+		{
+			for (var t = 0; t < league.Teams.Count; t++)
+			{
+				foreach (var position in league.Teams[t].Players.GroupBy(p => p.Position))
+				{
+					var deals = position.Where(p => Hit(p) > premium).ToList();
+
+					if (deals.Count > 1 && deals.Any(p => p.Slot / Active != t))
+					{
+						offenders.Add($"seed {seed} {league.Teams[t].Definition.Abbr} {position.Key}: {string.Join(" and ", deals.Select(p => $"slot {p.Slot} at ${Hit(p) / 1e6:F1}M"))}");
+					}
+				}
+			}
+		}
+
+		offenders.ShouldBeEmpty();
+	}
+
+	[Fact]
 	public void Event_1301_reports_the_trades_and_the_teams_shares_of_the_cap()
 	{
 		var offenders = new List<string>();
@@ -219,7 +295,11 @@ public sealed class LeagueGeneratorTests
 
 	// ---- Helpers ----
 
-	private static long Total(IEnumerable<GeneratedPlayer> players) => players.Sum(p => p.Contract!.Seasons.Single(s => s.Season == Season).CapHit);
+	private static long Hit(GeneratedPlayer player) => player.Contract!.Seasons.Single(s => s.Season == Season).CapHit;
+
+	private static long Total(IEnumerable<GeneratedPlayer> players) => players.Sum(Hit);
+
+	private static bool Inside(long total, Utilization band) => total >= band.Min * Contracts.Cap && total <= band.Max * Contracts.Cap;
 
 	/// <summary>A total as events 1301–1302 show it: a percentage of the cap, to one decimal.</summary>
 	private static double Percent(double total) => Math.Round(total * 100 / Contracts.Cap, 1, MidpointRounding.AwayFromZero);

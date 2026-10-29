@@ -25,7 +25,7 @@
 | D-015 | Integer keys + strongly typed IDs | **Accepted** |
 | D-016 | Single-writer command queue | **Accepted** |
 | D-017 | Fictional league and players only | Accepted (follows from D-011) |
-| D-018 | Testing stack | **Accepted** |
+| D-018 | Testing stack | **Accepted** (Verify dropped by D-085) |
 | D-019 | Unpackaged + Velopack, Steam later | Proposed |
 | D-020 | Feature folders, no mediator/mapper libraries | **Accepted** |
 | D-021 | Host: WPF + BlazorWebView (MAUI removed) | **Accepted** |
@@ -92,6 +92,9 @@
 | D-082 | Team strength from a ladder, carried by the young core | **Accepted** |
 | D-083 | Optional fields with defaults are for importable data formats only | **Accepted** |
 | D-084 | OVR is one yardstick per position; archetypes are balanced in the data | **Accepted** |
+| D-085 | The golden league is a hand-rolled JSON snapshot; Verify is dropped | **Accepted** |
+| D-086 | The creation trades never stack two premium deals at one position | **Accepted** |
+| D-087 | The creation trades get past a stuck pair, and a league whose pay can't fit is scaled once | **Accepted** |
 
 ---
 
@@ -198,7 +201,7 @@
 - **Decision:** No real league, team, player or logo names. Generated names are checked against a blocklist of famous real people. Real **city** names are used with original nicknames ([D-033](#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)). Colleges are fictional by default, and users can import their own list in M11 ([D-035](#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)). Personal-use real-roster imports are a post-1.0 modding question (F-28), not shipped content.
 
 ## D-018: Testing stack
-- **Status:** **Accepted** (owner, 2026-10-15: *"Whatever you recommend"*). Accepted as recommended, with the open choice resolved: **Shouldly** is the assertion library (already in use; the AwesomeAssertions alternative isn't needed). BenchmarkDotNet arrives with the engine (M2), `FakeTimeProvider` with live events (M6), and Playwright stays optional (M3+).
+- **Status:** **Accepted** (owner, 2026-10-15: *"Whatever you recommend"*). Accepted as recommended, with the open choice resolved: **Shouldly** is the assertion library (already in use; the AwesomeAssertions alternative isn't needed). BenchmarkDotNet arrives with the engine (M2), `FakeTimeProvider` with live events (M6), and Playwright stays optional (M3+). **Amended by [D-085](#d-085-the-golden-league-is-a-hand-rolled-json-snapshot-verify-is-dropped):** Verify is dropped over a license fee; snapshots are hand-rolled JSON files.
 - **Decision:** xUnit v3, bUnit, **Shouldly** (or the AwesomeAssertions fork, Apache 2.0, *not* FluentAssertions v8+, which requires a commercial license), Verify (snapshot tests), `Microsoft.Extensions.TimeProvider.Testing` (`FakeTimeProvider`), NetArchTest (architecture rules), BenchmarkDotNet, and optionally Playwright for .NET (E2E through DevHost). Tests use real SQLite temp files, not the EF in-memory provider.
 - **Implementation note (M0 WP1, 2026-10-15):** tests run on **Microsoft.Testing.Platform**, enabled in `global.json`. The .NET 10 SDK no longer runs xUnit v3 through the VSTest bridge, so `Microsoft.NET.Test.Sdk` and `xunit.runner.visualstudio` aren't used, and filters use xUnit's own options ([TESTING_AND_QUALITY.md §7](architecture/TESTING_AND_QUALITY.md#7-build-script-now-ci-later)).
 
@@ -708,7 +711,7 @@
   2. **Skills = archetype + shared quality + noise**, not a correlated multivariate normal: the archetype sets each skill's mean, one shared draw (by tier) lifts a player's skills together, and independent noise goes on top. No correlation matrices, no Cholesky.
   3. **The name re-roll is unit-tested** instead of a 100-league blocklist sweep.
   4. **Only the budgets a player feels are checked:** a new league in under 5 s (Release, measured at the exit) and the 2,000-row grid. Component targets (loading, generation, perception) are logged, not asserted.
-  5. **No UI golden snapshots in M1:** design changes keep landing. Verify stays for the generator's golden test.
+  5. **No UI golden snapshots in M1:** design changes keep landing. The generator's golden test keeps its snapshot ([D-085](#d-085-the-golden-league-is-a-hand-rolled-json-snapshot-verify-is-dropped): a hand-rolled JSON file, not Verify).
   6. **The stadium is columns on `Teams`:** no `Stadiums` table and no `StadiumID`.
   7. **The user's team is stored once,** in `SaveInfo.UserTeamID` (no `Teams.IsUserTeam`).
   8. **`RatingHistory` arrives with player development** (F-20, M5).
@@ -782,3 +785,34 @@
   3. **How much an individual trait is worth** (a QB's legs: Elusiveness and Vision carry no QB weight today) **is SimLab's call in M2,** when the weights are regressed on what the engine rewards.
   4. **Archetypes don't shape the combine numbers yet** ("Not now"): a Deep Threat runs no faster than a Possession receiver. It stays with [D-079](#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts)'s deferred priors, revisited with M2's SimLab.
 - **Consequences:** + A player's style never costs him rating, pay or draft position; `Overall` stays a plain weighted sum. − Archetype means are shifted values rather than hand-picked round numbers, and a tuning change to the weights or means needs the balance test to pass again.
+
+## D-085: The golden league is a hand-rolled JSON snapshot; Verify is dropped
+- **Status:** **Accepted** (owner, 2026-10-29, asked how to snapshot the golden league once Verify's license turned out to carry a fee: *"Hand-rolled snapshot"*). Amends [D-018](#d-018-testing-stack) (Verify leaves the testing stack) and [D-078](#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) #5.
+- **Why:** Verify's source is MIT, but its NuGet binaries (33.3.3, checked 2026-10-28) ship under the Open Source Maintenance Fee EULA: a user with US$10,000 or more of annual gross revenue who uses them in revenue-generating activities owes a monthly fee. A commercial Steam release could plausibly pass that, which [D-008](#d-008-ui-components-and-assets-permissive-licenses-only)'s license rule rejects. D-018 accepted Verify before its license was read; `THIRD_PARTY_NOTICES.md` had deferred the check to its first use.
+- **Decision:**
+  1. **A snapshot is a JSON file in the repository,** next to the test that owns it, named `<Test>.<name>.verified.json`. System.Text.Json writes it tab-indented with a final newline, as `.editorconfig` asks.
+  2. **On a mismatch, or with no approved file yet,** the test writes `<Test>.<name>.received.json` beside it and fails with both paths. Approving a change means reading the diff and renaming the received file over the verified one. `*.received.*` is git-ignored.
+  3. **Line endings don't count:** both sides are compared with `\n`, since Git may check the file out with CRLF.
+  4. **The helper lives with its only user,** `Snapshot` in `Application.Tests`. It moves to a shared test project when a second project needs it (M2's golden games).
+- **Consequences:** + No package, no license to watch and no fee; a snapshot is a plain file that diffs in any tool. − No diff tool opens on a mismatch and there are no scrubbers, so a snapshot may hold only deterministic values (the golden summary has no times or paths).
+
+## D-086: The creation trades never stack two premium deals at one position
+- **Status:** **Accepted** (owner, 2026-10-29, after the golden league showed BAL paying two quarterbacks $41.1M and $39.1M: *"So a team having two cap hits of 38M+ at the same position is not an ideal outcome"*; then, of the options measured, *"Add the guard"*). Amends [D-081](#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) #1 and [F-12](features/F-12_CONTRACTS.md) §4.8.
+- **Why:** the cap trades send the biggest deals to the lowest-paid team, so a team could end up paying two stars at one position. Over 500 seeds, 3 leagues (0.6%) had a team with two cap hits of $38M or more at one position, all quarterbacks and all made by the trades. Teams generated with two such deals (7 in 500 leagues) never kept them: they're the highest-paid, so the trades moved one away first.
+- **Decision:**
+  1. **A premium deal is a cap hit over `premiumShare` of the cap,** a new field in `contracts.json`: **0.10** ($30M).
+  2. **No creation trade leaves either team with two premium deals at one position.** A pair that would is skipped, and the next best one is taken. A team generated with two keeps them unless a trade moves one away.
+  3. **Pay doesn't change,** so [D-080](#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle)'s pay by league-wide rank stands: only which team a deal lands on.
+- **Measured over the same 500 seeds:** no team with two $38M deals at one position (3 before); 57 teams with two over $30M, all generated that way (201 before); trades 38.5 a league (38.4) and the same two leagues outside the band (see the WP4 guide). Seed 42's golden league changed on six teams, all still inside the band.
+- **Options not taken:** the same guard at 12.5% (it handled only the extreme case); a guard on every starter-priced deal (it blocked the trades that fit the cap: 4,720 teams outside the band); paying a backup no more than the best Backup-tier rank (it reverses D-080, and the cheaper league missed the band in 16 of 500 leagues); accepting it.
+- **Consequences:** + No team carries two star contracts at one position because of the trades. − One more number in `contracts.json`, and a pair the guard skips can leave a trade or two more to make.
+
+## D-087: The creation trades get past a stuck pair, and a league whose pay can't fit is scaled once
+- **Status:** **Accepted** (owner, 2026-10-29, on the two leagues of 500 seeds that missed the cap band: *"Yes fix those"*). Amends [D-081](#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) #1 and [F-12](features/F-12_CONTRACTS.md) §4.8 and §11.
+- **Why:** F-12 requires every team inside the band, and seeds 1–20 were. Over 500 seeds two leagues weren't, for two different reasons. **Seed 311 stalled:** after 24 trades the highest and lowest teams had no pair left, so the trades stopped with 13 teams at 82.5–103.8% while other teams could still have traded. **Seed 463 was too cheap:** its whole league came to 84.7% of the cap, and trades only move money between teams, so 65 of them left every team at 84.6–84.9%.
+- **Decision:**
+  1. **Each trade is between the two teams furthest apart that can make one,** which is the highest and the lowest whenever they can, so every league that fitted before is unchanged. Two teams count only if the higher is over the band or the lower under it, so two teams inside it never trade. Ties go to the lower team indexes. The trades stop when no two teams have a pair.
+  2. **A league whose whole pay is outside the band is scaled once, before the trades.** If the teams' mean is under `utilization.min` or over `max` × cap, every veteran deal is made again from its drawn terms with its APY times one factor, aimed at the band's middle (91%). Rookie and undrafted deals don't change, the rank order of pay doesn't either, and nothing is drawn, so the league stays deterministic. Event 1303 logs the factor and the mean before and after.
+- **Measured over the same 500 seeds:** no team outside the band (45 teams in 2 leagues before); seed 463 scaled ×1.089, from 84.7% to 91.0%, and no other league scaled; trades 38.7 a league, 61 at most. The leagues' mean pay before any scaling ran from 84.7% to 96.0% (86.9% at the 1st percentile, 95.0% at the 99th), so the fallback is about a 1-in-500 event. Seed 42's golden league is unchanged.
+- **Options not taken:** lowering the band's floor (it moves the goalposts for every league); tuning the data so the league's mean sits higher (it only shifts the odds, toward the band's top); D-081's per-team scaling stays rejected (it bent pay by team, where one league-wide factor keeps a player's pay the same on any team).
+- **Consequences:** + Every team of every league measured ends inside the band. − In a rare league every veteran is paid a few percent more or less than the curve says, and generation has one more event.

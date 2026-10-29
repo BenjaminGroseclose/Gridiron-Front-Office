@@ -1,6 +1,7 @@
 {
   "cap": 300000000,
   "utilization": { "min": 0.85, "max": 0.97 },
+  "premiumShare": 0.10,
   "minimumSalaries": [
     { "creditedSeasons": 0, "salary": 885000 },
     { "creditedSeasons": 1, "salary": 1005000 },

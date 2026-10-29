@@ -21,7 +21,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
 
 ## Stack (all Accepted; see DECISIONS)
 
-.NET 10 LTS · **WPF + `BlazorWebView`** host (not MAUI) · Blazor UI in Razor Class Libraries · **Fluent UI Blazor v5** · **EF Core 10 + SQLite** (one `.gfo` file per league) · Serilog to `%LOCALAPPDATA%\GridironFrontOffice\logs\gfo-YYYYMMDD.log` · xUnit v3, bUnit, Shouldly, Verify, `FakeTimeProvider`, NetArchTest.
+.NET 10 LTS · **WPF + `BlazorWebView`** host (not MAUI) · Blazor UI in Razor Class Libraries · **Fluent UI Blazor v5** · **EF Core 10 + SQLite** (one `.gfo` file per league) · Serilog to `%LOCALAPPDATA%\GridironFrontOffice\logs\gfo-YYYYMMDD.log` · xUnit v3, bUnit, Shouldly, `FakeTimeProvider`, NetArchTest, and hand-rolled JSON snapshots instead of Verify (D-085: a mismatch writes `*.received.json`; rename it over `*.verified.json` to approve).
 
 ## Architecture: the rules that span many files
 

@@ -262,6 +262,7 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 	{
 		var contracts = data.Contracts;
 		var ranks = new Dictionary<int, (double Rank, PlayerTier Tier)>();
+		var veterans = new List<(List<GeneratedPlayer> Roster, int Index, VeteranTerms Terms)>();
 
 		// Per position, worst to best by OVR, then slot: index i of N ranks i / (N − 1), and the best teams × starters
 		// are the contract tier's Starters, whatever their own team's depth chart says
@@ -301,11 +302,46 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 					var random = new GfoRandom(Seeds.Derive(seed, SeedPurpose.Contract, season, player.Slot));
 					var terms = _contracts.DrawVeteranTerms(random, player.Position, rank, tier, player.Age, player.Experience);
 					contract = _contracts.Veteran(terms, player.Experience, season);
+					veterans.Add((roster, n, terms));
 				}
 
 				roster[n] = player with { Contract = contract };
 			}
 		}
+
+		this.ScaleIntoTheBand(season, rosters, veterans);
+	}
+
+	/// <summary>
+	/// D-087: trades only move money between teams, so a league whose whole pay is outside the band can never be traded
+	/// into it (about 1 league in 500). Its veteran deals are then made again from their drawn terms with every APY times
+	/// one factor, aimed at putting the league's mean in the band's middle, and event 1303 says so. Draws nothing.
+	/// </summary>
+	private void ScaleIntoTheBand(int season, List<List<GeneratedPlayer>> rosters, List<(List<GeneratedPlayer> Roster, int Index, VeteranTerms Terms)> veterans)
+	{
+		var band = data.Contracts.Utilization;
+		var mean = rosters.Average(r => r.Sum(p => CapTrades.CapHit(p, season)));
+		var veteranPay = veterans.Sum(v => CapTrades.CapHit(v.Roster[v.Index], season)) / (double)rosters.Count;
+
+		if ((mean >= band.Min * data.Contracts.Cap && mean <= band.Max * data.Contracts.Cap) || veteranPay == 0)
+		{
+			return;
+		}
+
+		// Only the veterans' share moves. Minimum floors and the minimum-deal rule keep it near the middle, not on it.
+		var middle = (band.Min + band.Max) / 2 * data.Contracts.Cap;
+		var factor = (middle - (mean - veteranPay)) / veteranPay;
+
+		foreach (var (roster, n, terms) in veterans)
+		{
+			var apy = (long)Math.Round(terms.Apy * factor, MidpointRounding.AwayFromZero);
+			roster[n] = roster[n] with { Contract = _contracts.Veteran(terms with { Apy = apy }, roster[n].Experience, season) };
+		}
+
+		var rounded = Math.Round(factor, 3, MidpointRounding.AwayFromZero);
+		var before = this.Percent(mean);
+		var after = this.Percent(rosters.Average(r => r.Sum(p => CapTrades.CapHit(p, season))));
+		PlayerGenerationLog.LeaguePayScaled(logger, rounded, before, after);
 	}
 
 	/// <summary>
@@ -318,9 +354,9 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 		var trades = CapTrades.Balance(rosters, season, contracts);
 		var totals = rosters.Select(r => r.Sum(p => CapTrades.CapHit(p, season))).ToList();
 
-		var minPercent = Percent(totals.Min());
-		var maxPercent = Percent(totals.Max());
-		var meanPercent = Percent(totals.Average());
+		var minPercent = this.Percent(totals.Min());
+		var maxPercent = this.Percent(totals.Max());
+		var meanPercent = this.Percent(totals.Average());
 		PlayerGenerationLog.CapFitted(logger, trades, minPercent, maxPercent, meanPercent);
 
 		for (var t = 0; t < totals.Count; t++)
@@ -329,14 +365,14 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 			if (totals[t] < contracts.Utilization.Min * contracts.Cap || totals[t] > contracts.Utilization.Max * contracts.Cap)
 			{
 				var team = data.TeamSet.Teams[t].Abbr;
-				var percent = Percent(totals[t]);
+				var percent = this.Percent(totals[t]);
 				PlayerGenerationLog.TeamOutsideCapBand(logger, team, percent);
 			}
 		}
-
-		// A total as the events show it: a percentage of the cap, to one decimal
-		double Percent(double total) => Math.Round(total * 100 / contracts.Cap, 1, MidpointRounding.AwayFromZero);
 	}
+
+	/// <summary>A total as events 1301–1303 show it: a percentage of the cap, to one decimal.</summary>
+	private double Percent(double total) => Math.Round(total * 100 / data.Contracts.Cap, 1, MidpointRounding.AwayFromZero);
 
 	private void AssignNames(ulong seed, int season, List<List<GeneratedPlayer>> rosters, List<GeneratedPlayer> freeAgents)
 	{

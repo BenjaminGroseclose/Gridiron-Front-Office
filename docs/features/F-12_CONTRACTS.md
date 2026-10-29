@@ -148,7 +148,7 @@ The shares are GFO's first pass. The references are anecdotal (a top-of-market d
 1. **Elapsed seasons.** A veteran deal was signed `elapsed` seasons ago, `elapsed` uniform in `0 … min(years − 1, experience)`, so a contract never predates the player's entry and always has a season left. A rookie deal has `elapsed = experience`. The signed season is `currentSeason − elapsed`, and this season's cap hit is `CapHit(base[elapsed], bonus, years, elapsed)`.
 2. **Every ContractYear is written**, past seasons included (D-074: proration and history span earlier seasons).
 3. **The team total** = Σ current-season cap hits over the 53 (§4.3).
-4. **Into the band, by trades** ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application)). No contract is changed to fit a team. While any team's total is outside `utilization.min`–`max` × cap, the team with the highest total and the team with the lowest swap two players: **both on Veteran contracts, at the same position and in the same generation tier** (F-03 §4.10, so each team keeps a starter where it had one), the higher cap hit going to the lower team, choosing the pair whose difference in cap hits comes closest to half the gap between the two teams. The difference must be smaller than the whole gap, or the trade would only swap which team is high. The players keep their contracts. It runs once, at league creation (M4's rules take over afterwards); a reference run needed about 25 trades per league. A team no trade can bring into the band stays outside it and is logged (§11); the tests require that it never happens.
+4. **Into the band, by trades** ([D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application)). No contract is changed to fit a team. While any team's total is outside `utilization.min`–`max` × cap, the team with the highest total and the team with the lowest swap two players (if they have no pair, the two teams furthest apart that do, as long as the higher is over the band or the lower under it: [D-087](../DECISIONS.md#d-087-the-creation-trades-get-past-a-stuck-pair-and-a-league-whose-pay-cant-fit-is-scaled-once)): **both on Veteran contracts, at the same position and in the same generation tier** (F-03 §4.10, so each team keeps a starter where it had one), the higher cap hit going to the lower team, choosing the pair whose difference in cap hits comes closest to half the gap between the two teams. The difference must be smaller than the whole gap, or the trade would only swap which team is high. **No trade leaves either team with two premium deals at one position** ([D-086](../DECISIONS.md#d-086-the-creation-trades-never-stack-two-premium-deals-at-one-position)): a cap hit over `premiumShare` of the cap (0.10, $30M) is premium, and a pair that would stack two is skipped for the next best. The players keep their contracts. It runs once, at league creation (M4's rules take over afterwards); a reference run needed about 25 trades per league. Trades only move money between teams, so **a league whose whole pay is outside the band is scaled first** (D-087): every veteran deal is made again from its drawn terms with its APY times one factor, aimed at the band's middle (about 1 league in 500). A team no trade can bring into the band stays outside it and is logged (§11); the tests require that it never happens.
 5. **Determinism:** every draw comes from the player's generation seed (`Hash(leagueSeed, "gen", season, slot)`, F-03 §4.10) through the contract purpose, so the same seed gives the same cap table. The league-wide rank is computed once, after every player exists and before any contract is drawn. The trades draw nothing; ties go to the lower team index, then the lower slot.
 
 ### 4.9 The data file: `data/contracts/contracts.json`
@@ -159,6 +159,7 @@ _Built 2026-10-21 (WP3's last slice), with `ContractData`, `ContractType`, `ISee
 {
   "cap": 300000000,
   "utilization": { "min": 0.85, "max": 0.97 },
+  "premiumShare": 0.10,
   "minimumSalaries": [
     { "creditedSeasons": 0, "salary": 885000 }, { "creditedSeasons": 1, "salary": 1005000 },
     { "creditedSeasons": 2, "salary": 1075000 }, { "creditedSeasons": 3, "salary": 1145000 },
@@ -193,7 +194,7 @@ _Built 2026-10-21 (WP3's last slice), with `ContractData`, `ContractType`, `ISee
 **Records** (`Application/Contracts/ContractData.cs`, the WP3 pattern; `ISeedData` gains `ContractData Contracts`):
 
 ```csharp
-public sealed record ContractData(long Cap, Utilization Utilization, IReadOnlyList<MinimumSalary> MinimumSalaries,
+public sealed record ContractData(long Cap, Utilization Utilization, double PremiumShare, IReadOnlyList<MinimumSalary> MinimumSalaries,
     RookieScale RookieScale, UndraftedDeal Undrafted, VeteranDeals Veterans);
 public sealed record Utilization(double Min, double Max);
 public sealed record MinimumSalary(int CreditedSeasons, long Salary);
@@ -217,7 +218,7 @@ Each lists every offender, as the WP3 tests do.
 
 | # | Rule |
 |---|---|
-| R1 | The file loads; `cap > 0`; `0 < utilization.min < utilization.max ≤ 1` |
+| R1 | The file loads; `cap > 0`; `0 < utilization.min < utilization.max ≤ 1`; `0 < premiumShare ≤ 1` |
 | R2 | Minimum salaries start at 0 credited seasons and ascend in both columns; every step > 0 |
 | R3 | Rookie scale: `years` within 1–`CapMath.MaxContractYears`; `baseWeights` has `years` entries that sum to 1; rounds 1–7 each exactly once; `firstPick ≥ lastPick` within a round and `lastPick(r) ≥ firstPick(r + 1)` between rounds; every share within 0–1, non-increasing by round |
 | R4 | Every rookie pick's bases cover the minimums: `lastPick × (1 − bonusShare) ≥ Σ minimum(0..years − 1)` for every round |
@@ -271,12 +272,12 @@ None in M1. The cap year equals the season; the league starts at Training Camp w
 - A 35-year-old Starter gets a 1–2 year deal (§4.7) and never a signing bonus prorated past his years.
 - The minimum floor can push a short, cheap contract's total above its drawn APY × years; the total is then the sum of what was written, not the draw.
 - A kicker, punter or long snapper is one of 32 at his position, so his rank spans the whole curve: the worst kicker earns the minimum, the best about the max. That is the real shape of those markets.
-- A team that no same-position trade can bring into the band (§4.8) stays outside it and is logged (§11); over 20 seeds the tests require that it never happens. If it does, the data is tuned (the maxima or the curve), not the rule.
+- A team that no same-position trade can bring into the band (§4.8) stays outside it and is logged (§11); over 20 seeds the tests require that it never happens, and none did over 500 seeds once D-087 was in (2026-10-29). If it does, the data is tuned (the maxima or the curve), not the rule.
 - Two players tied on OVR at a position take adjacent ranks in seed order, so the rank is still deterministic.
 
 ## 11. Logging
 
-Within WP4's `LeagueGenerated` range (1300–1329, numbers from the [WP4 guide](../milestones/M1_WP4_GUIDE.md)): one Information event per league with the number of trades and the lowest, highest and mean utilization (1301); one **Warning** per team still outside the band after the trades (1302).
+Within WP4's `LeagueGenerated` range (1300–1329, numbers from the [WP4 guide](../milestones/M1_WP4_GUIDE.md)): one Information event per league with the number of trades and the lowest, highest and mean utilization (1301); one **Warning** per team still outside the band after the trades (1302); and one Information event when a league's whole pay was outside the band and its veteran deals were scaled, with the factor and the mean before and after (1303, D-087).
 
 ## 12. Performance
 
@@ -286,7 +287,7 @@ About 1,700 contracts and 6,500 `ContractYears` rows per league, written in the 
 
 - **Core:** `CapMath` is covered (WP1). `ContractType` needs nothing.
 - **Data (`ContractDataTests`, Claude):** R1–R10 above, each listing every offender; plus "a misspelled enum key fails", as for the WP3 files.
-- **Application (WP4):** for every drafted player with experience 0–3 the contract is `Rookie`, four years, signed in the draft season, total on the round's line; undrafted with experience 0–2 are three-year `Minimum` deals; every base ≥ the season's minimum; Σ(bases) + bonus = total; guarantees ≤ total; every `CapHit` = `CapMath.CapHit`; `elapsed ≤ experience` and the contract has a season left; **pay follows rank:** across the league, APY is non-decreasing in `t` at every position before wiggle, and the same player's APY would be the same on any team; **every team between `utilization.min` and `max`**, over 20 seeds, after trades that only ever swap Veteran contracts at the same position and tier; the golden league's cap totals (Verify).
+- **Application (WP4):** for every drafted player with experience 0–3 the contract is `Rookie`, four years, signed in the draft season, total on the round's line; undrafted with experience 0–2 are three-year `Minimum` deals; every base ≥ the season's minimum; Σ(bases) + bonus = total; guarantees ≤ total; every `CapHit` = `CapMath.CapHit`; `elapsed ≤ experience` and the contract has a season left; **pay follows rank:** across the league, APY is non-decreasing in `t` at every position before wiggle, and the same player's APY would be the same on any team; **every team between `utilization.min` and `max`**, over 20 seeds, after trades that only ever swap Veteran contracts at the same position and tier; the golden league's cap totals (its snapshot, D-085).
 - **UI (WP7, bUnit):** the Player page's contract block and the Team page's tiles read the DTOs.
 - **Autoplay:** none in M1.
 

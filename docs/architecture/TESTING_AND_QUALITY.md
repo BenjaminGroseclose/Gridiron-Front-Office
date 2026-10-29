@@ -18,8 +18,8 @@
 | Project | Scope | Tools | Runs |
 |---|---|---|---|
 | `GridironFrontOffice.Core.Tests` | Pure rules: cap hits, proration, dead money, tiebreakers, roster validation, overall formulas, draft order | xUnit v3, Shouldly, property tests (hand-rolled generators or FsCheck) | Every build |
-| `GridironFrontOffice.Simulation.Tests` | Engine units (resolvers), determinism, golden games, property tests (monotonicity) | xUnit, Verify | Every build (fast subset) + slow gate (statistical) |
-| `GridironFrontOffice.Application.Tests` | Use cases against a **real SQLite temp file**: signing, trading, the phase machine, journal resume, the live draft with `FakeTimeProvider`, AI decision units | xUnit, `FakeTimeProvider` | Every build |
+| `GridironFrontOffice.Simulation.Tests` | Engine units (resolvers), determinism, golden games, property tests (monotonicity) | xUnit, JSON snapshots | Every build (fast subset) + slow gate (statistical) |
+| `GridironFrontOffice.Application.Tests` | Use cases against a **real SQLite temp file**: signing, trading, the phase machine, journal resume, the live draft with `FakeTimeProvider`, AI decision units, the golden league | xUnit, `FakeTimeProvider`, JSON snapshots | Every build |
 | `GridironFrontOffice.Infrastructure.Tests` | **Transaction torture tests** ([DATA_ACCESS_GUIDE.md §9](DATA_ACCESS_GUIDE.md#9-proving-it-the-torture-tests-m0-run-on-every-build), including a kill-the-process test), migrations (fixture saves from each released schema), snapshots, export/import, integrity handling, bulk writers | xUnit | Every build |
 | `GridironFrontOffice.UI.Components.Tests` | Components: rendering, parameters, keyboard, ARIA | bUnit | Every build |
 | `GridironFrontOffice.UI.Tests` | Screens with fake query services | bUnit | Every build |
@@ -33,7 +33,8 @@
 
 ## 3. Determinism and golden tests
 
-- **Golden league:** `GenerateLeague(seed: 42)` → serialize a canonical summary (teams, top players per position, contract totals) → snapshot with **Verify**. Any unintended change to generation fails the test.
+- **Snapshots are hand-rolled** ([D-085](../DECISIONS.md#d-085-the-golden-league-is-a-hand-rolled-json-snapshot-verify-is-dropped)): the test serializes a summary to JSON and compares it with `<Test>.<name>.verified.json` next to it, line endings ignored. On a mismatch it writes `<Test>.<name>.received.json` and fails; reading the diff and renaming the received file over the verified one approves the change.
+- **Golden league:** `Generate(seed: 42, season: 2026)` → a canonical summary (per team its strength, position counts, Starters' mean OVR and cap total; the league's top cap hits; a few players in full) → a snapshot. Any unintended change to generation fails the test.
 - **Golden games:** a set of about 20 canonical `SimGameInput`s → `SimGameResult` summary snapshot. Tuning changes require approving new snapshots on purpose (and bumping `TuningVersion`).
 - **Re-run equality:** simulate the same input twice in one process and in parallel → byte-identical event logs.
 
