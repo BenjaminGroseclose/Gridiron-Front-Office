@@ -3,8 +3,8 @@ using GridironFrontOffice.Core.Players;
 namespace GridironFrontOffice.Application.Contracts;
 
 // The built-in contract data exactly as data/contracts/contracts.json holds it (F-12 §4.9, the M1 slice). Definitions,
-// not read models, so no Dto suffix (D-070). Money is long dollars; enum dictionary keys are the C# names; a field added
-// later gets a default value, so older files still load (D-077).
+// not read models, so no Dto suffix (D-070). Money is long dollars; enum dictionary keys are the C# names. The file is
+// built-in only, so a field added later is required, in the same commit as its record (D-083).
 
 /// <summary>
 /// Everything the contract generator (WP4) reads: the cap, the band and the premium line the creation trades keep to,

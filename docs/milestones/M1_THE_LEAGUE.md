@@ -50,7 +50,7 @@
 | WP1  | Core: IDs, positions and the PRNG  | M    | WP0      | ✅ Done 2026-10-20                                                                                      |
 | WP2  | Team and college data              | M    | WP1      | ✅ Done 2026-10-21                                                                                       |
 | WP3  | Player data                        | M–L  | WP1      | ✅ Done 2026-10-21                                                                                       |
-| WP4  | The player model and generator     | L    | WP2, WP3 | Distribution, golden, blocklist and contract tests green over many seeds                                |
+| WP4  | The player model and generator     | L    | WP2, WP3 | ✅ Done 2026-10-29                                                                                       |
 | WP5  | Schema and `CreateLeague`          | M    | WP4      | A generated league is written in one command in < 5 s, with progress                                    |
 | WP6  | Perception and read models         | M    | WP5      | `IPerception` (σ = 0), the DTOs and query services, `GameStateStore` v0                                 |
 | WP7  | Football components                | M    | WP6      | `TeamMark`, `PositionPill`, `RatingChip`/`RatingBar`, the grade chip, money, in the gallery, both modes |
@@ -106,7 +106,7 @@
 - `data/blocklists/famous-people.json` (F-03 §4.11): Hall of Fame members, notable players of the last ~25 seasons, and a short list of other very famous people.
 - **Tests:** every file parses and validates; weights sum to 1; every attribute appears in at least one position's weights or archetypes.
 
-### WP4 · The player model and generator (L)
+### WP4 · The player model and generator (L) ✅ Done 2026-10-29
 
 **Goal:** a generator that makes believable, deterministic players. **Builder's guide:** [M1_WP4_GUIDE.md](M1_WP4_GUIDE.md).
 
@@ -117,6 +117,8 @@
 - **League generation:** 32 rosters of 53 (no practice squad in 1.0, D-080), with the league-wide roster mix averaging to the targets and every floor kept; about 150 unsigned free agents; a team-strength ladder, so contenders and bottom teams exist from day one (D-082); draft history from ranked classes (D-081); unique jersey numbers per team; names re-rolled on a blocklist hit or a same-team duplicate.
 - **Tests (F-03 §13):** the OVR calculator per position, grade bands, measurable → physical mapping (monotonic, within the noise), archetypes; **distributions** over 20 seeds (tier means and SDs, ~15–25 players at 90+, mean age 26.5 ± 1, roster mix within ±0.3 of each average, floors kept); **golden** `GenerateLeague(seed: 42)` summary (a JSON snapshot, D-085); the **blocklist re-roll** (a unit test); **contracts** (every team under the cap, cap hits from the formula, salaries shaped by position within tolerance). Generating ~1,850 players targets < 2 s (read from the log, not asserted).
 - **Logging:** `LeagueGenerated` (1300), the cap trades (1301) and a team outside the band (1302), in the 1300–1329 range.
+
+**Results (2026-10-29):** `WeightedPicker`, `GfoRandom.Draw` and the seed purposes (Core); `OverallCalculator`, `PlayerGenerator`, `PersonNames`, `LeagueGenerator` (all ten steps), `ContractGenerator` and `CapTrades` (Application); events 1300–1303; and 153 tests (606 in all): distributions and shape over seeds 1–20, the golden seed-42 snapshot, the blocklist re-roll, every contract to the dollar and the cap band, each proven to fail on planted problems. Seed 42 generates in about 400 ms in Debug. Details and the review in [M1_WP4_GUIDE.md §6](M1_WP4_GUIDE.md#6-done-when). Changed from this plan: D-083 to D-088 (required fields in built-in data, balanced archetypes, a hand-rolled golden instead of Verify, the premium guard, the stuck-pair trades with a one-time scaling and its event 1303, and the specialists' spread and draft rules), and Claude wrote parts of the code at the owner's request.
 
 ### WP5 · Schema and `CreateLeague` (M)
 

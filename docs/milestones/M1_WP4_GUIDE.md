@@ -1,6 +1,6 @@
 # M1 · WP4 builder's guide: the player model and generator
 
-> **Status:** 🔨 **In progress** (2026-10-27: slices 1–2 written and tested, slice 3 under way; [where it stands](#where-it-stands-2026-10-27)) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP4](M1_THE_LEAGUE.md#wp4--the-player-model-and-generator-l) · **Size:** L · **Written:** 2026-10-22
+> **Status:** ✅ **Done 2026-10-29** (§6 has the review; [where it stands](#where-it-stands-2026-10-29) is the record of how it went) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP4](M1_THE_LEAGUE.md#wp4--the-player-model-and-generator-l--done-2026-10-29) · **Size:** L · **Written:** 2026-10-22
 >
 > WP4 turns WP3's numbers into a league: 32 rosters of 53 and about 150 free agents, each player with measurables, 42 ratings, hidden ratings, personality, a bio, draft history and a real contract. Every team sits somewhere on a strength ladder from contender to bottom-feeder, and inside the cap band. It's all pure Application code that returns plain records. Nothing is saved yet: WP5 writes the result in one command. The same seed and season always give the same league.
 
@@ -25,16 +25,16 @@ Updated at each review. This table is the running state; §6's boxes get ticked 
 | Slice | Piece | State | Left to do |
 |---|---|---|---|
 | **1** | `PersonalityTrait`, the six seed purposes, `GfoRandom.Draw`, `Distribution` in Core | ✅ Matches §4.1 | — |
-| | `generation.json` additions and their records | ✅ | Reword the header comments of `PlayerData.cs` and `ContractData.cs` to D-083's rule (§3.2) |
+| | `generation.json` additions and their records | ✅ The header comments of `PlayerData.cs`, `ContractData.cs` and `EmbeddedSeedData.JsonOptions` follow D-083's rule (2026-10-29) | — |
 | | `OverallCalculator` | ✅ Matches §4.1 | — |
-| | `WeightedPicker<T>` | ✅ The weight rule is fixed, tests pass | Small: read `items` once before checking it (today each check re-runs the caller's `Select`). The summary promises a binary search over running totals, but each pick walks the list: make the two agree. The `_totalWeight == 0` check in `Pick` can't be reached any more |
+| | `WeightedPicker<T>` | ✅ The weight rule is fixed, tests pass. Tidied 2026-10-29: `items` is read once, the summary describes the walk along the running totals, and `Pick`'s unreachable zero check is gone | — |
 | **2** | `PlayerGenerator` | ✅ All 14 draws in §4.2's order | — |
 | | `PersonNames` | ✅ Matches §4.2 | — |
 | **3** | Step 1, roster mix | ✅ | — |
 | | Step 2, team strength | ✅ | — |
 | | Steps 3–4, team rosters | ✅ | — |
 | | Steps 3–4, free agents | ✅ | — |
-| | Step 5, draft classes | ✅ Checked on seed 42: picks unique per class, each class drafted at `round(0.7 × size)`, all 474 rookie-deal players drafted by their own team, the same draft twice | Tidy: the "can I use the Key" comment is answered (yes, and it does), `classSize` is unused, and the method has no summary |
+| | Step 5, draft classes | ✅ Checked on seed 42: picks unique per class, each class drafted at `round(0.7 × size)`, all 474 rookie-deal players drafted by their own team, the same draft twice. Tidied 2026-10-29: `classSize` is gone, and `DraftClasses` and `AssignNames` have summaries | — |
 | | Step 8, jerseys | ✅ Claude fixed `AssignJerseys` (2026-10-28). Over 20 seeds: every rostered player has a number, unique per team and allowed by his rule; free agents have none; the same seed gives the same numbers | — |
 | | Step 9, names | ✅ Matches §4.3 (re-reviewed 2026-10-29). `AssignNames` runs after `AssignJerseys`, writes each player back in place, gives each team its own `taken` (`PersonNames.FullNames`) and each free agent an empty one; `Named` adds every pick to `taken`, since `Pick` only reads it. A probe over 20 seeds: every player named, no two teammates share a full name, nothing blocklisted, the same seed gives the same names and another seed or season different ones. Teammates forced 4 re-rolls in 20 leagues; about 15 full names repeat across a league (allowed: §4.3 checks teammates only), 0.1 among the free agents. The 20 leagues took 3.3 s in Debug | `AssignNames` needs a summary, like its neighbours |
 | | Step 10, event 1300 | ✅ | The call is in. Seed 42 takes about 400 ms in Debug, data loading included |
@@ -45,13 +45,11 @@ Updated at each review. This table is the running state; §6's boxes get ticked 
 | | Slice 4: `ContractGeneratorTests` (Claude) | ✅ 34 cases pass, and each of 35 planted bugs fails at least one | §5's units, plus each deal worked through to the dollar on a fixture of F-12's numbers, so tuning `contracts.json` can't break them: picks 1, 2, 16, 32 and 33, the undrafted deal, and four veteran deals (plain, floor paid back, total grown, the 7-season step). On the shipped data: every pick's rules, the documented draw order, the length bands reached at both ends, pay rising with rank under one wiggle, and 30,720 drawn deals. Pick 2 is there because a truncating division passed everything else |
 | | Slice 4: `CapTradesTests` (Claude) | ✅ 30 cases pass, and 27 of 28 planted bugs fail at least one, all 7 in the premium guard among them; so do all 5 in D-087's choice of teams (one try only, no band filter, the high side's filter only, narrowest first, ties by the low team). D-087's own two: past a stuck pair to the widest one that can trade, and two teams inside the band never trade. The one that passes (`<=` for `<` on the pair key) can't change behaviour: slots are unique, so no two pairs tie. The guard's own theory (4 cases, a hit over 30 premium) covers both teams' sides and the line itself; the hand-built leagues otherwise have no premium deal, and the drawn ones have the guard at 10 | Hand-built leagues with a $100 cap, so totals read as percentages: the band's edges, the even trade, closest to half the spread, only veterans at the same position and tier, a trade must narrow the spread, this season's hits, a missing deal throws, ties by team index, then the high team's slot, then the low team's. Over 20 drawn leagues of 8 × 12: every trade is between the then-highest and then-lowest team, swaps an allowed pair and evens the league, and every stop has a reason. The 20-seed band test waits for steps 6–7 |
 | | Slice 4: `LeagueGeneratorTests` (Claude) | ✅ 12 cases pass on seeds 1–20, generated once and shared (about 5 s of the fast gate). D-086's: no premium deal arrived by trade beside another at its position (removing the guard fails it). D-087's: seeds 311 and 463, the two of 500 that once missed the band, now fit it (463 scaled); a band moved above or below a league's pay forces the scaling, which lands the mean within a point of the middle and changes only veteran deals, by its factor; seeds 1–20 log no 1303. All 5 planted bugs in the scaling fail at least one. 17 of 19 planted bugs in steps 6–7 fail at least one. The two that pass change numbers and break no rule: contract seeds by roster index instead of slot, and the rank over N instead of N − 1. Catching those is the golden's job | §5's every-contract and cap-band rows, plus: a veteran deal's length fits his league-wide contract tier and age; pay follows rank (OVR-to-APY rank correlation ≥ 0.95, 0.982–0.992 at every position whose max is at least 5 × the top minimum, since FB, K, P and LS sit too close to the minimums); event 1301's values match the league; an unreachable band logs a 1302 for every team, by `Abbr` and percent |
-| | Slice 4: `GoldenLeagueTests` (Claude) | ✅ A hand-rolled snapshot ([D-085](../DECISIONS.md#d-085-the-golden-league-is-a-hand-rolled-json-snapshot-verify-is-dropped): Verify's binaries carry a fee once revenue passes US$10,000). Seed 42's summary is `GoldenLeagueTests.Seed42.verified.json`, 1,441 lines, written by `Snapshot` in `Application.Tests`. It catches all five planted bugs the rule tests can't see: the draft without its noise, one roster-mix seed for every pair, contract seeds by roster index, the rank over N, and names seeded by roster index. Each failure names the first line that differs. A CRLF checkout still matches | **Read the snapshot before you commit it:** committing it approves it. Seed 42 at a glance: 17 players at 90+ (23 before D-088) and a mean age of 26.8. First approved with BAL carrying two of the three biggest cap hits, both QBs the cap trades brought in ($41.1M and a backup at $39.1M), which led to D-086's guard. Re-made for it on 2026-10-29: the $41.1M QB stays at NO and six teams' totals moved, all still inside the band |
+| | Slice 4: `GoldenLeagueTests` (Claude) | ✅ A hand-rolled snapshot ([D-085](../DECISIONS.md#d-085-the-golden-league-is-a-hand-rolled-json-snapshot-verify-is-dropped): Verify's binaries carry a fee once revenue passes US$10,000). Seed 42's summary is `GoldenLeagueTests.Seed42.verified.json`, 1,429 lines, written by `Snapshot` in `Application.Tests`. It catches all five planted bugs the rule tests can't see: the draft without its noise, one roster-mix seed for every pair, contract seeds by roster index, the rank over N, and names seeded by roster index. Each failure names the first line that differs. A CRLF checkout still matches | **Read the snapshot before you commit it:** committing it approves it. Seed 42 at a glance: 17 players at 90+ (23 before D-088) and a mean age of 26.8. First approved with BAL carrying two of the three biggest cap hits, both QBs the cap trades brought in ($41.1M and a backup at $39.1M), which led to D-086's guard. Re-made for it on 2026-10-29: the $41.1M QB stays at NO and six teams' totals moved, all still inside the band |
 | | Slice 3: `LeagueShapeTests` (Claude) | ✅ 17 cases pass on seeds 1–20, from the fixture `GeneratedLeagues` that `LeagueGeneratorTests` now shares (the 23 league tests take about 4 s). 27 of 30 planted bugs fail at least one, two of them in `generation.json` (the Starter shift, the Backup spread). Two of the three that pass change numbers and break no rule, so they're the golden's job: the draft without its rank noise, and one roster-mix seed for every pair. The third can't change anything on this data: the mix without its max check, because every position's band is symmetric about its average, so the partner's min already stops a team at its max | §5's rows (shape on all 20 seeds, not just 42), plus: every slot once and event 1300's season, seed and count; the free-agent split checked against largest remainder's rule, not recomputed; no Fringe player on a team; picks exactly `k × picks / n + 1`, with their rounds; a drafted veteran's team drawn, so rarely his own; each position's first player wearing more than one number across the 640 teams (handing out the lowest free number passed the rest). Measured 2026-10-29: OVR means within 2.5 of their targets (Starter QBs +2.5 and SD +1.8, the closest), 17.6 players at 90+ a league after D-088 (12–25 by seed; 21.4 before), mean ages 26.79–27.00, the ladder's top quarter 3.79 OVR over its bottom (2.8–4.8), the draft's OVR-to-pick correlation −0.667 (−0.724 before D-088) |
 | | **The specialists** ([D-088](../DECISIONS.md#d-088-kickers-punters-and-long-snappers-get-a-narrower-spread-and-wait-for-round-4), 2026-10-29) | ✅ Claude, on the owner's go-ahead: `positions.json`'s `spreadScale` (0.72 for K, P and LS), `earliestRound` (4) and `draftPenalty` (15), `PositionProfile`'s three fields, the skills formula and `DraftClasses`' score and pick rule. Over 500 seeds: specialists at 90+ from 6.8 to 2.4 a league, a specialist the league's best player in 19% of leagues (72% before), none in rounds 1–3 (27.6 a league in round 1 before), 9.1% of round 4's picks and 4.9–5.5% of rounds 5–7 (32% of round 4 with the earliest round alone), and no rookie deal over its position's veteran max (6.7 a league before). All 18 planted bugs fail at least one test; scaling the noise too, a different formula that breaks no rule, only the golden | Four `PlayerDataTests` rules; the lift theory at K; the K/P/LS Starter SD now checked (7.0–7.1); a slot unused only when no one left may take it (48 over seeds 1–20); no one before his earliest round, and each held-back position reaching it; the held-back positions' share of each round from 4 to 7 between 2.5% and 12% (4.8–8.3%). The golden re-approved: 17 at 90+, every team's total moved with the specialists' rookie deals and the cap trades' new path, Lowe's $39.1M deal is DAL's and Brown's CHI's |
 | **Docs** | LOGGING.md §8.2's 1300–1303 line | ✅ | — |
-| | CLAUDE.md's gotchas, the plan's WP4 | ⬜ | At the end (§6) |
-
-**The build is green again** (2026-10-28): every `ContractGenerator` method has a body. To commit slice 3 on its own, unstage `ContractGenerator.cs` and the `VeteranTerms` line in `GeneratedLeague.cs`, so they land with slice 4. The empty `src/Application/Teams/` folder can go.
+| | CLAUDE.md's gotchas, the plan's WP4 | ✅ 2026-10-29 | — |
 
 ## 1. What you'll build
 
@@ -70,12 +68,11 @@ src/Application/
 ├─ Players/
 │  ├─ PlayerData.cs                  + MixSwaps, DraftSettings, AgeRange, TeamStrengthSettings (§3.2)
 │  ├─ OverallCalculator.cs           OVR, its display, the potential grade, the archetype label (D-081 #4)
-│  ├─ GeneratedLeague.cs             the output records (§3.3)
+│  ├─ GeneratedLeague.cs             the output records, the contract records too (§3.3)
 │  ├─ PlayerGenerator.cs             one player from his slot's seed (§4.2)
 │  ├─ PersonNames.cs                 names, with the blocklist and same-team re-rolls
 │  └─ PlayerGenerationLog.cs         events 1300–1303
 └─ Contracts/
-   ├─ GeneratedContract.cs           the contract records
    ├─ ContractGenerator.cs           rookie, undrafted, veteran and minimum deals (F-12 §4.5–4.7)
    └─ CapTrades.cs                   the trades into the band (F-12 §4.8, D-081 #1)
 tests/ (Claude)                      Core.Tests/Random, Application.Tests/Players and /Contracts, Infrastructure.Tests/Seed (+ rules)
@@ -140,7 +137,7 @@ public sealed record TeamStrengthSettings(double Range, double YoungWeight, doub
 
 These fields are **required**, not optional. D-077's defaults let an M11 import read older team sets and colleges, but `generation.json` ships only inside the app and is never imported, so no older copy can exist ([D-083](../DECISIONS.md#d-083-optional-fields-with-defaults-are-for-importable-data-formats-only)). The header comment in `PlayerData.cs` (and `ContractData.cs`) still says every later field gets a default; reword it to D-083's rule when you add these.
 
-### 3.3 The output records (`Application/Players/GeneratedLeague.cs`, `Application/Contracts/GeneratedContract.cs`)
+### 3.3 The output records (`Application/Players/GeneratedLeague.cs`)
 
 ```csharp
 /// <summary>A whole generated league before it's saved (WP5 writes it in one command). Same seed and season, same league.</summary>
@@ -198,7 +195,7 @@ The steps after the players exist fill `Draft`, `Contract`, `JerseyNumber` and t
 ```csharp
 /// <summary>
 /// Picks items in proportion to their weights: names by frequency, hometowns by population, archetypes and tiers by
-/// share. Build it once per list; each pick is one NextDouble and a binary search over the running totals.
+/// share. Build it once per list; each pick is one NextDouble and a walk along the running totals.
 /// </summary>
 public sealed class WeightedPicker<T>
 {
@@ -349,7 +346,7 @@ Step 6 gives every rostered player a contract; free agents have none.
 public sealed class ContractGenerator(ContractData data, int picksPerRound)
 {
     public long Minimum(int creditedSeasons);   // the last step at or below max(0, creditedSeasons)
-    public GeneratedContract Rookie(DraftInfo draft, int experience, int season);
+    public GeneratedContract Rookie(DraftInfo draft);   // signed in the draft's season
     public GeneratedContract Undrafted(int experience, int season);
     public VeteranTerms DrawVeteranTerms(GfoRandom random, Position position, double rank, PlayerTier contractTier, int age, int experience);
     public GeneratedContract Veteran(VeteranTerms terms, int experience, int season);
@@ -455,13 +452,21 @@ Each list of offenders is reported, up to its first 20, since a broken step can 
 
 ## 6. Done when
 
-- [ ] Slice 1: `PersonalityTrait`, `WeightedPicker`, the seed purposes, `GfoRandom.Draw` (with `Distribution` moved to Core), `OverallCalculator`, and the `generation.json` additions with their records.
-- [ ] Slice 2: `PlayerGenerator` and `PersonNames`.
-- [ ] Slice 3: `LeagueGenerator` through step 10 (contracts empty), and event 1300.
-- [ ] Slice 4: `ContractGenerator`, `CapTrades`, steps 6–7, and events 1301–1302.
-- [ ] Every §5 test passes, each proven to fail on a planted problem.
-- [ ] Reviewed by Claude against this guide, F-03 and F-12; `./build.ps1` green.
-- [ ] LOGGING.md §8.2's 1300–1303 line and CLAUDE.md's gotchas updated; the plan's WP4 marked done; committed by you.
+- [x] Slice 1: `PersonalityTrait`, `WeightedPicker`, the seed purposes, `GfoRandom.Draw` (with `Distribution` moved to Core), `OverallCalculator`, and the `generation.json` additions with their records (2026-10-27).
+- [x] Slice 2: `PlayerGenerator` and `PersonNames` (2026-10-27).
+- [x] Slice 3: `LeagueGenerator` through step 10 (contracts empty), and event 1300 (2026-10-29).
+- [x] Slice 4: `ContractGenerator`, `CapTrades`, steps 6–7, and events 1301–1302, plus D-087's 1303 (2026-10-29).
+- [x] Every §5 test passes: 153 new cases (606 in all), each slice's proven on planted problems (the counts are in [where it stands](#where-it-stands-2026-10-29)). A plant that passes every rule test either changes numbers without breaking a rule, which the golden catches, or can't change anything on the shipped data.
+- [x] Reviewed by Claude against this guide, F-03 and F-12: each slice as it landed (the table's "Matches §4.x"), then on 2026-10-29 the public signatures, the seed purposes and the pipeline's order against §1 and §4. The differences are below. `./build.ps1` green (2026-10-29: 606 tests, 0 warnings, 18 s).
+- [x] LOGGING.md §8.2's 1300–1303 line and CLAUDE.md's gotchas updated (2026-10-29); the plan's WP4 marked done; committed by you.
+- **What was built:** `Core/Players/PlayerEnums.cs` (+`PersonalityTrait`); `Core/Random/` (`Distribution` moved in, `GfoRandom.Draw`, `WeightedPicker`, `Seeds`' six purposes); `Application/Players/` (`OverallCalculator`, `GeneratedLeague` with the contract records, `PlayerGenerator`, `PersonNames`, `PlayerGenerationLog` for 1300–1303, `PlayerData`'s new records); `Application/Leagues/LeagueGenerator`; `Application/Contracts/` (`ContractGenerator`, `CapTrades`); the data (`generation.json`'s `mixSwaps`, `draft` and `teamStrength`, `positions.json`'s tuned means and D-088's three fields); the tests in `Core.Tests/Random`, `Application.Tests/Players`, `/Contracts` and `/Leagues` (with the `GeneratedLeagues` fixture, `Snapshot` and the golden), and `Infrastructure.Tests/Seed`. Seed 42 generates in about 400 ms in Debug, data loading included.
+- **Changed from this guide:**
+  - Six decisions came out of the work: [D-083](../DECISIONS.md#d-083-optional-fields-with-defaults-are-for-importable-data-formats-only) (a new field in a built-in-only file is required), [D-084](../DECISIONS.md#d-084-ovr-is-one-yardstick-per-position-archetypes-are-balanced-in-the-data) (archetypes balanced in the data), [D-085](../DECISIONS.md#d-085-the-golden-league-is-a-hand-rolled-json-snapshot-verify-is-dropped) (a hand-rolled golden; Verify dropped for its fee), [D-086](../DECISIONS.md#d-086-the-creation-trades-never-stack-two-premium-deals-at-one-position) (no two premium deals at one position by trade), [D-087](../DECISIONS.md#d-087-the-creation-trades-get-past-a-stuck-pair-and-a-league-whose-pay-cant-fit-is-scaled-once) (past a stuck pair; a league whose pay can't fit is scaled once, event 1303) and [D-088](../DECISIONS.md#d-088-kickers-punters-and-long-snappers-get-a-narrower-spread-and-wait-for-round-4) (the specialists' spread, earliest round and draft penalty).
+  - Claude wrote parts of the code at the owner's request: the `AssignJerseys` fix, `DrawVeteranTerms`, `CapTrades`, steps 6–7, D-086 to D-088, and the closing tidy.
+  - `GeneratedContract` and `VeteranTerms` live in `Players/GeneratedLeague.cs` with the other output records, not in their own file.
+  - `Rookie` takes only the draft: the deal is signed in the draft's season, so its `experience` and `season` were never read.
+  - `WeightedPicker` walks the running totals instead of a binary search, which the lists' sizes don't need.
+  - Left open: about 1.2 rookie deals a league pay more than their position's veteran max, mostly top picks at C and RB just over those maxima. The real draft (M5) owns rookie value.
 
 ## 7. Order of work
 

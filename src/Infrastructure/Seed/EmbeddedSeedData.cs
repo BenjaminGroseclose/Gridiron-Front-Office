@@ -38,7 +38,8 @@ internal sealed class EmbeddedSeedData(ILogger<EmbeddedSeedData> log) : ISeedDat
 
     /// <summary>
     /// Strict parsing: a missing field, a null where text belongs, an unknown field ("stripes") or a number for an
-    /// enum is an error. A field added later has a default value, so older files still load (D-077).
+    /// enum is an error. A field added later to an importable format (the team set, the colleges) has a default value,
+    /// so older files still load (D-077); one added to a built-in-only file is required (D-083).
     /// </summary>
     internal static JsonSerializerOptions JsonOptions { get; } = new()
     {

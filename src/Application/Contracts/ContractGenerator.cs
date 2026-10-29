@@ -1,5 +1,3 @@
-using System.ComponentModel.DataAnnotations;
-using System.Numerics;
 using GridironFrontOffice.Application.Players;
 using GridironFrontOffice.Core.Contracts;
 using GridironFrontOffice.Core.Players;
@@ -14,7 +12,7 @@ public sealed class ContractGenerator(ContractData data, int picksPerRound)
 		return data.MinimumSalaries.Last(m => m.CreditedSeasons <= Math.Max(0, creditedSeasons)).Salary;
 	}
 
-	public GeneratedContract Rookie(DraftInfo draft, int experience, int season)
+	public GeneratedContract Rookie(DraftInfo draft)
 	{
 		var row = data.RookieScale.Rounds[draft.Round - 1];
 		var k = draft.Pick - (draft.Round - 1) * picksPerRound;

@@ -198,6 +198,12 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 		return counts;
 	}
 
+	/// <summary>
+	/// Step 5 (§4.3, D-081 #3): every player's draft history. Each entry class, free agents too, is ranked by OVR plus
+	/// noise less his position's penalty, and its top share is drafted at picks spread evenly over the rounds; a pick
+	/// takes the best player left whose position may go in its round (D-088). A player on his rookie deal was drafted by
+	/// his own team.
+	/// </summary>
 	private void DraftClasses(ulong seed, int season, List<List<GeneratedPlayer>> rosters, List<GeneratedPlayer> freeAgents)
 	{
 		var teams = data.TeamSet.Teams;
@@ -227,7 +233,6 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 
 			var ranked = scored.OrderByDescending(x => x.Score).ThenBy(x => x.Player.Slot).Select(x => x.Player).ToList();
 			var drafted = Math.Min(picks, (int)Math.Round(draft.DraftedShare * ranked.Count, MidpointRounding.AwayFromZero));
-			var classSize = ranked.Count;
 
 			// Not everyone is drafted. Each pick takes the best player left whose position may go in its round (D-088); when
 			// none may, the pick goes unused
@@ -300,7 +305,7 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 
 				if (player.Draft is not null && player.Experience < contracts.RookieScale.Years)
 				{
-					contract = _contracts.Rookie(player.Draft, player.Experience, season);
+					contract = _contracts.Rookie(player.Draft);
 				}
 				else if (player.Draft is null && player.Experience < contracts.Undrafted.Years)
 				{
@@ -385,6 +390,10 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 	/// <summary>A total as events 1301–1303 show it: a percentage of the cap, to one decimal.</summary>
 	private double Percent(double total) => Math.Round(total * 100 / data.Contracts.Cap, 1, MidpointRounding.AwayFromZero);
 
+	/// <summary>
+	/// Step 9 (§4.3): every player's name. Teams go in order, players in roster order, and no two teammates share a full
+	/// name; each free agent is named on his own.
+	/// </summary>
 	private void AssignNames(ulong seed, int season, List<List<GeneratedPlayer>> rosters, List<GeneratedPlayer> freeAgents)
 	{
 		foreach (var roster in rosters)

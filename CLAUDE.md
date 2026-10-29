@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is complete** (tagged `m0-complete`, 2026-10-20; `docs/milestones/M0_FOUNDATIONS.md` records what was built). **M1 · The League Exists is next.** Design changes from the Claude Design review land throughout development. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
+Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is complete** (tagged `m0-complete`, 2026-10-20; `docs/milestones/M0_FOUNDATIONS.md` records what was built). **M1 · The League Exists is in progress** (`docs/milestones/M1_THE_LEAGUE.md`: WP1–WP4 are done, WP5 is next). Design changes from the Claude Design review land throughout development. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
 
 ## Commands
 
@@ -108,6 +108,12 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - The blocklists (`data/blocklists/`) are test-only except `famous-people.json`, which ships; `RepoFiles` reads the others from the repository. A failing guardrail test means fixing the data (F-02 Appendix A records it), never loosening a threshold.
   - The WP3 files key dictionaries on enums (`"CB"`, `"Forty"`, `"Starter"`): the strict options parse them as the C# names, and a misspelled key is a `JsonException`. The records in `Application/Players/PlayerData.cs` and `Application/Contracts/ContractData.cs` are the files' shapes, not tables: the tables arrive with WP5.
   - The build doesn't enforce whitespace (`.editorconfig`'s tabs and final newline). `dotnet format whitespace --folder --include <paths>` fixes it.
+- **League generation (M1 WP4):**
+  - Every draw has a fixed order and a derived seed (`Seeds.Derive(seed, SeedPurpose.…, …)`; purpose names never change), and `GfoRandom.Draw` draws once even when `Sd` is 0. Moving a draw, or any data change that moves a number, changes every league, and the golden league (`GoldenLeagueTests.Seed42.verified.json`) then mismatches. Read the `.received.json` diff before approving it: approving it is committing it.
+  - The league tests share `GeneratedLeagues.Twenty` (seeds 1–20, generated once, about 4 s). Add new checks there instead of generating again, and check shape over all 20 seeds, not just 42.
+  - A rule for one position is a field on every position in `positions.json` (D-088's `spreadScale`, `earliestRound` and `draftPenalty` for K, P and LS), never a `Position` check in the generator.
+  - The cap trades move veterans between teams and never change a contract (D-081 #1). No premium deal arrives by trade beside another at its position (D-086), and a league whose pay can't fit the band is scaled once (D-087).
+  - To measure the shipped generator or plant a bug without editing the repository, build with `-p:CustomAfterMicrosoftCommonTargets=<file>.targets` (a `Compile Remove`/`Include` pair, or an `EmbeddedResource` swap with its `LogicalName`) and `-p:TreatWarningsAsErrors=false`. Rebuild with `--no-incremental` before trusting the gate: an incremental build after one of those can hide analyzer errors.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the raw `uow.CreateCommand` bulk path. Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 

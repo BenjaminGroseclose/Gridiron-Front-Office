@@ -70,7 +70,7 @@ public sealed class ContractGeneratorTests
 	[Fact]
 	public void The_first_pick_is_paid_as_F_12_works_it_out()
 	{
-		var contract = Worked.Rookie(new DraftInfo(2024, 1, 1, Team), 2, Season);
+		var contract = Worked.Rookie(new DraftInfo(2024, 1, 1, Team));
 
 		// $54.4M: a 60% bonus prorated over four seasons; the minimums plus 10/20/30/40% of the rest; all guaranteed
 		ContractSeason[] seasons =
@@ -96,13 +96,13 @@ public sealed class ContractGeneratorTests
 	[InlineData(32, 16_100_000)]
 	public void A_first_round_pick_is_on_the_straight_line_rounded_once(int pick, long expected)
 	{
-		Worked.Rookie(new DraftInfo(2024, 1, pick, Team), 2, Season).TotalValue.ShouldBe(expected);
+		Worked.Rookie(new DraftInfo(2024, 1, pick, Team)).TotalValue.ShouldBe(expected);
 	}
 
 	[Fact]
 	public void A_second_rounder_s_guarantee_covers_his_early_seasons_and_stops()
 	{
-		var contract = Worked.Rookie(new DraftInfo(2024, 2, 33, Team), 2, Season);
+		var contract = Worked.Rookie(new DraftInfo(2024, 2, 33, Team));
 
 		// $11M, a 30% bonus, 75% guaranteed: the bonus, then the bases from the first season until $8.25M is reached
 		ContractSeason[] seasons =
@@ -126,7 +126,7 @@ public sealed class ContractGeneratorTests
 
 		foreach (var row in ShippedContracts.RookieScale.Rounds)
 		{
-			var totals = Enumerable.Range(1, Teams).Select(k => Shipped.Rookie(Draft(row.Round, (row.Round - 1) * Teams + k), 0, Season).TotalValue).ToList();
+			var totals = Enumerable.Range(1, Teams).Select(k => Shipped.Rookie(Draft(row.Round, (row.Round - 1) * Teams + k)).TotalValue).ToList();
 			var steps = totals.Zip(totals.Skip(1), (a, b) => b - a).ToList();
 
 			if (totals[0] != row.FirstPick || totals[^1] != row.LastPick)
@@ -154,7 +154,7 @@ public sealed class ContractGeneratorTests
 		{
 			var round = scale.Rounds[(pick - 1) / Teams];
 			var draft = Draft(round.Round, pick);
-			var contract = Shipped.Rookie(draft, 1, Season);
+			var contract = Shipped.Rookie(draft);
 			var bases = contract.Seasons.Select(s => s.BaseSalary).ToList();
 
 			var broken = Broken(contract).ToList();

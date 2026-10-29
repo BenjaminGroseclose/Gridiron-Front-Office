@@ -5,8 +5,9 @@ using GridironFrontOffice.Core.Random;
 namespace GridironFrontOffice.Application.Players;
 
 // The built-in player data exactly as data/players, data/names and data/places hold it (M1 WP3 guide §2). Definitions,
-// not read models, so no Dto suffix (D-070). Enum values and enum dictionary keys are the C# names; a field added later
-// gets a default value, so older files still load (D-077). Ratings are on the internal 0–100 scale (F-03 §4.2).
+// not read models, so no Dto suffix (D-070). Enum values and enum dictionary keys are the C# names. The files are
+// built-in only, so a field added later is required, in the same commit as its record (D-083). Ratings are on the
+// internal 0–100 scale (F-03 §4.2).
 
 /// <summary>data/players/positions.json: one profile per position.</summary>
 public sealed record PositionData(IReadOnlyList<PositionProfile> Positions);
