@@ -275,13 +275,15 @@ public sealed class PlayerGeneratorTests
 		offenders.ShouldBeEmpty();
 	}
 
-	[Fact]
-	public void The_lift_is_the_strength_times_the_young_or_the_veteran_weight()
+	[Theory]
+	[InlineData(Position.QB)]   // spread scale 1
+	[InlineData(Position.K)]    // 0.72 (D-088)
+	public void The_lift_is_the_strength_times_the_young_or_the_veteran_weight(Position position)
 	{
-		// An unclamped player's OVR moves by strength × weight × the tier's spread × the OVR weight of his on-position
-		// skills. Backups, so few skills sit at the clamp.
+		// An unclamped player's OVR moves by strength × weight × the tier's spread × his position's spread scale × the OVR
+		// weight of his on-position skills. Backups, so few skills sit at the clamp.
 		const double strength = 0.5;
-		var profile = Profiles[Position.QB];
+		var profile = Profiles[position];
 		var spread = Generation.Tiers[PlayerTier.Backup].Spread;
 		var rookieYears = Data.Contracts.RookieScale.Years;
 
@@ -289,8 +291,8 @@ public sealed class PlayerGeneratorTests
 		var (young, veterans) = (0, 0);
 		for (var slot = 0; slot < 400; slot++)
 		{
-			var level = Generator.Generate(LeagueSeed, Season, slot, Position.QB, PlayerTier.Backup, 0);
-			var strong = Generator.Generate(LeagueSeed, Season, slot, Position.QB, PlayerTier.Backup, strength);
+			var level = Generator.Generate(LeagueSeed, Season, slot, position, PlayerTier.Backup, 0);
+			var strong = Generator.Generate(LeagueSeed, Season, slot, position, PlayerTier.Backup, strength);
 			var archetype = profile.Archetypes.Single(a => a.Name == level.Archetype);
 			var skills = Enum.GetValues<PlayerAttribute>().Where(a => OnPosition(archetype, a)).ToList();
 
@@ -301,7 +303,7 @@ public sealed class PlayerGeneratorTests
 
 			var isYoung = level.Experience < rookieYears;
 			var weight = isYoung ? Generation.TeamStrength.YoungWeight : Generation.TeamStrength.VeteranWeight;
-			var expected = strength * weight * spread * skills.Sum(a => profile.OvrWeights.GetValueOrDefault(a));
+			var expected = strength * weight * spread * profile.SpreadScale * skills.Sum(a => profile.OvrWeights.GetValueOrDefault(a));
 			var lift = Overall(strong) - Overall(level);
 			if (Math.Abs(lift - expected) > 1e-9)
 			{

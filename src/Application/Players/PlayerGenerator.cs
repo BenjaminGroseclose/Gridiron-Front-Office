@@ -99,7 +99,7 @@ public sealed class PlayerGenerator(ISeedData seedData)
 
 			if (archetype.Skills.TryGetValue(attribute, out var mean) || skills.Common.TryGetValue(attribute, out mean))
 			{
-				var value = mean + tierSettings.SkillShift + quality * tierSettings.Spread + random.Normal(0, skills.NoiseSd);
+				var value = mean + tierSettings.SkillShift + quality * tierSettings.Spread * profile.SpreadScale + random.Normal(0, skills.NoiseSd);
 				ratings[attribute] = Math.Clamp(value, 0, 100);
 			}
 			else

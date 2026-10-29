@@ -13,7 +13,12 @@ public sealed record PositionData(IReadOnlyList<PositionProfile> Positions);
 
 /// <summary>
 /// What a position looks like: roster targets (F-03 §4.1), ages, the 11 measurables, the OVR weights (§4.5, a hand-set
-/// first pass until SimLab replaces them in M2) and the archetypes a player draws from (D-078 #2).
+/// first pass until SimLab replaces them in M2) and the archetypes a player draws from (D-078 #2). D-088 adds three:
+/// <see cref="SpreadScale"/> times the tier's spread is how far the quality draw moves the position's skills (under 1
+/// where OVR is one or two skills, which would spread it wider than the tier's target),
+/// <see cref="EarliestRound"/> is the first draft round a player at the position goes in at creation, and
+/// <see cref="DraftPenalty"/> is the OVR points taken off his draft score, so a held-back position spreads over the later
+/// rounds instead of filling the first picks of its earliest one.
 /// </summary>
 public sealed record PositionProfile(
 	Position Position,
@@ -21,6 +26,9 @@ public sealed record PositionProfile(
 	Distribution Age,
 	IReadOnlyDictionary<Measurable, Distribution> Measurables,
 	IReadOnlyDictionary<PlayerAttribute, double> OvrWeights,
+	double SpreadScale,
+	int EarliestRound,
+	double DraftPenalty,
 	IReadOnlyList<Archetype> Archetypes);
 
 /// <summary>

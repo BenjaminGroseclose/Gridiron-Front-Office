@@ -60,6 +60,9 @@ Like WP2's files: camelCase field names, enum values **and enum dictionary keys*
         "BroadJump": { "mean": 124, "sd": 5 }, "ArmLength": { "mean": 31.5, "sd": 0.9 }, "HandSize": { "mean": 9.1, "sd": 0.4 }
       },
       "ovrWeights": { "ManCoverage": 0.20, "ZoneCoverage": 0.18, "Speed": 0.15, "Press": 0.10, "BallSkills": 0.10, "…": "sum to 1" },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         { "name": "Man", "share": 0.40, "skills": { "ManCoverage": 70, "Press": 68, "ZoneCoverage": 58, "BallSkills": 62, "Tackling": 55 } },
         { "name": "Zone", "share": 0.35, "skills": { "ZoneCoverage": 70, "Awareness": 66, "ManCoverage": 58, "BallSkills": 65, "Tackling": 58 } },
@@ -76,6 +79,9 @@ Like WP2's files: camelCase field names, enum values **and enum dictionary keys*
 | `age` | Ages by position (RB young, K/P old); rookies are 21–23 | Drawn, rounded, clamped to `min`–`max` |
 | `measurables` | The 11 combine numbers, in inches, pounds, seconds and reps (§3.1) | Drawn per player (§2.2's `athletic`), stored, and four of them become physical ratings |
 | `ovrWeights` | F-03 §4.5's hand-set first pass, summing to 1. SimLab replaces them in M2 | `OVR = Σ wᵢ · attributeᵢ`, onto the 0–99 display scale |
+| `spreadScale` | How far the quality draw moves the position's skills, times the tier's `spread` ([D-088](../DECISIONS.md#d-088-kickers-punters-and-long-snappers-get-a-narrower-spread-and-wait-for-round-4)): 0.72 for K, P and LS, whose OVR is one or two skills, and 1 elsewhere | The skills formula below |
+| `earliestRound` | The first draft round the position goes in at creation (D-088): 4 for K, P and LS, 1 elsewhere | WP4's draft classes |
+| `draftPenalty` | OVR points off the position's draft score at creation (D-088), so a held-back position spreads over the rounds after its earliest one: 15 for K, P and LS, 0 elsewhere (only a held-back position has one) | WP4's draft classes |
 | `archetypes` | A few profiles per position: how often each appears (`share`, summing to 1), and the mean of each skill it cares about **for a Backup-tier player** | A player draws one archetype; each listed skill starts from its mean (§2.2) |
 
 ### 2.2 `data/players/generation.json`: the league-wide settings
@@ -135,7 +141,7 @@ Like WP2's files: camelCase field names, enum values **and enum dictionary keys*
 | Quality | One draw `q ~ N(0, 1)` per player: how good they are within their tier |
 | Measurables | Each from its position's `mean` and `sd`, shifted by the tier's `athleticShift` (in SDs, toward "better"; for timed drills better is lower). The six drills (Forty, TenSplit, ThreeCone, Shuttle, Vertical, BroadJump) share one athletic draw with `drillCorrelation`, so a fast player also tests well elsewhere |
 | Physical ratings | Speed, Acceleration, Agility and Strength: the straight line through `best` and `worst`, averaged when two measurables feed one rating (Agility), plus `N(0, physicalNoiseSd)` (F-03 §4.3's ±3), clamped to 0–100 |
-| Skills (D-078 #2) | Each attribute's mean comes from the archetype if it lists it, else `skills.common`, else it's off-position (`offPosition`, no tier shift). Then `rating = mean + tier.skillShift + q · tier.spread + N(0, noiseSd)`, clamped |
+| Skills (D-078 #2) | Each attribute's mean comes from the archetype if it lists it, else `skills.common`, else it's off-position (`offPosition`, no tier shift). Then `rating = mean + tier.skillShift + q · tier.spread · spreadScale + N(0, noiseSd)`, clamped |
 | OVR | `Σ wᵢ · attributeᵢ`. The tier `target`s are what WP4's distribution tests check, not inputs |
 | Potential | Current OVR plus the growth band for the player's age (F-03 §4.6: at least current OVR when young); shown through `potentialGrades` |
 | Hidden ratings, personality | Each drawn from its distribution and clamped. Personality is one distribution for all six traits; `lowBelow`/`highAbove` make the Low/Average/High descriptors (F-03 §4.7) |

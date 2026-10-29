@@ -402,6 +402,59 @@ public sealed class PlayerDataTests
         offenders.ShouldBeEmpty();
     }
 
+    // ---- The specialists (D-088) ----
+
+    [Fact]
+    public void Spread_scales_are_within_0_to_1()
+    {
+        // The scale only narrows: it's under 1 where OVR is one or two skills, which the quality draw would spread wider
+        // than the tier's target
+        Positions
+            .Where(p => p.SpreadScale is <= 0 or > 1)
+            .Select(p => $"{p.Position}: spreadScale {p.SpreadScale.ToString(CultureInfo.InvariantCulture)}")
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Earliest_rounds_are_draft_rounds_and_some_position_can_go_first()
+    {
+        var rounds = Seed.Contracts.RookieScale.Rounds.Count;
+
+        Positions
+            .Where(p => p.EarliestRound < 1 || p.EarliestRound > rounds)
+            .Select(p => $"{p.Position}: earliestRound {p.EarliestRound} isn't a round from 1 to {rounds}")
+            .ShouldBeEmpty();
+        Positions.ShouldContain(p => p.EarliestRound == 1, "no position can go in round 1");
+    }
+
+    [Fact]
+    public void Draft_penalties_are_zero_or_more_and_only_for_positions_held_back()
+    {
+        // The penalty spreads a held-back position over the rounds after its earliest one. One on a position that may go
+        // in round 1 would be a value per position, which is the draft AI's (IDEAS.md)
+        Positions
+            .Where(p => p.DraftPenalty < 0 || (p.DraftPenalty > 0 && p.EarliestRound == 1))
+            .Select(p => $"{p.Position}: draftPenalty {p.DraftPenalty.ToString(CultureInfo.InvariantCulture)} with earliestRound {p.EarliestRound}")
+            .ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void A_position_held_back_in_the_draft_never_earns_more_as_a_rookie_than_its_best_veteran()
+    {
+        // Why the specialists wait for round 4: a round-3 deal (about $1.6M a year) pays a long snapper more than his
+        // position's $1.5M veteran max. The best deal of a position's earliest round is that round's first pick
+        var contracts = Seed.Contracts;
+        var offenders =
+            from profile in Positions
+            where profile.EarliestRound > 1
+            let apy = contracts.RookieScale.Rounds[profile.EarliestRound - 1].FirstPick / contracts.RookieScale.Years
+            let max = contracts.Veterans.MaxApy[profile.Position]
+            where apy > max
+            select $"{profile.Position}: round {profile.EarliestRound}'s first pick pays {apy:N0} a year, over the {max:N0} max";
+
+        offenders.ShouldBeEmpty();
+    }
+
     // ---- Jersey numbers exist ----
 
     [Fact]

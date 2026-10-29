@@ -76,6 +76,9 @@
         "Toughness": 0.04,
         "Discipline": 0.04
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Pocket Passer",
@@ -187,6 +190,9 @@
         "Stamina": 0.03,
         "Toughness": 0.02
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Power Back",
@@ -303,6 +309,9 @@
         "Toughness": 0.04,
         "Speed": 0.04
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Lead Blocker",
@@ -406,6 +415,9 @@
         "BreakTackle": 0.02,
         "Toughness": 0.02
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Deep Threat",
@@ -523,6 +535,9 @@
         "LeadBlock": 0.04,
         "Toughness": 0.04
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Receiving",
@@ -638,6 +653,9 @@
         "Discipline": 0.06,
         "Toughness": 0.04
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Pass Protector",
@@ -731,6 +749,9 @@
         "Discipline": 0.04,
         "Toughness": 0.04
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Mauler",
@@ -824,6 +845,9 @@
         "Discipline": 0.06,
         "Toughness": 0.06
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Anchor",
@@ -920,6 +944,9 @@
         "HitPower": 0.02,
         "Discipline": 0.02
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Speed Rusher",
@@ -1019,6 +1046,9 @@
         "Awareness": 0.06,
         "Stamina": 0.04
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Run Stuffer",
@@ -1122,6 +1152,9 @@
         "Discipline": 0.02,
         "Toughness": 0.02
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Run Stopper",
@@ -1238,6 +1271,9 @@
         "Tackling": 0.051,
         "Discipline": 0.031
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Man",
@@ -1349,6 +1385,9 @@
         "Agility": 0.04,
         "Discipline": 0.03
       },
+      "spreadScale": 1.0,
+      "earliestRound": 1,
+      "draftPenalty": 0,
       "archetypes": [
         {
           "name": "Free Safety",
@@ -1446,6 +1485,9 @@
         "Toughness": 0.05,
         "Discipline": 0.05
       },
+      "spreadScale": 0.72,
+      "earliestRound": 4,
+      "draftPenalty": 15,
       "archetypes": [
         {
           "name": "Big Leg",
@@ -1532,6 +1574,9 @@
         "Toughness": 0.05,
         "Discipline": 0.05
       },
+      "spreadScale": 0.72,
+      "earliestRound": 4,
+      "draftPenalty": 15,
       "archetypes": [
         {
           "name": "Big Leg",
@@ -1619,6 +1664,9 @@
         "Discipline": 0.05,
         "Awareness": 0.05
       },
+      "spreadScale": 0.72,
+      "earliestRound": 4,
+      "draftPenalty": 15,
       "archetypes": [
         {
           "name": "Long Snapper",

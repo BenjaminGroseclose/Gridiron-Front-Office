@@ -24,7 +24,7 @@ public sealed class LeagueShapeTests
 	private static readonly Position[] Positions = Enum.GetValues<Position>();
 	private static readonly Dictionary<Position, PositionProfile> Profiles = Data.Positions.Positions.ToDictionary(p => p.Position);
 
-	/// <summary>The positions whose OVR is mostly two kicking skills (§5's exemption).</summary>
+	/// <summary>The one-deep special-teams positions, whose Starter tier is the only one checked (§5's exemption).</summary>
 	private static readonly HashSet<Position> Kicking = [Position.K, Position.P, Position.LS];
 
 	private static IReadOnlyList<LoggedLeague> Twenty => GeneratedLeagues.Twenty;
@@ -220,10 +220,23 @@ public sealed class LeagueShapeTests
 				var drafted = draftClass.Where(p => p.Draft is not null).ToList();
 				var n = Math.Min(picks, (int)Math.Round(share * draftClass.Count(), MidpointRounding.AwayFromZero));
 
-				// The k-th of n takes pick k × picks / n + 1, so the picks are unique and spread over every round
-				if (!drafted.Select(p => p.Draft!.Pick).Order().SequenceEqual(Enumerable.Range(0, n).Select(k => k * picks / n + 1)))
+				// The k-th of n slots is pick k × picks / n + 1, so the picks are unique and spread over every round
+				var slots = Enumerable.Range(0, n).Select(k => k * picks / n + 1).ToList();
+				var taken = drafted.Select(p => p.Draft!.Pick).Order().ToList();
+				if (taken.Distinct().Count() != taken.Count || taken.Except(slots).Any())
 				{
-					offenders.Add($"{label}: {drafted.Count} of {draftClass.Count()} drafted, not {n}, or at other picks");
+					offenders.Add($"{label}: picks {string.Join(", ", taken)} repeat or aren't among the {n} slots");
+				}
+
+				// A slot goes unused only when no one left (drafted later, or not at all) may go in its round (D-088)
+				foreach (var slot in slots.Except(taken))
+				{
+					var round = (slot - 1) / Teams.Count + 1;
+					var left = draftClass.FirstOrDefault(p => (p.Draft is null || p.Draft.Pick > slot) && Profiles[p.Position].EarliestRound <= round);
+					if (left is not null)
+					{
+						offenders.Add($"{label}: pick {slot} went unused while slot {left.Slot} ({left.Position}) could go in round {round}");
+					}
 				}
 
 				offenders.AddRange(drafted
@@ -236,10 +249,46 @@ public sealed class LeagueShapeTests
 	}
 
 	[Fact]
+	public void No_one_is_drafted_before_his_position_s_earliest_round()
+	{
+		// D-088: kickers, punters and long snappers go from round 4 on, so none has a rookie deal worth more than his
+		// position's best veteran. Each position held back reaches its earliest round, so the rule isn't a round late
+		var drafted = Twenty.SelectMany(g => Everyone(g.League).Where(p => p.Draft is not null).Select(p => (g.Seed, Player: p))).ToList();
+
+		drafted
+			.Where(d => d.Player.Draft!.Round < Profiles[d.Player.Position].EarliestRound)
+			.Select(d => $"seed {d.Seed}: slot {d.Player.Slot} ({d.Player.Position}) in round {d.Player.Draft!.Round}")
+			.Take(20)
+			.ShouldBeEmpty();
+		Positions
+			.Where(p => Profiles[p].EarliestRound > 1 && !drafted.Any(d => d.Player.Position == p && d.Player.Draft!.Round == Profiles[p].EarliestRound))
+			.ShouldBeEmpty();
+	}
+
+	[Fact]
+	public void Positions_held_back_spread_over_the_rounds_from_their_earliest()
+	{
+		// D-088's draft penalty: without it, kickers, punters and long snappers took 32% of round 4's picks. With it,
+		// 4.8–8.3% of each round from 4 to 7 on 2026-10-29. Round 4 is the highest: a third of the old, tiny classes are
+		// specialists, and round 4 holds the first of their few picks a specialist may take
+		var heldBack = Positions.Where(p => Profiles[p].EarliestRound > 1).ToHashSet();
+		var first = heldBack.Min(p => Profiles[p].EarliestRound);
+		var rounds = Data.Contracts.RookieScale.Rounds.Count;
+		var drafted = Twenty.SelectMany(g => Everyone(g.League)).Where(p => p.Draft is not null).ToList();
+
+		Enumerable.Range(first, rounds - first + 1)
+			.Select(r => (Round: r, Share: drafted.Count(p => p.Draft!.Round == r && heldBack.Contains(p.Position)) / (double)drafted.Count(p => p.Draft!.Round == r)))
+			.Where(r => r.Share is < 0.025 or > 0.12)
+			.Select(r => $"round {r.Round}: {r.Share:P1} of the picks")
+			.ShouldBeEmpty();
+	}
+
+	[Fact]
 	public void Better_players_go_earlier_in_the_draft()
 	{
-		// Over the classes of 30 or more, as a mean because small classes go as low as −0.5. −0.724 over 245 classes on
-		// 2026-10-29 (−0.87 to −0.50 by class), and −0.73 in the reference run
+		// Over the classes of 30 or more, as a mean because small classes go as low as −0.16. −0.667 over 245 classes on
+		// 2026-10-29 (−0.82 to −0.16 by class; −0.724 before D-088 held the specialists to round 4 and marked them down),
+		// and −0.73 in the reference run
 		var correlations = (
 			from g in Twenty
 			from draftClass in Everyone(g.League).GroupBy(p => Season - p.Experience)
@@ -378,9 +427,9 @@ public sealed class LeagueShapeTests
 	[Fact]
 	public void Each_position_and_tier_s_OVR_matches_its_tier_s_target()
 	{
-		// ±3 on the mean and ±2 on the SD, over the 20 seeds. K, P and LS check only the Starter mean: their OVR is ~90% two
-		// kicking skills, so the shared quality draw spreads it wider (SD ~9.5) and the one-deep tiers sit further apart;
-		// only ~3 of each are free agents. Closest to the edges on 2026-10-29: Starter QBs (+2.5 on the mean, +1.8 on the
+		// ±3 on the mean and ±2 on the SD, over the 20 seeds. K, P and LS check only the Starter tier: they're one deep, so
+		// their ~3 free agents a league are Fringe with no Backups between (51.6–53.4 on 2026-10-29). D-088's spread scale
+		// holds their Starter SD at 7.0–7.1 (9.3–9.5 without it). Closest to the edges on 2026-10-29: Starter QBs (+2.5 on the mean, +1.8 on the
 		// SD), Fringe CBs and WRs (+2.5, +2.4) and Backup TEs (−2.4)
 		var players = Twenty.SelectMany(g => Everyone(g.League)).Select(p => (p.Position, p.Tier, Ovr: Ovr(p))).ToList();
 		var offenders =
@@ -392,7 +441,7 @@ public sealed class LeagueShapeTests
 			let target = Generation.Tiers[tier].Target
 			let mean = ovr.Average()
 			let sd = Math.Sqrt(ovr.Average(x => (x - mean) * (x - mean)))
-			where Math.Abs(mean - target.Mean) > 3 || (!Kicking.Contains(position) && Math.Abs(sd - target.Sd) > 2)
+			where Math.Abs(mean - target.Mean) > 3 || Math.Abs(sd - target.Sd) > 2
 			select $"{tier} {position}: mean {mean:F1} and SD {sd:F1} over {ovr.Count}, for a target of {target.Mean} and {target.Sd}";
 
 		offenders.ShouldBeEmpty();
@@ -401,7 +450,7 @@ public sealed class LeagueShapeTests
 	[Fact]
 	public void Players_at_90_plus_and_the_mean_age_hit_their_targets()
 	{
-		// The 90+ count is a mean over the seeds because single seeds range wider: 15–30 on 2026-10-29, 21.4 on average
+		// The 90+ count is a mean over the seeds because single seeds range wider: 12–25 on 2026-10-29, 17.6 on average
 		// (20.9 in the reference run). Each league's mean age is checked: 26.79–27.00
 		var targets = Generation.Targets;
 		var ninetyPlus = Twenty.Select(g => Everyone(g.League).Count(p => OverallCalculator.Display(Ovr(p)) >= 90)).ToList();

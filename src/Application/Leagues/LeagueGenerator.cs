@@ -218,7 +218,9 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 
 			foreach (var player in draftClass)
 			{
-				var score = OverallCalculator.Overall(_profiles[player.Position], player.Ratings) + random.Normal(0, draft.RankNoiseSd);
+				// A held-back position's penalty spreads it over the later rounds (D-088)
+				var profile = _profiles[player.Position];
+				var score = OverallCalculator.Overall(profile, player.Ratings) + random.Normal(0, draft.RankNoiseSd) - profile.DraftPenalty;
 
 				scored.Add((player, score));
 			}
@@ -227,12 +229,21 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 			var drafted = Math.Min(picks, (int)Math.Round(draft.DraftedShare * ranked.Count, MidpointRounding.AwayFromZero));
 			var classSize = ranked.Count;
 
-			// Not everyone is drafted
+			// Not everyone is drafted. Each pick takes the best player left whose position may go in its round (D-088); when
+			// none may, the pick goes unused
 			for (int n = 0; n < drafted; n++)
 			{
-				var player = ranked[n];
 				var pick = n * picks / drafted + 1;
 				var round = (pick - 1) / teams.Count + 1;
+				var next = ranked.FindIndex(p => _profiles[p.Position].EarliestRound <= round);
+
+				if (next < 0)
+				{
+					continue;
+				}
+
+				var player = ranked[next];
+				ranked.RemoveAt(next);
 				var onRoster = player.Slot < rosterSlots;
 
 				// On his rookie deal, his own team drafted him; anyone else, a random team, drawn in pick order
