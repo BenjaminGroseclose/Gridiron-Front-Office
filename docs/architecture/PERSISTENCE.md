@@ -53,7 +53,7 @@ flowchart LR
 - **Total budget:** 2 GB per league by default (configurable). Rolling snapshots are pruned oldest-first until the total fits.
 - Snapshots are taken off the UI thread with `VACUUM INTO`, which produces a compact, consistent, single file without closing the live database.
 - **As built (M0 WP7):**
-  - **The table is code:** `SnapshotTrigger` builds the names (`SnapshotTrigger.Week(2027, 8)` → `S2027-W08`) and `SnapshotPolicy` holds the keep counts and the pruning rule, as pure functions in Application with unit tests. M0 takes `created` (after a save is created), `pre-upgrade-v{n}` and `pre-restore`. The phase kinds are defined, but nothing triggers them until phases exist.
+  - **The table is code:** `SnapshotTrigger` builds the names (`SnapshotTrigger.Week(2027, 8)` → `S2027-W08`) and `SnapshotPolicy` holds the keep counts and the pruning rule, as pure functions in Application with unit tests. M0 takes `created` (after a save is created; from M1 the league is written in the same command as the save, so `created` holds it, before the user picks a team, [D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)), `pre-upgrade-v{n}` and `pre-restore`. The phase kinds are defined, but nothing triggers them until phases exist.
   - **Keep counts:** "last N" is the newest N of that kind; "until the next successful upgrade" is keep 1 (each new `pre-upgrade` replaces the older ones). Taking a snapshot whose name already exists replaces it.
   - **The budget:** only the phase snapshots (camp, weeks, deadline, playoffs, end, pre-FA, pre-draft) give way, oldest first. `created`, `pre-upgrade` and `pre-restore` are safety nets that are never pruned for the budget, and neither is the snapshot just taken. The budget is `SnapshotOptions.BudgetBytes` (2 GB); a user setting can come with the Time Machine.
   - **A snapshot's time is its file's write time.** There's no index file to get out of step with the folder. Files in the folder that don't match a snapshot name are ignored.
@@ -156,7 +156,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.3 People
 | Table | Key columns |
 |---|---|
-| `Players` | `PlayerID`, `TeamID?`, `Status`, `Position`, names, `BirthDate`, `College`, `Hometown`, `DraftSeason/Round/Pick/TeamID`, `ExperienceSeasons`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
+| `Players` | `PlayerID`, `TeamID?`, `Status`, `Position`, names, `BirthDate`, `CollegeID`, `HometownName`, `HometownState`, `DraftSeason/Round/Pick/TeamID`, `Experience`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
 | `RatingHistory` | `PlayerID`, `Season`, overall + key attributes (one snapshot per season). From M5, with player development ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)) |
 | `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `SignedOn`, `Type` (Rookie, Veteran, Tag, Minimum, …), `TotalValue`, `SigningBonus`, `IsActive` |
 | `ContractYears` | `ContractID`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
@@ -167,7 +167,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.4 Season and games
 | Table | Key columns |
 |---|---|
-| `Seasons` | `Season`, `CapAmount`, `ChampionTeamID`, … |
+| `Seasons` | `Season`, `Cap` (from M1: the first season's row is written at creation, so the save keeps its own cap, [D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)), `ChampionTeamID`, … |
 | `Games` | `GameID`, `Season`, `Week`, `Type` (Reg, WC, DIV, CONF, CHAMP; no preseason, [D-038](../DECISIONS.md#d-038-no-preseason-games-in-10)), `HomeTeamID`, `AwayTeamID`, `Date`, `HomeScore`, `AwayScore`, `Overtime`, `Status`, `EngineVersion`, `Seed` |
 | `TeamGameStats` | `GameID`, `TeamID`, ~40 stat columns |
 | `PlayerGameStats` | `GameID`, `PlayerID`, `TeamID`, ~60 stat columns (wide; SQLite stores 0 and 1 in zero payload bytes, so sparse wide rows are cheap) |

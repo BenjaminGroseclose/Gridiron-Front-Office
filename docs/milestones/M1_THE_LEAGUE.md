@@ -122,10 +122,10 @@
 
 ### WP5 · Schema and `CreateLeague` (M)
 
-**Goal:** a generated league written safely into the save.
+**Goal:** a generated league written safely into the save. **Builder's guide:** [M1_WP5_GUIDE.md](M1_WP5_GUIDE.md).
 
-- **Migration:** `Conferences`, `Divisions`, `Teams` (the stadium as columns), `Colleges`, `Players` (wide: measurables, 42 attributes, hidden ratings, six personality traits), `Contracts` + `ContractYears` (D-074: type, signed season, total value, signing bonus, guarantees, and per year the base salary, prorated bonus, guaranteed amount and cap hit), and `SaveInfo`'s league position (`UserTeamID`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`). `StadiumID` leaves `EntityIDs.cs` (D-078).
-- **`CreateLeague`:** generation runs **outside** the write transaction; then one command bulk-inserts everything through `uow.CreateCommand` (EF change tracking costs ~100 µs per entity; this is ~1,850 players). Either the whole league exists or none of it does. Progress is reported per step; the league starts at Training Camp.
+- **Migration:** `Conferences`, `Divisions`, `Teams` (the stadium as columns), `Colleges`, `Players` (wide: measurables, 42 attributes, hidden ratings, six personality traits), `Contracts` + `ContractYears` (D-074: type, signed season, total value, signing bonus, guarantees, and per year the base salary, prorated bonus, guaranteed amount and cap hit), `Seasons (Season, Cap)` (the save keeps its own cap, [D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)), and `SaveInfo`'s league position (`UserTeamID`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`). `StadiumID` leaves `EntityIDs.cs` (D-078).
+- **`CreateLeague`:** generation runs **outside** the write transaction; then one command creates the save and bulk-inserts the league through `uow.CreateCommand` (EF change tracking costs ~100 µs per entity; this is ~1,850 players). Either the whole league exists or none of it does, and no save file is left without one (D-089: `ISaveManager.CreateAsync` runs the write step in its own command). Progress is reported per step; the league starts at Training Camp.
 - **Typed-ID keys need opting in to `AUTOINCREMENT`** (found 2026-10-20): EF treats a key with a value converter as _not generated_, so `TypedIDs.UseAutoincrementForGeneratedKeys` skips it unless the entity says `.ValueGeneratedOnAdd()` (M0's convention test does). Either mark every typed-ID key generated in one place (preferred: extend the convention so no entity can forget), or have the bulk insert assign IDs itself; rows added later (contracts in M4, prospects in M5) still need `AUTOINCREMENT`.
 - **The user's team:** picking a team after generation is a second, small command (`SaveInfo.UserTeamID`, the only place the user's team is stored).
 - **Tests:** the bulk insert round-trips every column; a failure mid-write leaves no partial league; the torture tests stay green. Generate + write is timed in the log; the < 5 s budget is checked at the exit (§10).
@@ -191,10 +191,11 @@ data/
 └─ blocklists/  football-teams.json, major-league-teams.json, stadiums.json, metro-nfl-colors.json, real-colleges.json,
                 famous-people.json (all test-only except famous-people, which the name generator needs)
 src/
-├─ Core/        IDs/ (TeamID, PlayerID, …), Random/ (PRNG, seed derivation, weighted picker), Players/ (Position, PlayerAttribute, PersonalityTrait, …)
-├─ Application/ Leagues/ (CreateLeague, LeagueStructureQueries, ISeedData), Players/ (OverallCalculator, PlayerGenerator, LeagueGenerator,
-│               IPerception, PlayerQueries), Contracts/ (ContractGenerator, CapTrades)
-├─ Infrastructure/ Data/ (the new entities and migration), Seed/ (EmbeddedSeedData, SeedLog)
+├─ Core/        IDs/ (TeamID, PlayerID, …), Random/ (PRNG, seed derivation, weighted picker), Leagues/ (Team, Phase, …), Players/ (Player,
+│               Position, PlayerAttribute, PersonalityTrait, …), Contracts/ (Contract, ContractYear)
+├─ Application/ Leagues/ (LeagueGenerator, CreateLeague, LeagueWriter, LeagueCommands, LeagueStructureQueries, ISeedData), Players/
+│               (OverallCalculator, PlayerGenerator, IPerception, PlayerQueries), Contracts/ (ContractGenerator, CapTrades)
+├─ Infrastructure/ Data/ (the configurations and the migration), Seed/ (EmbeddedSeedData, SeedLog)
 ├─ UI/          Football/ (TeamMark, PositionPill, RatingChip, RatingBar), League/ (Home, League, Team, Roster, Player, PlayerPeekSheet),
 │               Menu/ (the wizard), Shell/ (GameStateStore, CommandPalette)
 └─ DevHost/     Gallery/ (teams, ratings)
