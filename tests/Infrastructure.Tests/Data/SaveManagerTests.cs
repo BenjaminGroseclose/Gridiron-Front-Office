@@ -173,6 +173,22 @@ public sealed class SaveManagerTests
     }
 
     [Fact]
+    public async Task A_save_from_an_older_build_is_refused_and_says_to_delete_it()
+    {
+        // D-090: M0's InitialCreate, regenerated away for M1. Nothing can upgrade it.
+        await using var save = await TestSave.CreateAsync();
+        await save.Saves.CloseAsync(Ct);
+        TestSave.Tamper(save.Save.FilePath, "UPDATE __EFMigrationsHistory SET MigrationId = '20261016174102_InitialCreate';");
+
+        var result = await save.Saves.OpenAsync(save.Save.FilePath, Ct);
+
+        result.Error!.Code.ShouldBe("SaveFromOlderBuild");
+        result.Error.Message.ShouldContain("older development build");
+        save.Saves.Current.ShouldBeNull();
+        File.Delete(save.Save.FilePath);   // refused saves are released too
+    }
+
+    [Fact]
     public async Task With_no_save_open_the_data_layer_says_so()
     {
         using var temp = new TempFolder();

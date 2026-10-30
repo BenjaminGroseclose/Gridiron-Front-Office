@@ -136,4 +136,18 @@ public sealed class SaveRestoreTests
         save.Saves.Current.ShouldBe(save.Save);
         save.ScalarText("SELECT Value FROM Probe").ShouldBe("keep me");
     }
+
+    [Fact]
+    public async Task A_snapshot_from_an_older_build_is_refused_and_the_save_stays_open()
+    {
+        // D-090: the snapshot holds M0's InitialCreate, regenerated away for M1
+        await using var save = await TestSave.CreateAsync();
+        var snapshot = await save.Snapshots.TakeAsync(SnapshotTrigger.Week(2027, 1), Ct);
+        TestSave.Tamper(snapshot.FilePath, "UPDATE __EFMigrationsHistory SET MigrationId = '20261016174102_InitialCreate';");
+
+        var result = await save.Saves.RestoreAsync(snapshot, Ct);
+
+        result.Error!.Code.ShouldBe("SaveFromOlderBuild");
+        save.Saves.Current.ShouldBe(save.Save);
+    }
 }

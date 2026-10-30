@@ -247,11 +247,13 @@ internal sealed class SaveManager(
         try
         {
             var (known, applied) = await MigrationStateAsync(session, ct).ConfigureAwait(false);
-            if (applied.Except(known).Any() || probe.UserVersion > known.Count)
+            if (LeagueSchema.Mismatch(applied, probe.UserVersion) is { } mismatch)
             {
-                var newerApp = LastOpenedBy(session.ConnectionString);   // before the release: it opens a pooled connection
+                var error = mismatch == SaveCardStatus.FromOlderBuild
+                    ? SaveErrors.OlderBuild(fileName)
+                    : SaveErrors.NewerVersion(fileName, LastOpenedBy(session.ConnectionString));   // before the release: it opens a pooled connection
                 SqliteFile.Release(session.ConnectionString);
-                return Result.Fail<OpenSave>(SaveErrors.NewerVersion(fileName, newerApp));
+                return Result.Fail<OpenSave>(error);
             }
 
             var pending = known.Count - applied.Count;
@@ -366,6 +368,11 @@ internal sealed class SaveManager(
         if (card.Status == SaveCardStatus.FromNewerVersion)
         {
             return Result.Fail<OpenSave>(SaveErrors.NewerVersion(snapshotFile, card.AppVersionLastOpened));
+        }
+
+        if (card.Status == SaveCardStatus.FromOlderBuild)
+        {
+            return Result.Fail<OpenSave>(SaveErrors.OlderBuild(snapshotFile));
         }
 
         var savePath = open.FilePath;

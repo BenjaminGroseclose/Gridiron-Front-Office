@@ -321,7 +321,7 @@ Play 3 full seasons as a player, not as the developer. Then answer honestly, in 
 - **F-01 league data import:** a "League data" step in the New League wizard for custom team sets and college lists, with validation errors ([D-035](DECISIONS.md#d-035-fictional-colleges-teams-and-colleges-as-data-files-user-import-in-m11)).
 - A performance pass against every budget. A memory soak test (a 4-hour session).
 - **Packaging:** Velopack installer and updater, versioning, release notes, a code-signing decision.
-- **Save migration hardening:** fixture saves for every schema since the first public build.
+- **Save migration hardening:** fixture saves for every schema since the first public build, and a rehearsal of the upgrade path, which never runs on a real older save before 1.0 ([D-090](DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand)): a save from the frozen 1.0 `InitialCreate` upgrades through a test-only second migration.
 - Shareable cards (PNG export) if time allows.
 - **Steam-readiness checklist:** licenses inventory (fonts, icons, packages), name and trademark check ([Q-22](OPEN_QUESTIONS.md#q-22-name--trademark-check)), achievements design, store page draft, Steam Deck research ([Q-23](OPEN_QUESTIONS.md#q-23-steam-deck)).
 

@@ -27,24 +27,25 @@ internal static class TypedIDs
     }
 
     /// <summary>
-    /// EF's SQLite convention adds AUTOINCREMENT only to plain integer keys. A converted key gets a bare
-    /// INTEGER PRIMARY KEY, and SQLite may then reuse the highest ID after a delete, while IDs are referenced from
-    /// history. So every generated typed-ID key gets it explicitly. EF Core 10 ignores the old raw
+    /// EF treats a converted key as not generated, so a typed-ID key would get a bare INTEGER PRIMARY KEY, and SQLite
+    /// may then reuse the highest ID after a delete, while IDs are referenced from history. So every single-column
+    /// typed-ID key is set generated and AUTOINCREMENT here, and no entity has to opt in. A bulk insert may still
+    /// write its own IDs: SQLite moves its counter past them (WP5 §2). EF Core 10 ignores the old raw
     /// "Sqlite:Autoincrement" annotation; it has to be the value-generation strategy API. Call it last in
     /// OnModelCreating.
     /// </summary>
-    public static void UseAutoincrementForGeneratedKeys(ModelBuilder modelBuilder)
+    public static void UseAutoincrementForTypedIDKeys(ModelBuilder modelBuilder)
     {
         var keys = modelBuilder.Model.GetEntityTypes()
             .Select(entity => (Entity: entity, Key: entity.FindPrimaryKey()))
             .Where(x => x.Key is { Properties.Count: 1 })
             .Select(x => (x.Entity, Property: x.Key!.Properties[0]))
-            .Where(x => typeof(IStronglyTypedID).IsAssignableFrom(x.Property.ClrType) && x.Property.ValueGenerated == ValueGenerated.OnAdd)
+            .Where(x => typeof(IStronglyTypedID).IsAssignableFrom(x.Property.ClrType))
             .ToList();
 
         foreach (var (entity, property) in keys)
         {
-            modelBuilder.Entity(entity.ClrType).Property(property.Name).UseAutoincrement();
+            modelBuilder.Entity(entity.ClrType).Property(property.Name).ValueGeneratedOnAdd().UseAutoincrement();
         }
     }
 }

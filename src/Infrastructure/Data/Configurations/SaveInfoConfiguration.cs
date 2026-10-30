@@ -17,5 +17,6 @@ internal sealed class SaveInfoConfiguration : IEntityTypeConfiguration<SaveInfo>
         builder.Property(x => x.LeagueName).IsRequired();
         builder.Property(x => x.AppVersionCreated).IsRequired();
         builder.Property(x => x.AppVersionLastOpened).IsRequired();
+        builder.HasOne<Team>().WithMany().HasForeignKey(x => x.UserTeamID);
     }
 }

@@ -31,6 +31,7 @@ public static class SaveCardText
             SaveCardStatus.NeedsUpgrade => "Saved by an older version. Opening it upgrades the file, after keeping a snapshot.",
             SaveCardStatus.FromNewerVersion =>
                 $"Saved by a newer version{(card.AppVersionLastOpened.Length > 0 ? $" ({card.AppVersionLastOpened})" : "")}. Update Gridiron Front Office to open it.",
+            SaveCardStatus.FromOlderBuild => "Saved by an older development build. It can't be opened: delete it.",
             SaveCardStatus.Unreadable => card.Problem ?? "This file can't be read.",
             _ => null,
         };

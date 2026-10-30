@@ -1,5 +1,7 @@
 using System.Data.Common;
+using GridironFrontOffice.Core.Contracts;
 using GridironFrontOffice.Core.Leagues;
+using GridironFrontOffice.Core.Players;
 using GridironFrontOffice.Core.Results;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,6 +15,22 @@ public interface ILeagueDb
 {
     DbSet<SaveInfo> SaveInfo { get; }
 
+    DbSet<Conference> Conferences { get; }
+
+    DbSet<Division> Divisions { get; }
+
+    DbSet<Team> Teams { get; }
+
+    DbSet<College> Colleges { get; }
+
+    DbSet<LeagueSeason> Seasons { get; }
+
+    DbSet<Player> Players { get; }
+
+    DbSet<Contract> Contracts { get; }
+
+    DbSet<ContractYear> ContractYears { get; }
+
     /// <summary>An optional mid-command flush (e.g. to get generated IDs). It never commits: SaveWriter does.</summary>
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
@@ -21,6 +39,22 @@ public interface ILeagueDb
 public interface ILeagueReadDb
 {
     IQueryable<SaveInfo> SaveInfo { get; }
+
+    IQueryable<Conference> Conferences { get; }
+
+    IQueryable<Division> Divisions { get; }
+
+    IQueryable<Team> Teams { get; }
+
+    IQueryable<College> Colleges { get; }
+
+    IQueryable<LeagueSeason> Seasons { get; }
+
+    IQueryable<Player> Players { get; }
+
+    IQueryable<Contract> Contracts { get; }
+
+    IQueryable<ContractYear> ContractYears { get; }
 }
 
 /// <summary>What a command receives: one transaction, from start to commit or rollback.</summary>

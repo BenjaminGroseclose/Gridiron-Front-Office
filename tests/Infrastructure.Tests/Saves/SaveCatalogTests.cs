@@ -107,6 +107,28 @@ public sealed class SaveCatalogTests
     }
 
     [Fact]
+    public async Task An_unknown_migration_is_from_an_older_build_or_a_newer_app_by_its_timestamp()
+    {
+        // D-090: InitialCreate is regenerated on every schema change, so the count stays 1 and only the ID tells.
+        // An M0 save holds M0's InitialCreate; a later ID than the app's own is a newer app's.
+        await using var save = await TestSave.CreateAsync("Stale");
+        var future = await save.Saves.CreateAsync("Future", Ct);
+        var current = await save.Saves.CreateAsync("Current", Ct);
+        await save.Saves.CloseAsync(Ct);
+        TestSave.Tamper(save.Save.FilePath, "UPDATE __EFMigrationsHistory SET MigrationId = '20261016174102_InitialCreate';");
+        TestSave.Tamper(future.Value.FilePath, "UPDATE __EFMigrationsHistory SET MigrationId = '29991231000000_InitialCreate';");
+
+        var cards = await save.Catalog.ListAsync(Ct);
+
+        var stale = cards.Single(c => c.LeagueName == "Stale");
+        stale.Status.ShouldBe(SaveCardStatus.FromOlderBuild, "OpenAsync refuses it, so the list mustn't offer it as ready.");
+        stale.SchemaVersion.ShouldBe(current.Value.SchemaVersion);
+        stale.CanOpen.ShouldBeFalse();
+        cards.Single(c => c.LeagueName == "Future").Status.ShouldBe(SaveCardStatus.FromNewerVersion);
+        cards.ContinueTarget()!.LeagueName.ShouldBe("Current");
+    }
+
+    [Fact]
     public async Task Only_gfo_files_are_listed_and_odd_file_names_work()
     {
         await using var save = await TestSave.CreateAsync("Team #1 100%");

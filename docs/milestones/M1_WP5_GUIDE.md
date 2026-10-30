@@ -2,7 +2,7 @@
 
 > **Status:** 📝 **Ready to build** (2026-10-29; checked against the code 2026-10-30, §2 walked through with the owner) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP5](M1_THE_LEAGUE.md#wp5--schema-and-createleague-m) · **Size:** M · **Written:** 2026-10-29
 >
-> WP5 puts WP4's league in the save. One migration adds the league's eight tables and `SaveInfo`'s league position. `CreateLeague` generates a league outside any transaction, then writes the save and the league in one command ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)), so a save never exists without its league. A second, small command records the user's team. Nothing on screen changes yet: WP8's wizard is the first caller. When WP5 is done, a seed-42 league round-trips through a real `.gfo` file, column by column.
+> WP5 puts WP4's league in the save. The regenerated `InitialCreate` holds the league's eight tables and `SaveInfo`'s league position ([D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand): one migration until 1.0). `CreateLeague` generates a league outside any transaction, then writes the save and the league in one command ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)), so a save never exists without its league. A second, small command records the user's team. Nothing on screen changes yet: WP8's wizard is the first caller. When WP5 is done, a seed-42 league round-trips through a real `.gfo` file, column by column.
 
 ---
 
@@ -47,16 +47,20 @@ src/Infrastructure/
 │  ├─ LeagueDbContext.cs             + the DbSets, deletes restricted (§3.3)
 │  ├─ TypedIDs.cs                    every typed-ID key generated and AUTOINCREMENT (§3.3)
 │  ├─ Configurations/                + LeagueConfigurations.cs, PlayerConfiguration.cs, ContractConfigurations.cs; SaveInfo's FK
-│  └─ Migrations/                    + TheLeague (schema 2)
-└─ Saves/SaveManager.cs              CreateAsync(name, write): the write step inside Save.Create (§4.2)
-tests/ (Claude)                      Core.Tests/Leagues, Infrastructure.Tests/Data and /Leagues
+│  └─ Migrations/                    InitialCreate, regenerated (D-090; schema 1)
+└─ Saves/
+   ├─ SaveManager.cs                 CreateAsync(name, write): the write step inside Save.Create (§4.2)
+   └─ SaveCatalog.cs                 reads the migration IDs: FromOlderBuild or FromNewerVersion (§4.1)
+src/Infrastructure/Data/LeagueSchema.cs   Mismatch: the one check for the list, open and restore (D-090, §4.1)
+src/Application/Saves/                    + FromOlderBuild, SaveErrors.OlderBuild; src/UI/Menu/SaveCardText.cs its note
+tests/ (Claude)                      Core.Tests/Leagues, Infrastructure.Tests/Data, /Saves and /Leagues
 ```
 
 Names are suggestions: keep them unless you have a reason not to. The configuration files follow the entity files, one configuration class per entity, like M0's `SaveInfoConfiguration`.
 
 ## 2. Decisions this guide makes
 
-D-089 settled the two questions. These are the smaller choices, so the code, the tests and WP6 agree:
+D-089 settled the two questions, and D-090 the migrations. These are the smaller choices, so the code, the tests and WP6 agree:
 
 | Choice | Rule | Why |
 |---|---|---|
@@ -305,20 +309,30 @@ EF adds an index for every foreign key, which covers M1's reads (a team's player
             modelBuilder.Entity(entity.ClrType).Property(property.Name).ValueGeneratedOnAdd().UseAutoincrement();
 ```
 
-**The migration** (stop the DevHost first; `dotnet ef` builds Infrastructure):
+**The migration** ([D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand)): until 1.0 the schema is one `InitialCreate`, regenerated on every change, so M0's is replaced, not followed by a second one. Stop the DevHost first, since `dotnet ef` builds Infrastructure:
 
 ```powershell
 dotnet tool restore
-dotnet ef migrations add TheLeague --project src/Infrastructure --output-dir Data/Migrations
+Remove-Item src/Infrastructure/Data/Migrations/*.cs
+dotnet ef migrations add InitialCreate --project src/Infrastructure --output-dir Data/Migrations
 ```
 
-Then make **one edit** in the generated file: `CurrentPhase`'s `AddColumn` gets `defaultValue: "TrainingCamp"` instead of `""`. An M0 save upgrades through this migration, and EF can't read an empty string as a `Phase`, so the open would throw. Read the rest of the file before you commit it. SQLite can't add a foreign key to an existing table, so EF rebuilds `SaveInfo`; that's expected. The schema version becomes 2.
+Nothing to hand-edit: no older save upgrades through it. Read it before you commit it: nine `CreateTable`s, six of them with `Sqlite:Autoincrement` (not `Seasons`, `ContractYears` or `SaveInfo`), and every foreign key `ReferentialAction.Restrict`. The schema version stays 1, and the new migration ID makes every M0 dev save stale (§4.1).
 
 ## 4. The code, slice by slice
 
 ### 4.1 Slice 1: the schema
 
-§3 in full: the entities, `SaveInfo`, `Phase`, `LeagueCalendar`, the configurations, `LeagueDbContext`, `TypedIDs`, the DbSets on `ILeagueDb` and `ILeagueReadDb`, `StadiumID` removed, and the migration. No behavior changes yet, so every M0 test should still pass, apart from two that Claude updates: `TypedIDConventionTests` (the convention) and `TypedIDTests.The_M1_IDs_are_all_there`, which lists `StadiumID` and fails as soon as it's gone.
+§3 in full: the entities, `SaveInfo`, `Phase`, `LeagueCalendar`, the configurations, `LeagueDbContext`, `TypedIDs`, the DbSets on `ILeagueDb` and `ILeagueReadDb`, `StadiumID` removed, and the regenerated `InitialCreate`. Then the older-build status (D-090), since the new `InitialCreate` makes every existing dev save stale:
+
+- **`LeagueSchema.Mismatch(applied, userVersion)`** is the one check. A migration ID starts with the UTC time it was generated, so an unknown ID before the app's newest was regenerated away (`FromOlderBuild`), and one after it, or a higher `user_version`, is a newer app's (`FromNewerVersion`). Null means the app ships every one.
+- **`SaveCatalog`** reads `SELECT MigrationId FROM __EFMigrationsHistory` on the read-only connection and asks `Mismatch`. Before, it compared only `PRAGMA user_version`, and a stale save still says 1, so the list would have offered it as `Ready` and opening it would have failed.
+- **`OpenAsync` and `RestoreAsync`** refuse a `FromOlderBuild` save or snapshot with `SaveErrors.OlderBuild` (*"… was saved by an older development build of Gridiron Front Office and can't be opened. Delete it."*), and a newer one as before.
+- **The card** (`SaveCardText.Note`): *"Saved by an older development build. It can't be opened: delete it."* It can't be opened, Continue skips it, and the load screen's Delete removes it. Nothing deletes it automatically: a Debug build running an older commit would otherwise delete the newer saves.
+
+**Built by Claude, at your request (2026-10-30):** §3.3 (the configurations, `LeagueDbContext`, `TypedIDs`, the DbSets and the regenerated `InitialCreate`) and the older-build status above, with its tests (§5) and the updated `TypedIDConventionTests`, each proven on planted bugs.
+
+ No behavior changes yet, so every M0 test should still pass, apart from two that Claude updates: `TypedIDConventionTests` (the convention) and `TypedIDTests.The_M1_IDs_are_all_there`, which lists `StadiumID` and fails as soon as it's gone.
 
 ### 4.2 Slice 2: writing a league
 
@@ -505,7 +519,9 @@ Per slice, each proven to fail on a planted problem. Every save is a real file i
 | **1** | `LeagueSchemaTests` | The model has no pending changes (`HasPendingModelChanges`: an entity change without a migration fails); every typed-ID key is `AUTOINCREMENT` and `Seasons` and `ContractYears` aren't; no foreign key cascades; `Player` has a `double` property for every `Measurable`, `PlayerAttribute` and `PersonalityTrait` member, and a property of the same name and type for every `HiddenRatings` field (`DevelopmentCurve` is the enum), and each one is a column of `Players` |
 | | `TypedIDConventionTests` (updated) | A typed-ID key is generated and AUTOINCREMENT without opting in |
 | | `TypedIDTests` (updated) | The M1 IDs without `StadiumID` (D-078 #6) |
-| | `SaveUpgradeTests` | A schema-1 save (built by migrating to `InitialCreate` only) opens: upgraded, a `pre-upgrade-v1` snapshot, and `CurrentPhase` readable. The first real upgrade the app has |
+| | `SaveCatalogTests` (one case added) | With the same `user_version`, M0's `InitialCreate` ID is `FromOlderBuild` and a later ID `FromNewerVersion`; Continue skips both |
+| | `SaveManagerTests`, `SaveRestoreTests` (one case each) | Opening an older-build save, or restoring an older-build snapshot, is refused with `SaveFromOlderBuild`, and the open save stays open |
+| | `LoadScreenTests`, `SaveCardTextTests` (UI) | The older-build card has Show in folder and Delete, no Open, and says to delete it |
 | | `LeagueCalendarTests` (Core) | The fourth Tuesday of July for 2026–2060, always July 22–28 |
 | **2** | `CreateLeagueTests`: the round trip | Seed 42, season 2026, read back through EF (`ILeagueReadDb`) and compared with the `GeneratedLeague` field by field: the structure against the team set, the colleges, every player column (enum names, dates, nulls, doubles exact), every contract and year, the cap, and `SaveInfo`'s position (`UserTeamID` null) |
 | | IDs and counts | 2, 8, 32, 230, 1,846, one contract per rostered player, the years' sum; `PlayerID = slot + 1`; `PRAGMA foreign_key_check` empty; every `CapHit` equals `CapMath.CapHit` (F-12 §5) |
@@ -519,7 +535,7 @@ Per slice, each proven to fail on a planted problem. Every save is a real file i
 
 ## 6. Done when
 
-- [ ] Slice 1: the entities, `SaveInfo`'s position, `Phase`, `LeagueCalendar`, the configurations, the restricted deletes, the `TypedIDs` change, the DbSets, `StadiumID` gone, and the migration (schema 2, with the `CurrentPhase` default).
+- [ ] Slice 1: the entities, `SaveInfo`'s position, `Phase`, `LeagueCalendar`, the configurations, the restricted deletes, the `TypedIDs` change, the DbSets, `StadiumID` gone, `InitialCreate` regenerated (schema 1), the older-build status (`LeagueSchema.Mismatch`, the list, open, restore and the card).
 - [ ] Slice 2: `ISaveManager.CreateAsync(name, write)`, `SaveManager`, `LeagueWriter`, `CreateLeague` and event 1304.
 - [ ] Slice 3: `LeagueCommands.PickUserTeamAsync`, `UserTeamPicked`, `LeagueErrors` and event 1305.
 - [ ] Every §5 test passes, each proven to fail on a planted problem; the torture tests stay green.
@@ -530,7 +546,7 @@ Per slice, each proven to fail on a planted problem. Every save is a real file i
 
 One commit per slice (D-076), each with its tests:
 
-1. **Slice 1.** Generate the migration last, after the entities and configurations settle, and read it. If you change an entity afterwards, delete the migration and add it again (nothing has shipped).
+1. **Slice 1.** Regenerate `InitialCreate` last, after the entities and configurations settle, and read it. If you change an entity afterwards, regenerate it again (D-090).
 2. **Slice 2.** `SaveManager`'s change first (Claude's all-or-nothing tests need only it and a failing write step), then `LeagueWriter` and `CreateLeague`. The round trip is the moment of truth: most mismatches are a column name or an enum written as a number.
 3. **Slice 3**, the smallest.
 
@@ -541,8 +557,8 @@ Seed 42 should write well under a second: the bulk path costs about 3 µs a row 
 - **Raw SQL skips EF's converters.** Enums go in by name and typed IDs as `.Value`. The round trip reads everything back through EF, so a mismatch fails there, not on a screen in WP9.
 - **Foreign keys are on** for every connection (`LeagueSession`), so parents go in before children: §4.2's table order.
 - **An `int` key is AUTOINCREMENT by EF's convention; a typed-ID key isn't** (probed, §9). `Seasons.Season` needs `ValueGeneratedNever()`, and `TypedIDs` covers every typed-ID key.
-- **The migration's `CurrentPhase` default.** EF writes `""` for a new non-null string column, and an empty string isn't a `Phase`: change it to `"TrainingCamp"`, or every M0 save fails to open.
-- **M0 saves upgrade into a save with no league.** Pre-1.0 that's allowed (PERSISTENCE §7): delete your M0 test saves once WP8's screens arrive, since they have nothing to show.
+- **Your M0 dev saves are stale now.** The regenerated `InitialCreate` has a new ID, so the load screen marks them "Saved by an older development build". Delete them there.
+- **Never edit or rename `InitialCreate`** (D-090). Its new ID is what marks older saves stale: an old ID kept on a changed schema would open and then fail on a missing column.
 - **Flush before you query.** `SaveManager` flushes `SaveInfo` before the write step so `LeagueWriter` can read it (DATA_ACCESS_GUIDE §5.4's rule).
 - **No `try`/`catch` in `LeagueWriter`** (W5): a failure must reach SaveWriter, which rolls back, and `SaveManager`, which deletes the file.
 - **Generation stays outside the command.** The writer's gate is held for the whole write step, so anything slow inside it blocks every other command. `CreateLeague` generates first, on the thread pool.
@@ -569,5 +585,8 @@ Two throwaway EF Core 10.0.13 + SQLite programs, outside the repository, on the 
 Both as recommended ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)):
 1. ~~How do the save and its league exist together or not at all?~~ → **One command:** `CreateAsync` runs the league's write step inside `Save.Create`, and the `created` snapshot holds the league.
 2. ~~Where does the cap live?~~ → **A `Seasons` table,** with one row per season, so the save keeps its own cap.
+
+Later, on 2026-10-30 ([D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand)):
+3. ~~Does every schema change need a migration?~~ → **Not until 1.0:** one `InitialCreate`, regenerated on each change. A save from an older build gets its own status and is deleted by hand.
 
 **Still owed, before WP8:** F-01's M1 spec (WP0). WP5 doesn't need it: the wizard's steps, its cancel and its error cases are WP8's.

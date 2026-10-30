@@ -172,16 +172,18 @@ public sealed class LoadScreenTests : SaveScreenContext
         Catalog.Add("Saturday League");
         Catalog.Add("Old League", status: SaveCardStatus.NeedsUpgrade);
         Catalog.Add("Future League", status: SaveCardStatus.FromNewerVersion);
+        Catalog.Add("Stale League", status: SaveCardStatus.FromOlderBuild);
         Catalog.Add("broken", status: SaveCardStatus.Unreadable, problem: "This isn't a Gridiron Front Office save.");
         var cut = Render<LoadScreen>();
 
         var cards = cut.FindAll("[data-testid=save-card]");
-        cards.Select(c => c.QuerySelector("h2")!.TextContent).ShouldBe(["Saturday League", "Old League", "Future League", "broken.gfo"]);
-        cards.Select(Buttons).ShouldBe(["delete open", "delete open", "show-in-folder delete", "show-in-folder delete"]);
+        cards.Select(c => c.QuerySelector("h2")!.TextContent).ShouldBe(["Saturday League", "Old League", "Future League", "Stale League", "broken.gfo"]);
+        cards.Select(Buttons).ShouldBe(["delete open", "delete open", "show-in-folder delete", "show-in-folder delete", "show-in-folder delete"]);
         cards[0].QuerySelector("[data-testid=save-note]").ShouldBeNull();
         cards[1].QuerySelector("[data-testid=save-note]")!.TextContent.ShouldContain("older version");
         cards[2].QuerySelector("[data-testid=save-note]")!.TextContent.ShouldContain("Update Gridiron Front Office");
-        cards[3].QuerySelector("[data-testid=save-note]")!.TextContent.ShouldContain("isn't a Gridiron Front Office save");
+        cards[3].QuerySelector("[data-testid=save-note]")!.TextContent.ShouldContain("older development build");
+        cards[4].QuerySelector("[data-testid=save-note]")!.TextContent.ShouldContain("isn't a Gridiron Front Office save");
 
         static string Buttons(AngleSharp.Dom.IElement card) =>
             string.Join(' ', card.QuerySelectorAll("[data-testid]").Select(b => b.GetAttribute("data-testid")).Where(id => id is "open" or "delete" or "show-in-folder"));
@@ -319,6 +321,14 @@ public sealed class SaveCardTextTests
         var card = new SaveCard(@"C:\Saves\a.gfo", SaveCardStatus.FromNewerVersion) { LeagueName = "A", AppVersionLastOpened = "0.4.0" };
 
         SaveCardText.Note(card).ShouldBe("Saved by a newer version (0.4.0). Update Gridiron Front Office to open it.");
+    }
+
+    [Fact]
+    public void A_save_from_an_older_build_says_to_delete_it()
+    {
+        var card = new SaveCard(@"C:\Saves\a.gfo", SaveCardStatus.FromOlderBuild) { LeagueName = "A" };
+
+        SaveCardText.Note(card).ShouldBe("Saved by an older development build. It can't be opened: delete it.");
     }
 
     [Fact]

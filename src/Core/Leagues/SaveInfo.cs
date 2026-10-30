@@ -1,3 +1,5 @@
+using GridironFrontOffice.Core.IDs;
+
 namespace GridironFrontOffice.Core.Leagues;
 
 /// <summary>
@@ -45,12 +47,12 @@ public sealed class SaveInfo
 	/// <summary>Incremented by SaveWriter on every commit (D-026 groundwork for rollback detection).</summary>
 	public long Generation { get; set; }
 
-	public int UserTeamID { get; set; }
+	public TeamID? UserTeamID { get; set; }
 
 	public ulong Seed { get; set; }
 
 	public int CurrentSeason { get; set; }
-	public int CurrentPhase { get; set; }
+	public Phase CurrentPhase { get; set; }
 	public DateOnly CurrentDate { get; set; }
 }
 

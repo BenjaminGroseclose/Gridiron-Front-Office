@@ -15,7 +15,7 @@ dotnet test --project tests/Architecture.Tests --filter-class "*PackageRules*"  
 dotnet watch --project src/DevHost                                                # browser host with hot reload on http://localhost:5180 (VS Code: task "watch: DevHost")
 dotnet run --project src/Desktop -- --diag-test=crash                             # Debug: prove a failure path (page|js|task|crash|ui)
 dotnet run --project tools/SimLab -- calibrate --seasons 200 --seed 42           # SimLab commands arrive in M2
-dotnet ef migrations add <Name> --project src/Infrastructure --output-dir Data/Migrations   # a schema change (dotnet tool restore first)
+Remove-Item src/Infrastructure/Data/Migrations/*.cs; dotnet ef migrations add InitialCreate --project src/Infrastructure --output-dir Data/Migrations   # a schema change before 1.0 (D-090; dotnet tool restore first)
 ```
 Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-30 and will just call `build.ps1`.
 
@@ -74,7 +74,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - Logs: the real app writes to `%LOCALAPPDATA%\GridironFrontOffice\logs`, the DevHost to `GridironFrontOffice-Dev\logs`.
   - The DevHost **doesn't prerender**: a disposed prerender scope makes Fluent v5 fault background tasks, and the desktop WebView never prerenders anyway.
 - **Persistence (WP6, DATA_ACCESS_GUIDE.md §3):**
-  - The schema version **is** the number of EF migrations, so adding one bumps it.
+  - The schema version **is** the number of EF migrations. Until 1.0 there's one, `InitialCreate`, regenerated on every schema change and never edited or renamed (D-090), so the version stays 1 and an older dev save holds an unknown, earlier migration ID: the list marks it `FromOlderBuild` (`LeagueSchema.Mismatch` compares the IDs' timestamps), it can't be opened, and it's deleted by hand.
   - A save with an unknown migration is "from a newer app" and is refused.
   - Domain-event subscribers run on the thread that finished the command (`ConfigureAwait(false)`), not the UI thread, so marshal with `InvokeAsync`.
   - The torture tests (`tests/Infrastructure.Tests/Data`) must stay green on every build. The Crasher kill test launches a separate process.
@@ -102,7 +102,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
 - **Core (M1 WP1):**
   - Never use `string.GetHashCode()` or `HashCode.Combine` for anything that must repeat: .NET randomizes them per process. Seeds come from `Seeds.Derive` (FNV-1a 64 + SplitMix64's `Mix`).
   - Naming analyzers fail the build: CA1720 rejects members named after types (`Single`, `Double`), CA1711 reserves the `Attribute` suffix (`PlayerAttribute` carries a justified suppression), and CA1716 rejects members named after Visual Basic keywords (`Exit`: the platform port's member is `Quit`).
-  - Typed IDs are one line each in `Core/IDs/EntityIDs.cs`. A typed-ID key only gets `AUTOINCREMENT` when it's marked generated: EF treats a converted key as not generated (see WP5 in the M1 plan).
+  - Typed IDs are one line each in `Core/IDs/EntityIDs.cs`. EF treats a converted key as not generated, so `TypedIDs.UseAutoincrementForTypedIDKeys` sets every single-column typed-ID key generated and `AUTOINCREMENT` (M1 WP5): no entity opts in. A bulk insert may still write its own IDs, and SQLite moves its counter past them.
 - **Built-in data (M1 WP2–WP3):**
   - The built-in team set and college list are embedded in Infrastructure (`league/teams.json`, `league/colleges.json`) and parsed by `EmbeddedSeedData.JsonOptions`, which rejects unknown, missing and null fields. A field added later to these two (the formats M11 imports) needs a default value, or every older file fails (D-077). The built-in-only files (player, generation, jersey, name, place, contract data) take new fields as required, in the same commit as their records (D-083).
   - The blocklists (`data/blocklists/`) are test-only except `famous-people.json`, which ships; `RepoFiles` reads the others from the repository. A failing guardrail test means fixing the data (F-02 Appendix A records it), never loosening a threshold.

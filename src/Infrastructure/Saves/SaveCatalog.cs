@@ -9,7 +9,7 @@ namespace GridironFrontOffice.Infrastructure.Saves;
 
 /// <summary>
 /// The load screen's list (PERSISTENCE.md §9). Each file is read through a read-only connection that leaves nothing
-/// behind: the GFO signature and schema from the header, then the card's columns from SaveInfo with raw SQL, so a
+/// behind: the GFO signature and schema from the header, the migration IDs, then the card's columns from SaveInfo with raw SQL, so a
 /// save from an older or newer app (whose SaveInfo has other columns) still gets a card. No quick_check: it reads the
 /// whole file, too slow for a list. A damaged save is caught when it's opened.
 /// </summary>
@@ -63,6 +63,7 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
             }
 
             var schema = Integer(connection, "PRAGMA user_version;");
+            var mismatch = LeagueSchema.Mismatch(MigrationIDs(connection), schema);
             using var command = connection.CreateCommand();
             command.CommandText = CardQuery;
             using var reader = command.ExecuteReader();
@@ -71,12 +72,8 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
                 return Unreadable(path, size, "This save has no league in it.");
             }
 
-            var status = schema.CompareTo(LeagueSchema.CurrentVersion) switch
-            {
-                < 0 => SaveCardStatus.NeedsUpgrade,
-                > 0 => SaveCardStatus.FromNewerVersion,
-                _ => SaveCardStatus.Ready,
-            };
+            // OpenAsync's check, so the list never offers a save that can't be opened
+            var status = mismatch ?? (schema < LeagueSchema.CurrentVersion ? SaveCardStatus.NeedsUpgrade : SaveCardStatus.Ready);
 
             return new SaveCard(path, status)
             {
@@ -110,6 +107,24 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
         var fileName = Path.GetFileName(path);
         DataLog.SaveUnreadable(log, fileName, problem);
         return new SaveCard(path, SaveCardStatus.Unreadable) { SizeBytes = size, Problem = problem };
+    }
+
+    /// <summary>
+    /// The save's applied migrations. The schema version alone can't tell a save from an older development build
+    /// before 1.0, since the regenerated InitialCreate keeps the count at 1 (D-090).
+    /// </summary>
+    private static List<string> MigrationIDs(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT MigrationId FROM __EFMigrationsHistory;";
+        using var reader = command.ExecuteReader();
+        var ids = new List<string>();
+        while (reader.Read())
+        {
+            ids.Add(reader.GetString(0));
+        }
+
+        return ids;
     }
 
     private static int Integer(SqliteConnection connection, string sql)

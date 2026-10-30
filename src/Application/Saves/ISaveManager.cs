@@ -66,6 +66,10 @@ public static class SaveErrors
         new("SaveFromNewerVersion",
             $"{fileName} was saved by a newer version of Gridiron Front Office{(appVersion is { Length: > 0 } ? $" ({appVersion})" : "")}. Update the app to open it.");
 
+    /// <summary>D-090: a save whose schema was regenerated away. Nothing can upgrade it.</summary>
+    public static DomainError OlderBuild(string fileName) =>
+        new("SaveFromOlderBuild", $"{fileName} was saved by an older development build of Gridiron Front Office and can't be opened. Delete it.");
+
     public static DomainError InvalidName(string why) => new("InvalidLeagueName", why);
 
     public static DomainError IronmanNoRestore { get; } =

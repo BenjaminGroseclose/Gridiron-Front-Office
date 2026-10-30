@@ -52,6 +52,12 @@ public enum SaveCardStatus
     /// <summary>Made by a newer app: the card says to update.</summary>
     FromNewerVersion,
 
+    /// <summary>
+    /// Made by an older development build: its migration was regenerated away (D-090), so there's nothing to upgrade
+    /// it with. The card says to delete it.
+    /// </summary>
+    FromOlderBuild,
+
     /// <summary>"Can't read this save", with Show in folder.</summary>
     Unreadable,
 }

@@ -1,7 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using GridironFrontOffice.Application.Data;
+using GridironFrontOffice.Core.Contracts;
 using GridironFrontOffice.Core.IDs;
 using GridironFrontOffice.Core.Leagues;
+using GridironFrontOffice.Core.Players;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -16,7 +18,39 @@ internal sealed class LeagueDbContext(DbContextOptions<LeagueDbContext> options)
 {
     public DbSet<SaveInfo> SaveInfo => Set<SaveInfo>();
 
+    public DbSet<Conference> Conferences => Set<Conference>();
+
+    public DbSet<Division> Divisions => Set<Division>();
+
+    public DbSet<Team> Teams => Set<Team>();
+
+    public DbSet<College> Colleges => Set<College>();
+
+    public DbSet<LeagueSeason> Seasons => Set<LeagueSeason>();
+
+    public DbSet<Player> Players => Set<Player>();
+
+    public DbSet<Contract> Contracts => Set<Contract>();
+
+    public DbSet<ContractYear> ContractYears => Set<ContractYear>();
+
     IQueryable<SaveInfo> ILeagueReadDb.SaveInfo => SaveInfo;
+
+    IQueryable<Conference> ILeagueReadDb.Conferences => Conferences;
+
+    IQueryable<Division> ILeagueReadDb.Divisions => Divisions;
+
+    IQueryable<Team> ILeagueReadDb.Teams => Teams;
+
+    IQueryable<College> ILeagueReadDb.Colleges => Colleges;
+
+    IQueryable<LeagueSeason> ILeagueReadDb.Seasons => Seasons;
+
+    IQueryable<Player> ILeagueReadDb.Players => Players;
+
+    IQueryable<Contract> ILeagueReadDb.Contracts => Contracts;
+
+    IQueryable<ContractYear> ILeagueReadDb.ContractYears => ContractYears;
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -30,7 +64,14 @@ internal sealed class LeagueDbContext(DbContextOptions<LeagueDbContext> options)
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(LeagueDbContext).Assembly);   // Fluent API keeps Core EF-free
-        TypedIDs.UseAutoincrementForGeneratedKeys(modelBuilder);
+
+        // History is kept forever, so a delete never cascades (WP5 §2)
+        foreach (var foreignKey in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+        {
+            foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+        }
+
+        TypedIDs.UseAutoincrementForTypedIDKeys(modelBuilder);
     }
 }
 

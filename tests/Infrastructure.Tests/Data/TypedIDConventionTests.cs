@@ -5,16 +5,16 @@ using Microsoft.EntityFrameworkCore;
 namespace GridironFrontOffice.Infrastructure.Tests.Data;
 
 /// <summary>
-/// D-015 and the Spike S0a finding: typed IDs map to INTEGER through one convention, and generated typed-ID keys get
-/// AUTOINCREMENT so SQLite never reuses an ID that history may still reference. The first real IDs arrive in M1, so
-/// this uses a test-only WidgetID with the same convention LeagueDbContext applies.
+/// D-015 and the Spike S0a finding: typed IDs map to INTEGER through one convention, and every typed-ID key is
+/// generated and AUTOINCREMENT without opting in (WP5 §2), so SQLite never reuses an ID that history may still
+/// reference. This uses a test-only WidgetID with the same convention LeagueDbContext applies.
 /// </summary>
 public sealed class TypedIDConventionTests
 {
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
 
     [Fact]
-    public void A_generated_typed_ID_key_is_an_AUTOINCREMENT_integer()
+    public void A_typed_ID_key_is_an_AUTOINCREMENT_integer_without_opting_in()
     {
         using var temp = new TempFolder();
         using var db = WidgetContext.At(Path.Combine(temp.Path, "widgets.db"));
@@ -65,10 +65,7 @@ public sealed class TypedIDConventionTests
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
             TypedIDs.ApplyConversions(configurationBuilder, [typeof(WidgetID)]);
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Widget>().Property(w => w.ID).ValueGeneratedOnAdd();
-            TypedIDs.UseAutoincrementForGeneratedKeys(modelBuilder);
-        }
+        // No ValueGeneratedOnAdd here: the convention has to set it
+        protected override void OnModelCreating(ModelBuilder modelBuilder) => TypedIDs.UseAutoincrementForTypedIDKeys(modelBuilder);
     }
 }
