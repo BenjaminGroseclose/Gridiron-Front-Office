@@ -4,8 +4,7 @@ namespace GridironFrontOffice.Core.Leagues;
 
 /// <summary>
 /// The save's single metadata row (PERSISTENCE.md §5.1). The load screen reads it without opening the league.
-/// M0 holds the identity, versions, timestamps and the creation settings that are already decided; the league's
-/// position (user team, season, phase, date, seed) arrives with league generation in M1.
+/// M0 holds the identity, versions, timestamps and the creation settings that are already decided;
 /// </summary>
 public sealed class SaveInfo
 {

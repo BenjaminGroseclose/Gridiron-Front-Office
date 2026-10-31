@@ -10,32 +10,40 @@ namespace GridironFrontOffice.Application.Saves;
 /// </summary>
 public interface ISaveManager
 {
-    /// <summary>The open save, or null at the main menu.</summary>
-    OpenSave? Current { get; }
+	/// <summary>The open save, or null at the main menu.</summary>
+	OpenSave? Current { get; }
 
-    /// <summary>Creates a new save in the saves folder, opens it and takes its <c>created</c> snapshot.</summary>
-    Task<Result<OpenSave>> CreateAsync(string leagueName, CancellationToken cancellationToken = default);
+	/// <summary>
+	/// Creates a new save in the saves folder with <paramref name="write"/>'s content, opens it and takes its
+	/// <c>created</c> snapshot (D-089). <paramref name="write"/> runs in the same command as the SaveInfo row, after
+	/// it's flushed; if it throws or is cancelled, nothing is committed and the file is deleted.
+	/// </summary>
+	Task<Result<OpenSave>> CreateAsync(string leagueName, Func<IUnitOfWork, CancellationToken, Task> write,
+		CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Opens a save: integrity check, then schema check, then (for an older save) a pre-upgrade snapshot and the
-    /// migrations. Closes the current save first.
-    /// </summary>
-    Task<Result<OpenSave>> OpenAsync(string path, CancellationToken cancellationToken = default);
+	/// <summary>An empty save, with no league: the save-lifecycle tests use it, and M0's New League page until WP8.</summary>
+	Task<Result<OpenSave>> CreateAsync(string leagueName, CancellationToken cancellationToken = default);
 
-    /// <summary>Waits for the running command, checkpoints the WAL and releases the file. Safe to call when nothing is open.</summary>
-    Task CloseAsync(CancellationToken cancellationToken = default);
+	/// <summary>
+	/// Opens a save: integrity check, then schema check, then (for an older save) a pre-upgrade snapshot and the
+	/// migrations. Closes the current save first.
+	/// </summary>
+	Task<Result<OpenSave>> OpenAsync(string path, CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Puts the open save back to one of its snapshots (PERSISTENCE.md §2.2): close → snapshot the current state as
-    /// <c>pre-restore</c> → replace the file → reopen. Refused in Ironman leagues and while a live event runs.
-    /// </summary>
-    Task<Result<OpenSave>> RestoreAsync(SnapshotInfo snapshot, CancellationToken cancellationToken = default);
+	/// <summary>Waits for the running command, checkpoints the WAL and releases the file. Safe to call when nothing is open.</summary>
+	Task CloseAsync(CancellationToken cancellationToken = default);
 
-    /// <summary>
-    /// Sends a save to the Recycle Bin with its snapshot folder (PERSISTENCE.md §10). Closes it first if it's open.
-    /// Works for unreadable files too. The UI confirms first, naming the league.
-    /// </summary>
-    Task<Result<Unit>> DeleteAsync(string path, CancellationToken cancellationToken = default);
+	/// <summary>
+	/// Puts the open save back to one of its snapshots (PERSISTENCE.md §2.2): close → snapshot the current state as
+	/// <c>pre-restore</c> → replace the file → reopen. Refused in Ironman leagues and while a live event runs.
+	/// </summary>
+	Task<Result<OpenSave>> RestoreAsync(SnapshotInfo snapshot, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Sends a save to the Recycle Bin with its snapshot folder (PERSISTENCE.md §10). Closes it first if it's open.
+	/// Works for unreadable files too. The UI confirms first, naming the league.
+	/// </summary>
+	Task<Result<Unit>> DeleteAsync(string path, CancellationToken cancellationToken = default);
 }
 
 /// <param name="Upgraded">True when opening migrated the file to this app's schema.</param>
@@ -53,40 +61,40 @@ public sealed record SaveDeleted(string FilePath, Guid? SaveID) : IDomainEvent;
 /// <summary>The expected ways save management can fail.</summary>
 public static class SaveErrors
 {
-    public static DomainError NotFound(string fileName) =>
-        new("SaveNotFound", $"The save {fileName} doesn't exist.");
+	public static DomainError NotFound(string fileName) =>
+		new("SaveNotFound", $"The save {fileName} doesn't exist.");
 
-    public static DomainError NotAGfoSave(string fileName) =>
-        new("NotAGfoSave", $"{fileName} isn't a Gridiron Front Office save.");
+	public static DomainError NotAGfoSave(string fileName) =>
+		new("NotAGfoSave", $"{fileName} isn't a Gridiron Front Office save.");
 
-    public static DomainError Damaged(string fileName, string detail) =>
-        new("SaveDamaged", $"{fileName} is damaged and can't be opened ({detail}).");
+	public static DomainError Damaged(string fileName, string detail) =>
+		new("SaveDamaged", $"{fileName} is damaged and can't be opened ({detail}).");
 
-    public static DomainError NewerVersion(string fileName, string? appVersion) =>
-        new("SaveFromNewerVersion",
-            $"{fileName} was saved by a newer version of Gridiron Front Office{(appVersion is { Length: > 0 } ? $" ({appVersion})" : "")}. Update the app to open it.");
+	public static DomainError NewerVersion(string fileName, string? appVersion) =>
+		new("SaveFromNewerVersion",
+			$"{fileName} was saved by a newer version of Gridiron Front Office{(appVersion is { Length: > 0 } ? $" ({appVersion})" : "")}. Update the app to open it.");
 
-    /// <summary>D-090: a save whose schema was regenerated away. Nothing can upgrade it.</summary>
-    public static DomainError OlderBuild(string fileName) =>
-        new("SaveFromOlderBuild", $"{fileName} was saved by an older development build of Gridiron Front Office and can't be opened. Delete it.");
+	/// <summary>D-090: a save whose schema was regenerated away. Nothing can upgrade it.</summary>
+	public static DomainError OlderBuild(string fileName) =>
+		new("SaveFromOlderBuild", $"{fileName} was saved by an older development build of Gridiron Front Office and can't be opened. Delete it.");
 
-    public static DomainError InvalidName(string why) => new("InvalidLeagueName", why);
+	public static DomainError InvalidName(string why) => new("InvalidLeagueName", why);
 
-    public static DomainError IronmanNoRestore { get; } =
-        new("IronmanNoRestore", "Ironman leagues can't go back to an earlier point.");
+	public static DomainError IronmanNoRestore { get; } =
+		new("IronmanNoRestore", "Ironman leagues can't go back to an earlier point.");
 
-    public static DomainError LiveEventRunning(string action) =>
-        new("LiveEventRunning", $"{action} isn't available while a live event is running.");
+	public static DomainError LiveEventRunning(string action) =>
+		new("LiveEventRunning", $"{action} isn't available while a live event is running.");
 
-    public static DomainError SnapshotNotFound(string name) =>
-        new("SnapshotNotFound", $"The snapshot {name} doesn't exist anymore.");
+	public static DomainError SnapshotNotFound(string name) =>
+		new("SnapshotNotFound", $"The snapshot {name} doesn't exist anymore.");
 
-    public static DomainError SnapshotNotForThisSave(string name) =>
-        new("SnapshotNotForThisSave", $"The snapshot {name} doesn't belong to the open league.");
+	public static DomainError SnapshotNotForThisSave(string name) =>
+		new("SnapshotNotForThisSave", $"The snapshot {name} doesn't belong to the open league.");
 
-    public static DomainError DeleteFailed(string fileName, string detail) =>
-        new("DeleteFailed", $"{fileName} couldn't be moved to the Recycle Bin ({detail}). Close any program using it and try again.");
+	public static DomainError DeleteFailed(string fileName, string detail) =>
+		new("DeleteFailed", $"{fileName} couldn't be moved to the Recycle Bin ({detail}). Close any program using it and try again.");
 
-    public static DomainError DeleteCancelled(string fileName) =>
-        new("DeleteCancelled", $"{fileName} wasn't deleted.");
+	public static DomainError DeleteCancelled(string fileName) =>
+		new("DeleteCancelled", $"{fileName} wasn't deleted.");
 }

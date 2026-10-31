@@ -11,8 +11,6 @@ public readonly record struct ConferenceID(int Value) : IStronglyTypedID;
 
 public readonly record struct DivisionID(int Value) : IStronglyTypedID;
 
-public readonly record struct StadiumID(int Value) : IStronglyTypedID;
-
 public readonly record struct CollegeID(int Value) : IStronglyTypedID;
 
 public readonly record struct ContractID(int Value) : IStronglyTypedID;

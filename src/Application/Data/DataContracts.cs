@@ -63,7 +63,14 @@ public interface IUnitOfWork
     /// <summary>Bound to this command's transaction.</summary>
     ILeagueDb Db { get; }
 
-    /// <summary>Raw SQL on the same connection and transaction, for bulk paths (DATA_ACCESS_GUIDE.md §5.4).</summary>
+    /// <summary>
+    /// The bulk insert (DATA_ACCESS_GUIDE.md §5.4, D-091): <paramref name="rows"/> as they are, keys included, through one
+    /// prepared INSERT on this command's transaction and without change tracking. The table, the columns and each
+    /// value's conversion come from EF's model, so a row is stored exactly as SaveChanges would store it.
+    /// </summary>
+    Task InsertAsync<TEntity>(IEnumerable<TEntity> rows, CancellationToken ct = default) where TEntity : class;
+
+    /// <summary>Raw SQL on the same connection and transaction, for what the bulk insert can't do (DATA_ACCESS_GUIDE.md §5.4).</summary>
     DbCommand CreateCommand(string sql);
 
     /// <summary>Delivered to subscribers only if the command commits.</summary>

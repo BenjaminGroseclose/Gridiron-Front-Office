@@ -95,6 +95,11 @@ internal sealed class FakeSaveManager(FakeDomainEvents events) : ISaveManager
         return Task.FromResult(Result.Ok(Open(new OpenSave(Guid.NewGuid(), leagueName.Trim(), $@"C:\Saves\{leagueName.Trim()}.gfo", 1, Upgraded: false))));
     }
 
+    /// <summary>No screen writes a league before WP8's wizard, so there's no unit of work to run the write step on.</summary>
+    public Task<Result<OpenSave>> CreateAsync(string leagueName, Func<IUnitOfWork, CancellationToken, Task> write,
+        CancellationToken cancellationToken = default) =>
+        CreateAsync(leagueName, cancellationToken);
+
     public Task<Result<OpenSave>> OpenAsync(string path, CancellationToken cancellationToken = default)
     {
         Opened.Add(path);

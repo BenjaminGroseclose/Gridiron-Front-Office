@@ -1,5 +1,4 @@
 using GridironFrontOffice.Application.Leagues;
-using GridironFrontOffice.Application.Players;
 using GridironFrontOffice.Core.Contracts;
 using GridironFrontOffice.Core.Players;
 

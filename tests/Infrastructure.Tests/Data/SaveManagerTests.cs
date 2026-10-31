@@ -50,6 +50,80 @@ public sealed class SaveManagerTests
         Path.GetFileName(second.Value.FilePath).ShouldBe("Wolves_ Year 1_ (2).gfo");
     }
 
+    // D-089: CreateAsync(name, write) writes the league in the save's own command, so a save never exists without it.
+
+    [Fact]
+    public async Task The_write_step_commits_with_the_save_in_one_command_and_the_created_snapshot_holds_it()
+    {
+        await using var save = await TestSave.CreateAsync();
+
+        var created = await save.Saves.CreateAsync("With A Season", (uow, ct) => InsertSeasonAsync(uow, ct), Ct);
+
+        created.IsSuccess.ShouldBeTrue(created.ToString());
+        (await save.Reader.QueryAsync((db, ct) => db.Seasons.SingleAsync(ct), Ct)).Cap.ShouldBe(255_000_000);
+        (await save.Reader.QueryAsync((db, ct) => db.SaveInfo.SingleAsync(ct), Ct)).Generation.ShouldBe(1, "The row and the league are one command.");
+        var snapshot = (await save.Snapshots.ListAsync(created.Value.SaveID, Ct)).ShouldHaveSingleItem();
+        snapshot.Kind.ShouldBe(SnapshotKind.Created);
+        TestSave.ScalarText(snapshot.FilePath, "SELECT Cap FROM Seasons").ShouldBe("255000000");
+    }
+
+    [Fact]
+    public async Task The_write_step_can_read_the_SaveInfo_row()
+    {
+        await using var save = await TestSave.CreateAsync();
+        Guid? seen = null;
+
+        var created = await save.Saves.CreateAsync("Flushed", async (uow, ct) => seen = (await uow.Db.SaveInfo.SingleAsync(ct)).SaveID, Ct);
+
+        seen.ShouldBe(created.Value.SaveID, "SaveManager flushes the row before the write step (DATA_ACCESS_GUIDE.md §5.4).");
+    }
+
+    [Fact]
+    public async Task A_write_step_that_throws_leaves_no_save_behind_and_the_exception_surfaces()
+    {
+        await using var save = await TestSave.CreateAsync();
+        await save.Saves.CloseAsync(Ct);
+        var before = Files(save);
+
+        var failure = await Should.ThrowAsync<InvalidOperationException>(() => save.Saves.CreateAsync("Broken", async (uow, ct) =>
+        {
+            await InsertSeasonAsync(uow, ct);
+            throw new InvalidOperationException("The league didn't fit.");
+        }, Ct));
+
+        failure.Message.ShouldBe("The league didn't fit.");
+        save.Saves.Current.ShouldBeNull();
+        Files(save).ShouldBe(before, "No .gfo, -wal, -shm or snapshot folder is left.");
+    }
+
+    [Fact]
+    public async Task A_cancel_inside_the_write_step_leaves_no_save_behind()
+    {
+        await using var save = await TestSave.CreateAsync();
+        await save.Saves.CloseAsync(Ct);
+        var before = Files(save);
+        using var cancel = CancellationTokenSource.CreateLinkedTokenSource(Ct);
+
+        await Should.ThrowAsync<OperationCanceledException>(() => save.Saves.CreateAsync("Cancelled", async (uow, ct) =>
+        {
+            await InsertSeasonAsync(uow, ct);
+            await cancel.CancelAsync();
+            ct.ThrowIfCancellationRequested();
+        }, cancel.Token));
+
+        save.Saves.Current.ShouldBeNull();
+        Files(save).ShouldBe(before);
+    }
+
+    private static Task InsertSeasonAsync(IUnitOfWork uow, CancellationToken ct) =>
+        uow.InsertAsync([new LeagueSeason { Season = 2026, Cap = 255_000_000 }], ct);
+
+    /// <summary>Everything under the test's root (saves, snapshots, sidecars), as paths relative to it.</summary>
+    private static List<string> Files(TestSave save) =>
+        [.. Directory.EnumerateFileSystemEntries(save.RootPath, "*", SearchOption.AllDirectories)
+            .Select(path => Path.GetRelativePath(save.RootPath, path))
+            .Order(StringComparer.OrdinalIgnoreCase)];
+
     [Fact]
     public async Task Closing_releases_the_file_and_records_the_session()
     {

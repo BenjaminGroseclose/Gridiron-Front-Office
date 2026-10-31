@@ -14,7 +14,7 @@ public sealed class TypedIDTests
     public void The_M1_IDs_are_all_there()
     {
         IDTypes.Select(row => row.Data.Name).Order(StringComparer.Ordinal).ShouldBe(
-            ["CollegeID", "ConferenceID", "ContractID", "DivisionID", "PlayerID", "StadiumID", "TeamID"]);
+            ["CollegeID", "ConferenceID", "ContractID", "DivisionID", "PlayerID", "TeamID"]);   // no StadiumID: the stadium is columns on Teams (D-078 #6)
     }
 
     [Theory]

@@ -1,6 +1,6 @@
 # M1 · WP5 builder's guide: the schema and `CreateLeague`
 
-> **Status:** 📝 **Ready to build** (2026-10-29; checked against the code 2026-10-30, §2 walked through with the owner) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP5](M1_THE_LEAGUE.md#wp5--schema-and-createleague-m) · **Size:** M · **Written:** 2026-10-29
+> **Status:** 🔨 **In progress** (2026-10-31: slices 1 and 2 built and tested; slice 3, the user's team, next) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP5](M1_THE_LEAGUE.md#wp5--schema-and-createleague-m) · **Size:** M · **Written:** 2026-10-29
 >
 > WP5 puts WP4's league in the save. The regenerated `InitialCreate` holds the league's eight tables and `SaveInfo`'s league position ([D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand): one migration until 1.0). `CreateLeague` generates a league outside any transaction, then writes the save and the league in one command ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)), so a save never exists without its league. A second, small command records the user's team. Nothing on screen changes yet: WP8's wizard is the first caller. When WP5 is done, a seed-42 league round-trips through a real `.gfo` file, column by column.
 
@@ -10,14 +10,15 @@
 
 | | |
 |---|---|
-| **Claude prepared** ✅ | [D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table) (your answers of 2026-10-29) and the doc updates: PERSISTENCE §2.1 and §5, F-12 §5 (the `Seasons` row), F-03 §5 (the column names below) and the plan. Two probes of EF Core 10 + SQLite (§9). |
-| **You build** (§3, §4) | Three slices: the schema; writing a league; the user's team. |
+| **Claude prepared** ✅ | [D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table) (your answers of 2026-10-29), [D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand) and [D-091](../DECISIONS.md#d-091-bulk-inserts-go-through-one-shared-insert-that-writes-entities-from-efs-model) (2026-10-30 and 31), and the doc updates: PERSISTENCE §2.1 and §5, F-12 §5 (the `Seasons` row), F-03 §5 (the column names below), DATA_ACCESS_GUIDE §5.4 and the plan. The probes of EF Core 10 + SQLite (§9). |
+| **You build** (§3, §4) | Three slices: the schema; writing a league; the user's team. Yours so far: slice 1's Core types (§3.1, §3.2), and slice 2's `CreateAsync(name, write)`, `SaveManager` change and `CreateLeague`. |
+| **Claude built, at your request** | Slice 1's configurations, `LeagueDbContext`, `TypedIDs`, the regenerated `InitialCreate` and the older-build status (2026-10-30, §4.1); slice 2's bulk insert (`IUnitOfWork.InsertAsync`, D-091), `LeagueWriter` on it, the shared `PlayerRows.ToPlayer` and `LeagueLog`'s event 1304 (2026-10-31, §4.2, §4.4). |
 | **Claude writes the tests** (§5) | Per slice, as each one lands, each proven to fail on a planted problem. |
 
 **Read first:**
 - [DATA_ACCESS_GUIDE.md](../architecture/DATA_ACCESS_GUIDE.md) §5.3–5.4 (operations and bulk writes) and §10 (the checklist);
 - PERSISTENCE §5, F-02 §5, F-03 §5 and F-12 §5 (the tables);
-- [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) #6, #7, #9 and #12, and D-089;
+- [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) #6, #7, #9 and #12, D-089, D-090 and D-091;
 - CLAUDE.md's "Data access".
 
 **AI counterpart:** none. No team acts yet, and every team is written by the same code.
@@ -35,16 +36,18 @@ src/Core/
 ├─ Players/Player.cs                 the wide Players row (§3.1)
 └─ Contracts/Contract.cs             Contract, ContractYear (§3.1)
 src/Application/
-├─ Data/DataContracts.cs             + eight DbSets on ILeagueDb, eight queryables on ILeagueReadDb
+├─ Data/DataContracts.cs             + eight DbSets on ILeagueDb, eight queryables on ILeagueReadDb; IUnitOfWork.InsertAsync (D-091)
 ├─ Saves/ISaveManager.cs             + CreateAsync(name, write, ct) (D-089)
+├─ Players/PlayerRows.cs             ToPlayer: a generated player as his row, shared with the draft classes (§4.2)
 └─ Leagues/
    ├─ CreateLeague.cs                NewLeague, LeagueCreationStep, CreateLeague (§4.2)
-   ├─ LeagueWriter.cs                the bulk insert, an operation on IUnitOfWork (§4.2)
+   ├─ LeagueWriter.cs                writes the league through uow.InsertAsync, an operation (§4.2)
    ├─ LeagueCommands.cs              PickUserTeamAsync, UserTeamPicked, LeagueErrors (§4.3)
    └─ LeagueLog.cs                   events 1304–1305 (§4.4)
 src/Infrastructure/
 ├─ Data/
 │  ├─ LeagueDbContext.cs             + the DbSets, deletes restricted (§3.3)
+│  ├─ SaveWriter.cs                  UnitOfWork.InsertAsync, the bulk insert from EF's model (D-091, Claude)
 │  ├─ TypedIDs.cs                    every typed-ID key generated and AUTOINCREMENT (§3.3)
 │  ├─ Configurations/                + LeagueConfigurations.cs, PlayerConfiguration.cs, ContractConfigurations.cs; SaveInfo's FK
 │  └─ Migrations/                    InitialCreate, regenerated (D-090; schema 1)
@@ -53,7 +56,7 @@ src/Infrastructure/
    └─ SaveCatalog.cs                 reads the migration IDs: FromOlderBuild or FromNewerVersion (§4.1)
 src/Infrastructure/Data/LeagueSchema.cs   Mismatch: the one check for the list, open and restore (D-090, §4.1)
 src/Application/Saves/                    + FromOlderBuild, SaveErrors.OlderBuild; src/UI/Menu/SaveCardText.cs its note
-tests/ (Claude)                      Core.Tests/Leagues, Infrastructure.Tests/Data, /Saves and /Leagues
+tests/ (Claude)                      Core.Tests/Leagues, Application.Tests/Players, Infrastructure.Tests/Data, /Saves and /Leagues
 ```
 
 Names are suggestions: keep them unless you have a reason not to. The configuration files follow the entity files, one configuration class per entity, like M0's `SaveInfoConfiguration`.
@@ -65,8 +68,10 @@ D-089 settled the two questions, and D-090 the migrations. These are the smaller
 | Choice | Rule | Why |
 |---|---|---|
 | **IDs** | Every typed-ID key is generated and AUTOINCREMENT, set in one place (`TypedIDs`), so no entity can forget. The bulk insert still writes its own IDs: conferences, divisions and teams numbered from 1 in the team set's order, colleges in the list's order, **`PlayerID = slot + 1`**, contracts in player order. SQLite moves its counter past explicit IDs, so M4's contracts and M5's prospects continue from the highest (probed, §9) | IDs are known before the insert, so no read-back, and the same seed gives the same IDs. The plan preferred the convention for rows added later; both are needed |
-| **Columns are C# names** | The 11 measurables, 42 attributes and 6 traits are columns named after their enum members, each a `double` property on `Player`. The hidden ratings take `HiddenRatings`' names. The bulk insert builds its column list from `Enum.GetNames`, so the SQL can't drift from the enums, and a test checks that `Player` has a property for every member | One name from the data files to the save. `PlayerAttribute`'s summary already says a rename is a schema change |
+| **Columns are C# names** | The 11 measurables, 42 attributes and 6 traits are columns named after their enum members, each a `double` property on `Player`. The hidden ratings take `HiddenRatings`' names. The bulk insert reads the columns from EF's model, `PlayerRows.ToPlayer` sets each rating by name, and tests check that `Player` has a property for every member and that every member lands in its own | One name from the data files to the save. `PlayerAttribute`'s summary already says a rename is a schema change |
 | **Spec names, settled** | `Experience` (F-12's name; F-03 said `ExperienceSeasons`), `DevelopmentCurve` (F-03 said `DevCurve`), `HometownName` + `HometownState`, and the draft as `DraftSeason`, `DraftRound`, `DraftPick` (overall) and `DraftTeamID`, all four null when undrafted | The code's names (`GeneratedPlayer`, `HiddenRatings`). F-03 and PERSISTENCE are updated |
+| **The bulk insert** | Every table goes in through `uow.InsertAsync(entities)` ([D-091](../DECISIONS.md#d-091-bulk-inserts-go-through-one-shared-insert-that-writes-entities-from-efs-model)): one prepared `INSERT` per table, built from EF's model, untracked, on the command's transaction. Enums and typed IDs are converted as `SaveChanges` would | No column lists or conversions by hand; the draft classes and the weekly stats reuse it |
+| **One player conversion** | `generated.ToPlayer(id, team, status, college, draftTeam)` in `Application/Players/PlayerRows.cs`. The caller passes the IDs and the status. The contracts' conversion stays in `LeagueWriter` until a second writer needs it | Each year's draft class writes new players too (as `Prospect`, with no team), so the 59 rating lines exist once |
 | **No navigations** | Entities carry foreign-key properties only (`Player.TeamID`), configured with `HasOne<Team>().WithMany().HasForeignKey(…)` | WP6's queries join where they need to. A navigation can be added later without a migration |
 | **Deletes are restricted** | Every foreign key is `DeleteBehavior.Restrict`: one loop in `OnModelCreating` | Nothing deletes in M1, and history (players, contracts) is kept forever, so a delete must never cascade by accident |
 | **Not saved** | Generation's tier, archetype, age, slot and team strength; the hometown's population; the team's metro (D-078 #12) | Nothing reads them: screens recompute the archetype label and the age, and the slot is `PlayerID − 1` |
@@ -332,7 +337,7 @@ Nothing to hand-edit: no older save upgrades through it. Read it before you comm
 
 **Built by Claude, at your request (2026-10-30):** §3.3 (the configurations, `LeagueDbContext`, `TypedIDs`, the DbSets and the regenerated `InitialCreate`) and the older-build status above, with its tests (§5) and the updated `TypedIDConventionTests`, each proven on planted bugs.
 
- No behavior changes yet, so every M0 test should still pass, apart from two that Claude updates: `TypedIDConventionTests` (the convention) and `TypedIDTests.The_M1_IDs_are_all_there`, which lists `StadiumID` and fails as soon as it's gone.
+No behavior changed, so every M0 test still passed, apart from the two Claude updated: `TypedIDConventionTests` (the convention) and `TypedIDTests.The_M1_IDs_are_all_there`, which listed `StadiumID`.
 
 ### 4.2 Slice 2: writing a league
 
@@ -356,12 +361,14 @@ Nothing to hand-edit: no older save upgrades through it. Read it before you comm
 2. Inside `Save.Create`, after `SaveInfo.Add(…)`: `await uow.Db.SaveChangesAsync(token)`, then `await write(uow, token)`. The flush lets the write step query the row like any command. Today's lambda is synchronous and discards its token (`(uow, _) => { …; return Task.FromResult(Result.Ok()); }`), so it becomes `async (uow, token) => { …; return Result.Ok(); }`, with `ConfigureAwait(false)` on both awaits.
 3. Nothing else. The existing `catch` already releases and deletes the file on any exception, cancellation included, and the snapshot already comes after the command.
 
+**Built by you (2026-10-30)**, with four write-step cases in `SaveManagerTests` (§5).
+
 **`LeagueWriter`** (`Application/Leagues`) is an operation (DATA_ACCESS_GUIDE §5.3), public so the tests can hand it a league:
 
 ```csharp
 /// <summary>
 /// Writes a generated league into the save being created (D-089): an operation inside SaveManager's Save.Create
-/// command, through prepared raw inserts (DATA_ACCESS_GUIDE.md §5.4). It assigns the IDs, in order (WP5 §2).
+/// command, through the bulk insert (DATA_ACCESS_GUIDE.md §5.4, D-091). It assigns the IDs, in order (WP5 §2).
 /// </summary>
 public static class LeagueWriter
 {
@@ -380,59 +387,26 @@ Parents before children: every connection has foreign keys on, so the order is t
 | `Colleges` | 230 | 1… in `data.Colleges.Colleges`' order | name, region, tier |
 | `Players` | 1,846 | `Slot + 1`, in slot order | `TeamID` his team's (null for free agents), `Status` `Active` or `FreeAgent`, `CollegeID` by college name, `DraftTeamID` by `Abbr` |
 | `Contracts` | 1,696 | 1…, in `PlayerID` order | `Years` = `Seasons.Count`, `IsActive` = true, `TeamID` his team's |
-| `ContractYears` | about 6,500 | `(ContractID, Season)` | each `ContractSeason` |
+| `ContractYears` | 4,712 | `(ContractID, Season)` | each `ContractSeason` |
 | `SaveInfo` | the row | — | `Seed`, `CurrentSeason`, `CurrentPhase = TrainingCamp`, `CurrentDate`: a tracked change, which SaveWriter saves at the end |
 
-Look the IDs up through dictionaries built as you insert: team by `Abbr`, college by `Name` (WP2's tests keep both unique). Each table is one prepared statement executed once per row. A small helper keeps the eight inserts short:
+Look the IDs up through dictionaries built as you go: team by `Abbr`, college by `Name` (WP2's tests keep both unique). Build each table's entities and hand them to `uow.InsertAsync` (D-091), which writes them through one prepared statement per table, converting enums and typed IDs as EF does:
 
 ```csharp
-    /// <summary>One prepared INSERT, executed once per row; each row's values come in the columns' order.</summary>
-    private static async Task InsertAsync<T>(IUnitOfWork uow, string table, IReadOnlyList<string> columns,
-        IEnumerable<T> rows, Func<T, object?[]> values, CancellationToken ct)
-    {
-        // The table and column names are constants and enum names, never input
-        var command = uow.CreateCommand(
-            $"INSERT INTO {table} ({string.Join(", ", columns)}) VALUES ({string.Join(", ", columns.Select(c => "$" + c))})");
-        await using (command.ConfigureAwait(false))
+        var teamIDs = data.TeamSet.Teams
+            .Select((team, i) => (team.Abbr, ID: new TeamID(i + 1)))
+            .ToDictionary(x => x.Abbr, x => x.ID);
+        await uow.InsertAsync(data.TeamSet.Teams.Select(t => new Team
         {
-            var parameters = columns.Select(column =>
-            {
-                var parameter = command.CreateParameter();
-                parameter.ParameterName = "$" + column;
-                command.Parameters.Add(parameter);
-                return parameter;
-            }).ToArray();
-            command.Prepare();
-
-            foreach (var row in rows)
-            {
-                var rowValues = values(row);
-                for (var i = 0; i < parameters.Length; i++)
-                {
-                    parameters[i].Value = rowValues[i] ?? DBNull.Value;
-                }
-
-                await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
-            }
-        }
-    }
+            TeamID = teamIDs[t.Abbr], DivisionID = divisionOf[t.Abbr],
+            Abbreviation = t.Abbr, City = t.City, Nickname = t.Nickname,
+            CrestShape = t.Crest.Shape, StadiumRoof = t.Stadium.Roof, /* … every TeamDefinition field but Metro */
+        }), ct).ConfigureAwait(false);
 ```
 
-The players' columns come from the enums, so they can't drift:
+A `Player` is the longest: the bio, then one line per rating, `Speed = p.Ratings[PlayerAttribute.Speed]`, for the 11 measurables, the 42 attributes and the 6 traits, then the hidden ratings. It lives in `Application/Players/PlayerRows.cs` as `generated.ToPlayer(id, team, status, college, draftTeam)`, since each year's draft class will write new players too; the caller passes the IDs and the status. Every key is set by the writer (§2's order): the insert refuses a row whose generated key is still at its default.
 
-```csharp
-    private static readonly string[] PlayerColumns =
-    [
-        "PlayerID", "TeamID", "Status", "Position", "FirstName", "LastName", "BirthDate", "CollegeID", "HometownName",
-        "HometownState", "Experience", "DraftSeason", "DraftRound", "DraftPick", "DraftTeamID", "JerseyNumber",
-        .. Enum.GetNames<Measurable>(),
-        .. Enum.GetNames<PlayerAttribute>(),
-        "Potential", "DevelopmentCurve", "BustRisk", "PeakAgeOffset", "InjuryProneness",
-        .. Enum.GetNames<PersonalityTrait>(),
-    ];
-```
-
-A row's values follow the same order: the bio, then `Enum.GetValues<Measurable>().Select(m => (object?)player.Measurables[m])`, the attributes and the traits the same way. Raw SQL skips EF's converters, so write **enums by name** (`ToString()`) and **typed IDs as `.Value`**. `DateOnly`, `ulong` and `null` (as `DBNull.Value`) bind as EF stores them (§9).
+**Built by Claude, at your request (2026-10-31):** `IUnitOfWork.InsertAsync` (D-091, in `SaveWriter.cs`'s `UnitOfWork`), `LeagueWriter` on it, and `PlayerRows.ToPlayer`, with `BulkInsertTests` and `PlayerRowsTests`. A probe wrote seed 42 through it and through the column-array version it replaced: the same rows in every column of all eight tables (§9).
 
 **`CreateLeague`** (`Application/Leagues`):
 
@@ -477,6 +451,8 @@ public sealed class CreateLeague(ISaveManager saves, LeagueGenerator generator, 
 ```
 
 A bad name comes back as `SaveErrors.InvalidName`, from `CreateAsync` as before. It's checked after generation, which costs a fraction of a second, and the wizard checks the name first anyway.
+
+**Built:** `CreateLeague` by you, and event 1304 by Claude at your request (2026-10-31): `LeagueLog.LeagueCreated`, logged once the save exists, with the counts taken from the generated league and the time from `started`. `CreateLeagueTests` (Claude, 2026-10-31) covers the slice: §5.
 
 ### 4.3 Slice 3: the user's team
 
@@ -523,38 +499,45 @@ Per slice, each proven to fail on a planted problem. Every save is a real file i
 | | `SaveManagerTests`, `SaveRestoreTests` (one case each) | Opening an older-build save, or restoring an older-build snapshot, is refused with `SaveFromOlderBuild`, and the open save stays open |
 | | `LoadScreenTests`, `SaveCardTextTests` (UI) | The older-build card has Show in folder and Delete, no Open, and says to delete it |
 | | `LeagueCalendarTests` (Core) | The fourth Tuesday of July for 2026–2060, always July 22–28 |
-| **2** | `CreateLeagueTests`: the round trip | Seed 42, season 2026, read back through EF (`ILeagueReadDb`) and compared with the `GeneratedLeague` field by field: the structure against the team set, the colleges, every player column (enum names, dates, nulls, doubles exact), every contract and year, the cap, and `SaveInfo`'s position (`UserTeamID` null) |
-| | IDs and counts | 2, 8, 32, 230, 1,846, one contract per rostered player, the years' sum; `PlayerID = slot + 1`; `PRAGMA foreign_key_check` empty; every `CapHit` equals `CapMath.CapHit` (F-12 §5) |
-| | Later rows continue | After creation, a contract added through EF gets the highest `ContractID` + 1 |
-| | All or nothing | A write step that fails partway (a player whose college isn't in the list) leaves no `.gfo`, `-wal`, `-shm` or snapshot folder, and nothing open, and the exception surfaces; a cancel while saving does the same |
-| | The `created` snapshot | Holds the league (read-only, its player count) |
-| | Deterministic | Two saves from the same seed and season hold the same rows, apart from `SaveID` and the timestamps |
-| | The rest | Progress reports `Generating`, then `Saving`; a blank name is refused with no file; 1304's counts |
+| **2** | `SaveManagerTests` (four cases, done) | The write step commits in one command with the save, and the `created` snapshot holds its rows; it can read the flushed `SaveInfo` row; a write step that throws, or is cancelled, leaves no `.gfo`, `-wal`, `-shm` or snapshot folder, and the exception surfaces |
+| | `BulkInsertTests` (D-091, done) | A bulk-inserted player and contract match EF's own insert in every column; the rows roll back with the command; a generated key left at its default and a type outside the model are refused |
+| | `PlayerRowsTests` (D-091, done) | Every measurable, attribute, trait and hidden rating of seed 1's 1,846 players lands in the `Player` property named after it; the IDs and the status are the caller's; an undrafted free agent has no team, draft or jersey |
+| | `CreateLeagueTests`: the round trip (done) | Seed 42, season 2026, read back through EF (`ILeagueReadDb`) and compared with the `GeneratedLeague` field by field: the structure against the team set, the colleges, every player column (enum names, dates, nulls, doubles exact), every contract and year, the cap, and `SaveInfo`'s position (`UserTeamID` null) |
+| | IDs and counts (done) | 2, 8, 32, 230, 1,846, one contract per rostered player, the years' sum; `PlayerID = slot + 1`; `PRAGMA foreign_key_check` empty; every `CapHit` equals `CapMath.CapHit` (F-12 §5) |
+| | Later rows continue (done) | After creation, a prospect and a contract added through EF get the next `PlayerID` and `ContractID` |
+| | All or nothing (done) | Through `CreateLeague`: a write step that fails partway (a player whose college isn't in the list) leaves no `.gfo`, `-wal`, `-shm` or snapshot folder, and nothing open, and the exception surfaces; a cancel while saving does the same (`SaveManagerTests` already proves it for `SaveManager`) |
+| | The `created` snapshot (done) | Holds the league (read-only, its player count) |
+| | Deterministic (done) | Two saves from the same seed and season hold the same rows, apart from `SaveID` and the timestamps |
+| | The rest (done) | Progress reports `Generating`, then `Saving`; a blank name is refused with no file and no 1304 |
+| | 1304 (done) | One Information event with the league's name, 32 teams, 1,846 players and 1,696 contracts (from the data's roster sizes), seed 42, season 2026, and a time between 1 ms and the call's own |
 | **3** | `LeagueCommandsTests` | The pick sets `UserTeamID`, raises `UserTeamPicked` after the commit and logs 1305; an unknown team is refused, with nothing changed and no event; a second pick replaces the first; restoring `created` brings `UserTeamID` back to null |
 | **All** | The torture tests | Unchanged, still green |
 
 ## 6. Done when
 
-- [ ] Slice 1: the entities, `SaveInfo`'s position, `Phase`, `LeagueCalendar`, the configurations, the restricted deletes, the `TypedIDs` change, the DbSets, `StadiumID` gone, `InitialCreate` regenerated (schema 1), the older-build status (`LeagueSchema.Mismatch`, the list, open, restore and the card).
-- [ ] Slice 2: `ISaveManager.CreateAsync(name, write)`, `SaveManager`, `LeagueWriter`, `CreateLeague` and event 1304.
+- [x] Slice 1: the entities, `SaveInfo`'s position, `Phase`, `LeagueCalendar`, the configurations, the restricted deletes, the `TypedIDs` change, the DbSets, `StadiumID` gone, `InitialCreate` regenerated (schema 1), the older-build status (`LeagueSchema.Mismatch`, the list, open, restore and the card) (2026-10-30). Open: the doc-comment tidy in Core (below).
+- [x] Slice 2: `ISaveManager.CreateAsync(name, write)`, `SaveManager`, `LeagueWriter`, `CreateLeague` and event 1304, with the bulk insert (`IUnitOfWork.InsertAsync`, D-091) and `PlayerRows.ToPlayer` (2026-10-31). `CreateAsync(name, write)`, `SaveManager` and `CreateLeague` are yours; the rest Claude's, at your request.
 - [ ] Slice 3: `LeagueCommands.PickUserTeamAsync`, `UserTeamPicked`, `LeagueErrors` and event 1305.
-- [ ] Every §5 test passes, each proven to fail on a planted problem; the torture tests stay green.
+- [ ] Every §5 test passes, each proven to fail on a planted problem; the torture tests stay green. Slice 1's pass (2026-10-30): `LeagueCalendarTests` (35 seasons and the two edges), `LeagueSchemaTests` (6), `TypedIDTests` without `StadiumID`, and the older-build cases; 653 in all, each caught at least one planted bug. Slice 2 so far (2026-10-31): `SaveManagerTests`' four write-step cases, `BulkInsertTests` (4), `PlayerRowsTests` (3) and `CreateLeagueTests` (13: the round trip in four parts, the IDs and counts, the snapshot, progress, 1304, later rows, a failed and a cancelled write, determinism and a blank name); 677 in all, and each of the 24 caught a planted bug.
+  - **Open in slice 1, the doc-comment tidy (yours):** `SaveInfo`'s summary ends mid-sentence ("…already decided;") and its five new properties have none (§3.2 has the text); the `// Core/…` path comments copied from this guide's snippets sit in `Contract.cs` (in place of `Contract`'s summary), `Phase.cs` and `Player.cs`; `TrainingCampOpens` keeps its "3." and "4." step comments; `LeagueCalendar.cs`, `LeagueEntities.cs`, `Player.cs` and `Contract.cs` have no final newline (`dotnet format whitespace --folder --include src/Core` fixes those).
 - [ ] Reviewed by Claude against this guide, PERSISTENCE §5, F-02, F-03 and F-12 §5, and DATA_ACCESS_GUIDE §10; `./build.ps1` green.
-- [ ] PERSISTENCE §5 marked as built, LOGGING.md §8.2's 1304–1305, CLAUDE.md's gotchas; the plan's WP5 marked done; committed by you.
+- [ ] PERSISTENCE §5 marked as built, LOGGING.md §8.2's 1305 (1304 is in), CLAUDE.md's gotchas; the plan's WP5 marked done; committed by you.
 
 ## 7. Order of work
 
 One commit per slice (D-076), each with its tests:
 
 1. **Slice 1.** Regenerate `InitialCreate` last, after the entities and configurations settle, and read it. If you change an entity afterwards, regenerate it again (D-090).
-2. **Slice 2.** `SaveManager`'s change first (Claude's all-or-nothing tests need only it and a failing write step), then `LeagueWriter` and `CreateLeague`. The round trip is the moment of truth: most mismatches are a column name or an enum written as a number.
+2. **Slice 2.** `SaveManager`'s change first (Claude's all-or-nothing tests need only it and a failing write step), then `LeagueWriter` and `CreateLeague`. The round trip is the moment of truth: with the bulk insert converting the values, the likeliest mismatch is a rating set from the wrong key.
 3. **Slice 3**, the smallest.
 
-Seed 42 should write well under a second: the bulk path costs about 3 µs a row (Spike S0a), and this is about 10,300 rows. Read it from 1304 and SaveWriter's 2000.
+Seed 42 should write well under a second: the bulk path costs about 3 µs a row (Spike S0a), and this is about 8,500 rows (measured in Debug: the whole create, with the migration and the `created` snapshot, took 420 ms on 2026-10-30, and about 230 ms warm through the bulk insert on 2026-10-31). Read it from 1304 and SaveWriter's 2000.
 
 ## 8. Gotchas
 
-- **Raw SQL skips EF's converters.** Enums go in by name and typed IDs as `.Value`. The round trip reads everything back through EF, so a mismatch fails there, not on a screen in WP9.
+- **EF 10 refuses to migrate a model that doesn't match its migration** (`PendingModelChangesWarning`, thrown, found 2026-10-30). Change an entity or a configuration without regenerating `InitialCreate`, and every test that creates a save fails at once. `LeagueSchemaTests.The_model_matches_the_migration` is the one that names the cause.
+- **The bulk insert writes keys as they are** (D-091). Set every ID yourself; a generated key left at its default is refused rather than written as 0. Its rows aren't tracked, so query one before changing it in the same command.
+- **A rating set from the wrong key compiles** (`Speed = p.Ratings[PlayerAttribute.Agility]`). `PlayerRowsTests` catches it, and a new `Measurable`, `PlayerAttribute` or `PersonalityTrait` member fails that test until `ToPlayer` has its line.
 - **Foreign keys are on** for every connection (`LeagueSession`), so parents go in before children: §4.2's table order.
 - **An `int` key is AUTOINCREMENT by EF's convention; a typed-ID key isn't** (probed, §9). `Seasons.Season` needs `ValueGeneratedNever()`, and `TypedIDs` covers every typed-ID key.
 - **Your M0 dev saves are stale now.** The regenerated `InitialCreate` has a new ID, so the load screen marks them "Saved by an older development build". Delete them there.
@@ -566,9 +549,9 @@ Seed 42 should write well under a second: the bulk path costs about 3 µs a row 
 - **`Player` has two relationships to `Teams`** (`TeamID` and `DraftTeamID`). Give each its own `HasForeignKey`, then check that the migration puts two foreign keys on `Players`, on those two columns, and adds no column of its own.
 - **The DevHost locks the DLLs,** and `dotnet ef` builds Infrastructure: stop the DevHost before adding the migration.
 
-## 9. The probes (2026-10-29)
+## 9. The probes (2026-10-29 and 31)
 
-Two throwaway EF Core 10.0.13 + SQLite programs, outside the repository, on the same packages as the app:
+Throwaway EF Core 10.0.13 + SQLite programs and test builds, outside the repository, on the same packages as the app:
 
 | Question | Answer |
 |---|---|
@@ -579,6 +562,8 @@ Two throwaway EF Core 10.0.13 + SQLite programs, outside the repository, on the 
 | Is a converted typed-ID key generated? | No (`ValueGenerated.Never`), so its table gets a plain `PRIMARY KEY`: hence §3.3's change |
 | Is an `int` key generated? | Yes (`OnAdd`), so `Seasons` would become AUTOINCREMENT: hence `ValueGeneratedNever()` |
 | What does an optional foreign key do on delete? | Nothing in SQL (no `ON DELETE` clause); a required one would cascade: hence the restrict loop |
+| Does the bulk insert write what the column arrays did? (2026-10-31) | Yes: seed 42 through both, compared by `quote()` in every column of all eight tables, with the same `SaveInfo` position and a clean `foreign_key_check`. The whole create took about 230 ms warm either way |
+| Are `ExecuteUpdateAsync` and `ExecuteDeleteAsync` in the core package? (2026-10-31) | Yes, in EF 10's `Microsoft.EntityFrameworkCore`, so Application has them (D-091 #3) |
 
 ## 10. Questions (answered 2026-10-29)
 
@@ -588,5 +573,8 @@ Both as recommended ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-wri
 
 Later, on 2026-10-30 ([D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand)):
 3. ~~Does every schema change need a migration?~~ → **Not until 1.0:** one `InitialCreate`, regenerated on each change. A save from an older build gets its own status and is deleted by hand.
+
+On 2026-10-31 ([D-091](../DECISIONS.md#d-091-bulk-inserts-go-through-one-shared-insert-that-writes-entities-from-efs-model)):
+4. ~~Does every bulk path write its own insert?~~ → **No:** one shared insert, `uow.InsertAsync(entities)`, built from EF's model. Updates and deletes need nothing new.
 
 **Still owed, before WP8:** F-01's M1 spec (WP0). WP5 doesn't need it: the wizard's steps, its cancel and its error cases are WP8's.

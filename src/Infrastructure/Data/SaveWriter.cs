@@ -4,6 +4,8 @@ using GridironFrontOffice.Application.Data;
 using GridironFrontOffice.Core.Results;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
 
@@ -169,6 +171,53 @@ internal sealed class UnitOfWork(LeagueDbContext db) : IUnitOfWork
         command.Transaction = (SqliteTransaction)db.Database.CurrentTransaction!.GetDbTransaction();   // same transaction, always
         command.CommandText = sql;
         return command;
+    }
+
+    public async Task InsertAsync<TEntity>(IEnumerable<TEntity> rows, CancellationToken ct = default) where TEntity : class
+    {
+        ArgumentNullException.ThrowIfNull(rows);
+        var entityType = db.Model.FindEntityType(typeof(TEntity))
+            ?? throw new InvalidOperationException($"{typeof(TEntity).Name} isn't an entity in the league's model.");
+        var table = StoreObjectIdentifier.Table(entityType.GetTableName()!, entityType.GetSchema());
+        var columns = entityType.GetProperties().ToArray();
+        if (columns.FirstOrDefault(c => c.IsShadowProperty()) is { } shadow)
+        {
+            throw new InvalidOperationException($"{typeof(TEntity).Name}.{shadow.Name} is a shadow property, which a row can't carry.");
+        }
+
+        var sql = db.GetService<ISqlGenerationHelper>();
+        var command = CreateCommand(
+            $"INSERT INTO {sql.DelimitIdentifier(table.Name, table.Schema)} " +
+            $"({string.Join(", ", columns.Select(c => sql.DelimitIdentifier(c.GetColumnName(table)!)))}) " +
+            $"VALUES ({string.Join(", ", columns.Select((_, i) => "$p" + i))})");
+        await using (command.ConfigureAwait(false))
+        {
+            // EF's own type mappings make the parameters and convert the values, as SaveChanges does: enums by name,
+            // typed IDs as their ints
+            var getters = columns.Select(c => c.GetGetter()).ToArray();
+            var mappings = columns.Select(c => c.GetRelationalTypeMapping()).ToArray();
+            var parameters = columns.Select((c, i) => mappings[i].CreateParameter(command, "$p" + i, null, c.IsNullable)).ToArray();
+            command.Parameters.AddRange(parameters);
+            // A generated key holding its default would be written as 0, not generated: rows bring their own keys
+            var keys = columns.Select(c => c.IsPrimaryKey() && c.ValueGenerated != ValueGenerated.Never).ToArray();
+            await command.PrepareAsync(ct).ConfigureAwait(false);
+
+            foreach (var row in rows)
+            {
+                for (var i = 0; i < columns.Length; i++)
+                {
+                    if (keys[i] && getters[i].HasSentinelValueUsingContainingEntity(row))
+                    {
+                        throw new InvalidOperationException($"A {typeof(TEntity).Name} row has no {columns[i].Name}: the bulk insert writes keys as they are.");
+                    }
+
+                    var value = getters[i].GetClrValueUsingContainingEntity(row);
+                    parameters[i].Value = (mappings[i].Converter is { } converter ? converter.ConvertToProvider(value) : value) ?? DBNull.Value;
+                }
+
+                await command.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+            }
+        }
     }
 }
 

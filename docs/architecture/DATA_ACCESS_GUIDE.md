@@ -149,7 +149,9 @@ public interface ILeagueReadDb
 public interface IUnitOfWork
 {
     ILeagueDb Db { get; }                         // bound to THIS command's transaction
-    DbCommand CreateCommand(string sql);          // raw SQL on the SAME connection + transaction (hot paths only)
+    Task InsertAsync<TEntity>(IEnumerable<TEntity> rows, CancellationToken ct = default)
+        where TEntity : class;                    // the bulk insert, from EF's model, untracked (§5.4, D-091)
+    DbCommand CreateCommand(string sql);          // raw SQL on the SAME connection + transaction (what InsertAsync can't do)
     void Raise(IDomainEvent domainEvent);         // delivered only if the command commits
 }
 
@@ -326,6 +328,11 @@ internal sealed class UnitOfWork(LeagueDbContext db) : IUnitOfWork
         cmd.CommandText = sql;
         return cmd;
     }
+
+    // The bulk insert (§5.4, D-091). From the entity's IEntityType: the table and its columns, each property's
+    // getter and its RelationalTypeMapping, which makes the parameter and converts the value as SaveChanges does.
+    // One prepared INSERT on CreateCommand's transaction, executed once per row; a generated key at its default is refused.
+    public Task InsertAsync<TEntity>(IEnumerable<TEntity> rows, CancellationToken ct = default) where TEntity : class { /* … */ }
 }
 
 internal sealed class SaveReader(ILeagueSessionAccessor sessions) : ISaveReader
@@ -452,26 +459,25 @@ internal static class ContractOperations
 > Calling `SaveChangesAsync` inside a command is safe. EF sees the command's transaction is already open, so the changes stay uncommitted until `SaveWriter` commits. (EF also takes an automatic savepoint around each `SaveChanges` inside an existing transaction. Don't rely on it. A failure still aborts the whole command.)
 
 ### 5.4 Bulk writes (hot paths)
-Change tracking is too slow for ~26k stat rows per week. Use the raw-SQL escape hatch. It's still the same connection and the same transaction.
+Change tracking is too slow for ~26k stat rows per week. Build the entities and hand them to `uow.InsertAsync` (D-091). It's still the same connection and the same transaction.
 
 ```csharp
 // GridironFrontOffice.Application/Season/GameResultWriter.cs (called inside the "Season.PersistWeek" command)
-internal static async Task InsertPlayerStatsAsync(IUnitOfWork uow, IReadOnlyList<PlayerGameStatLine> lines, CancellationToken ct)
-{
-    await using var cmd = uow.CreateCommand(
-        "INSERT INTO PlayerGameStats (GameID, PlayerID, TeamID, PassAtt, PassCmp, PassYds /* … */) " +
-        "VALUES ($game, $player, $team, $att, $cmp, $yds /* … */)");
-    DbParameter Param(string name) { var p = cmd.CreateParameter(); p.ParameterName = name; cmd.Parameters.Add(p); return p; }
-    var pGame = Param("$game"); var pPlayer = Param("$player"); /* … */
-    cmd.Prepare();                                         // compile once, execute many
-    foreach (var l in lines)
+internal static Task InsertPlayerStatsAsync(IUnitOfWork uow, IReadOnlyList<PlayerGameStatLine> lines, CancellationToken ct) =>
+    uow.InsertAsync(lines.Select(l => new PlayerGameStat
     {
-        pGame.Value = l.GameID; pPlayer.Value = l.PlayerID; /* … */
-        await cmd.ExecuteNonQueryAsync(ct);
-    }
-}
+        GameID = l.GameID, PlayerID = l.PlayerID, TeamID = l.TeamID, PassAtt = l.PassAtt, /* … */
+    }), ct);
 ```
-> **What counts as a bulk path (measured in Spike S0a):** EF change tracking costs about **100 µs per inserted entity** (a 10,500-entity league seed took 1.1 s warm), while raw prepared statements cost about **3 µs per row**. So stats, play logs, **league generation and yearly draft classes** all use `uow.CreateCommand`. Awaiting `ExecuteNonQueryAsync` per row costs within about 12% of the sync call, so keep the async form; no analyzer suppression is needed.
+
+`InsertAsync` prepares one `INSERT` for the entity's table and runs it once per row. The table, the columns and each value's conversion (enums by name, typed IDs as their ints) come from EF's model, so a row is stored exactly as `SaveChanges` stores it. Three rules:
+- **Rows bring their own keys.** A generated key left at its default is refused: it would be written as 0. `AUTOINCREMENT` continues past the keys written, so a later `Add` gets a fresh one.
+- **The rows aren't tracked.** A command that changes them afterwards queries them first.
+- **Parents first.** Foreign keys are on, so insert a table's parents before it. If a parent was added through EF in the same command, flush with `SaveChangesAsync` first.
+
+> **What counts as a bulk path (measured in Spike S0a):** EF change tracking costs about **100 µs per inserted entity** (a 10,500-entity league seed took 1.1 s warm), while raw prepared statements cost about **3 µs per row**. So stats, play logs, **league generation and yearly draft classes** all use `uow.InsertAsync`. Building its statement from EF's model costs about the same as hand-written SQL: seed 42's league writes the same rows in 226 ms warm, against 204 ms (2026-10-31). Awaiting `ExecuteNonQueryAsync` per row costs within about 12% of the sync call, so the async form stays; no analyzer suppression is needed.
+
+> **Updates and deletes of many rows** use EF's set-based `ExecuteUpdateAsync` and `ExecuteDeleteAsync` (in the core package, so Application has them): one statement, in the command's transaction, untracked. Every foreign key restricts deletes, so delete children first. Raw SQL that neither covers goes through `uow.CreateCommand(sql)`.
 
 > Mixing EF changes and raw SQL in one command is fine and atomic. Both use the same transaction. The only rule is to call `uow.Db.SaveChangesAsync()` *before* raw SQL that depends on rows EF hasn't flushed yet.
 
@@ -535,6 +541,7 @@ Each step commits on its own and records itself in `AdvanceJournal` *in the same
 | One user or AI action = one `ExecuteAsync` | Spread one action across several `ExecuteAsync` calls and hope |
 | Return `Result.Fail` for business rule failures | Throw for business rules, or catch-and-continue on persistence errors |
 | Share logic through operations that take `IUnitOfWork` | Call a command from inside a command |
+| Bulk inserts via `uow.InsertAsync(entities)`; set-based changes via `ExecuteUpdateAsync`/`ExecuteDeleteAsync` | `AddRange` thousands of rows, or hand-write an `INSERT` and its conversions |
 | Raw SQL via `uow.CreateCommand` | `new SqliteConnection(...)` anywhere outside Infrastructure |
 | Project reads to DTOs through `ISaveReader` | Return tracked entities to the UI, or keep them in component state |
 | `await` every command. Blazor handlers return `Task`. | `_ = DoAsync()`, `async void`, `.Result`, `.Wait()` |
@@ -651,6 +658,6 @@ public sealed class TransactionTortureTests : IAsyncLifetime   // each test gets
 - [ ] Reads project to DTOs through `ISaveReader`
 - [ ] No simulation, AI deliberation or I/O wait inside a write transaction
 - [ ] Every async call is awaited. No `async void`.
-- [ ] Bulk inserts use `uow.CreateCommand` with prepared parameters
+- [ ] Bulk inserts use `uow.InsertAsync`, with every row's key set and parents inserted first
 - [ ] Domain events raised with `uow.Raise` (never dispatched manually)
 - [ ] New schema → a migration plus an updated fixture save (at release time)
