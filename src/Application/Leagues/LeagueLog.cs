@@ -11,4 +11,8 @@ internal static partial class LeagueLog
 	/// </summary>
 	[LoggerMessage(EventId = 1304, Level = LogLevel.Information, Message = "League \"{LeagueName}\" created: {Teams} teams, {Players} players, {Contracts} contracts, seed {Seed}, season {Season}, in {ElapsedMs} ms")]
 	public static partial void LeagueCreated(ILogger logger, string leagueName, int teams, int players, int contracts, ulong seed, int season, long elapsedMs);
+
+	/// <summary>Logged after the pick commits (WP5 §4.3).</summary>
+	[LoggerMessage(EventId = 1305, Level = LogLevel.Information, Message = "{Abbreviation} is the user's team")]
+	public static partial void TeamPicked(ILogger logger, string abbreviation);
 }

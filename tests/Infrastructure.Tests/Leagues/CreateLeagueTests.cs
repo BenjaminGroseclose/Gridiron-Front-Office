@@ -352,7 +352,7 @@ public sealed class CreateLeagueTests(Seed42League league) : IClassFixture<Seed4
 	private static long Count(string path, string sql) => long.Parse(TestSave.ScalarText(path, sql)!, CultureInfo.InvariantCulture);
 
 	/// <summary>Every row of a table, every column by quote(), sorted.</summary>
-	private static string Dump(string path, string table)
+	internal static string Dump(string path, string table)
 	{
 		var columns = TestSave.ScalarText(path, $"SELECT group_concat(name, '|') FROM (SELECT name FROM pragma_table_info('{table}') ORDER BY cid)")!.Split('|');
 		var row = string.Join(" || '|' || ", columns.Select(c => $"quote(\"{c}\")"));
