@@ -1,8 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using GridironFrontOffice.Core.IDs;
 
 namespace GridironFrontOffice.Core.Players;
 
-// Core/Players/Player.cs
 /// <summary>
 /// A player's row (F-03 §5): bio and draft history, then one column per Measurable, PlayerAttribute and
 /// PersonalityTrait, named after the member, and the hidden ratings. True values: screens see them through
@@ -40,6 +40,13 @@ public sealed class Player
 	/// </summary>
 	public int? DraftPick { get; set; }
 	public TeamID? DraftTeamID { get; set; }
+
+	/// <summary>
+	/// True unless all four draft columns are set, so after <c>!IsUndrafted</c> their values need no <c>!</c>. In memory
+	/// only: EF doesn't map it, so a query writes <c>p.DraftSeason == null</c> (M1 WP6 §4.2).
+	/// </summary>
+	[MemberNotNullWhen(false, nameof(DraftSeason), nameof(DraftRound), nameof(DraftPick), nameof(DraftTeamID))]
+	public bool IsUndrafted => DraftSeason is null || DraftRound is null || DraftPick is null || DraftTeamID is null;
 	public int? JerseyNumber { get; set; }               // null for free agents
 
 	// Measurable's members, in its order: inches, pounds, seconds, reps of 225 lb
@@ -136,4 +143,14 @@ public sealed class Player
 	public double Ego { get; set; }
 
 	#endregion
+
+	/// <summary>
+	/// Whole years from <paramref name="birthDate"/> to <paramref name="date"/>, the league date (never the clock). A
+	/// February 29 birthday counts on February 28 in other years.
+	/// </summary>
+	public static int AgeOn(DateOnly birthDate, DateOnly date)
+	{
+		var age = date.Year - birthDate.Year;
+		return birthDate.AddYears(age) > date ? age - 1 : age;
+	}
 }

@@ -57,6 +57,35 @@ public sealed class PlayerRowsTests
 			.ShouldBe((null, null, null, null, null, null));
 	}
 
+	[Fact]
+	public void Every_attribute_trait_and_the_potential_survive_ToPlayer_then_ToSnapshot_under_their_own_keys()
+	{
+		var problems = new List<string>();
+
+		// D-093 #2: ToSnapshot is ToPlayer's mirror by hand, so a crossed pair compiles and only a round trip catches it
+		foreach (var p in League.Teams.SelectMany(t => t.Players).Concat(League.FreeAgents))
+		{
+			var snapshot = p.ToPlayer(new PlayerID(p.Slot + 1), new TeamID(3), PlayerStatus.Active, new CollegeID(1), null).ToSnapshot();
+
+			snapshot.Attributes.Keys.ShouldBe(Enum.GetValues<PlayerAttribute>(), ignoreOrder: true);
+			snapshot.Personality.Keys.ShouldBe(Enum.GetValues<PersonalityTrait>(), ignoreOrder: true);
+			problems.AddRange(Enum.GetValues<PlayerAttribute>()
+				.Where(a => snapshot.Attributes[a] != p.Ratings[a])
+				.Select(a => $"Slot {p.Slot}: {a} is {snapshot.Attributes[a]}, not {p.Ratings[a]}"));
+			problems.AddRange(Enum.GetValues<PersonalityTrait>()
+				.Where(t => snapshot.Personality[t] != p.Personality[t])
+				.Select(t => $"Slot {p.Slot}: {t} is {snapshot.Personality[t]}, not {p.Personality[t]}"));
+			if (snapshot.Potential != p.Hidden.Potential)
+			{
+				problems.Add($"Slot {p.Slot}: Potential is {snapshot.Potential}, not {p.Hidden.Potential}");
+			}
+
+			(snapshot.PlayerID, snapshot.TeamID, snapshot.Position).ShouldBe((new PlayerID(p.Slot + 1), (TeamID?)new TeamID(3), p.Position));
+		}
+
+		problems.Take(20).ShouldBeEmpty();
+	}
+
 	/// <summary>Each (property, expected value) pair against the row's property of that name, which must exist.</summary>
 	private static void Check(GeneratedPlayer p, Player row, IEnumerable<(string Name, object Expected)> values, List<string> problems)
 	{

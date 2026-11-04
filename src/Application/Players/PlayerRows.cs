@@ -10,6 +10,84 @@ namespace GridironFrontOffice.Application.Players;
 /// </summary>
 public static class PlayerRows
 {
+	public static PlayerSnapshot ToSnapshot(this Player p)
+	{
+		ArgumentNullException.ThrowIfNull(p);
+
+		var attributes = new Dictionary<PlayerAttribute, double>
+		{
+			// Physical
+			[PlayerAttribute.Speed] = p.Speed,
+			[PlayerAttribute.Acceleration] = p.Acceleration,
+			[PlayerAttribute.Agility] = p.Agility,
+			[PlayerAttribute.Strength] = p.Strength,
+			[PlayerAttribute.Stamina] = p.Stamina,
+			[PlayerAttribute.Toughness] = p.Toughness,
+
+			// Mental
+			[PlayerAttribute.Awareness] = p.Awareness,
+			[PlayerAttribute.Discipline] = p.Discipline,
+
+			// Passing
+			[PlayerAttribute.ArmStrength] = p.ArmStrength,
+			[PlayerAttribute.ShortAccuracy] = p.ShortAccuracy,
+			[PlayerAttribute.MediumAccuracy] = p.MediumAccuracy,
+			[PlayerAttribute.DeepAccuracy] = p.DeepAccuracy,
+			[PlayerAttribute.ThrowOnTheRun] = p.ThrowOnTheRun,
+			[PlayerAttribute.PocketPresence] = p.PocketPresence,
+			[PlayerAttribute.DecisionMaking] = p.DecisionMaking,
+
+			// Ball carrying
+			[PlayerAttribute.BallSecurity] = p.BallSecurity,
+			[PlayerAttribute.Vision] = p.Vision,
+			[PlayerAttribute.Elusiveness] = p.Elusiveness,
+			[PlayerAttribute.BreakTackle] = p.BreakTackle,
+
+			// Receiving
+			[PlayerAttribute.Hands] = p.Hands,
+			[PlayerAttribute.RouteRunning] = p.RouteRunning,
+			[PlayerAttribute.Release] = p.Release,
+			[PlayerAttribute.ContestedCatch] = p.ContestedCatch,
+
+			// Blocking
+			[PlayerAttribute.PassBlock] = p.PassBlock,
+			[PlayerAttribute.RunBlock] = p.RunBlock,
+			[PlayerAttribute.LeadBlock] = p.LeadBlock,
+
+			// Defense
+			[PlayerAttribute.PassRushPower] = p.PassRushPower,
+			[PlayerAttribute.PassRushFinesse] = p.PassRushFinesse,
+			[PlayerAttribute.BlockShedding] = p.BlockShedding,
+			[PlayerAttribute.Tackling] = p.Tackling,
+			[PlayerAttribute.Pursuit] = p.Pursuit,
+			[PlayerAttribute.HitPower] = p.HitPower,
+			[PlayerAttribute.ManCoverage] = p.ManCoverage,
+			[PlayerAttribute.ZoneCoverage] = p.ZoneCoverage,
+			[PlayerAttribute.Press] = p.Press,
+			[PlayerAttribute.BallSkills] = p.BallSkills,
+
+			// Special teams
+			[PlayerAttribute.KickPower] = p.KickPower,
+			[PlayerAttribute.KickAccuracy] = p.KickAccuracy,
+			[PlayerAttribute.PuntPower] = p.PuntPower,
+			[PlayerAttribute.PuntAccuracy] = p.PuntAccuracy,
+			[PlayerAttribute.Return] = p.Return,
+			[PlayerAttribute.SnapAccuracy] = p.SnapAccuracy,
+		};
+
+		var personality = new Dictionary<PersonalityTrait, double>
+		{
+			[PersonalityTrait.WorkEthic] = p.WorkEthic,
+			[PersonalityTrait.Coachability] = p.Coachability,
+			[PersonalityTrait.Greed] = p.Greed,
+			[PersonalityTrait.Loyalty] = p.Loyalty,
+			[PersonalityTrait.Competitiveness] = p.Competitiveness,
+			[PersonalityTrait.Ego] = p.Ego,
+		};
+
+		return new PlayerSnapshot(p.PlayerID, p.TeamID, p.Position, attributes, p.Potential, personality);
+	}
+
 	public static Player ToPlayer(this GeneratedPlayer p, PlayerID id, TeamID? team, PlayerStatus status, CollegeID college,
 		TeamID? draftTeam)
 	{
@@ -17,11 +95,22 @@ public static class PlayerRows
 
 		return new Player
 		{
-			PlayerID = id, TeamID = team, Status = status,
-			Position = p.Position, FirstName = p.FirstName, LastName = p.LastName, BirthDate = p.BirthDate,
-			CollegeID = college, HometownName = p.Hometown.Name, HometownState = p.Hometown.State,
-			Experience = p.Experience, DraftSeason = p.Draft?.Season, DraftRound = p.Draft?.Round, DraftPick = p.Draft?.Pick,
-			DraftTeamID = draftTeam, JerseyNumber = p.JerseyNumber,
+			PlayerID = id,
+			TeamID = team,
+			Status = status,
+			Position = p.Position,
+			FirstName = p.FirstName,
+			LastName = p.LastName,
+			BirthDate = p.BirthDate,
+			CollegeID = college,
+			HometownName = p.Hometown.Name,
+			HometownState = p.Hometown.State,
+			Experience = p.Experience,
+			DraftSeason = p.Draft?.Season,
+			DraftRound = p.Draft?.Round,
+			DraftPick = p.Draft?.Pick,
+			DraftTeamID = draftTeam,
+			JerseyNumber = p.JerseyNumber,
 
 			// Measurables
 			Height = p.Measurables[Measurable.Height],
@@ -95,8 +184,11 @@ public static class PlayerRows
 			SnapAccuracy = p.Ratings[PlayerAttribute.SnapAccuracy],
 
 			// Hidden
-			Potential = p.Hidden.Potential, DevelopmentCurve = p.Hidden.DevelopmentCurve, BustRisk = p.Hidden.BustRisk,
-			PeakAgeOffset = p.Hidden.PeakAgeOffset, InjuryProneness = p.Hidden.InjuryProneness,
+			Potential = p.Hidden.Potential,
+			DevelopmentCurve = p.Hidden.DevelopmentCurve,
+			BustRisk = p.Hidden.BustRisk,
+			PeakAgeOffset = p.Hidden.PeakAgeOffset,
+			InjuryProneness = p.Hidden.InjuryProneness,
 
 			// Personality
 			WorkEthic = p.Personality[PersonalityTrait.WorkEthic],

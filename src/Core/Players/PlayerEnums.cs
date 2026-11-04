@@ -43,6 +43,11 @@ public enum AttributeGroup
 	Physical, Mental, Passing, BallCarrying, Receiving, Blocking, Defense, SpecialTeams,
 }
 
+public enum TraitLevel
+{
+	Low, Average, High
+}
+
 /// <summary>
 /// The 42 player attributes (F-03 §4.2, D-050: every one is read by the sim), in that table's order. Each is also a
 /// column in the Players table, so renaming one is a schema change.
