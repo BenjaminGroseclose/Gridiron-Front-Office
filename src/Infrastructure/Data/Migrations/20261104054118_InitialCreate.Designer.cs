@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GridironFrontOffice.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(LeagueDbContext))]
-    [Migration("20261030175834_InitialCreate")]
+    [Migration("20261104054118_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -583,7 +583,7 @@ namespace GridironFrontOffice.Infrastructure.Data.Migrations
 
                     b.HasIndex("DraftTeamID");
 
-                    b.HasIndex("TeamID");
+                    b.HasIndex("TeamID", "Status");
 
                     b.ToTable("Players", (string)null);
                 });

@@ -332,9 +332,9 @@ namespace GridironFrontOffice.Infrastructure.Data.Migrations
                 column: "DraftTeamID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Players_TeamID",
+                name: "IX_Players_TeamID_Status",
                 table: "Players",
-                column: "TeamID");
+                columns: new[] { "TeamID", "Status" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_SaveInfo_UserTeamID",

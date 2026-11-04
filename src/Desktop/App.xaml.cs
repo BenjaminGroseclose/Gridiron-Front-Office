@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
+using GridironFrontOffice.Application;
 using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Settings;
 using GridironFrontOffice.Desktop.Diagnostics;
@@ -77,6 +78,7 @@ internal sealed partial class App : System.Windows.Application
         var services = new ServiceCollection();
         services.AddLogging(logging => logging.ClearProviders().AddSerilog(Log.Logger));
         services.AddGfoInfrastructure(paths, app);   // paths, the save manager and the data layer (DATA_ACCESS_GUIDE.md §3.6)
+        services.AddGfoApplication();                // perception and the query services (M1 WP6)
         services.AddSingleton<IPlatformServices, WindowsPlatformServices>();   // the Recycle Bin and Explorer
         services.AddSingleton<ISettingsStore>(_settings);
         services.AddWpfBlazorWebView();

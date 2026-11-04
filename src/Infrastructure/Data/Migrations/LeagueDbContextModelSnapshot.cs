@@ -580,7 +580,7 @@ namespace GridironFrontOffice.Infrastructure.Data.Migrations
 
                     b.HasIndex("DraftTeamID");
 
-                    b.HasIndex("TeamID");
+                    b.HasIndex("TeamID", "Status");
 
                     b.ToTable("Players", (string)null);
                 });

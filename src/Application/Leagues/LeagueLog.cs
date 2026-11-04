@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GridironFrontOffice.Application.Leagues;
 
-/// <summary>New League's messages (M1 WP5 guide §4.4). Event IDs 1304–1329, after league generation's 1300–1303.</summary>
+/// <summary>New League's messages (M1 WP5 guide §4.4). Event IDs 1304–1305, after league generation's 1300–1303.</summary>
 internal static partial class LeagueLog
 {
 	/// <summary>

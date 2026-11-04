@@ -89,7 +89,7 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 
 		var playerCount = rosters.Sum(r => r.Count) + freeAgents.Count;
 		var elapsedMs = (long)time.GetElapsedTime(started).TotalMilliseconds;
-		PlayerGenerationLog.LeagueGenerated(logger, season, seed, playerCount, elapsedMs);
+		PlayerLog.LeagueGenerated(logger, season, seed, playerCount, elapsedMs);
 
 		var generatedTeams = teams.Select((team, t) => new GeneratedTeam(team, strengths[t], rosters[t])).ToList();
 
@@ -357,7 +357,7 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 		var rounded = Math.Round(factor, 3, MidpointRounding.AwayFromZero);
 		var before = this.Percent(mean);
 		var after = this.Percent(rosters.Average(r => r.Sum(p => CapTrades.CapHit(p, season))));
-		PlayerGenerationLog.LeaguePayScaled(logger, rounded, before, after);
+		PlayerLog.LeaguePayScaled(logger, rounded, before, after);
 	}
 
 	/// <summary>
@@ -373,7 +373,7 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 		var minPercent = this.Percent(totals.Min());
 		var maxPercent = this.Percent(totals.Max());
 		var meanPercent = this.Percent(totals.Average());
-		PlayerGenerationLog.CapFitted(logger, trades, minPercent, maxPercent, meanPercent);
+		PlayerLog.CapFitted(logger, trades, minPercent, maxPercent, meanPercent);
 
 		for (var t = 0; t < totals.Count; t++)
 		{
@@ -382,7 +382,7 @@ public sealed class LeagueGenerator(ISeedData data, ILogger<LeagueGenerator> log
 			{
 				var team = data.TeamSet.Teams[t].Abbr;
 				var percent = this.Percent(totals[t]);
-				PlayerGenerationLog.TeamOutsideCapBand(logger, team, percent);
+				PlayerLog.TeamOutsideCapBand(logger, team, percent);
 			}
 		}
 	}

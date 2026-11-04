@@ -91,6 +91,22 @@ public sealed class LeagueSchemaTests
 		columns["DevelopmentCurve"].ShouldBe("TEXT", "An enum is stored by name.");
 	}
 
+	[Fact]
+	public async Task Players_has_the_TeamID_Status_index_and_no_TeamID_index_of_its_own()
+	{
+		// The indexes the migration created (origin 'c', not the primary key's), each with its columns in key order
+		var indexes = await TablesAsync(
+			"SELECT l.name, (SELECT group_concat(name, ',') FROM (SELECT name FROM pragma_index_info(l.name) ORDER BY seqno)) " +
+			"FROM pragma_index_list('Players') l WHERE l.origin = 'c' ORDER BY l.name");
+
+		indexes.Select(x => $"{x[0]} ({x[1]})").ShouldBe(
+		[
+			"IX_Players_CollegeID (CollegeID)",
+			"IX_Players_DraftTeamID (DraftTeamID)",
+			"IX_Players_TeamID_Status (TeamID,Status)",
+		], customMessage: "GetRosterAsync's index (WP6 §3) starts with TeamID, so it covers the foreign key and replaces EF's IX_Players_TeamID.");
+	}
+
 	/// <summary>The model alone: listing migrations and comparing the model never opens the connection.</summary>
 	private static LeagueDbContext Model() =>
 		new(new DbContextOptionsBuilder<LeagueDbContext>().UseSqlite("Data Source=:memory:").Options);

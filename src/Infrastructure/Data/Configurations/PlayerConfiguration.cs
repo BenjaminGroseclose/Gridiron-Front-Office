@@ -16,5 +16,6 @@ internal sealed class PlayerConfiguration : IEntityTypeConfiguration<Player>
 		builder.HasOne<Team>().WithMany().HasForeignKey(x => x.TeamID);
 		builder.HasOne<Team>().WithMany().HasForeignKey(x => x.DraftTeamID);
 		builder.HasOne<College>().WithMany().HasForeignKey(x => x.CollegeID);
+		builder.HasIndex(x => new { x.TeamID, x.Status });
 	}
 }
