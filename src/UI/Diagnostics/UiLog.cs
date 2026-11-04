@@ -16,4 +16,7 @@ internal static partial class UiLog
 
     [LoggerMessage(EventId = 8003, Level = LogLevel.Warning, Message = "gfo-diagnostics.js isn't loaded by the host page, so JavaScript errors won't be logged")]
     public static partial void DiagnosticsScriptMissing(ILogger logger, Exception exception);
+
+    [LoggerMessage(EventId = 8004, Level = LogLevel.Error, Message = "Couldn't load the league header after {Trigger}")]
+    public static partial void HeaderLoadFailed(ILogger logger, Exception exception, string trigger);
 }

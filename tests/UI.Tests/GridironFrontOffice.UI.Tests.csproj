@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
   <ItemGroup>
     <ProjectReference Include="..\..\src\UI\GridironFrontOffice.UI.csproj" />
+    <!-- Test-only (D-093 #1): UI tests that need read models build a real save, as the hosts do. -->
+    <ProjectReference Include="..\..\src\Infrastructure\GridironFrontOffice.Infrastructure.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="bunit" />
