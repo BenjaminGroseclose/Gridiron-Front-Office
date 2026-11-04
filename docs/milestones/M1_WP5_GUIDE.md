@@ -1,6 +1,6 @@
 # M1 · WP5 builder's guide: the schema and `CreateLeague`
 
-> **Status:** 🔨 **In progress** (2026-10-31: slices 1–3 built and tested; the review and the close-out next) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP5](M1_THE_LEAGUE.md#wp5--schema-and-createleague-m) · **Size:** M · **Written:** 2026-10-29
+> **Status:** ✅ **Done 2026-11-01** (three slices, reviewed and closed out: §6) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP5](M1_THE_LEAGUE.md#wp5--schema-and-createleague-m--done-2026-11-01) · **Size:** M · **Written:** 2026-10-29
 >
 > WP5 puts WP4's league in the save. The regenerated `InitialCreate` holds the league's eight tables and `SaveInfo`'s league position ([D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand): one migration until 1.0). `CreateLeague` generates a league outside any transaction, then writes the save and the league in one command ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)), so a save never exists without its league. A second, small command records the user's team. Nothing on screen changes yet: WP8's wizard is the first caller. When WP5 is done, a seed-42 league round-trips through a real `.gfo` file, column by column.
 
@@ -49,7 +49,7 @@ src/Infrastructure/
 │  ├─ LeagueDbContext.cs             + the DbSets, deletes restricted (§3.3)
 │  ├─ SaveWriter.cs                  UnitOfWork.InsertAsync, the bulk insert from EF's model (D-091, Claude)
 │  ├─ TypedIDs.cs                    every typed-ID key generated and AUTOINCREMENT (§3.3)
-│  ├─ Configurations/                + LeagueConfigurations.cs, PlayerConfiguration.cs, ContractConfigurations.cs; SaveInfo's FK
+│  ├─ Configurations/                + one configuration per entity (Conference … ContractYear, LeagueSeason); SaveInfo's FK
 │  └─ Migrations/                    InitialCreate, regenerated (D-090; schema 1)
 └─ Saves/
    ├─ SaveManager.cs                 CreateAsync(name, write): the write step inside Save.Create (§4.2)
@@ -289,7 +289,7 @@ internal sealed class PlayerConfiguration : IEntityTypeConfiguration<Player>
 | `ContractYears` | `(ContractID, Season)` | `ContractID` |
 | `SaveInfo` | `SaveID` (as now) | **`UserTeamID?`** to `Teams` |
 
-EF adds an index for every foreign key, which covers M1's reads (a team's players, a player's contract). WP6 adds others if a query plan asks for one (PERSISTENCE §5.6).
+EF adds an index for every foreign key, which covers M1's reads (a team's players, a player's contract). WP6 adds `Players(TeamID, Status)` with `GetRoster`, its first query (PERSISTENCE §5.6).
 
 **`LeagueDbContext`** gets the eight `DbSet`s, the explicit `ILeagueReadDb` queryables beside them (like `SaveInfo`'s), and two lines in `OnModelCreating`:
 
@@ -520,10 +520,10 @@ Per slice, each proven to fail on a planted problem. Every save is a real file i
 - [x] Slice 1: the entities, `SaveInfo`'s position, `Phase`, `LeagueCalendar`, the configurations, the restricted deletes, the `TypedIDs` change, the DbSets, `StadiumID` gone, `InitialCreate` regenerated (schema 1), the older-build status (`LeagueSchema.Mismatch`, the list, open, restore and the card) (2026-10-30). Open: the doc-comment tidy in Core (below).
 - [x] Slice 2: `ISaveManager.CreateAsync(name, write)`, `SaveManager`, `LeagueWriter`, `CreateLeague` and event 1304, with the bulk insert (`IUnitOfWork.InsertAsync`, D-091) and `PlayerRows.ToPlayer` (2026-10-31). `CreateAsync(name, write)`, `SaveManager` and `CreateLeague` are yours; the rest Claude's, at your request.
 - [x] Slice 3: `LeagueCommands.PickUserTeamAsync`, `UserTeamPicked`, `LeagueErrors` and event 1305 (2026-10-31), yours.
-- [ ] Every §5 test passes, each proven to fail on a planted problem; the torture tests stay green. Slice 1's pass (2026-10-30): `LeagueCalendarTests` (35 seasons and the two edges), `LeagueSchemaTests` (6), `TypedIDTests` without `StadiumID`, and the older-build cases; 653 in all, each caught at least one planted bug. Slice 2 so far (2026-10-31): `SaveManagerTests`' four write-step cases, `BulkInsertTests` (4), `PlayerRowsTests` (3) and `CreateLeagueTests` (13: the round trip in four parts, the IDs and counts, the snapshot, progress, 1304, later rows, a failed and a cancelled write, determinism and a blank name); 677 in all, and each of the 24 caught a planted bug. Slice 3 (2026-10-31): `LeagueCommandsTests` (4); 681 in all, and the 8 planted bugs were each caught.
-  - **Open in slice 1, the doc-comment tidy (yours):** `SaveInfo`'s summary ends mid-sentence ("…already decided;") and its five new properties have none (§3.2 has the text); the `// Core/…` path comments copied from this guide's snippets sit in `Contract.cs` (in place of `Contract`'s summary), `Phase.cs` and `Player.cs`; `TrainingCampOpens` keeps its "3." and "4." step comments; `LeagueCalendar.cs`, `LeagueEntities.cs`, `Player.cs` and `Contract.cs` have no final newline (`dotnet format whitespace --folder --include src/Core` fixes those).
-- [ ] Reviewed by Claude against this guide, PERSISTENCE §5, F-02, F-03 and F-12 §5, and DATA_ACCESS_GUIDE §10; `./build.ps1` green.
-- [ ] PERSISTENCE §5 marked as built, CLAUDE.md's gotchas (LOGGING.md §8.2 has 1304 and 1305); the plan's WP5 marked done; committed by you.
+- [x] Every §5 test passes, each proven to fail on a planted problem; the torture tests stay green. Slice 1's pass (2026-10-30): `LeagueCalendarTests` (35 seasons and the two edges), `LeagueSchemaTests` (6), `TypedIDTests` without `StadiumID`, and the older-build cases; 653 in all, each caught at least one planted bug. Slice 2 so far (2026-10-31): `SaveManagerTests`' four write-step cases, `BulkInsertTests` (4), `PlayerRowsTests` (3) and `CreateLeagueTests` (13: the round trip in four parts, the IDs and counts, the snapshot, progress, 1304, later rows, a failed and a cancelled write, determinism and a blank name); 677 in all, and each of the 24 caught a planted bug. Slice 3 (2026-10-31): `LeagueCommandsTests` (4); 681 in all, and the 8 planted bugs were each caught.
+  - **Slice 1's doc-comment tidy (yours, in the close-out commit):** `SaveInfo`'s summary ends mid-sentence ("…already decided;") and its five new properties have none (§3.2 has the text); the `// Core/…` path comments copied from this guide's snippets sit in `Contract.cs` (in place of `Contract`'s summary), `Phase.cs` and `Player.cs`; `TrainingCampOpens` keeps its "3." and "4." step comments; `LeagueCalendar.cs`, `LeagueEntities.cs`, `Player.cs` and `Contract.cs` have no final newline (`dotnet format whitespace --folder --include src/Core` fixes those); and `Team.PrimaryColor`'s summary reads "#RRGGBB, for example".
+- [x] Reviewed by Claude (2026-11-01, an independent read against this guide, PERSISTENCE §5, F-02, F-03 and F-12 §5, and DATA_ACCESS_GUIDE §10): every table, column, type, nullability and foreign key matches the specs, nothing D-078 #12 rules out is saved, every §2 decision is built, and the §10 checklist holds. No code changed. The docs that had drifted are fixed (next item); PERSISTENCE §5.6's `Players(TeamID, Status)` index arrives with WP6's `GetRoster`. `./build.ps1` green (681 tests).
+- [x] Closed out (2026-11-01): PERSISTENCE §4 and §5 as built (the bulk path, the M1 tables and columns, the cap in `Seasons`, the generation season); the specs' unbuilt events and stale numbers (F-02 §6, F-03 §6 and §11, F-12 §5, §6, §8 and §12); DATA_ACCESS_GUIDE §3.3's sketch and §10's migration item (D-090); the camp date in CALENDAR_AND_PHASES §2; D-073, D-089 and D-091's cross-references; LOGGING.md §8.2's 1304 and 1305; CLAUDE.md's status and gotchas; the plan's WP5 marked done. Committed by you, with slice 1's tidy.
 
 ## 7. Order of work
 

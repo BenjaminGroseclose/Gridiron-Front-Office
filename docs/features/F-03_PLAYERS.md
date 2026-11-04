@@ -170,7 +170,7 @@ With uncertainty, a grade shows its likely spread ("Ceiling: B+, likely B to A�
 | Competitiveness | Free agency contender priority, retirement (F-15 M9, F-20) |
 | Ego | Role demands (F-14/F-15 M9) |
 
-- Values are hidden 0–100 floats. **Shown as coarse descriptors:** Low (< 35), Average, High (> 65). Visibility follows D-032: your roster from acquisition, prospects through interviews, others only through reputation tags.
+- Values are hidden 0–100 floats. **Shown as coarse descriptors:** Low (< 35), Average, High (> 65). Visibility follows D-032: your roster from acquisition, prospects through interviews, others only through reputation tags. From M1, before either exists, everyone else's show "Unknown" ([D-092](../DECISIONS.md#d-092-before-the-pick-an-outsider-looks-personality-shows-for-your-own-roster-roster-strength-is-the-starters-mean-ovr)).
 - Traits are six columns on `Players`, like the attributes ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)). Their values come from one distribution in `data/players/generation.json`, which also holds the Low/High thresholds ([D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts)). Adding one later is a column and a deterministic backfill migration.
 
 ### 4.8 Bio
@@ -192,14 +192,15 @@ Every rating a screen shows passes through one Application service:
 ```csharp
 public interface IPerception
 {
-    // The viewer is always a team: the user's team for screens, each AI team for its own decisions.
-    PerceivedPlayer Perceive(TeamID viewer, PlayerSnapshot player);
+    // The viewer is a team: the user's team for screens, each AI team for its own decisions.
+    // Null is an outsider, before the user picks a team (D-092).
+    PerceivedPlayer Perceive(TeamID? viewer, PlayerSnapshot player);
 }
 
-public readonly record struct PerceivedRating(float Estimate, float Sigma);  // Sigma = 0 means exact
+public readonly record struct PerceivedRating(double Estimate, double Sigma);  // Sigma = 0 means exact; double, like the ratings
 ```
 
-- **Rules (D-032):** the viewer's own players → exact current ratings. Other teams' players and free agents → a fixed fuzz. Prospects → the viewer's scouting state (F-17).
+- **Rules (D-032):** the viewer's own players → exact current ratings. Other teams' players and free agents → a fixed fuzz. Prospects → the viewer's scouting state (F-17). No viewer (New League's team picker, before the pick) → every player as another team's ([D-092](../DECISIONS.md#d-092-before-the-pick-an-outsider-looks-personality-shows-for-your-own-roster-roster-strength-is-the-starters-mean-ovr)).
 - **Error model (numbers owned by F-17):** `error = σ_player · z_player + σ_attr · z_attr`. A shared player-level term (a team misjudges the *whole* player) plus a small attribute-level term. The shared term dominates, so the OVR range behaves like the "about ±3" in D-032 instead of averaging away. All `z` values come from `Hash(leagueSeed, "perception", viewer, player, season)`, redrawn once per league year.
 - **Displayed range** = an **80% interval** (estimate ± 1.28σ), so the truth falls outside the range about 1 time in 5. That's what makes surprises and busts honest.
 - **OVR range** = the OVR formula over perceived attributes, with σ propagated through the weights.
@@ -240,8 +241,8 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 | Service | Commands | Queries | Domain events |
 |---|---|---|---|
-| `Players/PlayerGenerator` | Used inside `CreateLeague` (and the yearly draft class step from M5) | — | `PlayersGenerated` |
-| `Players/PlayerQueries` | — | `GetRoster(teamID)`, `GetPlayer(playerID)`, `SearchPlayers(filter)`, all for the user's team as the viewer | — |
+| `Players/PlayerGenerator` | Used inside `CreateLeague` (and the yearly draft class step from M5) | — | — |
+| `Players/PlayerQueries` | — | `GetRoster(teamID)`, `GetLeaguePlayers()` (the 2,000-player grid) and `GetPlayer(playerID)` (M1 WP6, [guide](../milestones/M1_WP6_GUIDE.md)), `SearchPlayers(filter)` (WP10, with the command palette, [D-092](../DECISIONS.md#d-092-before-the-pick-an-outsider-looks-personality-shows-for-your-own-roster-roster-strength-is-the-starters-mean-ovr)), all for the user's team as the viewer | — |
 | `Players/Perception` (`IPerception`) | — | Used by every query above and by the AI with its own team as the viewer | — |
 | `Players/OverallCalculator` (Application, pure; beside the data it reads, D-081) | — | OVR, archetype label and the potential grade from ratings | — |
 
@@ -267,7 +268,7 @@ public readonly record struct PerceivedRating(float Estimate, float Sigma);  // 
 
 ## 11. Logging
 - Information: `LeagueGenerated {Seed} {Players} {ElapsedMs}`, `DraftClassGenerated {Season} {Count}`.
-- Event IDs: 1300–1329. M1 uses 1300 (the league generated), 1301 (the cap trades) and 1302 (a team outside the cap band, a Warning); the [WP4 guide](../milestones/M1_WP4_GUIDE.md) §6 has the messages.
+- Event IDs: 1300–1329. M1 uses 1300 (the league generated), 1301 (the cap trades), 1302 (a team outside the cap band, a Warning) and 1303 (the league's pay scaled, D-087); the [WP4 guide](../milestones/M1_WP4_GUIDE.md) §6 has the messages. 1304 (a league created) and 1305 (the user's team picked) are `LeagueLog`'s ([LOGGING.md §8.2](../architecture/LOGGING.md)). 1306 (a Debug line each time `GetLeaguePlayersAsync` reads the league's list, with its count, the viewer and the time, §12) is `PlayerLog`'s, with 1300–1303 ([WP6 guide](../milestones/M1_WP6_GUIDE.md) §4.4).
 
 ## 12. Performance
 - Generating ~1,850 players (rosters and free agents) < 2 s, inside the < 5 s league budget.

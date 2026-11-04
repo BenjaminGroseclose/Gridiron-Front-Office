@@ -22,7 +22,7 @@
 | `GridironFrontOffice.Application.Tests` | Use cases against a **real SQLite temp file**: signing, trading, the phase machine, journal resume, the live draft with `FakeTimeProvider`, AI decision units, the golden league | xUnit, `FakeTimeProvider`, JSON snapshots | Every build |
 | `GridironFrontOffice.Infrastructure.Tests` | **Transaction torture tests** ([DATA_ACCESS_GUIDE.md §9](DATA_ACCESS_GUIDE.md#9-proving-it-the-torture-tests-m0-run-on-every-build), including a kill-the-process test), migrations (fixture saves from each released schema), snapshots, export/import, integrity handling, bulk writers | xUnit | Every build |
 | `GridironFrontOffice.UI.Components.Tests` | Components: rendering, parameters, keyboard, ARIA | bUnit | Every build |
-| `GridironFrontOffice.UI.Tests` | Screens with fake query services | bUnit | Every build |
+| `GridironFrontOffice.UI.Tests` | Screens and UI state: fakes for the save lifecycle and the overlays; read models from a real save through a test-only Infrastructure reference, never fake query services ([D-093](../DECISIONS.md#d-093-ui-tests-read-a-real-save-a-rows-ratings-are-read-back-line-by-line-team-identities-arent-cached)) | bUnit | Every build |
 | `GridironFrontOffice.Desktop.Tests` | The desktop host's plain logic: window placement, the page's messages, the single-instance guard | xUnit | Every build |
 | `GridironFrontOffice.Architecture.Tests` | Dependency rules ([ARCHITECTURE.md §4.1](../ARCHITECTURE.md#41-dependency-rules)), banned APIs | NetArchTest (MIT) | Every build |
 | *(optional)* E2E | Smoke flows through `GridironFrontOffice.DevHost` | Playwright for .NET | Slow gate, from M3 |

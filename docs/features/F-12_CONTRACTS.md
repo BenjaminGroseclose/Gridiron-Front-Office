@@ -1,6 +1,6 @@
 # F-12: Contracts & salary cap
 
-> **Status:** Proposed (drafted by Claude 2026-10-21 for owner review; revised the same day on the owner's feedback, [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle); the **M1 slice only**; the cap fit and the pay curve revised by [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) on 2026-10-22) · **Milestone:** M1 (structure, cap-hit formula, generated contracts), M4 (actions, rules, the cap sheet), M9 (v2) · **Owner:** Ben · **Last updated:** 2026-10-22
+> **Status:** Proposed (drafted by Claude 2026-10-21 for owner review; revised the same day on the owner's feedback, [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle); the **M1 slice only**; the cap fit and the pay curve revised by [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) on 2026-10-22) · **Milestone:** M1 (structure, cap-hit formula, generated contracts), M4 (actions, rules, the cap sheet), M9 (v2) · **Owner:** Ben · **Last updated:** 2026-11-01
 >
 > Decisions this slice implements: [D-040](../DECISIONS.md#d-040-salary-cap-realism-tiers) (realism tiers), [D-056](../DECISIONS.md#d-056-the-offseason-top-51-cap-rule-is-in-amends-d-040) (league-rules default), [D-074](../DECISIONS.md#d-074-contracts-are-real-from-m1-contract-actions-arrive-in-m4) (real contracts from M1), [D-077](../DECISIONS.md#d-077-data-files-carry-no-version-numbers-they-change-only-additively) (additive data files), [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications) (build for today's consumers), [D-079](../DECISIONS.md#d-079-wp3-player-data-traits-in-generationjson-measurable-priors-deferred-f-12-before-contracts) (this spec before `contracts.json`), [D-080](../DECISIONS.md#d-080-f-12s-m1-slice-no-practice-squad-in-10-pay-by-league-wide-quality-with-wiggle) (the owner's answers to this spec's questions), [D-081](../DECISIONS.md#d-081-wp4-generation-trades-fit-the-cap-ranked-draft-classes-player-rules-in-application) (trades fit the cap; the curve is 2.5). The M4 MVP (actions, dead money, tags, extensions, Top 51, the cap sheet) and the M9 v2 are listed in [FEATURES.md](../FEATURES.md#-f-12-contracts--salary-cap) and get their sections when M4 is planned.
 >
@@ -41,7 +41,7 @@ A contract is the GM's core puzzle: talent against money, across years. In M1 no
 
 | Term | Definition | Source |
 |---|---|---|
-| **League year, season** | One cap year = one season. M1's league starts at Training Camp of its first season ([WP5](../milestones/M1_THE_LEAGUE.md#wp5--schema-and-createleague-m)); the cap table is that season's. | — |
+| **League year, season** | One cap year = one season. M1's league starts at Training Camp of its first season ([WP5](../milestones/M1_THE_LEAGUE.md#wp5--schema-and-createleague-m--done-2026-11-01)); the cap table is that season's. | — |
 | **Cap hit** | What a contract counts against the cap in a season: base salary plus that season's share of the signing bonus (§4.2). | NFL accounting |
 | **Accrued season** | A season with the player on full-pay status for **6 or more** regular-season games. Drives free agency status (3 accrued → restricted, 4 → unrestricted; fewer than 4 is exclusive-rights in GFO, D-040). | [NFL Operations](https://operations.nfl.com/inside-football-ops/nfl-operations/nfl-free-agency/types-of-free-agents) |
 | **Credited season** | A season with **3 or more** games on full-pay status. Drives pay: the minimum-salary ladder. | [Over The Cap, CBA Art. 8 / 26](https://overthecap.com/collective-bargaining-agreement/article/8/section/1) |
@@ -231,11 +231,11 @@ Each lists every offender, as the WP3 tests do.
 
 ## 5. Data model
 
-Per [PERSISTENCE.md](../architecture/PERSISTENCE.md) and the [WP5 migration](../milestones/M1_THE_LEAGUE.md#wp5--schema-and-createleague-m). M1 writes only columns that something reads (D-078 #12); the rest arrive with M4.
+Per [PERSISTENCE.md](../architecture/PERSISTENCE.md) and the [WP5 migration](../milestones/M1_THE_LEAGUE.md#wp5--schema-and-createleague-m--done-2026-11-01). M1 writes only columns that something reads (D-078 #12); the rest arrive with M4.
 
 | Table | M1 columns | Notes |
 |---|---|---|
-| `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `Type` (`ContractType` name), `SignedSeason`, `Years`, `TotalValue`, `SigningBonus`, `GuaranteedTotal`, `IsActive` | One active contract per player on a team; free agents have none. PERSISTENCE.md lists `SignedOn` (a date): M1 stores the **season**, since the calendar's dates arrive with the phases in M3. |
+| `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `Type` (`ContractType` name), `SignedSeason`, `Years`, `TotalValue`, `SigningBonus`, `GuaranteedTotal`, `IsActive` | One active contract per player on a team; free agents have none. A **season**, not a date: the calendar's dates arrive with the phases in M3. |
 | `ContractYears` | `ContractID`, `Season`, `BaseSalary`, `ProratedBonus`, `GuaranteedAmount`, `CapHit` | One row per contract season, past seasons included. `CapHit` is stored for the read models and must equal `CapMath.CapHit` (a test). `RosterBonus` and `IsVoid` wait for their readers (M4, v2). |
 | `Seasons` | `Season`, `Cap` | One row per season ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)). M1 writes the first season's at creation, copied from `contracts.json`, so an app update never changes an existing league's cap. `TeamCapDto` reads the cap here. M4 adds each new season's row (cap growth). |
 
@@ -247,9 +247,9 @@ Per [PERSISTENCE.md](../architecture/PERSISTENCE.md) and the [WP5 migration](../
 
 | Service | Commands | Queries | Domain events |
 |---|---|---|---|
-| `Players/PlayerGenerator` (WP4) | none: generation happens inside `CreateLeague` | — | `LeagueGenerated` carries the cap totals |
+| `Players/PlayerGenerator` (WP4) | none: generation happens inside `CreateLeague` | — | — (the cap totals are logged, 1301) |
 | `Contracts/ContractGenerator` (WP4, pure) | — | — | — |
-| `Contracts/ContractQueries` (WP6) | — | `ContractSummaryDto`, `TeamCapDto` | — |
+| WP6's read models (no `ContractQueries`) | — | A team's cap, committed and space on `TeamSummaryDto` (`LeagueQueries`); a player's `ContractSummaryDto` on `PlayerDetailDto` (`PlayerQueries`); the Team page's top five cap hits are its roster's rows, sorted (WP9). The [WP6 guide](../milestones/M1_WP6_GUIDE.md) §2 | — |
 
 `ContractGenerator` is a pure function from (player, his league-wide rank at the position, draft info, `ContractData`, seed) to a contract with its years; the cap trades (§4.8 step 4) are a pure pass over the league's rosters. Both run outside the write transaction, like the rest of generation.
 
@@ -259,8 +259,8 @@ None in M1: there are no actions. Every team, the user's included, gets its cont
 
 ## 8. UI
 
-- **Player page (WP7):** a contract block: "3 years left · $12.4M APY · cap hit this season $14.1M · $9.0M guaranteed remaining", and a small per-season table (base, bonus share, cap hit). Money through the existing `$12.4M` formatting; tabular figures.
-- **Team page (WP7):** cap, committed, space and utilization as `Stat` tiles, the top five cap hits as a short list.
+- **Player page (WP9):** a contract block: "3 years left · $12.4M APY · cap hit this season $14.1M · $9.0M guaranteed remaining", and a small per-season table (base, bonus share, cap hit). Money through the existing `$12.4M` formatting; tabular figures.
+- **Team page (WP9):** cap, committed, space and utilization as `Stat` tiles, the top five cap hits as a short list.
 - No contract builder, no cap sheet, no cut preview: M4.
 
 ## 9. Calendar and phase integration
@@ -282,7 +282,7 @@ Within WP4's `LeagueGenerated` range (1300–1329, numbers from the [WP4 guide](
 
 ## 12. Performance
 
-About 1,700 contracts and 6,500 `ContractYears` rows per league, written in the one bulk insert `CreateLeague` already plans. Generation is arithmetic; it's inside the < 5 s new-league budget and not timed separately (D-078 #4).
+About 1,700 contracts and 4,700 `ContractYears` rows per league (seed 42: 1,696 and 4,712), written in the one bulk insert `CreateLeague` already plans. Generation is arithmetic; it's inside the < 5 s new-league budget and not timed separately (D-078 #4).
 
 ## 13. Test plan
 

@@ -1,6 +1,6 @@
 # Persistence: SQLite Save Files
 
-> **Status:** Proposed · 2026-10-13 · Save file core built in M0 WP6 (2026-10-16), save lifecycle in WP7 (2026-10-18) · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
+> **Status:** Proposed · 2026-10-13 · Save file core built in M0 WP6 (2026-10-16), save lifecycle in WP7 (2026-10-18), the league's tables in M1 WP5 (2026-11-01) · Related: [D-004](../DECISIONS.md#d-004-save-model-autosave--snapshots), [D-005](../DECISIONS.md#d-005-saves-live-in-localappdata-not-documents), [D-006](../DECISIONS.md#d-006-ef-core-for-the-model-raw-ado-for-bulk-paths) (reopened)
 >
 > **Data access: EF Core with the GFO unit of work** ([D-024](../DECISIONS.md#d-024-data-access-ef-core-with-the-gfo-unit-of-work)). **How to read and write** (transactions, patterns, troubleshooting) is in **[DATA_ACCESS_GUIDE.md](DATA_ACCESS_GUIDE.md)**. This doc covers the save file itself.
 
@@ -127,7 +127,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 | Domain CRUD (rosters, contracts, picks, settings) | **EF Core 10** with change tracking, inside `ISaveWriter` transactions | Productivity, migrations, LINQ |
 | Read models (screens) | EF Core `AsNoTracking()` + `Select` projections to DTOs | Fast, keeps entities away from the UI |
 | Set-based updates (e.g., age every player) | EF Core `ExecuteUpdateAsync` / `ExecuteDeleteAsync` | No entity loading |
-| **High-volume inserts** (player game stats, play logs, scouting reports) | **Raw `SqliteCommand`**, prepared once and executed in a loop within the transaction | 10–50× faster than change tracking at ~50k rows |
+| **High-volume inserts** (league creation, draft classes, player game stats, play logs, scouting reports) | **`uow.InsertAsync(rows)`** ([D-091](../DECISIONS.md#d-091-bulk-inserts-go-through-one-shared-insert-that-writes-entities-from-efs-model)): one prepared `INSERT` built from EF's model, executed per row within the transaction, untracked | 10–50× faster than change tracking at ~50k rows, with EF's own columns and conversions |
 | Leaderboards and aggregates | Pre-aggregated tables (`PlayerSeasonStats`) updated each week | Fast queries without big `SUM`s |
 
 **EF Core + SQLite gotchas to respect**
@@ -145,24 +145,28 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.1 Meta
 | Table | Key columns | Notes |
 |---|---|---|
-| `SaveInfo` (singleton). **M0 has:** `SaveID`, `LeagueName`, `SchemaVersion`, both app versions, both timestamps, `PlayTimeSeconds`, the creation settings and `Generation`. The league position (`UserTeamID`, season, phase, date, seed) arrives with M1. Enums are stored by name. | `SaveID (GUID)`, `LeagueName`, `UserTeamID`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
-| `LeagueRules` (singleton) | Cap, cap growth, roster limits, minimum salaries table, live event toggles | Copied from defaults at creation |
+| `SaveInfo` (singleton). **M0 has:** `SaveID`, `LeagueName`, `SchemaVersion`, both app versions, both timestamps, `PlayTimeSeconds`, the creation settings and `Generation`. M1 WP5 added the league position: `UserTeamID` (null until the user picks a team), `Seed`, `CurrentSeason`, `CurrentPhase` and `CurrentDate`. The generation season ([D-073](../DECISIONS.md#d-073-a-leagues-first-season-is-the-real-world-year-its-created-in)) is `CurrentSeason` at creation and the first `Seasons` row; nothing reads it once seasons advance (M3), so no column keeps it until something does. Enums are stored by name. | `SaveID (GUID)`, `LeagueName`, `UserTeamID`, `CurrentSeason`, `CurrentPhase`, `CurrentDate`, `Seed`, `SchemaVersion`, `AppVersionCreated`, `AppVersionLastOpened`, `CreatedAtUtc`, `LastPlayedAtUtc`, `PlayTimeSeconds`, `IsIronman`, `ClockMode`, `IsEdited`, `ClockPreset`, `InjuryFrequency`, `CareerCanEnd` ([D-063](../DECISIONS.md#d-063-career-can-end-is-a-creation-setting-off-by-default)) (no difficulty, [D-042](../DECISIONS.md#d-042-no-difficulty-presets-in-10)), **`Generation`** (incremented by `SaveWriter` on every commit; groundwork for Ironman rollback detection, [D-026](../DECISIONS.md#d-026-ironman-mode-requires-live-clock-mode)) | Read by the load screen through a read-only connection |
+| `LeagueRules` (singleton) | Cap growth, roster limits, minimum salaries table, live event toggles | Copied from defaults at creation, with its first readers (M4). Each season's cap is a `Seasons` row (§5.4, [D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)) |
 | `AdvanceJournal` | `OperationID`, `Step`, `StartedAtUtc`, `CompletedAtUtc` | Makes long advances resumable ([CALENDAR_AND_PHASES.md §6](CALENDAR_AND_PHASES.md#6-resumable-advance-the-step-journal)) |
 | `LiveEventState` | `EventType`, `Status`, `StateJson`, `ClockRemainingMs`, `LastHeartbeatUtc` | See [LIVE_EVENTS.md](LIVE_EVENTS.md) |
 
 ### 5.2 League structure
-`Conferences`, `Divisions`, `Teams` (identity: city, nickname, abbreviation, colors, mark spec, and the stadium as columns, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)), `TeamSeasons` (W/L/T, points for and against, seed, playoff result per season), `Coaches` (M10), `Owners` (M10).
+`Conferences`, `Divisions`, `Teams` (identity: city, nickname, abbreviation, colors, the crest's shape, monogram and stripe, and the stadium as columns, [D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)), `Colleges` (`CollegeID`, `Name`, `Region`, `Tier`), `TeamSeasons` (W/L/T, points for and against, seed, playoff result per season), `Coaches` (M10), `Owners` (M10).
+
+**Built in M1 WP5:** `Conferences`, `Divisions`, `Teams` and `Colleges`, copied from the team set and the college list at creation, so a save stays self-contained ([F-02 §5](../features/F-02_LEAGUE_AND_TEAMS.md), [F-03 §5](../features/F-03_PLAYERS.md#5-data-model)).
 
 ### 5.3 People
 | Table | Key columns |
 |---|---|
 | `Players` | `PlayerID`, `TeamID?`, `Status`, `Position`, names, `BirthDate`, `CollegeID`, `HometownName`, `HometownState`, `DraftSeason/Round/Pick/TeamID`, `Experience`, measurables, **true ratings (wide columns)**, hidden attributes (potential, development curve, personality traits), `JerseyNumber` |
 | `RatingHistory` | `PlayerID`, `Season`, overall + key attributes (one snapshot per season). From M5, with player development ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)) |
-| `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `SignedOn`, `Type` (Rookie, Veteran, Tag, Minimum, …), `TotalValue`, `SigningBonus`, `IsActive` |
-| `ContractYears` | `ContractID`, `Season`, `BaseSalary`, `ProratedBonus`, `RosterBonus`, `GuaranteedAmount`, `CapHit`, `IsVoid` |
+| `Contracts` | `ContractID`, `PlayerID`, `TeamID`, `Type` (Rookie, Veteran, Tag, Minimum, …), `SignedSeason` (a season: the calendar's dates arrive in M3), `Years`, `TotalValue`, `SigningBonus`, `GuaranteedTotal`, `IsActive` |
+| `ContractYears` | `ContractID`, `Season`, `BaseSalary`, `ProratedBonus`, `GuaranteedAmount`, `CapHit`; `RosterBonus` and `IsVoid` wait for their readers (M4, v2; [F-12 §5](../features/F-12_CONTRACTS.md)) |
 | `DeadMoney` | `TeamID`, `Season`, `PlayerID`, `Amount`, `Reason` |
 | `Injuries` | `PlayerID`, `GameID?`, `Type`, `BodyPart`, `Severity`, `OccurredOn`, `ExpectedReturn`, `ActualReturn` |
 | `ScoutingReports` | `TeamID`, `PlayerID`, `AttributeGroup`, `Estimate`, `Sigma`, `UpdatedOn` for **prospects only** (the user's team is persisted; AI perception may be derived, see §8). Pro perception is never stored: it's a fixed fuzz derived from `Hash(leagueSeed, "perception", teamID, playerID, season)` ([D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted)). |
+
+**Built in M1 WP5:** `Players`, `Contracts` and `ContractYears`, with every foreign key restricting deletes ([F-03 §5](../features/F-03_PLAYERS.md#5-data-model), [F-12 §5](../features/F-12_CONTRACTS.md)).
 
 ### 5.4 Season and games
 | Table | Key columns |
@@ -183,6 +187,7 @@ then `SqliteConnection.ClearPool(connection)`. Microsoft.Data.Sqlite pools conne
 ### 5.6 Indexing guidelines
 - Index every foreign key used for filtering: `Players(TeamID, Status)`, `PlayerGameStats(PlayerID)`, `PlayerGameStats(GameID)`, `Games(Season, Week)`, `PlayerSeasonStats(Season, Position?)`, `Transactions(Season, TeamID)`.
 - Keep indexes deliberate. Each one slows the weekly bulk insert. Measure with `EXPLAIN QUERY PLAN`.
+- **As built (M1 WP5):** EF's one index per foreign key. `Players(TeamID, Status)` arrives with WP6's `GetRoster`, its first query.
 
 ---
 

@@ -414,7 +414,7 @@ The earlier plan said "screens only use GFO component names" ([D-008](../DECISIO
 ## 9. UI state management
 
 - **No global Flux library.** Three simple tiers:
-  1. **`GameStateStore`** (singleton per league session): current date and phase, user team summary, cap summary, inbox count, live event status. It listens to domain events and refreshes itself.
+  1. **`GameStateStore`** (`UI/State`, scoped: one per circuit in the DevHost, one in the desktop app): current date and phase, user team summary, cap summary, inbox count, live event status. It listens to domain events and refreshes itself. **v0 (M1 WP6)** holds the open league's `LeagueHeaderDto` (name, season, phase, date, and the user team's summary with its cap), null at the main menu: it loads on `SaveOpened` (and at construction when a save is open), again on `UserTeamPicked`, and clears on `SaveClosed`. Its loads run on the thread pool, the latest one wins, a failed one logs 8004 and keeps the header, and `Changed` fires on that thread, so components marshal with `InvokeAsync`. The other fields arrive with their events (M3 on).
   2. **Screen stores / view models** (one per page): load read models through Application query services, expose state plus `Changed` events, and dispose with the page.
   3. **Component-local state** for UI-only concerns.
 - After commands, rely on **domain events → store refresh**, not manual cross-page refresh calls ([DATA_ACCESS_GUIDE.md §5.7](DATA_ACCESS_GUIDE.md#57-calling-commands-from-the-ui)).

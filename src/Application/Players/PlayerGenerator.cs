@@ -2,6 +2,7 @@ using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.Core.Players;
 using GridironFrontOffice.Core.Random;
+using Microsoft.Extensions.Logging;
 
 namespace GridironFrontOffice.Application.Players;
 
@@ -165,3 +166,4 @@ public sealed class PlayerGenerator(ISeedData seedData)
 		return map.Worst.Rating + t * (map.Best.Rating - map.Worst.Rating);
 	}
 }
+

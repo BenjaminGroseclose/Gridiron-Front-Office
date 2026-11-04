@@ -226,12 +226,16 @@ protected override void ConfigureConventions(ModelConfigurationBuilder b)
         b.Properties(idType).HaveConversion(typeof(IDConverter<>).MakeGenericType(idType));
 }
 
-// At the end of OnModelCreating: EF's SQLite convention adds AUTOINCREMENT only to plain int keys.
-// A converted (typed-ID) key gets a bare INTEGER PRIMARY KEY, and SQLite may then REUSE the highest ID after a
-// delete, while IDs are referenced from history. EF Core 10 ignores the old "Sqlite:Autoincrement" annotation,
-// so use the value-generation strategy API:
-foreach (var (entity, key) in GeneratedTypedIDKeys(modelBuilder))
-    modelBuilder.Entity(entity.ClrType).Property(key.Name).UseAutoincrement();
+// At the end of OnModelCreating: every foreign key restricts deletes (history is kept, nothing cascades by accident)
+foreach (var foreignKey in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+    foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+
+// EF treats a converted (typed-ID) key as not generated, so it gets a bare INTEGER PRIMARY KEY, and SQLite may
+// then REUSE the highest ID after a delete while IDs are referenced from history. EF Core 10 ignores the old
+// "Sqlite:Autoincrement" annotation, so TypedIDs.UseAutoincrementForTypedIDKeys marks every single-column
+// typed-ID key generated, then uses the value-generation strategy API:
+//     modelBuilder.Entity(entity.ClrType).Property(key.Name).ValueGeneratedOnAdd().UseAutoincrement();
+TypedIDs.UseAutoincrementForTypedIDKeys(modelBuilder);
 ```
 
 ### 3.4 Infrastructure: `SaveWriter` (the only transaction owner)
@@ -363,30 +367,96 @@ services.AddGfoInfrastructure(paths, app);   // app: the AppIdentity, stamped in
 
 ## 4. Reading data (screens, AI snapshots)
 
+A query service is a plain Application class in its feature folder that takes `ISaveReader` (and whatever else its read models need, such as `IPerception` or `ISeedData`). Every public method is one `reader.QueryAsync` that returns read models.
+
+**What `QueryAsync` gives you.** Each call opens one `DbContext` on the open save, with change tracking off, runs your lambda and disposes the context. The lambda gets `ILeagueReadDb` (the tables as `IQueryable`s, no `SaveChanges`) and a `CancellationToken`. With no save open, it throws: reading with nothing open is a bug, not a result. Reads never wait for a command (WAL), and each statement sees the last *committed* state. Several statements in one call are not one snapshot, so a command that commits between them can show up in the second one but not the first. Nothing in M1 depends on that; a screen that ever does reads in one statement.
+
+These examples come from M1 WP6 (`Application/Leagues/LeagueQueries.cs`) and were run against a seed-42 save on 2026-11-02.
+
+### 4.1 Load the rows, then build the read model
+
+When the read model needs C# (nesting, a shared mapping, perception), load the rows into memory and build it there. The entities never leave the lambda.
+
 ```csharp
-// GridironFrontOffice.Application/Rosters/RosterQueries.cs
-public sealed class RosterQueries(ISaveReader reader)
+public sealed class LeagueQueries(ISaveReader reader, IPerception perception)
 {
-    public Task<IReadOnlyList<RosterRowDto>> GetRosterAsync(TeamID teamID, int season, CancellationToken ct = default) =>
-        reader.QueryAsync<IReadOnlyList<RosterRowDto>>(async (db, ct) =>
-            await db.Players
-                .Where(p => p.TeamID == teamID && p.Status == PlayerStatus.Active)
-                .OrderBy(p => p.Position).ThenByDescending(p => p.Overall)
-                .Select(p => new RosterRowDto(                    // project to a DTO, never return entities
-                    p.ID, p.FirstName + " " + p.LastName, p.Position, p.BirthDate, p.Overall,
-                    p.Contracts.Where(c => c.IsActive)
-                               .SelectMany(c => c.Years)
-                               .Where(y => y.Season == season)
-                               .Select(y => y.CapHit).FirstOrDefault(),
-                    p.Injuries.Any(i => i.ActualReturn == null)))
-                .ToListAsync(ct), ct);
+    /// <summary>Every team's identity, in TeamID order (the team set's).</summary>
+    public Task<IReadOnlyList<TeamIdentityDto>> GetTeamIdentitiesAsync(CancellationToken cancellationToken = default) =>
+        reader.QueryAsync<IReadOnlyList<TeamIdentityDto>>(async (db, ct) =>
+        {
+            var teams = await db.Teams.OrderBy(t => t.TeamID).ToListAsync(ct).ConfigureAwait(false);
+            return [.. teams.Select(ToIdentity)];
+        }, cancellationToken);
+
+    /// <summary>Both conferences, their divisions and their teams, each in ID order (the team set's).</summary>
+    public Task<LeagueStructureDto> GetStructureAsync(CancellationToken cancellationToken = default) =>
+        reader.QueryAsync(async (db, ct) =>
+        {
+            // Three small reads, put together in memory: the entities have no navigations
+            var conferences = await db.Conferences.OrderBy(c => c.ConferenceID).ToListAsync(ct).ConfigureAwait(false);
+            var divisions = await db.Divisions.OrderBy(d => d.DivisionID).ToListAsync(ct).ConfigureAwait(false);
+            var teams = await db.Teams.OrderBy(t => t.TeamID).ToListAsync(ct).ConfigureAwait(false);
+
+            return new LeagueStructureDto([.. conferences.Select(c => new ConferenceDto(c.ConferenceID, c.Key, c.Name,
+                [.. divisions.Where(d => d.ConferenceID == c.ConferenceID).Select(d => new DivisionDto(d.DivisionID, d.Key, d.Name,
+                    [.. teams.Where(t => t.DivisionID == d.DivisionID).Select(ToIdentity)]))]))]);
+        }, cancellationToken);
+
+    private static TeamIdentityDto ToIdentity(Team t) =>
+        new(t.TeamID, t.Abbreviation, t.City, t.Nickname, t.PrimaryColor, t.SecondaryColor, t.AccentColor,
+            t.CrestShape, t.CrestMonogram, t.CrestStripe);
 }
 ```
-**Rules for reads**
-- Always **project to a DTO** (`Select(new …)`). The UI never sees entities.
-- **A read model is a `sealed record` named `…Dto`** (`RosterRowDto`, `TeamSummaryDto`), declared in the feature folder next to the query service that fills it ([D-070](../DECISIONS.md#d-070-read-models-are-records-named-dto)).
-- Never call `SaveChangesAsync` from a reader. The read interface doesn't even expose it.
-- Reads can run while a write is in progress (WAL). They see the last *committed* state.
+
+- **`QueryAsync<IReadOnlyList<…>>`** needs its type argument written out when the lambda builds a list but the method returns `IReadOnlyList<T>`. Where the types match (`LeagueStructureDto`), C# infers it.
+- **Order explicitly.** IDs follow the data files' order (WP5 §2), so `OrderBy(x => x.…ID)` is the team set's order. A typed ID orders by its column **in SQL only**: in memory it's a record struct without `IComparable`, so `OrderBy(t => t.TeamID)` on a list throws "Failed to compare two elements in the array" (as does a `PerceivedRating`). Sort in the query, or by `.Value` (`.Estimate`) in memory (M1 WP6 §8).
+- Measured: the identities took 40 ms on the first read (EF builds its model once per process) and 2 ms after; the structure took 17 ms.
+
+### 4.2 Read only the columns you need
+
+When you need a few columns, or one row, project them in SQL. An anonymous type is fine inside the lambda.
+
+```csharp
+var info = await db.SaveInfo
+    .Select(i => new { i.LeagueName, i.CurrentSeason, i.CurrentPhase, i.CurrentDate, i.UserTeamID })
+    .SingleAsync(ct)
+    .ConfigureAwait(false);
+```
+
+`SaveInfo` has exactly one row, so `SingleAsync`. For a row that may not exist (a player by ID), use `SingleOrDefaultAsync` and return `null` from the query: "not found" is a result the screen shows, not an exception.
+
+### 4.3 Join yourself: there are no navigations
+
+Entities carry foreign-key properties only (M1 WP5 §2), so a read that crosses tables joins on them. Filter each side first and select only what you need:
+
+```csharp
+var season = await db.SaveInfo.Select(i => i.CurrentSeason).SingleAsync(ct).ConfigureAwait(false);
+
+// This season's cap hit of every active contract, by team
+var hits = await db.Contracts
+    .Where(c => c.IsActive)
+    .Join(db.ContractYears.Where(y => y.Season == season),
+        c => c.ContractID, y => y.ContractID, (c, y) => new { c.TeamID, y.CapHit })
+    .ToListAsync(ct)
+    .ConfigureAwait(false);
+
+var committed = hits.GroupBy(h => h.TeamID).ToDictionary(g => g.Key, g => g.Sum(h => h.CapHit));
+```
+
+This is the cap committed for all 32 teams in one statement (each between 85.7% and 96.8% of the cap on seed 42). Read a whole screen's data in a handful of statements like this one, never one statement per row.
+
+### 4.4 Ratings go through perception, and OVR is computed
+
+`Players` holds true ratings, and OVR isn't a column (it's recomputed from the ratings, F-03 §4.5). A read that shows ratings loads the rows, turns each into a `PlayerSnapshot` (`PlayerRows.ToSnapshot`), perceives it for the viewer from `SaveInfo.UserTeamID`, and only then sorts, filters or averages by OVR, in memory ([M1 WP6 guide](../milestones/M1_WP6_GUIDE.md) §4.2). Never show a true rating without perception, and never add an `Overall` column to make a query easier: it would go stale as ratings develop.
+
+### 4.5 Rules for reads
+
+- **Return read models, never entities.** A read model is a `sealed record` named `…Dto` (`TeamIdentityDto`, `PlayerRowDto`), declared in the feature folder next to the query service that fills it ([D-070](../DECISIONS.md#d-070-read-models-are-records-named-dto)). Entities may be loaded inside the lambda; they never leave it.
+- **One `QueryAsync` per public method,** with a few statements inside it, not one per row.
+- **`ConfigureAwait(false)` on every await,** as everywhere in Application.
+- **Never call `SaveChangesAsync` from a reader.** The read interface doesn't even expose it; a change is a command (§5).
+- **Not found is `null`** (or an empty list), never an exception. A missing save is the exception, because it's a bug.
+- **Queries take no viewer.** One that perceives reads `SaveInfo.UserTeamID` itself; the AI calls `IPerception` with its own team.
 
 ---
 
@@ -660,4 +730,4 @@ public sealed class TransactionTortureTests : IAsyncLifetime   // each test gets
 - [ ] Every async call is awaited. No `async void`.
 - [ ] Bulk inserts use `uow.InsertAsync`, with every row's key set and parents inserted first
 - [ ] Domain events raised with `uow.Raise` (never dispatched manually)
-- [ ] New schema → a migration plus an updated fixture save (at release time)
+- [ ] New schema → until 1.0, `InitialCreate` regenerated, never edited ([D-090](../DECISIONS.md#d-090-until-10-the-schema-is-one-migration-regenerated-on-each-change-a-save-from-an-older-build-is-deleted-by-hand)); from 1.0, one migration per shipped update plus an updated fixture save

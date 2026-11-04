@@ -51,8 +51,8 @@
 | WP2  | Team and college data              | M    | WP1      | ✅ Done 2026-10-21                                                                                       |
 | WP3  | Player data                        | M–L  | WP1      | ✅ Done 2026-10-21                                                                                       |
 | WP4  | The player model and generator     | L    | WP2, WP3 | ✅ Done 2026-10-29                                                                                       |
-| WP5  | Schema and `CreateLeague`          | M    | WP4      | A generated league is written in one command in < 5 s, with progress                                    |
-| WP6  | Perception and read models         | M    | WP5      | `IPerception` (σ = 0), the DTOs and query services, `GameStateStore` v0                                 |
+| WP5  | Schema and `CreateLeague`          | M    | WP4      | ✅ Done 2026-11-01                                                                                       |
+| WP6  | Perception and read models         | M    | WP5      | ✅ Done 2026-11-04                                                                                       |
 | WP7  | Football components                | M    | WP6      | `TeamMark`, `PositionPill`, `RatingChip`/`RatingBar`, the grade chip, money, in the gallery, both modes |
 | WP8  | New League wizard v0 and team tint | M    | WP5–WP7  | Name + seed → generate → pick a team → the app in your colors                                           |
 | WP9  | The screens                        | L    | WP6, WP7 | Home, League, Team, Roster (DataGrid v1), Player, the peek sheet                                        |
@@ -120,7 +120,7 @@
 
 **Results (2026-10-29):** `WeightedPicker`, `GfoRandom.Draw` and the seed purposes (Core); `OverallCalculator`, `PlayerGenerator`, `PersonNames`, `LeagueGenerator` (all ten steps), `ContractGenerator` and `CapTrades` (Application); events 1300–1303; and 153 tests (606 in all): distributions and shape over seeds 1–20, the golden seed-42 snapshot, the blocklist re-roll, every contract to the dollar and the cap band, each proven to fail on planted problems. Seed 42 generates in about 400 ms in Debug. Details and the review in [M1_WP4_GUIDE.md §6](M1_WP4_GUIDE.md#6-done-when). Changed from this plan: D-083 to D-088 (required fields in built-in data, balanced archetypes, a hand-rolled golden instead of Verify, the premium guard, the stuck-pair trades with a one-time scaling and its event 1303, and the specialists' spread and draft rules), and Claude wrote parts of the code at the owner's request.
 
-### WP5 · Schema and `CreateLeague` (M)
+### WP5 · Schema and `CreateLeague` (M) ✅ Done 2026-11-01
 
 **Goal:** a generated league written safely into the save. **Builder's guide:** [M1_WP5_GUIDE.md](M1_WP5_GUIDE.md).
 
@@ -130,15 +130,37 @@
 - **The user's team:** picking a team after generation is a second, small command (`SaveInfo.UserTeamID`, the only place the user's team is stored).
 - **Tests:** the bulk insert round-trips every column; a failure mid-write leaves no partial league; the torture tests stay green. Generate + write is timed in the log; the < 5 s budget is checked at the exit (§10).
 
-### WP6 · Perception and read models (M)
+**Results (2026-11-01):** the league's eight tables and `SaveInfo`'s league position in one regenerated `InitialCreate` (D-090: one migration until 1.0, and a save from an older build gets its own status); `CreateLeague` and `LeagueWriter`, writing the save and the league in one command (D-089) through the shared bulk insert `uow.InsertAsync` (D-091) and `PlayerRows.ToPlayer`; `LeagueCommands.PickUserTeamAsync`; events 1304–1305; and 75 tests (681 in all): every column of a seed-42 league read back as generated, the IDs and counts, all-or-nothing on a failed or cancelled write, the `created` snapshot, determinism and the pick, each proven to fail on planted problems. Seed 42's whole create takes about 230 ms warm in Debug. Details and the review in [M1_WP5_GUIDE.md §6](M1_WP5_GUIDE.md#6-done-when). Changed from this plan: D-089 to D-091, and Claude wrote parts of the code at the owner's request.
 
-**Goal:** what screens read, through the fog-of-war boundary.
+### WP6 · Perception and read models (M) ✅ Done 2026-11-04
 
-- **`IPerception`** (Application): `Perceive(viewer, player)` → estimates with sigmas. σ = 0 for everyone until M6. The sim never calls it.
-- **Read models** (D-070): `TeamIdentityDto`, `TeamSummaryDto`, `LeagueStructureDto`, `PlayerRowDto`, `PlayerDetailDto`, each rating an estimate + sigma, potential a grade + spread.
-- **Query services:** `LeagueStructureQueries` (identities cached per session), `PlayerQueries` (`GetRoster`, `GetPlayer`, `SearchPlayers`), always with the user's team as the viewer.
-- **`GameStateStore` v0** (UI): the user team summary, season, phase and date, loaded when the save opens. Refreshing from domain events arrives with the moving calendar (M3, D-078).
-- **Tests:** own roster exact, σ = 0 everywhere.
+**Goal:** what screens read, through the fog-of-war boundary. **Builder's guide:** [M1_WP6_GUIDE.md](M1_WP6_GUIDE.md).
+
+- **`IPerception`** (Application): `Perceive(viewer, player)` → estimates with sigmas. No viewer (before the pick) sees everyone as another team's player, and only the viewer's own players show personality ([D-092](../DECISIONS.md#d-092-before-the-pick-an-outsider-looks-personality-shows-for-your-own-roster-roster-strength-is-the-starters-mean-ovr)). σ = 0 for everyone until M6. The sim never calls it.
+- **Read models** (D-070): `TeamIdentityDto`, `TeamSummaryDto`, `LeagueStructureDto`, `PlayerRowDto`, `PlayerDetailDto`, each rating an estimate + sigma, potential a grade + spread; a player's contract and a team's cap totals ride on them (F-12's `ContractQueries` folds in).
+- **Query services:** `LeagueQueries` (the header, the structure, the team summaries, and the identities, read each time, [D-093](../DECISIONS.md#d-093-ui-tests-read-a-real-save-a-rows-ratings-are-read-back-line-by-line-team-identities-arent-cached)), `PlayerQueries` (`GetRoster`, `GetLeaguePlayers` for WP9's 2,000-player grid, `GetPlayer`; `SearchPlayers` arrives with WP10's palette, [D-092](../DECISIONS.md#d-092-before-the-pick-an-outsider-looks-personality-shows-for-your-own-roster-roster-strength-is-the-starters-mean-ovr)), always with the user's team as the viewer. Team summaries carry WP8's roster strength (the starters' mean OVR, D-092) and cap space.
+- **`GameStateStore` v0** (UI): the user team summary, season, phase and date, loaded when the save opens and again on `UserTeamPicked`, since WP8's pick comes after the open ([WP5 guide](M1_WP5_GUIDE.md) §2). Refreshing from other domain events arrives with the moving calendar (M3, D-078).
+- **Tests:** own roster exact, σ = 0 everywhere; UI tests read a real save, with no test-only code in Application (D-093).
+
+**Results (2026-11-04):**
+- **Built:**
+  - Core: `TraitLevel`, `SideOfBall`, `Player.AgeOn` and `Player.IsUndrafted`.
+  - Application: `Perception` and `PlayerRows.ToSnapshot`; `LeagueQueries` and `PlayerQueries` with their read models; `AddGfoApplication`, called by both hosts.
+  - Event 1306 in the renamed `PlayerLog`, and the `Players(TeamID, Status)` index in a regenerated `InitialCreate`.
+  - UI: `GameStateStore` v0 (scoped, `UI/State`) with event 8004.
+- **Tests:** 55 new ones (749 in all) plus the 13 age cases, each proven to fail on planted problems (34 plants, all caught). They cover:
+  - perception and roster strength;
+  - every row and every player's detail of a seed-42 save, checked against the generated league;
+  - the structure, the header and the summaries;
+  - the store on real saves, including overlapping loads, a restore and a failed load.
+
+  UI.Tests got a test-only reference to Infrastructure (D-093).
+- **Timing:** reading the league's 1,846 rows takes about 160 ms the first time and 70 ms after, in Debug, reads included.
+- **More:** details and the review are in [M1_WP6_GUIDE.md §6](M1_WP6_GUIDE.md#6-done-when).
+- **Changed from this plan:**
+  - D-092 and D-093.
+  - The structure and the lists sort in SQL, since a typed ID doesn't compare in memory.
+  - Claude wrote parts of the code at the owner's request (the fixes, `AddGfoApplication` and slice 3).
 
 ### WP7 · Football components (M)
 
@@ -177,7 +199,7 @@
 
 **Goal:** jump anywhere, then prove the milestone.
 
-- **Command palette v0** (`Ctrl+K`): a Fluent dialog with a search box and results; players and teams by name; Enter navigates. The command registry comes later (P1).
+- **Command palette v0** (`Ctrl+K`): a Fluent dialog with a search box and results; players and teams by name, through `PlayerQueries.SearchPlayers`, built here with its first consumer ([D-092](../DECISIONS.md#d-092-before-the-pick-an-outsider-looks-personality-shows-for-your-own-roster-roster-strength-is-the-starters-mean-ovr)); Enter navigates. The command registry comes later (P1).
 - **Run the exit checklist** (§10), record the generation time, update the docs, tag **`m1-complete`**, set `VersionPrefix` to `0.2.0`.
 
 ## 5. What the repository gains in M1
@@ -193,11 +215,11 @@ data/
 src/
 ├─ Core/        IDs/ (TeamID, PlayerID, …), Random/ (PRNG, seed derivation, weighted picker), Leagues/ (Team, Phase, …), Players/ (Player,
 │               Position, PlayerAttribute, PersonalityTrait, …), Contracts/ (Contract, ContractYear)
-├─ Application/ Leagues/ (LeagueGenerator, CreateLeague, LeagueWriter, LeagueCommands, LeagueStructureQueries, ISeedData), Players/
+├─ Application/ Leagues/ (LeagueGenerator, CreateLeague, LeagueWriter, LeagueCommands, LeagueQueries, ISeedData), Players/
 │               (OverallCalculator, PlayerGenerator, IPerception, PlayerQueries), Contracts/ (ContractGenerator, CapTrades)
 ├─ Infrastructure/ Data/ (the configurations and the migration), Seed/ (EmbeddedSeedData, SeedLog)
 ├─ UI/          Football/ (TeamMark, PositionPill, RatingChip, RatingBar), League/ (Home, League, Team, Roster, Player, PlayerPeekSheet),
-│               Menu/ (the wizard), Shell/ (GameStateStore, CommandPalette)
+│               Menu/ (the wizard), State/ (GameStateStore), Shell/ (CommandPalette)
 └─ DevHost/     Gallery/ (teams, ratings)
 ```
 

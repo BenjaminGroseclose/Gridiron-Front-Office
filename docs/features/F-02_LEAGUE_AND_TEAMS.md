@@ -112,14 +112,14 @@ A small parametric SVG, so 32 crests look like one family and can be read at 16 
 - `Teams (TeamID, DivisionID, Abbreviation, City, Nickname, PrimaryColor, SecondaryColor, AccentColor, CrestShape, CrestMonogram, CrestStripe, StadiumName, StadiumCapacity, StadiumRoof, StadiumSurface, StadiumClimate)`: the stadium is part of the team, with no table of its own
 - The user's team is `SaveInfo.UserTeamID`. `SaveInfo.TeamSetName` joins the save with M11's import, and `metro` stays in the data file for its tests ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications))
 
-**Read models:** `TeamIdentityDto` (ID, abbreviation, city, nickname, colors, crest), `TeamSummaryDto` (+ conference, division, record later), `LeagueStructureDto` (conferences → divisions → teams).
+**Read models:** `TeamIdentityDto` (ID, abbreviation, city, nickname, colors, crest), `TeamSummaryDto` (+ conference, division, stadium, roster strength and cap totals, record later; the [WP6 guide](../milestones/M1_WP6_GUIDE.md) §4.2), `LeagueStructureDto` (conferences → divisions → teams).
 
 ## 6. Application services
 
 | Service | Commands | Queries | Domain events |
 |---|---|---|---|
-| `Leagues/LeagueGenerator` (part of `CreateLeague`) | Copies the team set into the save, inside the creation command | — | `LeagueCreated` |
-| `Leagues/LeagueStructureQueries` | — | `GetLeagueStructure()`, `GetTeamIdentity(teamID)`, `GetAllTeamIdentities()` (cached per session; identities never change in 1.0) | — |
+| `Leagues/CreateLeague` (M1 WP5) | Generates the league, then writes the save and the league in one command; `LeagueWriter` copies the team set into it ([D-089](../DECISIONS.md#d-089-a-league-and-its-save-are-written-in-one-command-the-cap-lives-in-a-seasons-table)) | — | None until a consumer needs one (the save's `SaveOpened` follows) |
+| `Leagues/LeagueQueries` (M1 WP6) | — | `GetHeaderAsync()`, `GetStructureAsync()`, `GetTeamIdentitiesAsync()` (read each time, [D-093](../DECISIONS.md#d-093-ui-tests-read-a-real-save-a-rows-ratings-are-read-back-line-by-line-team-identities-arent-cached)), `GetTeamSummariesAsync()`, `GetTeamSummaryAsync(teamID)` | — |
 | `Leagues/TeamSetLoader` (Infrastructure port `ISeedData`) | — | Loads `teams.json` with strict parsing. Tests check the shipped data; a reusable validator arrives with M11's import ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)) | — |
 
 ## 7. AI counterpart
