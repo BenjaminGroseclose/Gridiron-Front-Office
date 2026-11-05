@@ -66,7 +66,7 @@
 
 - ✅ Your answers to §12 (2026-10-20): D-012 accepted, D-073, D-074, D-075, the route change, the data downloads, saved views in M3.
 - **F-12's M1 spec** (`docs/features/F-12_CONTRACTS.md`, the M1 slice; Claude drafts, you review): the contract structure, the cap-hit formula, the first-season cap, salary bands by position and tier, contract length by age and tier, bonus and guarantee shares, rookie-style deals, and how a team's total is kept under the cap. Checked against real references. _Drafted 2026-10-21 ([F-12](../features/F-12_CONTRACTS.md), Proposed): its §14 lists six questions for you; `contracts.json` follows its acceptance._
-- **F-01's M1 spec** (`docs/features/F-01_LEAGUE_CREATION.md`, from the template; Claude drafts, you review): the wizard steps, what the team picker shows, progress, cancel, the error cases, and what the load screen's cards gain (crest, team, season, phase).
+- **F-01's M1 spec** (`docs/features/F-01_LEAGUE_CREATION.md`, from the template; Claude drafts, you review): the wizard steps, what the team picker shows, progress, cancel, the error cases, and what the load screen's cards gain (crest, team, season, phase). _Drafted 2026-11-04 with the WP8 guide ([F-01](../features/F-01_LEAGUE_CREATION.md), Proposed); its four questions were answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)._
 - **Route fix from M0:** F-02 puts the League page (all teams) at `/league`, which M0 used for the league home. The home becomes `/home`, the League page `/league` (UI_DESIGN_SYSTEM.md §7, `SaveActions.LeagueHome`).
 
 ### WP1 · Core: IDs, positions and the PRNG (M) ✅ Done 2026-10-20
@@ -193,13 +193,13 @@
 
 ### WP8 · New League wizard v0 and team tint (M)
 
-**Goal:** start a real league.
+**Goal:** start a real league. **Builder's guide:** [M1_WP8_GUIDE.md](M1_WP8_GUIDE.md), with [F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md).
 
 - **The wizard** replaces M0's name-only page: a name and an optional seed (random by default) → **Generate**, with progress → **pick a team** from 32 cards (crest, name, roster strength, cap space) → open the league at Home.
 - **Team tint:** opening a league re-themes the app from the team's primary through `GfoThemeService` (the M0 plumbing; `AppearanceMapping` gets the team color), contrast-adjusted, in both modes.
 - **The load screen and Continue** gain the crest, team, season and phase (PERSISTENCE.md §9).
 - **AI counterpart:** none; every team is generated the same way.
-- **Tests:** bUnit for each wizard step and the error cases; an end-to-end create → pick → home in the desktop app.
+- **Tests:** bUnit for each wizard step and the error cases, and the whole create → pick → home flow over a real save. Claude runs the same flow in the desktop app after each slice, through WebView2's DevTools port ([D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check) #4).
 
 ### WP9 · The screens (L)
 

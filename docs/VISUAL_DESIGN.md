@@ -76,6 +76,7 @@ The accent comes from the user team's **primary color** and is contrast-correcte
 | **Accent text** | The same, until **≥ 4.5:1** | Accent-colored labels and links |
 | **Accent soft** | Accent at 20% alpha (dark) / 12% (light) | Active nav item, selected filter pills, badges, scout-range bands |
 | **Selection** | Surface 1 mixed 20% (dark) / 10% (light) toward the accent, opaque | Selected table rows (must be opaque for pinned columns) |
+| **Fill states** | The accent fill moved away from its on-accent text, toward white under `#0B0D12` and toward black under white: 10% hovered, 15% selected, 20% pressed ([D-095](DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check) #1). Each reads at least as well as the fill | Primary buttons when hovered or pressed, the chosen option of a segmented control. Fluent's own ramp always darkens, which buried 7 teams' near-black text at 1.48–3.55:1 (M1 WP8) |
 
 **Setting:** Accent → **Team** (default) / **Neutral** (`#0F6CBD`, Fluent's default brand blue), for team colors a player finds too loud.
 

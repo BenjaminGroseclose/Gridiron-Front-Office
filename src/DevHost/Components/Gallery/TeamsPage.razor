@@ -14,22 +14,22 @@
             <div class="teams">
                 @foreach (var abbreviation in division.Teams)
                 {
-                    var team = _teams[abbreviation];
-                    var contrast = AccentColors.Contrast(team.AccentColor, team.PrimaryColor);
-                    <div class="team">
-                        <TeamMark Team="team" Size="96" />
-                        <TeamMark Team="team" Size="32" />
-                        <TeamMark Team="team" Size="16" />
-                        <span class="team-text">
-                            <span class="team-name">@team.City @team.Nickname</span>
-                            <span class="team-note gfo-num">
-                                @team.CrestShape · @team.CrestStripe · accent @contrast.ToString("0.00", CultureInfo.InvariantCulture):1@(contrast < TeamMark.MonogramContrast ? " → on-color" : "")
-                            </span>
-                        </span>
-                        <span class="own-color" style="--gfo-team-primary: @team.PrimaryColor">
-                            <TeamMark Team="team" Size="48" Decorative="true" />
-                        </span>
-                    </div>
+									var team = _teams[abbreviation];
+									var contrast = AccentColors.Contrast(team.AccentColor, team.PrimaryColor);
+									<div class="team">
+											<TeamMark Team="team" Size="96" />
+											<TeamMark Team="team" Size="32" />
+											<TeamMark Team="team" Size="16" />
+											<span class="team-text">
+													<span class="team-name">@team.City @team.Nickname</span>
+													<span class="team-note gfo-num">
+															@team.CrestShape · @team.CrestStripe · accent @contrast.ToString("0.00", CultureInfo.InvariantCulture):1@(contrast < TeamMark.MonogramContrast ? " → on-color" : "")
+													</span>
+											</span>
+											<span class="own-color" style="--gfo-team-primary: @team.PrimaryColor">
+													<TeamMark Team="team" Size="48" Decorative="true" />
+											</span>
+									</div>
                 }
             </div>
         </GallerySection>
