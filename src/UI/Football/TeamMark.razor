@@ -1,0 +1,60 @@
+@using GridironFrontOffice.Application.Leagues
+@* UI/Football/TeamMark.razor: the team crest (F-02 §4.4), inline SVG from the identity, no image requests. The colors
+   are the team's own data, so they go in as presentation attributes; nothing here is a theme token. *@
+<svg class="gfo-team-mark @Class" width="@Size" height="@Size" viewBox="0 0 100 100" focusable="false"
+     role="@(Decorative ? null : "img")" aria-label="@(Decorative ? null : _name)" aria-hidden="@(Decorative ? "true" : null)"
+     data-shape="@Team.CrestShape" data-stripe="@Team.CrestStripe" @attributes="AdditionalAttributes">
+    <defs><clipPath id="@_clipID"><path d="@_field" /></clipPath></defs>
+    <g clip-path="url(#@_clipID)">
+        <path class="field" d="@_field" fill="@Team.PrimaryColor" />
+        @if (_stripe is not null)
+        {
+            <path class="stripe" d="@_stripe" fill="@Team.SecondaryColor" />
+        }
+        @* Stroked at 8 on the outline and clipped to it, so 4 show, inside the edge. *@
+        <path class="rim" d="@_field" fill="none" stroke="@Team.SecondaryColor" stroke-width="8" />
+    </g>
+    @* The halo is the field's color under each letter (paint-order), so the monogram reads over its stripe. *@
+    <text class="monogram gfo-display" x="50" y="@_centerY" font-size="@_fontSize" text-anchor="middle"
+          dominant-baseline="central" fill="@_monogram" stroke="@Team.PrimaryColor" stroke-width="7"
+          stroke-linejoin="round" paint-order="stroke">@Team.CrestMonogram</text>
+</svg>
+
+@code {
+    /// <summary>The accent stays while it holds 3:1 on the field (a glyph, VISUAL_DESIGN.md §10; §9 Q2).</summary>
+    public const double MonogramContrast = 3.0;
+
+    // Each crest owns its clip path: 32 on one page must never share an id (TitleBackground's marker, the same way).
+    private readonly string _clipID = $"gfo-crest-{Guid.NewGuid():N}"[..20];
+
+    [Parameter, EditorRequired] public TeamIdentityDto Team { get; set; } = default!;
+
+    /// <summary>Width and height in px: 16–20 in grids, 32–48 on cards (F-02 §4.4).</summary>
+    [Parameter] public int Size { get; set; } = 32;
+
+    /// <summary>Hidden from assistive technology, for a crest beside its team's name.</summary>
+    [Parameter] public bool Decorative { get; set; }
+		
+		[Parameter] public string? Class { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+		private string _field = string.Empty;
+		private string? _stripe = null;
+		private int _fontSize;
+		private int _centerY;
+		private string _monogram = string.Empty;
+		private string _name = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        _field = CrestGeometry.Field(Team.CrestShape);
+        _stripe = CrestGeometry.Stripe(Team.CrestStripe);
+        _fontSize = CrestGeometry.MonogramSize(Team.CrestShape, Team.CrestMonogram.Length);
+        _centerY = CrestGeometry.MonogramY(Team.CrestShape);
+        _monogram = AccentColors.Contrast(Team.AccentColor, Team.PrimaryColor) >= MonogramContrast
+            ? Team.AccentColor
+            : AccentColors.OnAccent(Team.PrimaryColor);   // white or #0B0D12, as on an accent fill
+        _name = $"{Team.City} {Team.Nickname}";
+    }
+}

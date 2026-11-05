@@ -101,6 +101,7 @@
 | D-091 | Bulk inserts go through one shared insert that writes entities from EF's model | **Accepted** |
 | D-092 | Before the pick an outsider looks; personality shows for your own roster; roster strength is the starters' mean OVR | **Accepted** |
 | D-093 | UI tests read a real save; a row's ratings are read back line by line; team identities aren't cached | **Accepted** |
+| D-094 | The crest gets a rim and a halo, and its monogram falls back below 3:1; potential grades take the rating colors; the bar is a marker | **Accepted** |
 
 ---
 
@@ -885,3 +886,14 @@
   3. **Team identities are read each time,** about a millisecond a page. A cache waits for a profile that shows a need.
 - **Options not taken:** query interfaces faked in UI.Tests (test-only code in Application); a table of getters built once from the enum names (shorter, but less plain than the lines `ToPlayer` already has); a per-save identity cache (about ten lines for a millisecond).
 - **Consequences:** + No test seams in production code, and every UI test runs on real data. − UI tests that need a save are slower, and can only show states generation makes (σ > 0 waits for M6's perception).
+
+## D-094: The crest gets a rim and a halo, and its monogram falls back below 3:1; potential grades take the rating colors; the bar is a marker
+- **Status:** **Accepted** (owner, 2026-11-04, asked *"Do you accept all four of the guide's §9 recommendations?"*: *"Yes, all four"*). Answers the [WP7 guide](milestones/M1_WP7_GUIDE.md)'s §9. Amends [F-02](features/F-02_LEAGUE_AND_TEAMS.md) §4.4 and §11, [F-03](features/F-03_PLAYERS.md) §8, [VISUAL_DESIGN.md](VISUAL_DESIGN.md) §3.4 and §6, and the [M1 plan](milestones/M1_THE_LEAGUE.md)'s WP7.
+- **Why:** WP7 draws the crest, the rating chips, the potential grade and the attribute bar. Rendering all 32 shipped crests in both modes showed two gaps in F-02 §4.4's three layers: five monograms vanish into their own stripes (JAX, NYS, LAN, PHI, TPA), and dark crests lose their edge on Dark's surfaces (JAX, NYX). F-02 §11 logged a warning when an accent failed contrast on its primary, but 15 of the 32 shipped accents are below 3:1, so the warning would fire for half the league on every render. F-03 §8 shows potential as a letter without saying how it's colored, and VISUAL_DESIGN §6's bar left open whether the track fills.
+- **Decision:**
+  1. **The crest has four layers:** the field in the primary; the stripe in the secondary, clipped to the field; a rim in the secondary, 4 units inside the edge of the 100-unit box; and the monogram, outlined in the primary (a halo, `paint-order="stroke"`) so it reads over its stripe.
+  2. **The monogram gives up its accent below 3:1 on the primary** (`TeamMark.MonogramContrast`) and takes the primary's on-color (`AccentColors.OnAccent`, which holds 4.5:1 on every primary). That is 15 of the 32 shipped teams. 3:1 is a glyph's bar (VISUAL_DESIGN §10). The fallback is a drawing rule, so it logs nothing, and F-02 §11's warning goes.
+  3. **Potential grades are colored by letter on the rating scale:** A+ to A− Elite (teal), B+ to B− Good (green), C+ to C− Average (yellow), D Below (orange), F Poor (red), drawn as the same chip as a rating. The letter is always shown, so color is never the only signal.
+  4. **`RatingBar` is VISUAL_DESIGN §6's bar while σ = 0:** the number in its tier color, a 6 px Surface 3 track, and a 3 × 10 px accent marker at the shown value, with no fill. M6 adds the range band under the marker.
+- **Options not taken:** the halo without the rim (dark crests lose their edge on Dark); F-02's three layers as written (five monograms vanish); a 4.5:1 fallback (22 of 32 teams lose their accent); changing the 15 failing accents in `teams.json` (reopens the set the owner accepted in D-064); a neutral potential pill (a potential would read as quieter than a rating); a filled track (a second encoding of the same number, which M6's range band would have to share).
+- **Consequences:** + Every shipped crest reads in both modes, at 32 px and up, with no data change. A grade and a rating share one chip, one set of tier classes and one contrast check. − Half the league shows a white or near-black monogram instead of its accent. The crest has a fourth layer F-02 didn't describe, and `TeamMarkTests` pins the 15 fallbacks, so a team-set change that moves one fails a test until it's updated.

@@ -43,7 +43,7 @@
 | Ground | `#0F1318` | App background |
 | Surface 1 | `#171C23` | Panels, cards, nav, table body |
 | Surface 2 | `#1E242D` | Table headers, inputs, secondary buttons, stat tiles |
-| Surface 3 | `#262E38` | Position pills, tracks, quiet chips |
+| Surface 3 | `#262E38` | Position pills, tracks, quiet chips (`--gfo-quiet-fill`, M1 WP7) |
 | Border | `#2C3540` | Row dividers, panel outlines |
 | Border strong | `#44505F` | Input and secondary button outlines, header underline |
 | Text | `#F1F4F7` | Primary text |
@@ -81,7 +81,9 @@ The accent comes from the user team's **primary color** and is contrast-correcte
 
 ### 3.4 Ratings, status and urgency
 
-Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 14% (light), text = the rating color. The **number is always shown**, so color is never the only signal.
+Rating chips are **pills**: background = the rating color at 20% (dark) / 14% (light) mixed into Surface 1, opaque, and text = the rating color. The **number is always shown**, so color is never the only signal.
+- **Why opaque:** a see-through tint takes the color of whatever is under it. On a selected row, the chip's text fell to 3.17:1 (M1 WP7). Opaque, it holds the contrast below on any row.
+- **Potential grades** use the same chip, colored by letter ([D-094](DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker)): A+ to A− Elite, B+ to B− Good, C+ to C− Average, D Below, F Poor. The letter is always shown.
 
 | Tier | Range | Dark | Light |
 |---|---|---|---|
@@ -167,11 +169,11 @@ Rating chips are **pills**: background = the rating color at 20% alpha (dark) / 
 | **Hero band** (page headers: Roster, Team, Draft Room clock band) | Accent fill, Radius L, padding 28 × 30, Display L title in on-accent. The team monogram is a "ghost" at 220 px in on-accent at 12% opacity, bottom-right, decorative. Segmented tabs sit on a black 22% tray, with the selected tab in an on-accent fill and team-color text. |
 | **Top bar** | Surface 1, crest + team name + "season · week · record", cap space pill, search with a `Ctrl K` hint, notifications, primary action button (accent fill). |
 | **Navigation** | Surface 1 column, 34 px items. The active item gets an Accent soft background, a 3 px accent indicator pill on the left, and bold text. A count badge uses Accent soft + Accent text. **As built (M0 WP8):** Fluent's nav offers 28 or 40 px items; GFO uses 28 px (Small), so the full league nav fits a 720 px window. Semibold text plus Accent soft. **Fixed after WP9 review:** Fluent sizes its indicator for 40 px items (100% − 20 px tall, 16 px outside the item), which at 28 px left it 8 px tall, off-center and in the gutter against the window edge. It's now restyled through GFO's classes to this spec: a 3 × 16 px accent pill 6 px inside the active item's left end, centered. The column has 8 px gutters, the icons sit 16 px into the pill, and the app bar's brand starts on the same 24 px line. |
-| **Rating chip + range** | Pill chip (§3.4) followed by the scout range in Faint, e.g. `78  74–83`. Attribute bars use a 6 px Surface 3 track, an Accent soft band for the range, and a 3 × 10 px accent marker for the estimate. |
+| **Rating chip + range** | Pill chip (§3.4) followed by the scout range in Faint, e.g. `78  74–83`. Attribute bars put the number in its tier color, then a 6 px Surface 3 track, an Accent soft band for the range, and a 3 × 10 px accent marker for the estimate. The track doesn't fill ([D-094](DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker) #4). **As built (M1 WP7):** σ is 0 until M6, so there's no range or band yet. |
 | **Draft clock** | Display XL condensed digits in on-accent on the hero band. At ≤ 10 s, the clock sits on an Urgent red pill. The client animates the countdown ([LIVE_EVENTS.md §3](architecture/LIVE_EVENTS.md#3-time-handling)). |
 | **"The pick is in"** | Scrim `rgba(4,7,12,.8)`. Dialog with Radius L: an accent-fill header band with the title in condensed uppercase, then the player name in Display M. |
 | **Scorebug** | Two team blocks (each in its own primary fill and on-color) with a condensed abbreviation and score, then a Surface 3 status block (quarter and clock). Radius M outer. |
-| **Crest** | A parametric `TeamMark`: shape (Shield, Roundel, Hexagon, Diamond, Banner) in the team primary, a stripe (None, Single, Double, Chevron, Sash) in the secondary, and the monogram in the accent (or on-color) in Archivo condensed 800. Defined in [F-02 §4.4](features/F-02_LEAGUE_AND_TEAMS.md#44-crest-system-teammark). |
+| **Crest** | A parametric `TeamMark`: a shape (Shield, Roundel, Hexagon, Diamond, Banner) in the team primary, with a stripe (None, Bar, TwinBars, Chevron, Sash) in the secondary, clipped to the shape. A rim in the secondary sits 4 units inside the edge of its 100-unit box, so a dark crest keeps its edge on Dark's surfaces. The monogram is in Archivo condensed 800, outlined in the primary so it reads over its stripe. It's in the accent, or in the primary's on-color when the accent is below 3:1 on the primary (15 of the 32 shipped teams, [D-094](DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker)). Defined in [F-02 §4.4](features/F-02_LEAGUE_AND_TEAMS.md#44-crest-system-teammark). |
 
 ---
 

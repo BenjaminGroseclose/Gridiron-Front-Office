@@ -180,6 +180,12 @@ Rule: if a value exists as a Fluent token, **reference it** (`var(--…)`) inste
 - light overrides under `:root[data-theme="light"]`, set by the theme service;
 - a `reset` layer (the body font and Ground, and no focus ring for the programmatic focus `FocusOnNavigate` gives a page's `h1`) and the utilities `gfo-visually-hidden`, `gfo-truncate`, `gfo-num`, `gfo-display`.
 
+**As built (M1 WP7):**
+- **`--gfo-quiet-fill`** names Surface 3 (`var(--colorNeutralBackground1Pressed)`, a slot `StadiumTheme` always sets to it), for position pills, rating tracks and quiet chips. It's one role alias, like `--gfo-selection`, not a surface system.
+- **The tier utilities:** `.gfo-tier-elite`, `-good`, `-avg`, `-below` and `-poor` each set `--gfo-tier` to their `--gfo-rating-*` token.
+  - **`.gfo-tier-chip`** is the pill: `--gfo-tier` as text, on `--gfo-chip-tint` of it mixed into Surface 1. The mix is opaque, so a selected or hovered row doesn't show through and the text keeps 4.5:1 on any row. Mixed toward `transparent`, a selected row had dropped it to 3.17:1.
+  - **They're global utilities, not scoped CSS,** because scoped CSS doesn't cross components. `RatingChip` and `PotentialChip` are markup only, and `RatingBar` colors its number with the same classes. C#'s side of the mapping is `RatingTiers.Token`, and a test checks that every token's class and color exist in the file.
+
 ### 3.5 Typography
 | Role | Implementation | Font ([VISUAL_DESIGN.md §4](../VISUAL_DESIGN.md#4-typography)) |
 |---|---|---|
@@ -292,6 +298,18 @@ GM games live in tables, so this wrapper gets extra investment. It adds GFO beha
 
 ### 5.4 Football composites (in `GridironFrontOffice.UI`)
 `TeamMark` (generated SVG crest), `PositionPill`, **`RatingChip`/`RatingBar` (0–99 with an uncertainty range, or a plain value when exact; potential as a letter grade; required by fog of war, [D-032](../DECISIONS.md#d-032-fog-of-war-your-roster-exact-other-pros-slightly-fuzzy-prospects-scouted) and [D-034](../DECISIONS.md#d-034-ratings-display-099-with-ranges-letter-grades-for-potential))**, `PlayerCard`, `PlayerPeekSheet` (in a Fluent drawer), `ContractSummary`, `CapBar`, `CapSheet`, `DepthChartBoard` (drag-and-drop plus keyboard reordering), `GamePlanPanel` (Fluent sliders), `Scorebug`, `DriveChart` (SVG field strip), `PlayByPlayFeed`, `StandingsTable`, `DraftClock`, `DraftTicker`, `BigBoard`, `TradeBuilder`, `TradePhoneCard`, `NewsCard`, `InboxItem`.
+
+**As built (M1 WP7):** the first five live in `UI/Football` (namespace `GridironFrontOffice.UI.Football`). Each takes a value straight from WP6's read models, so screens bind the read model's fields with no glue, and M6 changes the components, not their callers. All of them take `Class` and pass unmatched attributes through. None takes focus or keys. The gallery is `/_gallery/ratings` and `/_gallery/teams`.
+
+| Component | Parameters | Draws | Role |
+|---|---|---|---|
+| `RatingChip` | `Value` (`PerceivedRating`) | `OverallCalculator.Display(Value.Estimate)` as a `.gfo-tier-chip`, tiered on the shown integer (`RatingTiers.Of`). σ is ignored until M6 | Its text |
+| `PotentialChip` | `Value` (`PotentialRange`) | The grade's letter (`PotentialGrades.Text`, a real minus) on the same chip, colored by letter (`RatingTiers.OfGrade`, [D-094](../DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker) #3). `Low` and `High` wait for M6 | Its text |
+| `RatingBar` | `Value` (`PerceivedRating`), `Label` | The number in its tier color, a 6 px `--gfo-quiet-fill` track and a 3 × 10 px accent marker at the shown value, with no fill (D-094 #4) | `meter`, 0–99, named by `Label` |
+| `PositionPill` | `Value` (`Position`) | The enum's name, which is the abbreviation, in Micro type, Muted on `--gfo-quiet-fill` | Its text |
+| `TeamMark` | `Team` (`TeamIdentityDto`), `Size` (px, default 32), `Decorative` | The crest: field, stripe, rim and monogram from `CrestGeometry`, in the team's own hex colors as SVG attributes ([F-02 §4.4](../features/F-02_LEAGUE_AND_TEAMS.md#44-crest-system-teammark), D-094 #1–#2) | `img` named "City Nickname", or `aria-hidden` when `Decorative` |
+
+`Money.Format` (`UI.Components/Formatting`, [F-12 §8](../features/F-12_CONTRACTS.md#8-ui)) is the money display beside them. It's a function, not a component, since `Stat` takes a string. The rest of the list arrives with its first screen: `ContractSummary`, `CapBar`, `PlayerCard` and the peek sheet with WP9, the others in later milestones.
 
 ---
 

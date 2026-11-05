@@ -1,0 +1,19 @@
+@using GridironFrontOffice.Application.Players
+@* UI/Football/RatingChip.razor: a 0–99 rating as a pill (VISUAL_DESIGN.md §3.4, §6). A plain value while σ = 0;
+   M6 adds the scout range after it. *@
+<span class="gfo-tier-chip gfo-tier-@_tier.Token() @Class" @attributes="AdditionalAttributes">@_text</span>
+
+@code {
+    [Parameter, EditorRequired] public PotentialRange Value { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string _text = string.Empty;
+    private RatingTier _tier;
+
+    protected override void OnParametersSet()
+    {
+        _text = Value.Grade.Text(); 
+        _tier = RatingTiers.OfGrade(Value.Grade);
+    }
+}

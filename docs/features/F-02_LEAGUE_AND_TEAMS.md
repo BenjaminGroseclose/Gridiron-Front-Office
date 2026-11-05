@@ -81,9 +81,15 @@ A small parametric SVG, so 32 crests look like one family and can be read at 16 
 | `Shape` | Shield, Roundel, Hexagon, Diamond, Banner |
 | `Monogram` | 1–3 characters, Archivo condensed 800 ([VISUAL_DESIGN.md](../VISUAL_DESIGN.md)) |
 | `Stripe` | None, Bar, TwinBars, Chevron, Sash (one stripe, two stripes; the code can't use "Single" and "Double", which are .NET type names) |
-| Colors | Field = Primary, stripe = Secondary, monogram = Accent (or the on-color when the accent fails contrast) |
+| Colors | Field = Primary; stripe = Secondary, clipped to the field; a rim in the Secondary, 4 units inside the edge; monogram = Accent, outlined in the Primary (a halo), or the Primary's on-color when the Accent is below 3:1 on it ([D-094](../DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker)) |
 
-- Rendered by `TeamMark` (in `GridironFrontOffice.UI`) at the sizes used in grids (16–20 px), cards (32–48 px) and hero bands (the large "ghost" monogram).
+- Rendered by `TeamMark` (`GridironFrontOffice.UI.Football`, M1 WP7) at the sizes used in grids (16–20 px) and cards (32–48 px), and on the Team page's hero band. The band's large "ghost" monogram is text, not a crest (WP9, [VISUAL_DESIGN.md §6](../VISUAL_DESIGN.md#6-signature-elements)).
+- **As built (M1 WP7):**
+  - **The drawing:** `CrestGeometry` draws it in a 100 × 100 box: five fields, four stripes, and the monogram's size (52, 42 or 31 for one, two or three letters, about 82% of that in a diamond) and center. A longer monogram takes the three-letter size.
+  - **The fallback:** the monogram takes `AccentColors.OnAccent(primary)` (white or `#0B0D12`, 4.5:1 on every primary) when its accent is below `TeamMark.MonogramContrast` (3.0). That is 15 of the 32 shipped teams.
+  - **The rim and the halo:** without the halo, five monograms vanish into their own stripes (JAX, NYS, LAN, PHI, TPA). Without the rim, dark crests lose their edge on Dark's surfaces.
+  - **Parameters:** `Team` (a `TeamIdentityDto`), `Size` (px, default 32) and `Decorative`.
+  - **Markup:** each crest owns its clip path, and every SVG number is an integer, so no culture's decimal comma reaches the markup.
 - **Imported logos (M11)** are rendered as `<img>` (or sanitized) and never inlined, because SVG can carry script ([D-033](../DECISIONS.md#d-033-default-teams-32-curated-franchises-real-cities-original-nicknames)).
 - Replaces the placeholder crest in [VISUAL_DESIGN.md](../VISUAL_DESIGN.md).
 
@@ -131,7 +137,7 @@ None. Structure and identity are static data. (Every team, user or AI, is define
 - **Team page header:** the **hero band** in the team's accent with the ghost monogram ([VISUAL_DESIGN.md](../VISUAL_DESIGN.md)), crest, city and nickname, and the stadium as a subtitle.
 - **New League wizard, team selection** (F-01): a grid of all 32 cards (crest, name, and from M5 the inherited situation).
 - **Theme tint:** taking over a team re-tints the app through `GfoThemeService` (accent from Primary, contrast-adjusted).
-- **Gallery:** a `/_gallery/teams` page renders all 32 crests at 16, 32 and 96 px in both themes. It's the manual QA view for §4.3.
+- **Gallery:** `/_gallery/teams` (M1 WP7) renders all 32 crests from the shipped data, by division, at 96, 32 and 16 px and on their own color, with each team's shape, stripe and accent contrast ("→ on-color" below 3:1), in both modes. It's the manual QA view for §4.3.
 - Keyboard: the League page is a grid of links in reading order, with no custom key handling needed.
 
 ## 9. Calendar and phase integration
@@ -144,18 +150,21 @@ None. Identity is fixed at creation.
 
 ## 11. Logging
 - Information: `TeamSetLoaded {Name} {TeamCount}` at league creation.
-- Warning: a team color failed contrast and fell back to a derived on-color (data issue to fix).
+- The crest's on-color fallback logs nothing. It's a drawing rule, and it applies to 15 of the 32 shipped teams on every render, so it isn't a data error ([D-094](../DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker) #2).
 - Event IDs: 1200–1219.
 
 ## 12. Performance
-- Loading the team set: < 20 ms. Identities are cached per session and served from memory.
+- Loading the team set: < 20 ms. Identities are read from the save each time, about a millisecond a page ([D-093](../DECISIONS.md#d-093-ui-tests-read-a-real-save-a-rows-ratings-are-read-back-line-by-line-team-identities-arent-cached) #3).
 - These are targets read from the timed log, not test assertions ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - `TeamMark` renders as inline SVG from parameters with no image requests. 32 crests on the League page render in < 16 ms.
 
 ## 13. Test plan
 - **Unit (Core):** structure invariants (§4.1).
 - **Data tests:** every guardrail in §4.3 runs against `teams.json`, plus the structure checks (2 × 4 × 4, unique abbreviations, colors).
-- **bUnit:** `TeamMark` renders each shape and stripe, falls back to the on-color when the accent fails contrast, and exposes an accessible name ("New York Excelsiors").
+- **bUnit:** `TeamMark` renders each shape and stripe, falls back to the on-color when the accent fails contrast, and exposes an accessible name ("New York Excelsiors"). As built (M1 WP7, `tests/UI.Tests/Football`):
+  - `TeamMarkTests` covers all 25 shape × stripe pairs, the rim, the halo, unique clip ids, `Decorative`, `Size`, and all 32 shipped teams with exactly the 15 expected fallbacks.
+  - It renders under de-DE to keep commas out of the SVG.
+  - `CrestGeometryTests` checks the geometry's structure, not its path data, so the drawing can be tuned without a test edit.
 - **No UI golden snapshot in M1** ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)): design changes keep landing, and the gallery is the visual check.
 - **Autoplay:** no impact.
 
@@ -167,6 +176,7 @@ None. Identity is fixed at creation.
 
 ## 15. Decisions made while specifying
 - [D-064](../DECISIONS.md#d-064-f-02-team-set-accepted-shared-city-labels): the default team set is accepted, with shared city labels for the two-team metros and Heritage/Frontier conference names.
+- [D-094](../DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker) (M1 WP7): the crest's rim and halo, and the monogram's on-color below 3:1 with no warning logged.
 
 ---
 

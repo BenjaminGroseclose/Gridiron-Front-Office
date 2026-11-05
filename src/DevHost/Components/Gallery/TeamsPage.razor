@@ -1,0 +1,48 @@
+@page "/_gallery/teams"
+@using System.Globalization
+@inject ISeedData Seed
+<PageTitle>Teams · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">Teams</h1>
+
+@foreach (var conference in Seed.TeamSet.Conferences)
+{
+    @foreach (var division in conference.Divisions)
+    {
+        <GallerySection Title="@($"{conference.Name} · {division.Name}")"
+                        Check="Field in the primary, stripe and rim in the secondary, the monogram in the accent (or the on-color where marked). Monograms read at 32 and 96 px, every crest is recognizable at 16, and no two here share a shape and a stripe. On its own color (the hero band), the rim holds the edge.">
+            <div class="teams">
+                @foreach (var abbreviation in division.Teams)
+                {
+                    var team = _teams[abbreviation];
+                    var contrast = AccentColors.Contrast(team.AccentColor, team.PrimaryColor);
+                    <div class="team">
+                        <TeamMark Team="team" Size="96" />
+                        <TeamMark Team="team" Size="32" />
+                        <TeamMark Team="team" Size="16" />
+                        <span class="team-text">
+                            <span class="team-name">@team.City @team.Nickname</span>
+                            <span class="team-note gfo-num">
+                                @team.CrestShape · @team.CrestStripe · accent @contrast.ToString("0.00", CultureInfo.InvariantCulture):1@(contrast < TeamMark.MonogramContrast ? " → on-color" : "")
+                            </span>
+                        </span>
+                        <span class="own-color" style="--gfo-team-primary: @team.PrimaryColor">
+                            <TeamMark Team="team" Size="48" Decorative="true" />
+                        </span>
+                    </div>
+                }
+            </div>
+        </GallerySection>
+    }
+}
+
+@code {
+    private Dictionary<string, TeamIdentityDto> _teams = [];
+
+    // The shipped team set as identities, numbered as LeagueWriter numbers them, so no league has to be open.
+    protected override void OnInitialized() =>
+        _teams = Seed.TeamSet.Teams.Select(Identity).ToDictionary(t => t.Abbreviation, StringComparer.Ordinal);
+
+    private static TeamIdentityDto Identity(TeamDefinition t, int index) => new(new TeamID(index + 1), t.Abbr, t.City,
+        t.Nickname, t.Colors.Primary, t.Colors.Secondary, t.Colors.Accent, t.Crest.Shape, t.Crest.Monogram, t.Crest.Stripe);
+}

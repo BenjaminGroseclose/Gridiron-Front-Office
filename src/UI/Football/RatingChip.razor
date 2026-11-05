@@ -1,0 +1,18 @@
+@using GridironFrontOffice.Application.Players
+
+<span class="gfo-tier-chip gfo-tier-@_tier.Token() @Class" @attributes="AdditionalAttributes">@_shown</span>
+
+@code {
+    [Parameter, EditorRequired] public PerceivedRating Value { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private int _shown;
+    private RatingTier _tier;
+
+    protected override void OnParametersSet()
+    {
+        _shown = OverallCalculator.Display(Value.Estimate);   // Sigma is shown from M6 (D-078 #13)
+        _tier = RatingTiers.Of(_shown);
+    }
+}

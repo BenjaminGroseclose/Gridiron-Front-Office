@@ -2,7 +2,6 @@ using System.Globalization;
 using GridironFrontOffice.Application.Data;
 using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Core.IDs;
-using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.Core.Players;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

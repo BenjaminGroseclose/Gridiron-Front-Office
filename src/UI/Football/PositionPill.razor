@@ -1,0 +1,11 @@
+@using GridironFrontOffice.Core.Players
+
+@* UI/Football/PositionPill.razor: a position's abbreviation on Surface 3 (VISUAL_DESIGN.md §3.1, §4). Position's names
+   are the abbreviations (EDGE is upper case for that, M1 WP1), so the enum renders as it is, with no map to fall behind. *@
+<span class="gfo-position-pill @Class" @attributes="AdditionalAttributes">@Value</span>
+
+@code {
+	[Parameter, EditorRequired] public Position Value { get; set; }
+	[Parameter] public string? Class { get; set; }
+	[Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+}

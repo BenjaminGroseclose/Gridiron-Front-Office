@@ -11,16 +11,20 @@
     <DataGrid TItem="GalleryPlayer" Items="@GallerySample.Players" Label="Sample players" ItemKey="@(p => p.ID)" Height="65vh"
               @bind-SelectedItem="_selected" OnItemActivated="Open" data-testid="grid">
         <DataGridColumn Title="Player" Property="@(p => p.Name)" Width="200px" Pinned="true" />
-        <DataGridColumn Title="Pos" Property="@(p => p.Position)" Width="72px" />
+        <DataGridTemplateColumn Title="Pos" Width="88px" SortBy="@ByPosition">
+            <PositionPill Value="context.Position" />
+        </DataGridTemplateColumn>
         <DataGridColumn Title="Team" Property="@(p => p.Team)" Width="72px" />
         <DataGridColumn Title="Age" Property="@(p => p.Age)" Width="64px" Numeric="true" />
         <DataGridTemplateColumn Title="OVR" Width="130px" Numeric="true" SortBy="@ByOverall">
-            <span class="chip" style="--tier: var(--gfo-rating-@GallerySample.Tier(context.Overall))">@context.Overall</span>
+            <RatingChip Value="context.Overall" />
             <span class="range">@context.OverallLow–@context.OverallHigh</span>
         </DataGridTemplateColumn>
-        <DataGridColumn Title="POT" Property="@(p => p.Potential)" Width="64px" />
+        <DataGridTemplateColumn Title="POT" Width="76px" SortBy="@ByPotential">
+            <PotentialChip Value="context.Potential" />
+        </DataGridTemplateColumn>
         <DataGridTemplateColumn Title="Cap hit" Width="100px" Numeric="true" SortBy="@ByCapHit">
-            @GallerySample.Money(context.CapHit)
+            @Money.Format(context.CapHit)
         </DataGridTemplateColumn>
         @for (var i = 0; i < GallerySample.AttributeNames.Count; i++)
         {
@@ -43,7 +47,10 @@
 </GallerySection>
 
 @code {
-    private static readonly GridSort<GalleryPlayer> ByOverall = GridSort<GalleryPlayer>.ByAscending(p => p.Overall);
+    // A PerceivedRating doesn't compare (WP6 §8): sort by its estimate. Enums compare.
+    private static readonly GridSort<GalleryPlayer> ByPosition = GridSort<GalleryPlayer>.ByAscending(p => p.Position);
+    private static readonly GridSort<GalleryPlayer> ByOverall = GridSort<GalleryPlayer>.ByAscending(p => p.Overall.Estimate);
+    private static readonly GridSort<GalleryPlayer> ByPotential = GridSort<GalleryPlayer>.ByAscending(p => p.Potential.Grade);
     private static readonly GridSort<GalleryPlayer> ByCapHit = GridSort<GalleryPlayer>.ByAscending(p => p.CapHit);
 
     private static readonly GalleryPlayer[] NoPlayers = [];

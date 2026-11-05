@@ -53,7 +53,7 @@
 | WP4  | The player model and generator     | L    | WP2, WP3 | ✅ Done 2026-10-29                                                                                       |
 | WP5  | Schema and `CreateLeague`          | M    | WP4      | ✅ Done 2026-11-01                                                                                       |
 | WP6  | Perception and read models         | M    | WP5      | ✅ Done 2026-11-04                                                                                       |
-| WP7  | Football components                | M    | WP6      | `TeamMark`, `PositionPill`, `RatingChip`/`RatingBar`, the grade chip, money, in the gallery, both modes |
+| WP7  | Football components                | M    | WP6      | ✅ Done 2026-11-04                                                                                       |
 | WP8  | New League wizard v0 and team tint | M    | WP5–WP7  | Name + seed → generate → pick a team → the app in your colors                                           |
 | WP9  | The screens                        | L    | WP6, WP7 | Home, League, Team, Roster (DataGrid v1), Player, the peek sheet                                        |
 | WP10 | Command palette v0 and the M1 exit | S–M  | WP9      | Ctrl+K works; the exit checklist (§10) passes; tag `m1-complete`                                        |
@@ -162,15 +162,34 @@
   - The structure and the lists sort in SQL, since a typed ID doesn't compare in memory.
   - Claude wrote parts of the code at the owner's request (the fixes, `AddGfoApplication` and slice 3).
 
-### WP7 · Football components (M)
+### WP7 · Football components (M) ✅ Done 2026-11-04
 
-**Goal:** the pieces every football screen is built from.
+**Goal:** the pieces every football screen is built from. **Builder's guide:** [M1_WP7_GUIDE.md](M1_WP7_GUIDE.md).
 
 - **`TeamMark`:** the parametric SVG crest (5 shapes × 5 stripes, monogram in condensed Archivo 800), readable at 16 px, with an accessible name and the on-color fallback when the accent fails contrast.
 - **`PositionPill`, `RatingChip`, `RatingBar`:** a plain value (σ = 0 until M6, which adds the range display, D-078); the potential grade chip.
 - **`Money`:** compact dollar display ($24.5M, $850K) for grids and contract panels.
 - **Gallery:** `/_gallery/teams` (all 32 crests at 16, 32 and 96 px, both modes) and a ratings page (every tier).
 - **Tests:** bUnit for every shape and stripe, the contrast fallback, accessible names, the chips.
+
+**Results (2026-11-04):**
+- **Built:**
+  - UI.Components: `Money.Format` (`Formatting/`); in gfo-tokens.css, `--gfo-quiet-fill` (Surface 3), the `.gfo-tier-*` utilities and the opaque `.gfo-tier-chip`.
+  - UI (`Football/`): `RatingTiers` and `PotentialGrades`; `RatingChip`, `PotentialChip`, `RatingBar` and `PositionPill`; `CrestGeometry` and `TeamMark`.
+  - DevHost (Claude): `/_gallery/ratings` and `/_gallery/teams`, and the DataGrid page on the real pieces.
+- **Tests:** 151 new ones (900 in all), each proven to fail on planted problems (22 plants, all caught):
+  - every money rounding edge, under a German culture too;
+  - every tier edge and grade, and the stylesheet's classes;
+  - the chips, the bar and the pill;
+  - the crest's geometry, all 25 shape × stripe pairs, and all 32 shipped teams with their 15 fallbacks;
+  - the SVG under de-DE.
+- **Checked in the gallery:** both modes, all four tints, Comfortable and Compact. Every chip, bar number and pill holds 4.5:1, a selected row included.
+- **More:** details are in [M1_WP7_GUIDE.md §5](M1_WP7_GUIDE.md#5-done-when) and §8.
+- **Changed from this plan:**
+  - D-094: the crest's rim and halo, the monogram's on-color below 3:1 with no warning logged, potential grades colored by letter, and a bar with a marker and no fill.
+  - The chip's tint is opaque, so a selected row doesn't drop it below 4.5:1.
+  - `Money` is `Money.Format`, a function.
+  - Claude built the gallery pages and, at the owner's request, `PositionPill`'s markup and the chip's tint.
 
 ### WP8 · New League wizard v0 and team tint (M)
 
@@ -218,7 +237,8 @@ src/
 ├─ Application/ Leagues/ (LeagueGenerator, CreateLeague, LeagueWriter, LeagueCommands, LeagueQueries, ISeedData), Players/
 │               (OverallCalculator, PlayerGenerator, IPerception, PlayerQueries), Contracts/ (ContractGenerator, CapTrades)
 ├─ Infrastructure/ Data/ (the configurations and the migration), Seed/ (EmbeddedSeedData, SeedLog)
-├─ UI/          Football/ (TeamMark, PositionPill, RatingChip, RatingBar), League/ (Home, League, Team, Roster, Player, PlayerPeekSheet),
+├─ UI.Components/ Formatting/ (Money)
+├─ UI/          Football/ (TeamMark, CrestGeometry, PositionPill, RatingChip, PotentialChip, RatingBar, RatingTiers), League/ (Home, League, Team, Roster, Player, PlayerPeekSheet),
 │               Menu/ (the wizard), State/ (GameStateStore), Shell/ (CommandPalette)
 └─ DevHost/     Gallery/ (teams, ratings)
 ```

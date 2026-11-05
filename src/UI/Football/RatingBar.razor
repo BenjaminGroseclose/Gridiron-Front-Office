@@ -1,0 +1,24 @@
+@using GridironFrontOffice.Application.Players
+<span class="gfo-rating-bar @Class" role="meter" aria-valuemin="0" aria-valuemax="99" aria-valuenow="@_shown"
+aria-label="@Label" @attributes="AdditionalAttributes">
+    <span class="value gfo-num gfo-tier-@_tier.Token()">@_shown</span>
+    <span class="track" aria-hidden="true"><span class="marker" style="--at: @_shown"></span></span>
+</span>
+
+@code {
+    [Parameter, EditorRequired] public PerceivedRating Value { get; set; }
+
+    /// <summary>The attribute's name, for assistive technology; the page shows it beside the bar.</summary>
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private int _shown;
+    private RatingTier _tier;
+
+    protected override void OnParametersSet()
+    {
+        _shown = OverallCalculator.Display(Value.Estimate);   // Sigma is shown from M6 (D-078 #13)
+        _tier = RatingTiers.Of(_shown);
+    }
+}

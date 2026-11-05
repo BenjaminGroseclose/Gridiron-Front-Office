@@ -1,0 +1,29 @@
+/* UI/Football/RatingBar.razor.css */
+.gfo-rating-bar {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.value {
+	min-width: 2ch;
+	text-align: right;
+	font-weight: 700;
+	color: var(--gfo-tier);
+}
+.track {
+	position: relative;
+	flex: 1;
+	height: 6px;
+	border-radius: var(--gfo-radius-pill);
+	background: var(--gfo-quiet-fill);
+}
+.marker {
+	position: absolute;
+	top: 50%;
+	left: calc(var(--at) * 1%);
+	width: 3px;
+	height: 10px;
+	border-radius: 2px;
+	background: var(--gfo-accent);
+	transform: translate(-50%, -50%);
+}

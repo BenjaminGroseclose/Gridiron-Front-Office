@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is complete** (tagged `m0-complete`, 2026-10-20; `docs/milestones/M0_FOUNDATIONS.md` records what was built). **M1 · The League Exists is in progress** (`docs/milestones/M1_THE_LEAGUE.md`: WP1–WP6 are done, WP7 is next). Design changes from the Claude Design review land throughout development. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
+Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is complete** (tagged `m0-complete`, 2026-10-20; `docs/milestones/M0_FOUNDATIONS.md` records what was built). **M1 · The League Exists is in progress** (`docs/milestones/M1_THE_LEAGUE.md`: WP1–WP7 are done, WP8 is next). Design changes from the Claude Design review land throughout development. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
 
 ## Commands
 
@@ -127,6 +127,13 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - `[MemberNotNullWhen]` isn't checked against the body for `int?` members (`PlayerTests` pins `Player.IsUndrafted`). A get-only property doesn't translate to SQL: in a query, write `p.DraftSeason == null`.
   - SQLite's async calls complete synchronously, so `GameStateStore` starts each load with `Task.Run`. Otherwise a load started in an event handler holds the thread that finished the command. Tests await `store.Loading`.
   - UI tests read read models from a real save (D-093): `TestDoubles/RealApp` (UI.Tests' test-only Infrastructure reference). Its `HeaderGate` holds a header read, so overlapping loads are tested in a fixed order. Bound every wait on a store or a gate (`Settled`, `HeldAsync`: 10 s): an unbounded `await store.Loading` turned a planted bug into a hung run. VSTHRD003 rejects awaiting a `TaskCompletionSource`'s task outside its owner, even through a property.
+- **Football components (M1 WP7, `UI/Football`):**
+  - Keep every SVG number an `int`. Blazor writes a `double` attribute in the current culture, so a German Windows gets `51,48` and a broken crest (`TeamMarkTests` renders under de-DE). `var()` never resolves in SVG presentation attributes: team colors go in as hex from the read model, and token colors go through a scoped stylesheet.
+  - Each SVG instance owns its ids (`TeamMark`'s clip path, `TitleBackground`'s marker): two crests sharing one clip each other's stripe.
+  - Scoped CSS doesn't cross components, so the tier colors are global utilities in gfo-tokens.css (`.gfo-tier-*`, `.gfo-tier-chip`), and `--gfo-quiet-fill` is Surface 3. Tint anything that carries text opaquely (`color-mix(…, var(--colorNeutralBackground1))`): a see-through chip on a selected row fell to 3.17:1.
+  - Tier the shown number, never the estimate: `RatingTiers.Of(OverallCalculator.Display(x))`, so 89.5 is a teal 90. `Position`'s names are its abbreviations, so render the enum; `PotentialGrade`'s aren't (`BPlus`), so use `Text()`.
+  - In .NET 10, `array.Reverse()` binds to the in-place `Span` extension and returns nothing: use `OrderDescending()` or `Enumerable.Reverse`.
+  - A `DataGrid` column with a pill or chip needs its widest pill plus the cell padding (36 px Comfortable), or the cell clips with an ellipsis: 88 px for `EDGE`, 76 px for a grade.
 - **EF Core + SQLite (Spike S0a):** EF's SQLite convention doesn't give typed-ID keys `AUTOINCREMENT`, so `LeagueDbContext` must apply `UseAutoincrement()` to them (EF 10 ignores the raw `Sqlite:Autoincrement` annotation). EF change tracking costs about 100 µs per inserted entity, so league generation and draft classes use the bulk insert, `uow.InsertAsync` (D-091). Migration files are marked as generated code in `.editorconfig`.
 - The sim calibration bands in `SIMULATION_ENGINE.md` §9.2 are from memory. Verify them against a real reference before tuning.
 

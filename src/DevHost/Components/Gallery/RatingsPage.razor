@@ -1,0 +1,68 @@
+@page "/_gallery/ratings"
+@using System.Globalization
+<PageTitle>Ratings · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">Ratings</h1>
+
+<GallerySection Title="RatingChip: every tier and its edges"
+                Check="The number and the color agree at every edge: 59.5 shows 60 in orange, 89.5 shows 90 in teal, 100 shows 99. The text holds 4.5:1 in both modes (VISUAL_DESIGN.md §3.4).">
+    <div class="samples">
+        @foreach (var value in Values)
+        {
+            <span class="sample">
+                <RatingChip Value="new PerceivedRating(value, 0)" />
+                <span class="sample-label gfo-num">@Shown(value)</span>
+            </span>
+        }
+    </div>
+</GallerySection>
+
+<GallerySection Title="RatingBar" Check="The marker sits at the value in the team accent, on a Surface 3 track; the number takes its tier's color.">
+    <div class="bars">
+        @foreach (var value in Values)
+        {
+            <span class="bar-label gfo-num">@Shown(value)</span>
+            <RatingBar Value="new PerceivedRating(value, 0)" Label="@($"Rating {Shown(value)}")" />
+        }
+    </div>
+</GallerySection>
+
+<GallerySection Title="PotentialChip: all 11 grades" Check="A grades teal, B green, C yellow, D orange, F red. The minus is a real minus (A−, not A-).">
+    <div class="samples">
+        @foreach (var grade in Grades)
+        {
+            <PotentialChip Value="new PotentialRange(grade, grade, grade)" />
+        }
+    </div>
+</GallerySection>
+
+<GallerySection Title="PositionPill: all 16 positions" Check="Muted text in Micro type (11 px, 700, +0.04em) on Surface 3. EDGE is upper case.">
+    <div class="samples">
+        @foreach (var position in Enum.GetValues<Position>())
+        {
+            <PositionPill Value="position" />
+        }
+    </div>
+</GallerySection>
+
+<GallerySection Title="Money" Check="Tabular figures. One decimal from $1.0M, whole thousands below, and a real minus for a negative.">
+    <dl class="money">
+        @foreach (var amount in Amounts)
+        {
+            <dt class="gfo-num">@amount.ToString("#,0", CultureInfo.InvariantCulture)</dt>
+            <dd class="gfo-num">@Money.Format(amount)</dd>
+        }
+    </dl>
+</GallerySection>
+
+@code {
+    private static readonly double[] Values = [0, 45, 59, 59.5, 60, 69, 70, 79, 80, 89, 89.5, 90, 99, 100];
+
+    // Best first. OrderDescending, not Reverse: on .NET 10 an array's Reverse() binds to the in-place span overload.
+    private static readonly PotentialGrade[] Grades = [.. Enum.GetValues<PotentialGrade>().OrderDescending()];
+
+    private static readonly long[] Amounts =
+        [0, 999, 1_000, 850_000, 999_499, 999_500, 1_049_999, 1_050_000, 9_000_000, 12_450_000, 300_000_000, -3_200_000];
+
+    private static string Shown(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+}

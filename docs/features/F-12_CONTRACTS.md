@@ -259,7 +259,11 @@ None in M1: there are no actions. Every team, the user's included, gets its cont
 
 ## 8. UI
 
-- **Player page (WP9):** a contract block: "3 years left · $12.4M APY · cap hit this season $14.1M · $9.0M guaranteed remaining", and a small per-season table (base, bonus share, cap hit). Money through the existing `$12.4M` formatting; tabular figures.
+- **Player page (WP9):** a contract block: "3 years left · $12.4M APY · cap hit this season $14.1M · $9.0M guaranteed remaining", and a small per-season table (base, bonus share, cap hit). Money through `Money.Format` (`GridironFrontOffice.UI.Components.Formatting`, M1 WP7); tabular figures.
+- **`Money.Format(long dollars)`:**
+  - From $999,500 it shows millions with one decimal (`$12.4M`, `$9.0M`, `$300.0M`). From $1,000 it shows whole thousands (`$850K`). Below that, whole dollars (`$0`, `$999`).
+  - It rounds half up on the magnitude, uses a real minus for a negative (`−$3.2M`, U+2212), and ignores the current culture.
+  - It's a function, not a component, so a `Stat` tile takes its string. `MoneyField` (M4) will reuse it.
 - **Team page (WP9):** cap, committed, space and utilization as `Stat` tiles, the top five cap hits as a short list.
 - No contract builder, no cap sheet, no cut preview: M4.
 
@@ -289,7 +293,7 @@ About 1,700 contracts and 4,700 `ContractYears` rows per league (seed 42: 1,696 
 - **Core:** `CapMath` is covered (WP1). `ContractType` needs nothing.
 - **Data (`ContractDataTests`, Claude):** R1–R10 above, each listing every offender; plus "a misspelled enum key fails", as for the WP3 files.
 - **Application (WP4):** for every drafted player with experience 0–3 the contract is `Rookie`, four years, signed in the draft season, total on the round's line; undrafted with experience 0–2 are three-year `Minimum` deals; every base ≥ the season's minimum; Σ(bases) + bonus = total; guarantees ≤ total; every `CapHit` = `CapMath.CapHit`; `elapsed ≤ experience` and the contract has a season left; **pay follows rank:** across the league, APY is non-decreasing in `t` at every position before wiggle, and the same player's APY would be the same on any team; **every team between `utilization.min` and `max`**, over 20 seeds, after trades that only ever swap Veteran contracts at the same position and tier; the golden league's cap totals (its snapshot, D-085).
-- **UI (WP7, bUnit):** the Player page's contract block and the Team page's tiles read the DTOs.
+- **UI (bUnit):** `MoneyTests` (M1 WP7, `tests/UI.Components.Tests/Formatting`) covers every rounding edge from $999 to $1,000.0M, negatives with the real minus, and a German culture. The Player page's contract block and the Team page's tiles, which read the DTOs, are tested with WP9's screens.
 - **Autoplay:** none in M1.
 
 ## 14. Open questions

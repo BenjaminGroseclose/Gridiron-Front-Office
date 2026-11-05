@@ -1,4 +1,5 @@
-using System.Globalization;
+using GridironFrontOffice.Application.Players;
+using GridironFrontOffice.Core.Players;
 
 namespace GridironFrontOffice.DevHost.Components.Gallery;
 
@@ -13,23 +14,12 @@ internal static class GallerySample
 
     private static readonly string[] First = ["Marcus", "Dante", "Theo", "Jalen", "Owen", "Isaiah", "Caleb", "Rafael", "Kenji", "Malik", "Ezra", "Tobias", "Andre", "Silas", "Nico", "Desmond"];
     private static readonly string[] Last = ["Okafor", "Mensah", "Lindqvist", "Hale", "Moreau", "Castellano", "Brightwater", "Oduya", "Fairweather", "Koenig", "Abernathy", "Delacroix", "Whitlock", "Ashby", "Ferreira", "Nakamura"];
-    private static readonly string[] Positions = ["QB", "RB", "WR", "TE", "OT", "IOL", "EDGE", "DT", "LB", "CB", "S", "K"];
+    private static readonly Position[] Positions =
+        [Position.QB, Position.RB, Position.WR, Position.TE, Position.OT, Position.OG, Position.EDGE, Position.DT, Position.LB, Position.CB, Position.S, Position.K];
+    private static readonly PotentialGrade[] Grades = Enum.GetValues<PotentialGrade>();
     private static readonly string[] Teams = ["PHI", "WAS", "BAL", "CHI", "GB", "MIN", "KC", "ATL", "CHA", "JAX", "LAC", "LV"];
 
     public static IReadOnlyList<GalleryPlayer> Players { get; } = Generate(2000);
-
-    public static string Money(long dollars) =>
-        string.Create(CultureInfo.InvariantCulture, $"${dollars / 1_000_000.0:0.0}M");
-
-    /// <summary>The rating tier for a 0–99 value (VISUAL_DESIGN.md §3.4).</summary>
-    public static string Tier(int rating) => rating switch
-    {
-        >= 90 => "elite",
-        >= 80 => "good",
-        >= 70 => "avg",
-        >= 60 => "below",
-        _ => "poor",
-    };
 
     private static List<GalleryPlayer> Generate(int count)
     {
@@ -45,16 +35,17 @@ internal static class GallerySample
         {
             var overall = 48 + Next(50);
             var spread = 1 + Next(6);
+            var grade = Grades[Next(Grades.Length)];
             players.Add(new GalleryPlayer(
                 ID: id,
                 Name: $"{First[Next(First.Length)]} {Last[Next(Last.Length)]}",
                 Position: Positions[Next(Positions.Length)],
                 Team: Teams[Next(Teams.Length)],
                 Age: 21 + Next(14),
-                Overall: overall,
+                Overall: new PerceivedRating(overall, 0),
                 OverallLow: Math.Max(0, overall - spread),
                 OverallHigh: Math.Min(99, overall + spread),
-                Potential: "ABCD"[Next(4)] + (Next(3) switch { 0 => "+", 1 => "", _ => "−" }),
+                Potential: new PotentialRange(grade, grade, grade),
                 CapHit: 750_000L + (Next(400) * 100_000L),
                 Attributes: [.. AttributeNames.Select(_ => 40 + Next(60))]));
         }
@@ -66,12 +57,12 @@ internal static class GallerySample
 internal sealed record GalleryPlayer(
     int ID,
     string Name,
-    string Position,
+    Position Position,
     string Team,
     int Age,
-    int Overall,
+    PerceivedRating Overall,
     int OverallLow,
     int OverallHigh,
-    string Potential,
+    PotentialRange Potential,
     long CapHit,
     IReadOnlyList<int> Attributes);

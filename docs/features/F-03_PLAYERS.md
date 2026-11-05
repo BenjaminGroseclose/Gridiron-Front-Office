@@ -254,6 +254,12 @@ public readonly record struct PerceivedRating(double Estimate, double Sigma);  /
 - **Roster** (DataGrid v1): name, position, age, OVR chip, potential grade, archetype, contract. Sticky name column. Every name opens the `PlayerPeekSheet`.
 - **Player page:** a header (photo-less silhouette, name, position, number, team colors), an attributes panel grouped as in §4.2 with `RatingBar` (a range from M6), measurables, bio, personality descriptors (or "Unknown"), and the contract.
 - **`RatingChip` / `RatingBar`:** a plain value while σ = 0 (M1–M5). From M6, an estimate plus its 80% range when σ > 0, and the potential grade chip shows its spread ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
+- **As built (M1 WP7, `GridironFrontOffice.UI.Football`):**
+  - **The shown number:** `RatingChip` and `RatingBar` take a `PerceivedRating` and show `OverallCalculator.Display(Value.Estimate)`. Its tier (`RatingTiers.Of`) comes from that integer, so 89.5 shows as 90 in Elite's color.
+  - **`RatingBar`** is a meter (0–99, an optional `Label`): the number in its tier color, a 6 px Surface 3 track and a 3 × 10 px accent marker, with no fill. M6 adds the range band ([D-094](../DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker) #4).
+  - **`PotentialChip`** takes a `PotentialRange` and shows its grade's letter (`PotentialGrades.Text`: `A−` with a real minus). It's colored by letter on the rating scale (`RatingTiers.OfGrade`: A Elite, B Good, C Average, D Below, F Poor) and drawn as the same chip ([D-094](../DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker) #3).
+  - **`PositionPill`** takes a `Position` and shows its name, which is the abbreviation (`EDGE`, `OG`, `LS`), Muted on Surface 3.
+  - **The gallery:** `/_gallery/ratings` shows every tier edge, grade, position and money format.
 - Keyboard: the grid has arrow-key navigation, and Enter opens the peek sheet.
 
 ## 9. Calendar and phase integration
@@ -295,3 +301,4 @@ public readonly record struct PerceivedRating(double Estimate, double Sigma);  /
 - OVR weights are **derived from the sim** (M2 regression), not hand-set permanently.
 - The perception error model is a **shared player-level term plus a small attribute-level term**, and ranges are **80% intervals**. Numbers are owned by F-17.
 - [D-065](../DECISIONS.md#d-065-f-03-player-model-accepted-42-attributes-80-ranges-roster-mix-as-averages): the owner accepted the 42 attributes and the 80% interval, and made the roster targets league averages rather than rules.
+- [D-094](../DECISIONS.md#d-094-the-crest-gets-a-rim-and-a-halo-and-its-monogram-falls-back-below-31-potential-grades-take-the-rating-colors-the-bar-is-a-marker) (M1 WP7): potential grades take the rating colors by letter, and `RatingBar` is a marker on a track, with no fill.
