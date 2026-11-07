@@ -103,6 +103,7 @@
 | D-093 | UI tests read a real save; a row's ratings are read back line by line; team identities aren't cached | **Accepted** |
 | D-094 | The crest gets a rim and a halo, and its monogram falls back below 3:1; potential grades take the rating colors; the bar is a marker | **Accepted** |
 | D-095 | Accent states move away from their text; the picker can start over; a team is selected, then taken; the desktop end-to-end is a UI flow plus a check | **Accepted** |
+| D-096 | F-01's M1 slice accepted | **Accepted** |
 
 ---
 
@@ -909,3 +910,8 @@
   4. **The end-to-end is a UI flow plus Claude's check:** the UI tests run New League → the picker → Home over a real save (D-093), and Claude runs the same flow in the desktop app through WebView2's DevTools port after each slice, with screenshots. No automated desktop harness in M1.
 - **Options not taken:** changing only the 7 teams' states (two rules where one serves); leaving Fluent's ramp (the M1 exit's "readable text" fails for 7 teams); no way back from the picker (rerolling means deleting by hand from the load screen); keeping the first league when starting over (unpicked leagues pile up); a confirmation dialog on click (the recommendation; the owner preferred a visible selection); a click that picks at once (no pick by accident is the point); an automated desktop test over the DevTools protocol (a new, Windows-only, slower harness for one flow).
 - **Consequences:** + Every team's buttons and segmented controls are readable in every state, from one formula a test checks for all 32 colors. Rerolling a league is one click and a confirmation. A team can be compared, marked and changed before anything is final. − The 25 white-text teams' and the neutral blue's state shades change slightly from Fluent's. The picker keeps a selection and a footer button, and the selected card needs its own look. The desktop flow is checked by hand, so a break there is found at the next check, not by `./build.ps1`.
+
+## D-096: F-01's M1 slice accepted
+- **Status:** **Accepted** (owner, 2026-11-05, reviewing [F-01](features/F-01_LEAGUE_CREATION.md)'s M1 slice after D-095: *"Lets Accept F-01"*).
+- **Decision:** F-01's M1 slice is accepted as written: the New League wizard v0 (a name, an optional seed, generating with progress), the 32-team picker with select then Take over and Start over (D-095), where an open league lands, the team tint from the pick on, and the team, season and phase on the load screen and Continue. WP8 builds it from its [builder's guide](milestones/M1_WP8_GUIDE.md).
+- **Note:** F-01's later slices (M3's Time Machine, export, import and duplicate; M5's offseason start and Ironman; M6's clock settings; M11's league data import) get their own sections, written right before each is built.

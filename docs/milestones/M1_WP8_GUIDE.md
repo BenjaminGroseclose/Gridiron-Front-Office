@@ -1,6 +1,6 @@
 # M1 · WP8 builder's guide: the New League wizard v0 and team tint
 
-> **Status:** **Ready to build** once you accept [F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md) (written 2026-11-04; §10 answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP8](M1_THE_LEAGUE.md#wp8--new-league-wizard-v0-and-team-tint-m) · **Size:** M
+> **Status:** **Ready to build** ([F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md) accepted 2026-11-05 as [D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted); this guide written 2026-11-04, §10 answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP8](M1_THE_LEAGUE.md#wp8--new-league-wizard-v0-and-team-tint-m) · **Size:** M
 >
 > WP8 is the first time you can start a real league and play as a team. M0's name-only New League page becomes a two-step wizard. Step one takes a name and an optional seed, then **Generate** runs WP5's `CreateLeague` with progress. Step two shows all 32 teams as cards (crest, roster strength, cap space) from WP6's summaries, drawn with WP7's components. A click marks a card, and **Take over** runs WP5's `PickUserTeamAsync` and opens the league at its home. From then on the app wears the team's primary color through M0's `GfoThemeService`, and the load screen and Continue name each league's team, season and phase. Nothing in Core or the schema changes. When WP8 is done, the M1 plan's item 1 works end to end, and the exit's "the app wears the user team's colors in both modes, with readable text" holds for all 32 teams.
 
@@ -10,7 +10,7 @@
 
 | | |
 |---|---|
-| **Claude prepared** ✅ | This guide; [F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md), owed since WP0 (Proposed: your review); and the contrast of all 32 team colors on Fluent's button states in both modes, which found 7 teams whose hovered, pressed and selected buttons can't be read (§8). |
+| **Claude prepared** ✅ | This guide; [F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md), owed since WP0 (accepted, [D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted)); and the contrast of all 32 team colors on Fluent's button states in both modes, which found 7 teams whose hovered, pressed and selected buttons can't be read (§8). |
 | **You build** (§3) | Three slices: the wizard; team tint, with the button states fixed; the load screen and Continue. |
 | **Claude builds the gallery** | The team colors in the gallery's toolbar, `/_gallery/team-picker` (the 32 cards) and `/_gallery/save-cards` (every card state, with and without a team), and the button states on the Theme page (§3.4). |
 | **Claude writes the tests** (§4) | Per slice, as each one lands, each proven to fail on a planted problem. |
@@ -723,7 +723,7 @@ Per slice, each proven to fail on a planted problem.
 - [ ] Checked in a visible pane: create → pick → Home, Start over, Continue to an unpicked league, and the load screen, in Dark and Light with the 7 dark-text teams and a few others. Every button state holds 4.5:1 (§8's measurement, repeated on the built code), and the marked card's text and chips hold theirs on `--gfo-selection`. Then the same flow in the desktop app (D-095 #4).
 - [ ] `./build.ps1` green.
 - [ ] Reviewed against this guide, F-01, F-02 §8, PERSISTENCE §9, UI_DESIGN_SYSTEM §3.2 and §7, VISUAL_DESIGN §3.3 and §10, and D-095 (your §10 answers).
-- [ ] Docs: F-01 accepted and as built; the plan's WP8 results; PERSISTENCE §9 (the card's league line); UI_DESIGN_SYSTEM §3.2 (the button states) and §7 (the two wizard routes, `MenuLayout`); VISUAL_DESIGN §3.3 (the state rule); CLAUDE.md's gotchas.
+- [ ] Docs: F-01 as built; the plan's WP8 results; PERSISTENCE §9 (the card's league line); UI_DESIGN_SYSTEM §3.2 (the button states) and §7 (the two wizard routes, `MenuLayout`); VISUAL_DESIGN §3.3 (the state rule); CLAUDE.md's gotchas.
 - [ ] Committed by you: one commit per slice, each with its tests (D-076), then the docs.
 
 ## 6. Order of work
