@@ -25,6 +25,13 @@
 		--gfo-urgent: #c62828;
 		--gfo-on-urgent: #ffffff;
 
+		/* Danger: the fill of a button that destroys something (.gfo-danger). Urgent's red, the same in both modes, with
+		   its hover and pressed fills moved away from the white text by D-095's rule (AccentColors.StateFills). */
+		--gfo-danger: #c62828;
+		--gfo-danger-hover: #b22424;
+		--gfo-danger-pressed: #9e2020;
+		--gfo-on-danger: #ffffff;
+
 		/* Chips tint their background with their own color: 20% (Dark), 14% (Light). */
 		--gfo-chip-tint: 20%;
 
@@ -171,6 +178,16 @@
 	.gfo-icon-warning {
 		color: var(--gfo-status-warning);
 	}
+	/* The danger button (UI_DESIGN_SYSTEM.md §5.1): a primary FluentButton for an action that destroys something, with
+	   Class="gfo-danger". Fluent paints its primary button from these four tokens, so they're set to the danger red on
+	   the button itself: no reach into Fluent's markup, and its disabled and focus looks stay Fluent's. */
+	fluent-button.gfo-danger {
+		--colorBrandBackground: var(--gfo-danger);
+		--colorBrandBackgroundHover: var(--gfo-danger-hover);
+		--colorBrandBackgroundPressed: var(--gfo-danger-pressed);
+		--colorNeutralForegroundOnBrand: var(--gfo-on-danger);
+	}
+
 	.gfo-icon-negative {
 		color: var(--gfo-status-negative);
 	}

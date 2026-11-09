@@ -65,6 +65,19 @@
   cursor: pointer;
 }
 
+/* The 32 team colors: their own row under the bar's controls, smaller swatches */
+.gallery-swatches.is-teams {
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gallery-swatch.is-small {
+  width: 18px;
+  height: 18px;
+  border-width: 1px;
+}
+
 .gallery-swatch.is-active {
   outline: 2px solid var(--colorNeutralForeground1);
   outline-offset: 2px;

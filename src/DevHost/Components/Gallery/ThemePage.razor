@@ -88,6 +88,17 @@
     <FluentTextInput Placeholder="Search…" />
 </GallerySection>
 
+<GallerySection Title="Danger button (UI_DESIGN_SYSTEM.md §5.1)"
+                Check="A primary FluentButton with Class=&quot;gfo-danger&quot;, for an action that destroys something: Urgent's red with white text (5.6:1), darker on hover (6.6:1) and darker again pressed (7.8:1). The same red in both modes and under every tint; disabled and the focus ring stay Fluent's. Beside a primary button, it reads as the other kind of action.">
+    <FluentStack HorizontalGap="8px" VerticalAlignment="VerticalAlignment.Center" Wrap="true">
+        <FluentButton Appearance="ButtonAppearance.Primary" Class="gfo-danger">Delete league</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Class="gfo-danger" IconStart="@IconCatalog.Create(IconName.Delete)">Delete</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Class="gfo-danger" Disabled="true">Disabled</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary">Take over</FluentButton>
+        <FluentButton>Keep it</FluentButton>
+    </FluentStack>
+</GallerySection>
+
 @code {
     private static readonly (string Tier, int Sample)[] Ratings = [("elite", 93), ("good", 84), ("avg", 76), ("below", 64), ("poor", 52)];
     private static readonly string[] Statuses = ["positive", "warning", "negative", "inactive"];

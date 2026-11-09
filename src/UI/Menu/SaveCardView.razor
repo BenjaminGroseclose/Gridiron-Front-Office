@@ -28,7 +28,8 @@
             <FluentButton Appearance="ButtonAppearance.Subtle" Disabled="Busy" IconStart="@IconCatalog.Create(IconName.Folder)"
                           OnClick="@(() => OnShowInFolder.InvokeAsync(Card))" data-testid="show-in-folder">Show in folder</FluentButton>
         }
-        <FluentButton Appearance="ButtonAppearance.Subtle" Disabled="Busy" IconStart="@IconCatalog.Create(IconName.Delete)"
+        @* Destroys the save (to the Recycle Bin, after a confirmation): the danger button (UI_DESIGN_SYSTEM.md §5.1) *@
+        <FluentButton Appearance="ButtonAppearance.Primary" Class="gfo-danger" Disabled="Busy" IconStart="@IconCatalog.Create(IconName.Delete)"
                       OnClick="@(() => OnDelete.InvokeAsync(Card))" data-testid="delete">Delete</FluentButton>
         @if (Card.CanOpen)
         {

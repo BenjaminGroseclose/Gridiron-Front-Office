@@ -12,7 +12,7 @@ namespace GridironFrontOffice.UI.Tests.Menu;
 
 /// <summary>
 /// M1 WP8 slice 1 (guide §4): New League's summary on a real seed-42 save (D-099). The league and the marked team, the
-/// settings' placeholder, and Take over, the one place the pick is made.
+/// settings' placeholder, and Start, the one place the pick is made.
 /// </summary>
 public sealed class FinalizeTests(GeneratedSeed42 seed) : RealScreenContext, IClassFixture<GeneratedSeed42>
 {
@@ -57,17 +57,16 @@ public sealed class FinalizeTests(GeneratedSeed42 seed) : RealScreenContext, ICl
     }
 
     [Fact]
-    public async Task Take_over_names_the_team_picks_it_and_opens_home()
+    public async Task Start_picks_the_team_and_opens_home()
     {
         await OpenLeagueAsync(seed.League);
         var cut = await RenderSummaryAsync(Team);
-        var team = await SummaryAsync(Team);
-        var takeOver = cut.Find("[data-testid=take-over]");
+        var start = cut.Find("[data-testid=start]");
 
-        takeOver.TextContent.Trim().ShouldBe($"Take over the {team.Identity.City} {team.Identity.Nickname}");
-        (await HeaderAsync()).UserTeam.ShouldBeNull("Nothing is picked before Take over.");
+        start.TextContent.Trim().ShouldBe("Start");
+        (await HeaderAsync()).UserTeam.ShouldBeNull("Nothing is picked before Start.");
 
-        await takeOver.ClickAsync(new());
+        await start.ClickAsync(new());
 
         (await HeaderAsync()).UserTeam.ShouldNotBeNull().Identity.TeamID.ShouldBe(new TeamID(Team));
         Location.ShouldBe("league");

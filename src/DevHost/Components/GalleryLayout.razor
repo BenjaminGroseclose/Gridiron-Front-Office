@@ -1,5 +1,6 @@
 @inherits LayoutComponentBase
 @inject GfoThemeService Theme
+@inject ISeedData Seed
 @* The component gallery layout. It lives outside Gallery/ because that folder's _Imports sets @layout GalleryLayout, and a
    layout that names itself would loop forever.
    The component gallery (UI_DESIGN_SYSTEM.md §6.2, VISUAL_DESIGN.md §10): every v0 component, switchable between Dark
@@ -21,6 +22,17 @@
             @foreach (var (name, color) in Tints)
             {
                 <button type="button" class="gallery-swatch @(color == _accent ? "is-active" : "")" style="--swatch: @(color ?? GfoAppearance.NeutralAccent)"
+                        aria-pressed="@(color == _accent ? "true" : "false")" title="@name" @onclick="() => SetAccentAsync(color)">
+                    <span class="gfo-visually-hidden">@name</span>
+                </button>
+            }
+        </div>
+        @* Every shipped team's primary (M1 WP8 §3.4), so any page can be checked in any team's colors: the 7 with
+           near-black text on their fill (D-095) are among them *@
+        <div class="gallery-swatches is-teams" role="group" aria-label="Team colors">
+            @foreach (var (name, color) in _teamTints)
+            {
+                <button type="button" class="gallery-swatch is-small @(color == _accent ? "is-active" : "")" style="--swatch: @color"
                         aria-pressed="@(color == _accent ? "true" : "false")" title="@name" @onclick="() => SetAccentAsync(color)">
                     <span class="gfo-visually-hidden">@name</span>
                 </button>
@@ -55,6 +67,7 @@
         ("_gallery/title-background", "TitleBackground"),
         ("_gallery/teams", "Teams"),
         ("_gallery/ratings", "Ratings"),
+        ("_gallery/team-picker", "Team picker"),
         ("_gallery/app-shell", "AppShell"),
     ];
 
@@ -75,6 +88,13 @@
 
     private GfoThemeMode _mode = GfoThemeMode.Dark;
     private string? _accent;
+
+    // "CHI · Chicago Zephyrs #RRGGBB", in the team set's order, normalized as ?accent= is
+    private (string Name, string Color)[] _teamTints = [];
+
+    protected override void OnInitialized() =>
+        _teamTints = [.. Seed.TeamSet.Teams.Select(t => AccentColors.Normalize(t.Colors.Primary))
+            .Zip(Seed.TeamSet.Teams, (color, t) => ($"{t.Abbr} · {t.City} {t.Nickname} {color}", color))];
     private GfoDensity _density = GfoDensity.Comfortable;
 
     /// <summary>?mode=dark or light: the mode to open the page in.</summary>

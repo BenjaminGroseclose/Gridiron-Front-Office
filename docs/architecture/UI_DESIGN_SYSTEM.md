@@ -148,6 +148,7 @@ Use **Fluent's tokens directly** for surfaces, text, borders, brand, status, typ
   --gfo-rating-below: #F4A65F;   /* 60–69 */
   --gfo-rating-poor:  #F07B7B;   /* < 60  */
   --gfo-urgent:       #C62828;   /* draft clock ≤ 10 s, expiring offers, LIVE */
+  --gfo-danger:       #C62828;   /* a destructive button's fill (.gfo-danger), with -hover #B22424, -pressed #9E2020 and --gfo-on-danger #FFFFFF */
 
   /* Team colors for non-brand uses (opponent, crests, ticker). Set per element/region. */
   --gfo-team-primary:   currentColor;
@@ -227,7 +228,7 @@ Fonts are bundled locally as `woff2` (the app is offline). Both are SIL OFL.
 ### 5.1 From Fluent UI Blazor v5 (use directly in pages)
 | Category | Used for | Notes |
 |---|---|---|
-| **Buttons and inputs**: button, text and number inputs, select/dropdown, combobox/autocomplete, checkbox, switch, radio group, slider | Forms, filters, game plan sliders, contract builder | Use Fluent directly. No wrappers. |
+| **Buttons and inputs**: button, text and number inputs, select/dropdown, combobox/autocomplete, checkbox, switch, radio group, slider | Forms, filters, game plan sliders, contract builder | Use Fluent directly. No wrappers. **A destructive action** (the load screen's Delete) is a primary `FluentButton` with `Class="gfo-danger"`: Fluent has no danger appearance, so gfo-tokens.css sets the four tokens its primary button paints with (`--colorBrandBackground`, its `Hover` and `Pressed`, `--colorNeutralForegroundOnBrand`) to `--gfo-danger` and its states on that button alone. Urgent's red, the same in both modes and under every tint, with white text at 5.6:1 (6.6:1 hovered, 7.8:1 pressed) and states by D-095's rule; disabled and focus stay Fluent's. `DangerButtonTests` checks the colors where they're written. Added 2026-11-08 at the owner's request. |
 | **Overlays**: dialog, drawer/panel, tooltip, popover, menu, toast/message bar | Confirmations, **peek sheets**, hover cards, context menus, notifications | Dialogs and toasts go through thin GFO services (§6). Verified in S0b; see the overlay API names below. |
 | **Navigation**: nav, tabs, breadcrumb | App shell, sub-pages | — |
 | **Layout and text**: stack, card, text, divider, the `Padding`/`Margin` utilities | Every screen's rows, columns, panels and type ([D-100](../DECISIONS.md#d-100-screens-are-built-from-fluents-layout-and-text-components-scoped-css-covers-only-what-they-cant)) | §4 has the rules and `FluentStack`'s two traps |

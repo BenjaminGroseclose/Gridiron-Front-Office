@@ -149,6 +149,8 @@ public sealed class LoadScreenTests : SaveScreenContext
         cards[3].QuerySelector("[data-testid=save-note]")!.TextContent.ShouldContain("older development build");
         cards[4].QuerySelector("[data-testid=save-note]")!.TextContent.ShouldContain("isn't a Gridiron Front Office save");
 
+        cards[0].QuerySelector("[data-testid=delete]")!.ClassList.ShouldContain("gfo-danger", "Delete destroys the save: the danger button.");
+
         static string Buttons(AngleSharp.Dom.IElement card) =>
             string.Join(' ', card.QuerySelectorAll("[data-testid]").Select(b => b.GetAttribute("data-testid")).Where(id => id is "open" or "delete" or "show-in-folder"));
     }

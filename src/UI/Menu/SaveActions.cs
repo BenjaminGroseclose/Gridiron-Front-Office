@@ -27,7 +27,7 @@ public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToa
 	public const string Wizard = "/new";
 
 	/// <summary>
-	/// New League's last step (D-099): the league and the marked team, where Take over picks it. The league's settings
+	/// New League's last step (D-099): the league and the marked team, where Start picks it. The league's settings
 	/// join it with their milestones.
 	/// </summary>
 	public const string Finalize = "/finalize";
@@ -79,7 +79,7 @@ public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToa
 	}
 
 	/// <summary>
-	/// Makes the marked team the user's and opens the league's home (D-095 #3, D-099: the summary's Take over is the
+	/// Makes the marked team the user's and opens the league's home (D-095 #3, D-099: the summary's Start is the
 	/// confirmation). True when picked.
 	/// </summary>
 	public async Task<bool> PickAsync(TeamIdentityDto team)
@@ -93,42 +93,6 @@ public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToa
 		}
 
 		navigation.NavigateTo(LeagueHome);
-		return true;
-	}
-
-	/// <summary>
-	/// Asks first, then sends the open, unpicked league to the Recycle Bin and goes back to the first step with its
-	/// name filled in and a new random seed (D-095 #2, D-097 #3). False when it stays open.
-	/// </summary>
-	public async Task<bool> StartOverAsync()
-	{
-		if (saves.Current is not { } current)
-		{
-			navigation.NavigateTo(Wizard);
-			return true;
-		}
-
-		var header = await Task.Run(() => queries.GetHeaderAsync());
-		if (!await dialogs.ConfirmAsync("Start over?", $"{header.LeagueName} goes to the Recycle Bin, and you're back at the first step with its name and a new seed.",
-				confirm: "Start over", cancel: "Keep this league"))
-		{
-			return false;
-		}
-
-		var deleted = await saves.DeleteAsync(current.FilePath);
-		if (deleted.IsFailure)
-		{
-			// DeleteAsync closes the league before the Recycle Bin: it's closed either way, so back to the menu,
-			// where Continue still offers it
-			await toasts.ErrorAsync("Couldn't start over", deleted.Error!.Message);
-			navigation.NavigateTo(MainMenu);
-			return true;
-		}
-
-		navigation.NavigateTo(navigation.GetUriWithQueryParameters(Wizard, new Dictionary<string, object?>
-		{
-			["name"] = header.LeagueName,
-		}));
 		return true;
 	}
 

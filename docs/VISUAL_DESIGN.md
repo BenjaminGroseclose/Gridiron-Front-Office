@@ -101,6 +101,7 @@ Rating chips are **pills**: background = the rating color at 20% (dark) / 14% (l
 | Out / negative | `#F07B7B` | `#B42318` |
 | Injured reserve / inactive | `#A3A3A3` | `#5F6670` |
 | **Urgent** (draft clock ≤ 10 s, offer ≤ 8 s, LIVE tag) | `#C62828` fill + white text | same |
+| **Danger** (a button that destroys something: the load screen's Delete) | `#C62828` fill + white text (5.6:1); hover `#B22424`, pressed `#9E2020`, away from the text as D-095 moves every button state | same |
 
 > **Color-blind check (done in M0 WP8, 2026-10-19).** Machado (2009) simulation at full severity, adjacent tiers compared as CIEDE2000 ΔE (about 2 is barely noticeable, 5+ is clear):
 >

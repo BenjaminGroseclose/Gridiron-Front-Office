@@ -7,10 +7,10 @@
 @inject SaveActions Actions
 @inject NavigationManager Navigation
 
-<PageTitle>Take over · Gridiron Front Office</PageTitle>
+<PageTitle>Ready to take over · Gridiron Front Office</PageTitle>
 
-@* New League's last step (F-01 §4, D-099): the league and the team marked on the picker, and Take over, which picks it.
-   Nothing is picked before Take over. A section, not a main: AppShell's content area is the page's one main landmark. *@
+@* New League's last step (F-01 §4, D-099): the league and the team marked on the picker, and Start, which picks it.
+   Nothing is picked before Start. A section, not a main: AppShell's content area is the page's one main landmark. *@
 <section class="gfo-finalize" aria-labelledby="finalize-title">
     <LeagueHero Heading="Ready to take over" HeadingID="finalize-title" League="_header" />
 
@@ -58,7 +58,7 @@
         </section>
 
         @* The league's settings (D-099 #3) arrive in this section with their milestones (F-01 §2: injury frequency in M3,
-           Ironman in M5, the clock in M6), and Take over confirms them with the pick. Until the first one, a placeholder
+           Ironman in M5, the clock in M6), and Start confirms them with the pick. Until the first one, a placeholder
            holds their place. *@
         <section class="gfo-finalize-settings" aria-labelledby="finalize-settings-title">
             <h2 id="finalize-settings-title" class="gfo-display">League settings</h2>
@@ -75,9 +75,7 @@
     <footer class="gfo-finalize-actions">
         <FluentButton Disabled="_busy" OnClick="BackAsync" data-testid="back">Back</FluentButton>
         <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_team is null || _busy)" Loading="_busy"
-                      OnClick="TakeOverAsync" data-testid="take-over">
-            @(_team is { } marked ? $"Take over the {marked.Identity.City} {marked.Identity.Nickname}" : "Take over")
-        </FluentButton>
+                      OnClick="StartAsync" data-testid="start">Start</FluentButton>
     </footer>
 </section>
 
@@ -119,7 +117,7 @@
         return Task.CompletedTask;
     }
 
-    private async Task TakeOverAsync()
+    private async Task StartAsync()
     {
         if (_team is not { } team)
         {

@@ -94,6 +94,13 @@ public sealed class LeagueQueries(ISaveReader reader, IPerception perception)
 			.ToListAsync(ct)
 			.ConfigureAwait(false);
 
+		// No team to summarize: an unknown team, or a save with no league in it (made by M0's name-only New League),
+		// which has no season either, so the cap read below would fail (F-01 §10)
+		if (teams.Count == 0)
+		{
+			return [];
+		}
+
 		var cap = await db.Seasons.Where(s => s.Season == saveInfo.CurrentSeason).Select(s => s.Cap).SingleAsync(ct)
 			.ConfigureAwait(false);
 

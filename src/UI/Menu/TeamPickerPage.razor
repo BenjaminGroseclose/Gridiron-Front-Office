@@ -34,7 +34,7 @@
                     @foreach (var team in conference)
                     {
                         <TeamPickCard Team="team" Selected="@(_selected?.Identity.TeamID == team.Identity.TeamID)"
-                                      Disabled="_busy" OnSelect="Select" />
+                                      OnSelect="Select" />
                     }
                 </div>
             </section>
@@ -43,9 +43,8 @@
 
     @* Sticky at the bottom of the page's scroll (§2), so Next stays in reach of any card *@
     <footer class="gfo-picker-actions">
-        <FluentButton Disabled="_busy" OnClick="StartOverAsync" data-testid="start-over">Start over</FluentButton>
-        <FluentButton Disabled="_busy" OnClick="Actions.CloseAsync" data-testid="close-league">Close league</FluentButton>
-        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_selected is null || _busy)" OnClick="NextAsync"
+        <FluentButton OnClick="Actions.CloseAsync" data-testid="close-league">Close league</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_selected is null)" OnClick="NextAsync"
                       data-testid="next">Next</FluentButton>
     </footer>
 </section>
@@ -56,8 +55,7 @@
 
     private LeagueHeaderDto? _header;
     private IReadOnlyList<TeamSummaryDto>? _teams;
-    private TeamSummaryDto? _selected;   // the marked card (D-095 #3); nothing is picked until the summary's Take over
-    private bool _busy;
+    private TeamSummaryDto? _selected;   // the marked card (D-095 #3); nothing is picked until the summary's Start
 
     protected override async Task OnInitializedAsync()
     {
@@ -90,7 +88,7 @@
         return Task.CompletedTask;
     }
 
-    // To the summary (D-099), which picks nothing until its Take over
+    // To the summary (D-099), which picks nothing until its Start
     private Task NextAsync()
     {
         if (_selected is { } team)
@@ -99,11 +97,5 @@
         }
 
         return Task.CompletedTask;
-    }
-
-    private async Task StartOverAsync()
-    {
-        _busy = true;
-        _busy = await Actions.StartOverAsync();
     }
 }

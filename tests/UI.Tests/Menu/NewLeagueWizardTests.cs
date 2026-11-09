@@ -93,16 +93,13 @@ public sealed class NewLeagueWizardTests(GeneratedSeed42 seed) : RealScreenConte
     }
 
     [Fact]
-    public void Start_over_brings_back_the_name_with_a_new_random_seed()
+    public void Each_visit_opens_with_no_name_and_its_own_seed()
     {
-        GoTo("/new?name=Saturday%20League");
-
         var first = Render<NewLeaguePage>();
         var second = Render<NewLeaguePage>();
 
-        Field(first, "league-name").Value.ShouldBe("Saturday League");
-        Field(second, "league-name").Value.ShouldBe("Saturday League");
-        Field(first, "league-seed").Value.ShouldNotBe(Field(second, "league-seed").Value, "Each visit draws its own seed (D-097 #3).");
+        Field(first, "league-name").Value.ShouldBeNullOrEmpty();
+        Field(first, "league-seed").Value.ShouldNotBe(Field(second, "league-seed").Value, "Each visit draws its own seed (D-097 #2).");
     }
 
     [Fact]

@@ -31,8 +31,6 @@
 </MenuFrame>
 
 @code {
-    [SupplyParameterFromQuery(Name = "name")] public string? StartName { get; set; }
-
     private string? _name = "";
     private string? _seed = "";
     private string? _nameError;
@@ -48,8 +46,8 @@
             return;
         }
 
-        // Start over brings the name back (D-095 #2); the seed is always a new random one (D-097)
-        (_name, _seed) = (StartName ?? "", SeedText.Random().ToString(CultureInfo.InvariantCulture));
+        // Every visit opens with a new random seed (D-097 #2)
+        _seed = SeedText.Random().ToString(CultureInfo.InvariantCulture);
     }
 
     private static MessageState? State(string? error) => error is null ? null : MessageState.Error;

@@ -120,38 +120,6 @@ public sealed class TeamPickerTests(GeneratedSeed42 seed) : RealScreenContext, I
     }
 
     [Fact]
-    public async Task Start_over_asks_then_sends_the_league_to_the_Recycle_Bin_and_brings_back_its_name()
-    {
-        var league = await OpenLeagueAsync(seed.League);
-        var cut = await RenderPickerAsync();
-
-        await cut.Find("[data-testid=start-over]").ClickAsync(new());
-
-        var question = Dialogs.Asked.ShouldHaveSingleItem();
-        (question.Title, question.Confirm).ShouldBe(("Start over?", "Start over"));
-        question.Message.ShouldContain("Seed 42 goes to the Recycle Bin");
-        Platform.Recycled.ShouldContain(league.FilePath);
-        Saves.Current.ShouldBeNull();
-        Location.ShouldBe("new?name=Seed%2042");
-    }
-
-    [Fact]
-    public async Task Keeping_the_league_leaves_everything_as_it_was()
-    {
-        await OpenLeagueAsync(seed.League);
-        var cut = await RenderPickerAsync();
-        Dialogs.Answer = false;
-        GoTo("/pick-team");
-
-        await cut.Find("[data-testid=start-over]").ClickAsync(new());
-
-        Platform.Recycled.ShouldBeEmpty();
-        Saves.Current.ShouldNotBeNull();
-        Location.ShouldBe("pick-team");
-        cut.Find("[data-testid=start-over]").HasAttribute("disabled").ShouldBeFalse("The page works again.");
-    }
-
-    [Fact]
     public async Task A_league_with_a_team_goes_home()
     {
         await OpenLeagueAsync(seed.League);

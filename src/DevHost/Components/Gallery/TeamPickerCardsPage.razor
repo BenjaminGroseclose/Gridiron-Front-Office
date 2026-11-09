@@ -23,16 +23,6 @@
     </GallerySection>
 }
 
-<GallerySection Title="TeamPickCard while Start over runs" Plain="true"
-                Check="Every card waits (aria-disabled), and the marked one keeps its mark. A click does nothing.">
-    <div class="picker-grid">
-        @foreach (var team in _waiting)
-        {
-            <TeamPickCard Team="team" Selected="@(team == _waiting[0])" Disabled="true" OnSelect="Mark" />
-        }
-    </div>
-</GallerySection>
-
 @code {
     // F-01 §8's sample league
     private static readonly LeagueHeaderDto SampleLeague =
@@ -50,7 +40,6 @@
     private const long Cap = 279_500_000;
 
     private List<(string Name, List<TeamSummaryDto> Teams)> _conferences = [];
-    private TeamSummaryDto[] _waiting = [];
     private TeamID? _marked;
 
     // The shipped team set in the picker's order, numbered as LeagueWriter numbers it, with fixed sample strengths and cap
@@ -61,9 +50,7 @@
         _conferences = [.. set.Conferences.Select(c => (c.Name, c.Divisions
             .SelectMany(d => d.Teams.Select(abbr => Summary(set.Teams, abbr, c.Name, d.Name)))
             .ToList()))];
-        var all = _conferences.SelectMany(c => c.Teams).ToList();
-        _marked = all.Single(t => t.Identity.Abbreviation == "CHI").Identity.TeamID;
-        _waiting = [.. all.Take(3)];
+        _marked = _conferences.SelectMany(c => c.Teams).Single(t => t.Identity.Abbreviation == "CHI").Identity.TeamID;
     }
 
     private Task Mark(TeamSummaryDto team)
