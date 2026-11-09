@@ -868,7 +868,7 @@ Per slice, each proven to fail on a planted problem.
   - for the neutral blue and every shipped primary (read from `data/league/teams.json`), the on-accent text holds 4.5:1 on the fill and all three states;
   - each state moves away from its text: lighter under near-black, darker under white;
   - hover, selected and pressed step in that order.
-- **`AppearanceSyncTests`** (UI.Tests, `RealApp`):
+- **`AppearanceSyncTests`** and **`TeamTintTests`** (UI.Tests, on the real app):
   - neutral at open;
   - the team's primary after `UserTeamPicked`, in both modes;
   - neutral again on close;
@@ -886,15 +886,15 @@ Per slice, each proven to fail on a planted problem.
 ## 5. Done when
 
 **Slice 1: the wizard**
-- [ ] `AddGfoApplication` registers the three; `SaveRules.CheckLeagueName`, used by `SaveManager`; `LeagueHeaderDto.Seed`.
-- [ ] `SeedText`, `NewLeaguePage`, `MenuLayout`, `TeamPickerPage`, `TeamPickCard`, `SaveActions`' three actions and `WithTeam`, `LeagueHero`, `Finalize`, and `LeagueHome`'s redirect.
-- [ ] Claude: `/_gallery/team-picker` and the team colors in the toolbar.
-- [ ] Claude's slice 1 tests pass, each proven to fail on a planted problem (§4).
+- [x] `AddGfoApplication` registers the three; `SaveRules.CheckLeagueName`, used by `SaveManager`; `LeagueHeaderDto.Seed`.
+- [x] `SeedText`, `NewLeaguePage`, `MenuLayout`, `TeamPickerPage`, `TeamPickCard`, `SaveActions`' three actions and `WithTeam`, `LeagueHero`, `Finalize`, and `LeagueHome`'s redirect.
+- [ ] Claude: `/_gallery/team-picker` and the team colors in the toolbar. *(Built and compiled; the toolbar checked in the DevHost. The page waits for a watcher restart to be looked at.)*
+- [x] Claude's slice 1 tests pass, each proven to fail on a planted problem (§4).
 
 **Slice 2: team tint**
-- [ ] `AccentColors.StateFills` (D-095 #1) and `StadiumTheme`'s three slots; `AppearanceSync` on the store.
-- [ ] Claude: the Theme page's button states.
-- [ ] Claude's slice 2 tests pass, each proven to fail on a planted problem.
+- [x] `AccentColors.StateFills` (D-095 #1) and `StadiumTheme`'s three slots; `AppearanceSync` on the store.
+- [x] Claude: the Theme page's button states. *(Checked 2026-11-09 for the 7 dark-text teams in Dark and Light: every live token matches its computed state, 5.33–10.91:1.)*
+- [x] Claude's slice 2 tests pass, each proven to fail on a planted problem.
 
 **Slice 3: the load screen and Continue**
 - [ ] `SaveCard`'s three properties, `SaveCatalog`'s league query, `SaveCardText.League`, `SaveCardView`, `MainMenu` and `Phases`.

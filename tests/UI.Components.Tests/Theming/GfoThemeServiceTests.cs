@@ -38,6 +38,19 @@ public sealed class GfoThemeServiceTests : GfoTestContext
         state.AccentFill.ShouldBe("#1B2A4A");
     }
 
+    // D-095 #1 (M1 WP8 slice 2): Fluent's hover, pressed and selected brand fills are the accent moved away from its text
+    [Theory]
+    [InlineData("#1B2A4A")]   // dark navy: white text, darker states
+    [InlineData("#E1AD21")]   // pale gold: near-black text, lighter states
+    public async Task The_brand_state_slots_are_the_fill_moved_away_from_its_text(string primary)
+    {
+        await Theme.ApplyAsync(new GfoAppearance(GfoThemeMode.Dark, primary));
+
+        var brand = Fluent.Applied.ShouldHaveSingleItem().Colors.Brand;
+        (brand.BackgroundHover, brand.BackgroundPressed, brand.BackgroundSelected)
+            .ShouldBe(AccentColors.StateFills(Theme.Current!.AccentFill));
+    }
+
     [Fact]
     public async Task Match_Windows_follows_the_Windows_setting_and_its_changes()
     {

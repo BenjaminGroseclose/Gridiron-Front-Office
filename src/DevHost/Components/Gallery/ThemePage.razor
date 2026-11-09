@@ -88,6 +88,24 @@
     <FluentTextInput Placeholder="Search…" />
 </GallerySection>
 
+<GallerySection Title="Button states (D-095)"
+                Check="Hover, selected and pressed are the accent fill moved away from its on-accent text by 10%, 15% and 20%: lighter under near-black text, darker under white (Fluent's own ramp always darkens). Each swatch is the live Fluent token, so its color must match its value. The text holds 4.5:1 or better on every state, and at least what it holds on the fill. Check the 7 dark-text teams (CHI, ATL, CHA, LAC, LV, TPA, PHX) from the toolbar: hover and press the button, and see the selected option.">
+    @if (Theme.Current is { } s)
+    {
+        var (hover, pressed, selected) = AccentColors.StateFills(s.AccentFill);
+        <div class="swatch-row">
+            <Swatch Name="Fill" Token="--colorBrandBackground" Hex="@s.AccentFill" Ratio="@AccentColors.Contrast(s.OnAccent, s.AccentFill)" Minimum="4.5" />
+            <Swatch Name="Hover" Token="--colorBrandBackgroundHover" Hex="@hover" Ratio="@AccentColors.Contrast(s.OnAccent, hover)" Minimum="4.5" />
+            <Swatch Name="Selected" Token="--colorBrandBackgroundSelected" Hex="@selected" Ratio="@AccentColors.Contrast(s.OnAccent, selected)" Minimum="4.5" />
+            <Swatch Name="Pressed" Token="--colorBrandBackgroundPressed" Hex="@pressed" Ratio="@AccentColors.Contrast(s.OnAccent, pressed)" Minimum="4.5" />
+        </div>
+        <FluentStack HorizontalGap="12px" VerticalAlignment="VerticalAlignment.Center" Wrap="true">
+            <FluentButton Appearance="ButtonAppearance.Primary">Hover or press me</FluentButton>
+            <SegmentedControl TValue="string" Label="View" Options="Views" Value="@_view" ValueChanged="@(v => { _view = v; return Task.CompletedTask; })" />
+        </FluentStack>
+    }
+</GallerySection>
+
 <GallerySection Title="Danger button (UI_DESIGN_SYSTEM.md §5.1)"
                 Check="A primary FluentButton with Class=&quot;gfo-danger&quot;, for an action that destroys something: Urgent's red with white text (5.6:1), darker on hover (6.6:1) and darker again pressed (7.8:1). The same red in both modes and under every tint; disabled and the focus ring stay Fluent's. Beside a primary button, it reads as the other kind of action.">
     <FluentStack HorizontalGap="8px" VerticalAlignment="VerticalAlignment.Center" Wrap="true">
@@ -102,6 +120,10 @@
 @code {
     private static readonly (string Tier, int Sample)[] Ratings = [("elite", 93), ("good", 84), ("avg", 76), ("below", 64), ("poor", 52)];
     private static readonly string[] Statuses = ["positive", "warning", "negative", "inactive"];
+
+    private static readonly IReadOnlyList<SegmentedOption<string>> Views = [new("week", "Week"), new("season", "Season"), new("career", "Career")];
+
+    private string _view = "season";
 
     protected override void OnInitialized() => Theme.Applied += OnApplied;
 

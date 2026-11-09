@@ -6,7 +6,7 @@ namespace GridironFrontOffice.UI.Shell;
 /// <summary>Settings → Appearance, plus the user team's primary color, as the design system's appearance.</summary>
 public static class AppearanceMapping
 {
-    /// <param name="teamPrimary">The user team's primary color, or null when no league is open (until M1, always).</param>
+    /// <param name="teamPrimary">The user team's primary color, or null when no league is open or before the pick.</param>
     public static GfoAppearance From(AppearanceSettings settings, string? teamPrimary)
     {
         ArgumentNullException.ThrowIfNull(settings);

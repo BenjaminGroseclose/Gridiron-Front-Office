@@ -107,7 +107,8 @@ public sealed class GfoThemeService(IThemeService fluent, IAppSettings settings,
 - **Why `IsExact` plus GFO's own accent colors:** without `IsExact`, a primary button shows a ramp step (`#903B19` for `#D9541E`), not the team color. With it, Fluent uses the raw color for links, brand text and checked controls as well, which vanish on dark surfaces when the team color is dark. `AccentTokens` therefore sets:
   - `Colors.Neutral.ForegroundOnBrand` to the on-accent color;
   - `Colors.Brand.Foreground*` and `ForegroundLink*` to Accent text;
-  - `Colors.Brand.Stroke*` and `Colors.Compound.BrandForeground*` / `BrandStroke*` to Accent.
+  - `Colors.Brand.Stroke*` and `Colors.Compound.BrandForeground*` / `BrandStroke*` to Accent;
+  - `Colors.Brand.BackgroundHover`, `BackgroundPressed` and `BackgroundSelected` to `AccentColors.StateFills(fill)` (D-095 #1, as built in M1 WP8): the fill moved away from its on-accent text by 10%, 20% and 15%, lighter under near-black text and darker under white. Fluent's own ramp always darkens, which took 7 teams' near-black text to 1.5–3.6:1. Every state now reads at least as well as its fill (5.33–10.91:1 for those 7, measured on the built gallery). `AccentColorsTests` checks the neutral blue and all 32 shipped primaries.
 
   Spike S0b verified these on 7 team colors in Dark and Light.
 - **Why never `ThemeMode.System`:** given System, Fluent's CSS swaps in its *default* theme when Windows changes mode, dropping the team color and the Stadium tokens.
