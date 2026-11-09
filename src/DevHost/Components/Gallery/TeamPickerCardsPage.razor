@@ -1,0 +1,90 @@
+@page "/_gallery/team-picker"
+@using GridironFrontOffice.UI.Menu
+@inject ISeedData Seed
+<PageTitle>Team picker · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">Team picker</h1>
+
+<GallerySection Title="LeagueHero" Plain="true"
+                Check="The New League steps' hero band (picker and summary): the accent fill with on-accent text, Radius L, 28 × 30. The heading in Body L semibold above the league's name in Display L (56 px); Season and Seed in Title beside it, the seed selectable. Before the pick the accent is the neutral blue; try a team color from the toolbar too.">
+    <LeagueHero Heading="Pick your team" HeadingID="gallery-hero" League="SampleLeague" />
+</GallerySection>
+
+@foreach (var conference in _conferences)
+{
+    <GallerySection Title="@($"TeamPickCard · {conference.Name}")" Plain="true"
+                    Check="@CardCheck">
+        <div class="picker-grid">
+            @foreach (var team in conference.Teams)
+            {
+                <TeamPickCard Team="team" Selected="@(_marked == team.Identity.TeamID)" OnSelect="Mark" />
+            }
+        </div>
+    </GallerySection>
+}
+
+<GallerySection Title="TeamPickCard while Start over runs" Plain="true"
+                Check="Every card waits (aria-disabled), and the marked one keeps its mark. A click does nothing.">
+    <div class="picker-grid">
+        @foreach (var team in _waiting)
+        {
+            <TeamPickCard Team="team" Selected="@(team == _waiting[0])" Disabled="true" OnSelect="Mark" />
+        }
+    </div>
+</GallerySection>
+
+@code {
+    // F-01 §8's sample league
+    private static readonly LeagueHeaderDto SampleLeague =
+        new("Saturday League", 482_913_377, 2026, Phase.TrainingCamp, LeagueCalendar.TrainingCampOpens(2026), null);
+
+    // D-095: the 7 shipped primaries with near-black text on their fill. Their colors are in the toolbar.
+    private static readonly string[] DarkText = ["CHI", "ATL", "CHA", "LAC", "LV", "TPA", "PHX"];
+
+    private static readonly string CardCheck =
+        "The crest, \"City Nickname · Division\", OVR, OFF and DEF chips on one line, and cap space (Small, Muted, the amount " +
+        "semibold). Four to a row at 1440 px, three at 1280. A click marks one card: a 2 px accent line on the opaque " +
+        "selection, the chips still at 4.5:1, and it stays marked under the pointer. Chicago, a dark-text team, starts " +
+        $"marked; check the marked card in the colors of all 7 dark-text teams ({string.Join(", ", DarkText)}) from the toolbar.";
+
+    private const long Cap = 279_500_000;
+
+    private List<(string Name, List<TeamSummaryDto> Teams)> _conferences = [];
+    private TeamSummaryDto[] _waiting = [];
+    private TeamID? _marked;
+
+    // The shipped team set in the picker's order, numbered as LeagueWriter numbers it, with fixed sample strengths and cap
+    // space that cover every rating tier: no league has to be open
+    protected override void OnInitialized()
+    {
+        var set = Seed.TeamSet;
+        _conferences = [.. set.Conferences.Select(c => (c.Name, c.Divisions
+            .SelectMany(d => d.Teams.Select(abbr => Summary(set.Teams, abbr, c.Name, d.Name)))
+            .ToList()))];
+        var all = _conferences.SelectMany(c => c.Teams).ToList();
+        _marked = all.Single(t => t.Identity.Abbreviation == "CHI").Identity.TeamID;
+        _waiting = [.. all.Take(3)];
+    }
+
+    private Task Mark(TeamSummaryDto team)
+    {
+        _marked = team.Identity.TeamID;
+        return Task.CompletedTask;
+    }
+
+    private static TeamSummaryDto Summary(IReadOnlyList<TeamDefinition> teams, string abbr, string conference, string division)
+    {
+        var index = teams.Select((t, i) => (t, i)).Single(x => x.t.Abbr == abbr).i;
+        var t = teams[index];
+        var identity = new TeamIdentityDto(new TeamID(index + 1), t.Abbr, t.City, t.Nickname, t.Colors.Primary, t.Colors.Secondary,
+            t.Colors.Accent, t.Crest.Shape, t.Crest.Monogram, t.Crest.Stripe);
+
+        var overall = 62 + (index * 7) % 30;                          // 62–91: every tier from below average to elite
+        var offense = Math.Clamp(overall + (index % 5 - 2) * 3, 40, 99);
+        var defense = Math.Clamp(2 * overall - offense, 40, 99);
+        var space = 1_250_000L + (index * 3_100_000L) % 41_000_000L;   // $1.3M to $42M
+        var strength = new PerceivedRosterRating(new PerceivedRating(offense, 0), new PerceivedRating(defense, 0), new PerceivedRating(overall, 0));
+        return new TeamSummaryDto(identity, conference, division, t.Stadium.Name, t.Stadium.Capacity, t.Stadium.Roof, strength,
+            Cap, Cap - space, space);
+    }
+}

@@ -1,0 +1,37 @@
+@using GridironFrontOffice.Application.Leagues
+@* One team on the picker (F-01 §8). The whole card is a toggle button: a click, Enter or Space marks it (D-095 #3).
+   The slot is the scoped stylesheet's anchor: FluentCard's own element doesn't carry this component's scope, so the
+   marked look reaches it through ::deep and the class given here. *@
+<div class="gfo-pick-card-slot">
+<FluentCard Class="@(Selected ? "gfo-pick-card is-marked" : "gfo-pick-card")" Width="100%" Height="100%" Role="button"
+            OnClick="MarkAsync" aria-pressed="@(Selected ? "true" : "false")" aria-disabled="@(Disabled ? "true" : null)"
+            data-testid="pick-card">
+	<FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12px">
+		<TeamMark Team="Team.Identity" Size="48" Decorative="true" />
+		<FluentStack Orientation="Orientation.Vertical">
+		<FluentText Size="TextSize.Size400">@Team.Identity.City @Team.Identity.Nickname · <span class="gfo-pick-division">@Team.DivisionName</span></FluentText>
+			<FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12px">
+		    <span>OVR <RatingChip Value="Team.RosterStrength.Overall" /></span>
+        <span>OFF <RatingChip Value="Team.RosterStrength.Offense" /></span>
+        <span>DEF <RatingChip Value="Team.RosterStrength.Defense" /></span>
+			</FluentStack>
+			<span class="gfo-pick-cap">Cap space <span class="gfo-num">@Money.Format(Team.CapSpace)</span></span>
+		</FluentStack>
+	</FluentStack>
+</FluentCard>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TeamSummaryDto Team { get; set; } = default!;
+
+    /// <summary>The marked card: the one Next takes to the summary.</summary>
+    [Parameter] public bool Selected { get; set; }
+
+    /// <summary>Start over is running: every card waits.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    [Parameter] public EventCallback<TeamSummaryDto> OnSelect { get; set; }
+
+    // While Start over runs, the mark stays where it is
+    private Task MarkAsync() => Disabled ? Task.CompletedTask : OnSelect.InvokeAsync(Team);
+}

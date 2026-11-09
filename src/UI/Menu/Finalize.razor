@@ -1,0 +1,132 @@
+@page "/finalize"
+@using GridironFrontOffice.Application.Leagues
+@using GridironFrontOffice.Core.IDs
+@layout MenuLayout
+@inject ISaveManager Saves
+@inject LeagueQueries Queries
+@inject SaveActions Actions
+@inject NavigationManager Navigation
+
+<PageTitle>Take over · Gridiron Front Office</PageTitle>
+
+@* New League's last step (F-01 §4, D-099): the league and the team marked on the picker, and Take over, which picks it.
+   Nothing is picked before Take over. A section, not a main: AppShell's content area is the page's one main landmark. *@
+<section class="gfo-finalize" aria-labelledby="finalize-title">
+    <LeagueHero Heading="Ready to take over" HeadingID="finalize-title" League="_header" />
+
+    @if (_team is not { } team)
+    {
+        <FluentProgressBar />
+    }
+    else
+    {
+        <section class="gfo-finalize-team" aria-labelledby="finalize-team-title">
+            <h2 id="finalize-team-title" class="gfo-display">Your team</h2>
+            <FluentCard Class="gfo-finalize-card" Width="100%" data-testid="finalize-team">
+                <div class="gfo-finalize-body">
+                    <div class="gfo-finalize-identity">
+                        <TeamMark Team="team.Identity" Size="96" Decorative="true" />
+                        <div>
+                            <p class="gfo-finalize-name gfo-display">@team.Identity.City @team.Identity.Nickname</p>
+                            <p class="gfo-finalize-division">@team.ConferenceName · @team.DivisionName</p>
+                        </div>
+                    </div>
+                    <dl class="gfo-finalize-facts">
+                        <div>
+                            <dt>OVR</dt>
+                            <dd><RatingChip Value="team.RosterStrength.Overall" /></dd>
+                        </div>
+                        <div>
+                            <dt>OFF</dt>
+                            <dd><RatingChip Value="team.RosterStrength.Offense" /></dd>
+                        </div>
+                        <div>
+                            <dt>DEF</dt>
+                            <dd><RatingChip Value="team.RosterStrength.Defense" /></dd>
+                        </div>
+                        <div>
+                            <dt>Cap space</dt>
+                            <dd class="gfo-num">@Money.Format(team.CapSpace)</dd>
+                        </div>
+                        <div>
+                            <dt>Stadium</dt>
+                            <dd>@team.StadiumName</dd>
+                        </div>
+                    </dl>
+                </div>
+            </FluentCard>
+        </section>
+
+        @* The league's settings (D-099 #3) arrive in this section with their milestones (F-01 §2: injury frequency in M3,
+           Ironman in M5, the clock in M6), and Take over confirms them with the pick. Until the first one, a placeholder
+           holds their place. *@
+        <section class="gfo-finalize-settings" aria-labelledby="finalize-settings-title">
+            <h2 id="finalize-settings-title" class="gfo-display">League settings</h2>
+            <FluentCard Class="gfo-finalize-card" Width="100%" data-testid="finalize-settings">
+                <EmptyState Title="Nothing to set yet" Icon="IconName.Settings" Class="gfo-finalize-placeholder">
+                    Injury frequency, Ironman, the clock and more arrive in later versions. You'll set them here before
+                    you take over.
+                </EmptyState>
+            </FluentCard>
+        </section>
+    }
+
+    @* At the bottom of the content area, as on the picker *@
+    <footer class="gfo-finalize-actions">
+        <FluentButton Disabled="_busy" OnClick="BackAsync" data-testid="back">Back</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_team is null || _busy)" Loading="_busy"
+                      OnClick="TakeOverAsync" data-testid="take-over">
+            @(_team is { } marked ? $"Take over the {marked.Identity.City} {marked.Identity.Nickname}" : "Take over")
+        </FluentButton>
+    </footer>
+</section>
+
+@code {
+    /// <summary>The team marked on the picker.</summary>
+    [SupplyParameterFromQuery(Name = "team")] public int? MarkedTeam { get; set; }
+
+    private LeagueHeaderDto? _header;
+    private TeamSummaryDto? _team;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Saves.Current is null)
+        {
+            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            return;
+        }
+
+        // On the thread pool: SQLite's async calls complete synchronously, and the bar must paint
+        _header = await Task.Run(() => Queries.GetHeaderAsync());
+        if (_header.UserTeam is not null)
+        {
+            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);   // no second pick
+            return;
+        }
+
+        _team = MarkedTeam is { } id ? await Task.Run(() => Queries.GetTeamSummaryAsync(new TeamID(id))) : null;
+        if (_team is null)
+        {
+            Navigation.NavigateTo(SaveActions.TeamPicker, replace: true);   // no team to take over: pick one
+        }
+    }
+
+    // Back to the picker with this team still marked
+    private Task BackAsync()
+    {
+        Navigation.NavigateTo(_team is { } team ? SaveActions.WithTeam(SaveActions.TeamPicker, team.Identity.TeamID) : SaveActions.TeamPicker);
+        return Task.CompletedTask;
+    }
+
+    private async Task TakeOverAsync()
+    {
+        if (_team is not { } team)
+        {
+            return;
+        }
+
+        _busy = true;
+        _busy = await Actions.PickAsync(team.Identity);   // true: the page is going away
+    }
+}

@@ -69,8 +69,9 @@ public sealed class MainLayoutTests : SaveScreenContext
 
         cut.Instance.Dispose();
 
-        listening.ShouldBe(2);
-        Events.Subscribers.ShouldBe(0);
+        // The layout's SaveOpened and SaveClosed go with it. GameStateStore's three stay: it lives as long as the scope.
+        (listening - Events.Subscribers).ShouldBe(2);
+        Events.Subscribers.ShouldBe(3);
     }
 
     private IRenderedComponent<MainLayout> RenderLayout() =>

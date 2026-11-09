@@ -189,8 +189,8 @@ public sealed class LeagueShapeTests
 	[Fact]
 	public void The_ladder_s_top_quarter_fields_better_Starters_than_its_bottom_quarter_after_the_trades()
 	{
-		// D-082's point: the cap trades don't erase the ladder. The gap averaged 3.79 OVR on 2026-10-29 (2.8–4.8 by seed),
-		// and 4.2 in the reference run (§9)
+		// D-082's point: the cap trades don't erase the ladder. The gap averaged 5.79 OVR on 2026-11-07 at D-098's range of 1.5
+		// (4.9–6.8 by seed), 3.79 at 0.7, and 4.2 in WP4's reference run (§9)
 		var gaps = Twenty.Select(g =>
 		{
 			var ordered = g.League.Teams.OrderBy(t => t.Strength).ToList();
@@ -286,8 +286,8 @@ public sealed class LeagueShapeTests
 	[Fact]
 	public void Better_players_go_earlier_in_the_draft()
 	{
-		// Over the classes of 30 or more, as a mean because small classes go as low as −0.16. −0.667 over 245 classes on
-		// 2026-10-29 (−0.82 to −0.16 by class; −0.724 before D-088 held the specialists to round 4 and marked them down),
+		// Over the classes of 30 or more, as a mean because small classes go as low as −0.26. −0.673 over 245 classes on
+		// 2026-11-07 (−0.85 to −0.26 by class; −0.724 before D-088 held the specialists to round 4 and marked them down),
 		// and −0.73 in the reference run
 		var correlations = (
 			from g in Twenty
@@ -429,8 +429,9 @@ public sealed class LeagueShapeTests
 	{
 		// ±3 on the mean and ±2 on the SD, over the 20 seeds. K, P and LS check only the Starter tier: they're one deep, so
 		// their ~3 free agents a league are Fringe with no Backups between (51.6–53.4 on 2026-10-29). D-088's spread scale
-		// holds their Starter SD at 7.0–7.1 (9.3–9.5 without it). Closest to the edges on 2026-10-29: Starter QBs (+2.5 on the mean, +1.8 on the
-		// SD), Fringe CBs and WRs (+2.5, +2.4) and Backup TEs (−2.4)
+		// holds their Starter SD at 6.8–7.1 (9.3–9.5 without it at the spread of 2026-10-29). Closest to the edges on 2026-11-07: Fringe CBs,
+		// Fringe FBs and Backup TEs (+2.5, −2.5, −2.5 on the mean), Starter QBs (+2.4 on the mean, +1.8 on the SD: D-098's Starter spread
+		// of 7 keeps that SD there at range 1.5) and Fringe WRs (+2.4)
 		var players = Twenty.SelectMany(g => Everyone(g.League)).Select(p => (p.Position, p.Tier, Ovr: Ovr(p))).ToList();
 		var offenders =
 			from position in Positions
@@ -450,7 +451,7 @@ public sealed class LeagueShapeTests
 	[Fact]
 	public void Players_at_90_plus_and_the_mean_age_hit_their_targets()
 	{
-		// The 90+ count is a mean over the seeds because single seeds range wider: 12–25 on 2026-10-29, 17.6 on average
+		// The 90+ count is a mean over the seeds because single seeds range wider: 13–26 on 2026-11-07, 20.0 on average
 		// (20.9 in the reference run). Each league's mean age is checked: 26.79–27.00
 		var targets = Generation.Targets;
 		var ninetyPlus = Twenty.Select(g => Everyone(g.League).Count(p => OverallCalculator.Display(Ovr(p)) >= 90)).ToList();

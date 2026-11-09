@@ -1,0 +1,109 @@
+@page "/pick-team"
+@using GridironFrontOffice.Application.Leagues
+@layout MenuLayout
+@inject ISaveManager Saves
+@inject LeagueQueries Queries
+@inject SaveActions Actions
+@inject NavigationManager Navigation
+
+<PageTitle>Pick your team · Gridiron Front Office</PageTitle>
+
+@* A section, not a main: AppShell's content area is the page's one main landmark *@
+<section class="gfo-picker" aria-labelledby="picker-title">
+    <LeagueHero Heading="Pick your team" HeadingID="picker-title" League="_header" />
+
+    @if (_teams is null)
+    {
+        <FluentProgressBar />
+    }
+    else if (_teams.Count == 0)
+    {
+        <EmptyState Title="This save has no league in it" Icon="IconName.Warning" data-testid="picker-empty">
+            It was made before the league wizard. Close it, then delete it from the load screen.
+        </EmptyState>
+    }
+    else
+    {
+        @* Two conferences of 16, each in the team set's order, so a conference's divisions follow one another and each
+           card names its own *@
+        @foreach (var conference in _teams.GroupBy(t => t.ConferenceName))
+        {
+            <section class="gfo-picker-conference" aria-label="@conference.Key">
+                <h2 class="gfo-display">@conference.Key</h2>
+                <div class="gfo-picker-grid">
+                    @foreach (var team in conference)
+                    {
+                        <TeamPickCard Team="team" Selected="@(_selected?.Identity.TeamID == team.Identity.TeamID)"
+                                      Disabled="_busy" OnSelect="Select" />
+                    }
+                </div>
+            </section>
+        }
+    }
+
+    @* Sticky at the bottom of the page's scroll (§2), so Next stays in reach of any card *@
+    <footer class="gfo-picker-actions">
+        <FluentButton Disabled="_busy" OnClick="StartOverAsync" data-testid="start-over">Start over</FluentButton>
+        <FluentButton Disabled="_busy" OnClick="Actions.CloseAsync" data-testid="close-league">Close league</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_selected is null || _busy)" OnClick="NextAsync"
+                      data-testid="next">Next</FluentButton>
+    </footer>
+</section>
+
+@code {
+    /// <summary>The team to mark on arrival: the summary's Back brings its team (D-099).</summary>
+    [SupplyParameterFromQuery(Name = "team")] public int? MarkedTeam { get; set; }
+
+    private LeagueHeaderDto? _header;
+    private IReadOnlyList<TeamSummaryDto>? _teams;
+    private TeamSummaryDto? _selected;   // the marked card (D-095 #3); nothing is picked until the summary's Take over
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Saves.Current is null)
+        {
+            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            return;
+        }
+
+        // On the thread pool: SQLite's async calls complete synchronously, and the bar must paint (§2)
+        _header = await Task.Run(() => Queries.GetHeaderAsync());
+        if (_header.UserTeam is not null)
+        {
+            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);   // no second pick
+            return;
+        }
+
+        _teams = await Task.Run(() => Queries.GetTeamSummariesAsync());
+        _selected = _teams.FirstOrDefault(t => t.Identity.TeamID.Value == MarkedTeam);
+    }
+
+    private Task Select(TeamSummaryDto team)
+    {
+        if (_selected?.Identity.TeamID == team.Identity.TeamID)
+        {
+            return Task.CompletedTask;
+        }
+
+        _selected = team;   // a second card moves the mark
+        return Task.CompletedTask;
+    }
+
+    // To the summary (D-099), which picks nothing until its Take over
+    private Task NextAsync()
+    {
+        if (_selected is { } team)
+        {
+            Navigation.NavigateTo(SaveActions.WithTeam(SaveActions.Finalize, team.Identity.TeamID));
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task StartOverAsync()
+    {
+        _busy = true;
+        _busy = await Actions.StartOverAsync();
+    }
+}

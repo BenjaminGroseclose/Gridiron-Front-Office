@@ -218,7 +218,7 @@ public readonly record struct PerceivedRating(double Estimate, double Sigma);  /
 | Fringe (free agent) OVR | Mean ~56, SD ~5 |
 | 90+ OVR players league-wide | ~15–25 (the baseline the M5 health gate holds within ±25%) |
 | Mean age, league-wide | 26.5 (the health band is 25.5–27.5) |
-| Team strength spread (D-082) | The ladder's top quarter of teams has Starters at least 3 OVR better than its bottom quarter (about 4 in the reference run); tuned for wins once games exist (M2/M3) |
+| Team strength spread (D-082, D-098) | The ladder's top quarter of teams has Starters at least 3 OVR better than its bottom quarter (5.8 at D-098's range of 1.5; about 4 in WP4's reference run at 0.7); tuned for wins once games exist (M2/M3) |
 | **Yearly draft class (M5)** | ~300 prospects, each with college production stats generated from true ratings + noise + college tier |
 
 - **From M5 (offseason start, D-049):** generate rosters as of the *previous* season's opening day (53 + 16), simulate that season, then run Season Wrap, which produces the inherited situation at the Re-sign window.

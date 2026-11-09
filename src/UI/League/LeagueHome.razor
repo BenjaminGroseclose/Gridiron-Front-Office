@@ -1,6 +1,7 @@
 @page "/league"
 @inject ISaveManager Saves
 @inject NavigationManager Navigation
+@inject SaveActions Actions
 @* The open league's home. Empty in M0: the league itself (teams, players, the season) arrives in M1. Without an open
    league, this route goes back to the main menu. *@
 
@@ -15,11 +16,17 @@
 }
 
 @code {
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (Saves.Current is null)
         {
             Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            return;
+        }
+
+        if (await Actions.LandingAsync() == SaveActions.TeamPicker)
+        {
+            Navigation.NavigateTo(SaveActions.TeamPicker, replace: true);
         }
     }
 }

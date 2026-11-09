@@ -1,35 +1,44 @@
 @implements IDisposable
 @inject ISettingsStore Settings
 @inject GfoThemeService Theme
-@* Applies Settings → Appearance once the page is up, and again whenever it changes (UI_DESIGN_SYSTEM.md §3.2). Saves
-   that leave Appearance alone (the window placement on close, developer flags) don't re-apply. Renders nothing. *@
+@inject GameStateStore State
+@* Applies Settings → Appearance and the user team's primary once the page is up, and again whenever either changes
+   (UI_DESIGN_SYSTEM.md §3.2). Without a user team (the menus, the picker) the accent is neutral. Renders nothing. *@
 
 @code {
-    private AppearanceSettings? _applied;
+    private (AppearanceSettings Appearance, string? Primary)? _applied;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             Settings.Changed += OnSettingsChanged;
-            await ApplyAsync(Settings.Current);
+            State.Changed += OnStateChanged;
+            await ApplyAsync();
         }
     }
 
-    // Saves complete off the UI thread, so the re-apply is marshalled back onto it.
-    private void OnSettingsChanged(object? sender, AppSettings settings)
+    // Saves and loads complete off the UI thread, so the re-apply is marshalled back onto it.
+    private void OnSettingsChanged(object? sender, AppSettings settings) => _ = InvokeAsync(ApplyAsync);
+
+    private void OnStateChanged() => _ = InvokeAsync(ApplyAsync);
+
+    // Only a change to Appearance or to the team's color re-applies: the window placement and developer flags don't.
+    private Task ApplyAsync()
     {
-        if (settings.Appearance != _applied)
+        var wanted = (Settings.Current.Appearance, State.Header?.UserTeam?.Identity.PrimaryColor);
+        if (wanted == _applied)
         {
-            _ = InvokeAsync(() => ApplyAsync(settings));
+            return Task.CompletedTask;
         }
+
+        _applied = wanted;
+        return Theme.ApplyAsync(AppearanceMapping.From(wanted.Appearance, wanted.PrimaryColor));
     }
 
-    private Task ApplyAsync(AppSettings settings)
+    public void Dispose()
     {
-        _applied = settings.Appearance;
-        return Theme.ApplyAsync(AppearanceMapping.From(settings.Appearance, teamPrimary: null));
+        Settings.Changed -= OnSettingsChanged;
+        State.Changed -= OnStateChanged;
     }
-
-    public void Dispose() => Settings.Changed -= OnSettingsChanged;
 }

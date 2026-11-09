@@ -2,12 +2,12 @@
 	"Seed": 42,
 	"Season": 2026,
 	"Players": 1846,
-	"At90Plus": 17,
+	"At90Plus": 22,
 	"MeanAge": 26.8,
 	"Teams": [
 		{
 			"Abbr": "NYX",
-			"Strength": -0.196875,
+			"Strength": -0.421875,
 			"Positions": {
 				"QB": 4,
 				"RB": 3,
@@ -26,13 +26,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 73.84,
-			"CapTotal": 288454921,
-			"CapSpace": 11545079
+			"StartersOvr": 73.45,
+			"CapTotal": 278962815,
+			"CapSpace": 21037185
 		},
 		{
 			"Abbr": "PHI",
-			"Strength": -0.15312499999999998,
+			"Strength": -0.328125,
 			"Positions": {
 				"QB": 2,
 				"RB": 3,
@@ -51,13 +51,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 74.55,
-			"CapTotal": 257229628,
-			"CapSpace": 42770372
+			"StartersOvr": 74.34,
+			"CapTotal": 266506715,
+			"CapSpace": 33493285
 		},
 		{
 			"Abbr": "WAS",
-			"Strength": -0.021875,
+			"Strength": -0.046875,
 			"Positions": {
 				"QB": 4,
 				"RB": 3,
@@ -76,13 +76,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.31,
-			"CapTotal": 279729311,
-			"CapSpace": 20270689
+			"StartersOvr": 75.37,
+			"CapTotal": 267981905,
+			"CapSpace": 32018095
 		},
 		{
 			"Abbr": "BAL",
-			"Strength": -0.328125,
+			"Strength": -0.703125,
 			"Positions": {
 				"QB": 2,
 				"RB": 3,
@@ -101,13 +101,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.21,
-			"CapTotal": 263209270,
-			"CapSpace": 36790730
+			"StartersOvr": 73.2,
+			"CapTotal": 255796219,
+			"CapSpace": 44203781
 		},
 		{
 			"Abbr": "CHI",
-			"Strength": -0.37187499999999996,
+			"Strength": -0.796875,
 			"Positions": {
 				"QB": 3,
 				"RB": 3,
@@ -126,13 +126,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 74.08,
-			"CapTotal": 265667829,
-			"CapSpace": 34332171
+			"StartersOvr": 72.27,
+			"CapTotal": 258611897,
+			"CapSpace": 41388103
 		},
 		{
 			"Abbr": "GB",
-			"Strength": -0.459375,
+			"Strength": -0.984375,
 			"Positions": {
 				"QB": 3,
 				"RB": 4,
@@ -151,13 +151,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 73.66,
-			"CapTotal": 277082642,
-			"CapSpace": 22917358
+			"StartersOvr": 71.51,
+			"CapTotal": 256847517,
+			"CapSpace": 43152483
 		},
 		{
 			"Abbr": "MIN",
-			"Strength": 0.459375,
+			"Strength": 0.984375,
 			"Positions": {
 				"QB": 3,
 				"RB": 3,
@@ -177,12 +177,12 @@
 				"LS": 1
 			},
 			"StartersOvr": 78.04,
-			"CapTotal": 285568268,
-			"CapSpace": 14431732
+			"CapTotal": 272744489,
+			"CapSpace": 27255511
 		},
 		{
 			"Abbr": "KC",
-			"Strength": 0.328125,
+			"Strength": 0.703125,
 			"Positions": {
 				"QB": 4,
 				"RB": 2,
@@ -201,13 +201,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 76.91,
-			"CapTotal": 286469433,
-			"CapSpace": 13530567
+			"StartersOvr": 77.97,
+			"CapTotal": 265832467,
+			"CapSpace": 34167533
 		},
 		{
 			"Abbr": "ATL",
-			"Strength": -0.41562499999999997,
+			"Strength": -0.890625,
 			"Positions": {
 				"QB": 4,
 				"RB": 3,
@@ -226,13 +226,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 72.89,
-			"CapTotal": 259481645,
-			"CapSpace": 40518355
+			"StartersOvr": 72.12,
+			"CapTotal": 256845384,
+			"CapSpace": 43154616
 		},
 		{
 			"Abbr": "CHA",
-			"Strength": 0.590625,
+			"Strength": 1.265625,
 			"Positions": {
 				"QB": 2,
 				"RB": 4,
@@ -251,13 +251,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 76.77,
-			"CapTotal": 276129663,
-			"CapSpace": 23870337
+			"StartersOvr": 78.19,
+			"CapTotal": 279404648,
+			"CapSpace": 20595352
 		},
 		{
 			"Abbr": "NSH",
-			"Strength": -0.590625,
+			"Strength": -1.265625,
 			"Positions": {
 				"QB": 3,
 				"RB": 3,
@@ -276,13 +276,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 73.6,
-			"CapTotal": 270519697,
-			"CapSpace": 29480303
+			"StartersOvr": 71.3,
+			"CapTotal": 257082645,
+			"CapSpace": 42917355
 		},
 		{
 			"Abbr": "JAX",
-			"Strength": -0.678125,
+			"Strength": -1.453125,
 			"Positions": {
 				"QB": 2,
 				"RB": 3,
@@ -301,13 +301,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 74.22,
-			"CapTotal": 266786844,
-			"CapSpace": 33213156
+			"StartersOvr": 72.93,
+			"CapTotal": 265309597,
+			"CapSpace": 34690403
 		},
 		{
 			"Abbr": "LAC",
-			"Strength": 0.196875,
+			"Strength": 0.421875,
 			"Positions": {
 				"QB": 4,
 				"RB": 3,
@@ -326,13 +326,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 76.19,
-			"CapTotal": 290417893,
-			"CapSpace": 9582107
+			"StartersOvr": 77.3,
+			"CapTotal": 279108546,
+			"CapSpace": 20891454
 		},
 		{
 			"Abbr": "SF",
-			"Strength": 0.24062499999999998,
+			"Strength": 0.515625,
 			"Positions": {
 				"QB": 3,
 				"RB": 2,
@@ -351,13 +351,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.36,
-			"CapTotal": 272992951,
-			"CapSpace": 27007049
+			"StartersOvr": 76.4,
+			"CapTotal": 272566036,
+			"CapSpace": 27433964
 		},
 		{
 			"Abbr": "SEA",
-			"Strength": 0.109375,
+			"Strength": 0.234375,
 			"Positions": {
 				"QB": 4,
 				"RB": 2,
@@ -376,13 +376,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 76.67,
-			"CapTotal": 270985293,
-			"CapSpace": 29014707
+			"StartersOvr": 77.15,
+			"CapTotal": 267997859,
+			"CapSpace": 32002141
 		},
 		{
 			"Abbr": "LV",
-			"Strength": -0.24062499999999998,
+			"Strength": -0.515625,
 			"Positions": {
 				"QB": 3,
 				"RB": 2,
@@ -401,13 +401,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 74.55,
-			"CapTotal": 275389116,
-			"CapSpace": 24610884
+			"StartersOvr": 74.24,
+			"CapTotal": 267795033,
+			"CapSpace": 32204967
 		},
 		{
 			"Abbr": "NYS",
-			"Strength": 0.678125,
+			"Strength": 1.453125,
 			"Positions": {
 				"QB": 2,
 				"RB": 3,
@@ -426,13 +426,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 78.69,
-			"CapTotal": 280810098,
-			"CapSpace": 19189902
+			"StartersOvr": 79.66,
+			"CapTotal": 283779129,
+			"CapSpace": 16220871
 		},
 		{
 			"Abbr": "BOS",
-			"Strength": 0.41562499999999997,
+			"Strength": 0.890625,
 			"Positions": {
 				"QB": 4,
 				"RB": 3,
@@ -451,13 +451,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.53,
-			"CapTotal": 289538720,
-			"CapSpace": 10461280
+			"StartersOvr": 76.64,
+			"CapTotal": 283026949,
+			"CapSpace": 16973051
 		},
 		{
 			"Abbr": "BUF",
-			"Strength": -0.546875,
+			"Strength": -1.171875,
 			"Positions": {
 				"QB": 2,
 				"RB": 3,
@@ -476,13 +476,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 72.55,
-			"CapTotal": 258181215,
-			"CapSpace": 41818785
+			"StartersOvr": 72.16,
+			"CapTotal": 273231793,
+			"CapSpace": 26768207
 		},
 		{
 			"Abbr": "PIT",
-			"Strength": -0.109375,
+			"Strength": -0.234375,
 			"Positions": {
 				"QB": 4,
 				"RB": 3,
@@ -501,13 +501,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 74.4,
-			"CapTotal": 273024601,
-			"CapSpace": 26975399
+			"StartersOvr": 74.57,
+			"CapTotal": 270136332,
+			"CapSpace": 29863668
 		},
 		{
 			"Abbr": "DET",
-			"Strength": 0.5031249999999999,
+			"Strength": 1.078125,
 			"Positions": {
 				"QB": 3,
 				"RB": 3,
@@ -526,13 +526,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 78,
-			"CapTotal": 281052008,
-			"CapSpace": 18947992
+			"StartersOvr": 79.8,
+			"CapTotal": 280158427,
+			"CapSpace": 19841573
 		},
 		{
 			"Abbr": "CLE",
-			"Strength": 0.37187499999999996,
+			"Strength": 0.796875,
 			"Positions": {
 				"QB": 3,
 				"RB": 2,
@@ -551,13 +551,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.74,
-			"CapTotal": 283438661,
-			"CapSpace": 16561339
+			"StartersOvr": 75.86,
+			"CapTotal": 282064742,
+			"CapSpace": 17935258
 		},
 		{
 			"Abbr": "CIN",
-			"Strength": 0.284375,
+			"Strength": 0.609375,
 			"Positions": {
 				"QB": 3,
 				"RB": 3,
@@ -576,13 +576,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.19,
-			"CapTotal": 278943281,
-			"CapSpace": 21056719
+			"StartersOvr": 76.5,
+			"CapTotal": 274996069,
+			"CapSpace": 25003931
 		},
 		{
 			"Abbr": "IND",
-			"Strength": -0.5031249999999999,
+			"Strength": -1.078125,
 			"Positions": {
 				"QB": 2,
 				"RB": 4,
@@ -601,13 +601,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 73.87,
-			"CapTotal": 268099114,
-			"CapSpace": 31900886
+			"StartersOvr": 71.04,
+			"CapTotal": 260673803,
+			"CapSpace": 39326197
 		},
 		{
 			"Abbr": "MIA",
-			"Strength": 0.6343749999999999,
+			"Strength": 1.359375,
 			"Positions": {
 				"QB": 2,
 				"RB": 3,
@@ -626,13 +626,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 78.15,
-			"CapTotal": 278395778,
-			"CapSpace": 21604222
+			"StartersOvr": 76.77,
+			"CapTotal": 274029342,
+			"CapSpace": 25970658
 		},
 		{
 			"Abbr": "TPA",
-			"Strength": 0.021875,
+			"Strength": 0.046875,
 			"Positions": {
 				"QB": 4,
 				"RB": 2,
@@ -651,13 +651,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 76.67,
-			"CapTotal": 260039321,
-			"CapSpace": 39960679
+			"StartersOvr": 77.24,
+			"CapTotal": 259782969,
+			"CapSpace": 40217031
 		},
 		{
 			"Abbr": "NO",
-			"Strength": 0.15312499999999998,
+			"Strength": 0.328125,
 			"Positions": {
 				"QB": 3,
 				"RB": 3,
@@ -676,13 +676,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 77.45,
-			"CapTotal": 288945133,
-			"CapSpace": 11054867
+			"StartersOvr": 77.55,
+			"CapTotal": 267201219,
+			"CapSpace": 32798781
 		},
 		{
 			"Abbr": "HOU",
-			"Strength": -0.06562499999999999,
+			"Strength": -0.140625,
 			"Positions": {
 				"QB": 4,
 				"RB": 3,
@@ -701,13 +701,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.37,
-			"CapTotal": 266430062,
-			"CapSpace": 33569938
+			"StartersOvr": 75.67,
+			"CapTotal": 263103804,
+			"CapSpace": 36896196
 		},
 		{
 			"Abbr": "LAN",
-			"Strength": -0.284375,
+			"Strength": -0.609375,
 			"Positions": {
 				"QB": 2,
 				"RB": 3,
@@ -726,13 +726,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 72.88,
-			"CapTotal": 269049499,
-			"CapSpace": 30950501
+			"StartersOvr": 72.94,
+			"CapTotal": 270972009,
+			"CapSpace": 29027991
 		},
 		{
 			"Abbr": "PHX",
-			"Strength": 0.546875,
+			"Strength": 1.171875,
 			"Positions": {
 				"QB": 3,
 				"RB": 4,
@@ -751,13 +751,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 75.75,
-			"CapTotal": 283686109,
-			"CapSpace": 16313891
+			"StartersOvr": 76.57,
+			"CapTotal": 280887448,
+			"CapSpace": 19112552
 		},
 		{
 			"Abbr": "DEN",
-			"Strength": 0.06562499999999999,
+			"Strength": 0.140625,
 			"Positions": {
 				"QB": 2,
 				"RB": 4,
@@ -776,13 +776,13 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 76.27,
-			"CapTotal": 277477824,
-			"CapSpace": 22522176
+			"StartersOvr": 76.46,
+			"CapTotal": 273216427,
+			"CapSpace": 26783573
 		},
 		{
 			"Abbr": "DAL",
-			"Strength": -0.6343749999999999,
+			"Strength": -1.359375,
 			"Positions": {
 				"QB": 3,
 				"RB": 4,
@@ -801,9 +801,9 @@
 				"P": 1,
 				"LS": 1
 			},
-			"StartersOvr": 72.99,
-			"CapTotal": 262038607,
-			"CapSpace": 37961393
+			"StartersOvr": 72.71,
+			"CapTotal": 259914751,
+			"CapSpace": 40085249
 		}
 	],
 	"TopCapHits": [
@@ -812,137 +812,149 @@
 			"Team": "GB",
 			"Position": "QB",
 			"Type": "Veteran",
-			"CapHit": 43561862
+			"CapHit": 42446596
 		},
 		{
 			"Name": "Daniel Gardiner",
-			"Team": "NO",
+			"Team": "LAN",
 			"Position": "QB",
 			"Type": "Veteran",
 			"CapHit": 41079433
 		},
 		{
-			"Name": "Martin Lowe",
-			"Team": "DAL",
-			"Position": "QB",
+			"Name": "Diego Brown",
+			"Team": "BUF",
+			"Position": "EDGE",
 			"Type": "Veteran",
-			"CapHit": 39097934
+			"CapHit": 36928056
 		},
 		{
 			"Name": "John Felix",
 			"Team": "DET",
 			"Position": "QB",
 			"Type": "Veteran",
-			"CapHit": 37877996
+			"CapHit": 36898692
 		},
 		{
-			"Name": "Diego Brown",
-			"Team": "CHI",
-			"Position": "EDGE",
+			"Name": "Martin Lowe",
+			"Team": "BAL",
+			"Position": "QB",
 			"Type": "Veteran",
-			"CapHit": 37504464
+			"CapHit": 36895212
 		}
 	],
 	"TeamOne": [
 		{
-			"Slot": 212,
+			"Slot": 0,
 			"Position": "QB",
 			"Tier": "Starter",
-			"Archetype": "Pocket Passer",
-			"FirstName": "Nicholas",
-			"LastName": "Preston",
-			"BirthDate": "1991-06-17",
-			"Age": 35,
+			"Archetype": "Scrambler",
+			"FirstName": "Aaron",
+			"LastName": "Lee",
+			"BirthDate": "1989-10-20",
+			"Age": 36,
 			"Experience": 13,
-			"College": "Muscadine State",
-			"Hometown": "Wenatchee, WA",
-			"Draft": null,
+			"College": "Estacado State",
+			"Hometown": "San Jose, CA",
+			"Draft": {
+				"Season": 2013,
+				"Round": 1,
+				"Pick": 1,
+				"Team": "NYS"
+			},
 			"JerseyNumber": 6,
 			"Measurables": {
-				"Height": 78.42139885700713,
-				"Weight": 224.7673248559711,
-				"Forty": 4.746107714635403,
-				"TenSplit": 1.6370228668421782,
-				"ThreeCone": 6.864122989737389,
-				"Shuttle": 4.19125190002859,
-				"Bench": 27.89824553190839,
-				"Vertical": 31.994928710071232,
-				"BroadJump": 113.45450229362265,
-				"ArmLength": 31.18655944087283,
-				"HandSize": 9.410638455010194
+				"Height": 76.00707311502528,
+				"Weight": 218.63052055044028,
+				"Forty": 4.875971219963634,
+				"TenSplit": 1.6562219722733427,
+				"ThreeCone": 7.015326110747356,
+				"Shuttle": 4.253415531077095,
+				"Bench": 22.190282735322164,
+				"Vertical": 31.74155159009155,
+				"BroadJump": 115.22828256062778,
+				"ArmLength": 32.04974616523312,
+				"HandSize": 10.175599866712354
 			},
 			"Ratings": {
-				"Speed": 74.43564589976326,
-				"Acceleration": 78.64343787727597,
-				"Agility": 85.64087685492643,
-				"Strength": 77.69516510578146,
-				"Stamina": 77.85316150003582,
-				"Toughness": 68.79095176671089,
-				"Awareness": 64.94547174786304,
-				"Discipline": 67.39032057058718,
-				"ArmStrength": 59.98364025731642,
-				"ShortAccuracy": 69.23741528831016,
-				"MediumAccuracy": 68.15063802066945,
-				"DeepAccuracy": 69.5035921905265,
-				"ThrowOnTheRun": 59.38022624577786,
-				"PocketPresence": 67.49099317398561,
-				"DecisionMaking": 63.00075664389242,
-				"BallSecurity": 56.542828491649686,
-				"Vision": 20.08364427961608,
-				"Elusiveness": 24.889483817192275,
-				"BreakTackle": 25.297280828814134,
-				"Hands": 25.454379862120128,
-				"RouteRunning": 21.146805303736375,
-				"Release": 33.73545555379878,
-				"ContestedCatch": 19.55126084879331,
-				"PassBlock": 16.862968438678976,
-				"RunBlock": 20.082023013308465,
-				"LeadBlock": 28.529193160608752,
-				"PassRushPower": 28.02251776599003,
-				"PassRushFinesse": 17.754322718834633,
-				"BlockShedding": 22.60978396267691,
-				"Tackling": 45.05484589702287,
-				"Pursuit": 39.18447899009386,
-				"HitPower": 34.03817442478581,
-				"ManCoverage": 21.76022382638089,
-				"ZoneCoverage": 31.180998217074542,
-				"Press": 46.301953094262274,
-				"BallSkills": 40.15563769822687,
-				"KickPower": 35.679744848004866,
-				"KickAccuracy": 35.66521362411546,
-				"PuntPower": 31.83785685781441,
-				"PuntAccuracy": 36.3240737248453,
-				"Return": 20.110415715547994,
-				"SnapAccuracy": 36.3256163681212
+				"Speed": 70.67664751452611,
+				"Acceleration": 78.39387176138997,
+				"Agility": 83.1470255068162,
+				"Strength": 70.34498813435208,
+				"Stamina": 87.51796052008345,
+				"Toughness": 79.25590168617438,
+				"Awareness": 87.68573050158165,
+				"Discipline": 78.22151460445916,
+				"ArmStrength": 79.96364971235458,
+				"ShortAccuracy": 79.44266811530252,
+				"MediumAccuracy": 78.8994404357049,
+				"DeepAccuracy": 75.05114230277032,
+				"ThrowOnTheRun": 82.61429080510591,
+				"PocketPresence": 68.18977970156699,
+				"DecisionMaking": 80.34839254572732,
+				"BallSecurity": 73.80053379755178,
+				"Vision": 72.02163416666622,
+				"Elusiveness": 76.62498991344171,
+				"BreakTackle": 27.707813897892294,
+				"Hands": 16.321748023797994,
+				"RouteRunning": 29.487354754960446,
+				"Release": 28.364735972231088,
+				"ContestedCatch": 15.51145527807336,
+				"PassBlock": 37.4522517113752,
+				"RunBlock": 17.455329836888573,
+				"LeadBlock": 29.064718589372987,
+				"PassRushPower": 18.86551380061949,
+				"PassRushFinesse": 36.4441928183561,
+				"BlockShedding": 26.789967906495065,
+				"Tackling": 17.529119671970548,
+				"Pursuit": 22.937296304234323,
+				"HitPower": 24.07947972512085,
+				"ManCoverage": 22.924616882913643,
+				"ZoneCoverage": 36.96226099737797,
+				"Press": 19.066782491254543,
+				"BallSkills": 22.901568560884634,
+				"KickPower": 19.25934442097436,
+				"KickAccuracy": 26.403313548474387,
+				"PuntPower": 37.21268354315495,
+				"PuntAccuracy": 16.596750440844012,
+				"Return": 20.812984514507797,
+				"SnapAccuracy": 29.609196127207404
 			},
 			"Hidden": {
-				"Potential": 66.55158945351187,
-				"DevelopmentCurve": "Early",
-				"BustRisk": 0.1937845143389154,
-				"PeakAgeOffset": -0.7150942632134175,
-				"InjuryProneness": 1.1489742637424667
+				"Potential": 78.48323691887961,
+				"DevelopmentCurve": "Late",
+				"BustRisk": 0.1306126037879033,
+				"PeakAgeOffset": 0.46474336589872856,
+				"InjuryProneness": 0.8978027322687996
 			},
 			"Personality": {
-				"WorkEthic": 41.404418492211924,
-				"Coachability": 49.045227229968205,
-				"Greed": 91.0401963219019,
-				"Loyalty": 71.97532746825101,
-				"Competitiveness": 42.306873919048385,
-				"Ego": 34.90342506130777
+				"WorkEthic": 57.90864310782388,
+				"Coachability": 69.93414419371206,
+				"Greed": 32.19138015922691,
+				"Loyalty": 59.415872449377936,
+				"Competitiveness": 36.689767143746934,
+				"Ego": 31.602358469303276
 			},
 			"Contract": {
 				"Type": "Veteran",
 				"SignedSeason": 2026,
-				"TotalValue": 11812740,
-				"SigningBonus": 762977,
-				"GuaranteedTotal": 2839934,
+				"TotalValue": 61396944,
+				"SigningBonus": 17801508,
+				"GuaranteedTotal": 33966886,
 				"Seasons": [
 					{
 						"Season": 2026,
-						"BaseSalary": 11049763,
-						"ProratedBonus": 762977,
-						"GuaranteedAmount": 2076957,
-						"CapHit": 11812740
+						"BaseSalary": 20959344,
+						"ProratedBonus": 8900754,
+						"GuaranteedAmount": 16165378,
+						"CapHit": 29860098
+					},
+					{
+						"Season": 2027,
+						"BaseSalary": 22636092,
+						"ProratedBonus": 8900754,
+						"GuaranteedAmount": 0,
+						"CapHit": 31536846
 					}
 				]
 			}
@@ -979,18 +991,18 @@
 				"Acceleration": 88.6472570415619,
 				"Agility": 83.79359514575262,
 				"Strength": 67.11903270286568,
-				"Stamina": 63.56986674154345,
-				"Toughness": 58.09040373316985,
-				"Awareness": 71.19899707824645,
-				"Discipline": 68.93971209667475,
-				"ArmStrength": 64.59832565617907,
-				"ShortAccuracy": 67.88739559983094,
-				"MediumAccuracy": 67.28887529208752,
-				"DeepAccuracy": 64.87991683367014,
-				"ThrowOnTheRun": 54.31794497369253,
-				"PocketPresence": 71.92817780781631,
-				"DecisionMaking": 60.708285489968844,
-				"BallSecurity": 62.857387377318865,
+				"Stamina": 62.62486674154344,
+				"Toughness": 57.14540373316984,
+				"Awareness": 70.25399707824644,
+				"Discipline": 67.99471209667476,
+				"ArmStrength": 63.65332565617907,
+				"ShortAccuracy": 66.94239559983093,
+				"MediumAccuracy": 66.34387529208752,
+				"DeepAccuracy": 63.93491683367014,
+				"ThrowOnTheRun": 53.37294497369253,
+				"PocketPresence": 70.9831778078163,
+				"DecisionMaking": 59.76328548996884,
+				"BallSecurity": 61.912387377318865,
 				"Vision": 24.553114393252773,
 				"Elusiveness": 20.79732041932389,
 				"BreakTackle": 33.84642122063822,
@@ -1019,7 +1031,7 @@
 				"SnapAccuracy": 17.62741660214671
 			},
 			"Hidden": {
-				"Potential": 66.69176034606336,
+				"Potential": 65.81291034606335,
 				"DevelopmentCurve": "Late",
 				"BustRisk": 0.02687532707168197,
 				"PeakAgeOffset": -0.7156587295417072,
@@ -1036,23 +1048,23 @@
 			"Contract": {
 				"Type": "Veteran",
 				"SignedSeason": 2025,
-				"TotalValue": 27097500,
-				"SigningBonus": 3835882,
-				"GuaranteedTotal": 6910671,
+				"TotalValue": 19963564,
+				"SigningBonus": 2826013,
+				"GuaranteedTotal": 5091304,
 				"Seasons": [
 					{
 						"Season": 2025,
-						"BaseSalary": 11183470,
-						"ProratedBonus": 1917941,
-						"GuaranteedAmount": 3074789,
-						"CapHit": 13101411
+						"BaseSalary": 8239207,
+						"ProratedBonus": 1413007,
+						"GuaranteedAmount": 2265291,
+						"CapHit": 9652214
 					},
 					{
 						"Season": 2026,
-						"BaseSalary": 12078148,
-						"ProratedBonus": 1917941,
+						"BaseSalary": 8898344,
+						"ProratedBonus": 1413006,
 						"GuaranteedAmount": 0,
-						"CapHit": 13996089
+						"CapHit": 10311350
 					}
 				]
 			}
@@ -1072,7 +1084,7 @@
 			"Draft": {
 				"Season": 2023,
 				"Round": 6,
-				"Pick": 167,
+				"Pick": 181,
 				"Team": "NYX"
 			},
 			"JerseyNumber": 9,
@@ -1094,18 +1106,18 @@
 				"Acceleration": 76.13881853189535,
 				"Agility": 71.97968697460257,
 				"Strength": 58.876202749608545,
-				"Stamina": 62.57748007208808,
-				"Toughness": 57.89764198219831,
-				"Awareness": 60.031573729263194,
-				"Discipline": 60.783748199193404,
-				"ArmStrength": 62.64942128257169,
-				"ShortAccuracy": 53.33434447415828,
-				"MediumAccuracy": 63.19437774609942,
-				"DeepAccuracy": 55.29993739253685,
-				"ThrowOnTheRun": 46.26899027794403,
-				"PocketPresence": 55.623096480040154,
-				"DecisionMaking": 54.146198153331405,
-				"BallSecurity": 48.66487698037508,
+				"Stamina": 60.41748007208808,
+				"Toughness": 55.73764198219831,
+				"Awareness": 57.8715737292632,
+				"Discipline": 58.62374819919341,
+				"ArmStrength": 60.48942128257169,
+				"ShortAccuracy": 51.17434447415828,
+				"MediumAccuracy": 61.03437774609942,
+				"DeepAccuracy": 53.13993739253685,
+				"ThrowOnTheRun": 44.10899027794403,
+				"PocketPresence": 53.46309648004016,
+				"DecisionMaking": 51.98619815333141,
+				"BallSecurity": 46.50487698037508,
 				"Vision": 11.891218236475252,
 				"Elusiveness": 37.178570965449225,
 				"BreakTackle": 45.89455218415169,
@@ -1134,7 +1146,7 @@
 				"SnapAccuracy": 33.70566641443779
 			},
 			"Hidden": {
-				"Potential": 59.21623419251147,
+				"Potential": 57.207434192511464,
 				"DevelopmentCurve": "Late",
 				"BustRisk": 0.18280157277285577,
 				"PeakAgeOffset": 0.4706267682363571,
@@ -1151,37 +1163,37 @@
 			"Contract": {
 				"Type": "Rookie",
 				"SignedSeason": 2023,
-				"TotalValue": 4480645,
-				"SigningBonus": 224032,
-				"GuaranteedTotal": 224032,
+				"TotalValue": 4435484,
+				"SigningBonus": 221774,
+				"GuaranteedTotal": 221774,
 				"Seasons": [
 					{
 						"Season": 2023,
-						"BaseSalary": 899661,
-						"ProratedBonus": 56008,
+						"BaseSalary": 895371,
+						"ProratedBonus": 55445,
 						"GuaranteedAmount": 0,
-						"CapHit": 955669
+						"CapHit": 950816
 					},
 					{
 						"Season": 2024,
-						"BaseSalary": 1034322,
-						"ProratedBonus": 56008,
+						"BaseSalary": 1025742,
+						"ProratedBonus": 55443,
 						"GuaranteedAmount": 0,
-						"CapHit": 1090330
+						"CapHit": 1081185
 					},
 					{
 						"Season": 2025,
-						"BaseSalary": 1118983,
-						"ProratedBonus": 56008,
+						"BaseSalary": 1106113,
+						"ProratedBonus": 55443,
 						"GuaranteedAmount": 0,
-						"CapHit": 1174991
+						"CapHit": 1161556
 					},
 					{
 						"Season": 2026,
-						"BaseSalary": 1203647,
-						"ProratedBonus": 56008,
+						"BaseSalary": 1186484,
+						"ProratedBonus": 55443,
 						"GuaranteedAmount": 0,
-						"CapHit": 1259655
+						"CapHit": 1241927
 					}
 				]
 			}
@@ -1218,20 +1230,20 @@
 				"Acceleration": 81.34033315889661,
 				"Agility": 92.10651306196462,
 				"Strength": 67.16123612649102,
-				"Stamina": 66.89094334962203,
-				"Toughness": 57.9951191770539,
-				"Awareness": 55.96969449579969,
-				"Discipline": 63.11970989570613,
-				"ArmStrength": 61.83997064780857,
-				"ShortAccuracy": 67.05863602072016,
-				"MediumAccuracy": 61.74635311969831,
-				"DeepAccuracy": 61.66165520312241,
-				"ThrowOnTheRun": 65.91034085131136,
-				"PocketPresence": 58.13573124825111,
-				"DecisionMaking": 68.55361300448101,
-				"BallSecurity": 59.38393999868895,
-				"Vision": 50.32825710578764,
-				"Elusiveness": 66.35095790669051,
+				"Stamina": 65.94594334962204,
+				"Toughness": 57.05011917705391,
+				"Awareness": 55.02469449579969,
+				"Discipline": 62.17470989570613,
+				"ArmStrength": 60.89497064780858,
+				"ShortAccuracy": 66.11363602072015,
+				"MediumAccuracy": 60.80135311969831,
+				"DeepAccuracy": 60.71665520312241,
+				"ThrowOnTheRun": 64.96534085131137,
+				"PocketPresence": 57.19073124825111,
+				"DecisionMaking": 67.60861300448101,
+				"BallSecurity": 58.43893999868895,
+				"Vision": 49.383257105787635,
+				"Elusiveness": 65.4059579066905,
 				"BreakTackle": 19.836512079220523,
 				"Hands": 2.2854964194144216,
 				"RouteRunning": 35.93271059915015,
@@ -1258,7 +1270,7 @@
 				"SnapAccuracy": 24.72331252639005
 			},
 			"Hidden": {
-				"Potential": 64.22422115058107,
+				"Potential": 63.34537115058109,
 				"DevelopmentCurve": "Normal",
 				"BustRisk": 0.28055703192793746,
 				"PeakAgeOffset": -0.613704310188293,
@@ -1275,23 +1287,23 @@
 			"Contract": {
 				"Type": "Veteran",
 				"SignedSeason": 2025,
-				"TotalValue": 14645578,
-				"SigningBonus": 990559,
-				"GuaranteedTotal": 3500142,
+				"TotalValue": 10227694,
+				"SigningBonus": 691754,
+				"GuaranteedTotal": 2444313,
 				"Seasons": [
 					{
 						"Season": 2025,
-						"BaseSalary": 6564912,
-						"ProratedBonus": 495280,
-						"GuaranteedAmount": 2509583,
-						"CapHit": 7060192
+						"BaseSalary": 4584586,
+						"ProratedBonus": 345877,
+						"GuaranteedAmount": 1752559,
+						"CapHit": 4930463
 					},
 					{
 						"Season": 2026,
-						"BaseSalary": 7090107,
-						"ProratedBonus": 495279,
+						"BaseSalary": 4951354,
+						"ProratedBonus": 345877,
 						"GuaranteedAmount": 0,
-						"CapHit": 7585386
+						"CapHit": 5297231
 					}
 				]
 			}
@@ -1311,7 +1323,7 @@
 			"Draft": {
 				"Season": 2025,
 				"Round": 5,
-				"Pick": 134,
+				"Pick": 139,
 				"Team": "NYX"
 			},
 			"JerseyNumber": 44,
@@ -1333,10 +1345,10 @@
 				"Acceleration": 94.64624696692164,
 				"Agility": 82.56315407081146,
 				"Strength": 84.47849638474123,
-				"Stamina": 62.503743831340856,
-				"Toughness": 66.59904217227833,
-				"Awareness": 50.04450671577929,
-				"Discipline": 61.205059040103905,
+				"Stamina": 63.03174359454117,
+				"Toughness": 67.12704193547864,
+				"Awareness": 50.572506478979605,
+				"Discipline": 61.73305880330422,
 				"ArmStrength": 16.82285297523608,
 				"ShortAccuracy": 29.13651753231594,
 				"MediumAccuracy": 23.89666611182185,
@@ -1344,15 +1356,15 @@
 				"ThrowOnTheRun": 29.68925900618828,
 				"PocketPresence": 15.793125707448013,
 				"DecisionMaking": 32.74909633553122,
-				"BallSecurity": 54.426788658518134,
-				"Vision": 44.89364256113278,
-				"Elusiveness": 60.59730615521794,
-				"BreakTackle": 57.59615594032654,
-				"Hands": 49.65149406815769,
-				"RouteRunning": 42.0272469942002,
+				"BallSecurity": 54.95478842171845,
+				"Vision": 45.42164232433309,
+				"Elusiveness": 61.125305918418256,
+				"BreakTackle": 58.12415570352685,
+				"Hands": 50.179493831358,
+				"RouteRunning": 42.55524675740051,
 				"Release": 16.88059161712333,
 				"ContestedCatch": 28.807904742438716,
-				"PassBlock": 39.47645433160497,
+				"PassBlock": 40.00445409480528,
 				"RunBlock": 29.636073781322022,
 				"LeadBlock": 32.300152692613686,
 				"PassRushPower": 22.286286340176062,
@@ -1369,11 +1381,11 @@
 				"KickAccuracy": 25.277463032366875,
 				"PuntPower": 26.084479155769305,
 				"PuntAccuracy": 34.051453785368565,
-				"Return": 48.734626808694976,
+				"Return": 49.26262657189529,
 				"SnapAccuracy": 37.53651434686147
 			},
 			"Hidden": {
-				"Potential": 76.46920126513541,
+				"Potential": 76.81768110884761,
 				"DevelopmentCurve": "Late",
 				"BustRisk": 0.042448620247903884,
 				"PeakAgeOffset": -1.5549704092730032,
@@ -1390,37 +1402,37 @@
 			"Contract": {
 				"Type": "Rookie",
 				"SignedSeason": 2025,
-				"TotalValue": 4583871,
-				"SigningBonus": 366710,
-				"GuaranteedTotal": 366710,
+				"TotalValue": 4567742,
+				"SigningBonus": 365419,
+				"GuaranteedTotal": 365419,
 				"Seasons": [
 					{
 						"Season": 2025,
-						"BaseSalary": 895716,
-						"ProratedBonus": 91679,
+						"BaseSalary": 894232,
+						"ProratedBonus": 91357,
 						"GuaranteedAmount": 0,
-						"CapHit": 987395
+						"CapHit": 985589
 					},
 					{
 						"Season": 2026,
-						"BaseSalary": 1026432,
-						"ProratedBonus": 91677,
+						"BaseSalary": 1023464,
+						"ProratedBonus": 91354,
 						"GuaranteedAmount": 0,
-						"CapHit": 1118109
+						"CapHit": 1114818
 					},
 					{
 						"Season": 2027,
-						"BaseSalary": 1107148,
-						"ProratedBonus": 91677,
+						"BaseSalary": 1102696,
+						"ProratedBonus": 91354,
 						"GuaranteedAmount": 0,
-						"CapHit": 1198825
+						"CapHit": 1194050
 					},
 					{
 						"Season": 2028,
-						"BaseSalary": 1187865,
-						"ProratedBonus": 91677,
+						"BaseSalary": 1181931,
+						"ProratedBonus": 91354,
 						"GuaranteedAmount": 0,
-						"CapHit": 1279542
+						"CapHit": 1273285
 					}
 				]
 			}

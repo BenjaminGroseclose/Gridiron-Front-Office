@@ -1,0 +1,36 @@
+@using GridironFrontOffice.Application.Leagues
+@* The hero band of the New League steps after Generate (VISUAL_DESIGN.md §6, F-01 §8): the step's heading above the
+   league's name, with its season and seed beside it. Before the pick the accent is neutral, so the band is too. *@
+<header class="gfo-league-hero">
+    <div>
+        <h1 id="@HeadingID" class="gfo-league-hero-heading">@Heading</h1>
+        @if (League is { } league)
+        {
+            <p class="gfo-league-hero-name gfo-display" data-testid="hero-league">@league.LeagueName</p>
+        }
+    </div>
+    @if (League is { } facts)
+    {
+        <dl class="gfo-league-hero-facts">
+            <div>
+                <dt>Season</dt>
+                <dd class="gfo-display gfo-num" data-testid="hero-season">@facts.Season</dd>
+            </div>
+            <div>
+                <dt>Seed</dt>
+                <dd class="gfo-display gfo-num" data-testid="hero-seed">@facts.Seed</dd>
+            </div>
+        </dl>
+    }
+</header>
+
+@code {
+    /// <summary>The page's heading: what the step asks.</summary>
+    [Parameter, EditorRequired] public string Heading { get; set; } = "";
+
+    /// <summary>The heading's id, for the page's <c>aria-labelledby</c>.</summary>
+    [Parameter, EditorRequired] public string HeadingID { get; set; } = "";
+
+    /// <summary>The open league; null while it loads, when only the heading shows.</summary>
+    [Parameter] public LeagueHeaderDto? League { get; set; }
+}

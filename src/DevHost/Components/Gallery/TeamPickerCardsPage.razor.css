@@ -1,0 +1,6 @@
+/* The picker's own grid (TeamPickerPage.razor.css): at least 320 px a card, four to a row at 1440 px */
+.picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}

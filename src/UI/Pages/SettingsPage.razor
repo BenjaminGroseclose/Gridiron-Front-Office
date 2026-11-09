@@ -11,57 +11,81 @@
 
 <PageTitle>Settings · Gridiron Front Office</PageTitle>
 
-@if (Saves.Current is null)
-{
-    <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
-                  OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
-}
-<h1 class="gfo-page-title gfo-display">Settings</h1>
+@* Built from Fluent's layout and text components (D-100). Without a league the shell bleeds (MainLayout: the menu
+   screens paint their own backdrop), so the page brings the shell's own 20 × 24 gutter; with a league open the shell
+   pads it. FluentStack is width: 100% inline, so the gutter is its padding: a margin would push it past the content
+   area and scroll it sideways. *@
+<FluentStack Orientation="Orientation.Vertical" VerticalGap="16px" Padding="@(Saves.Current is null ? Gutter : null)">
+    <h1 class="gfo-page-title gfo-display">Settings</h1>
 
-<section class="gfo-settings-panel" aria-labelledby="appearance-heading">
-    <h2 id="appearance-heading" class="gfo-settings-heading">Appearance</h2>
+    @* A panel (VISUAL_DESIGN.md §5): a flat card, padding 20. Each row is the setting's name and hint, then its control. *@
+    <FluentCard Role="region" aria-labelledby="appearance-heading" Width="@PanelWidth" Shadow="CardShadow.None" Padding="@Padding.All5">
+        <FluentText As="TextTag.H2" Id="appearance-heading" Size="TextSize.Size400" Weight="TextWeight.Bold">Appearance</FluentText>
 
-    <div class="gfo-setting">
-        <div class="gfo-setting-text">
-            <span class="gfo-setting-label">Theme</span>
-            <span class="gfo-setting-hint">Match Windows follows the Windows light or dark setting.</span>
-        </div>
-        <SegmentedControl TValue="ThemeChoice" Label="Theme" Options="ThemeOptions" Value="@_appearance.Theme"
-                          ValueChanged="@(value => SaveAsync(_appearance with { Theme = value }))" data-testid="theme" />
-    </div>
+        <FluentStack HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="24px" Padding="@Padding.Vertical3">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="2px" Width="auto">
+                <FluentText Weight="TextWeight.Semibold">Theme</FluentText>
+                <FluentText Size="TextSize.Size200" Color="Color.Custom" CustomColor="@HintColor">Match Windows follows the Windows light or dark setting.</FluentText>
+            </FluentStack>
+            <SegmentedControl TValue="ThemeChoice" Label="Theme" Options="ThemeOptions" Value="@_appearance.Theme"
+                              ValueChanged="@(value => SaveAsync(_appearance with { Theme = value }))" data-testid="theme" />
+        </FluentStack>
+        <FluentDivider />
 
-    <div class="gfo-setting">
-        <div class="gfo-setting-text">
-            <span class="gfo-setting-label">Accent</span>
-            <span class="gfo-setting-hint">Team uses your team's primary color once a league is open. Neutral is Fluent blue.</span>
-        </div>
-        <SegmentedControl TValue="AccentMode" Label="Accent" Options="AccentOptions" Value="@_appearance.Accent"
-                          ValueChanged="@(value => SaveAsync(_appearance with { Accent = value }))" data-testid="accent" />
-    </div>
+        <FluentStack HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="24px" Padding="@Padding.Vertical3">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="2px" Width="auto">
+                <FluentText Weight="TextWeight.Semibold">Accent</FluentText>
+                <FluentText Size="TextSize.Size200" Color="Color.Custom" CustomColor="@HintColor">Team uses your team's primary color once a league is open. Neutral is Fluent blue.</FluentText>
+            </FluentStack>
+            <SegmentedControl TValue="AccentMode" Label="Accent" Options="AccentOptions" Value="@_appearance.Accent"
+                              ValueChanged="@(value => SaveAsync(_appearance with { Accent = value }))" data-testid="accent" />
+        </FluentStack>
+        <FluentDivider />
 
-    <div class="gfo-setting">
-        <div class="gfo-setting-text">
-            <span class="gfo-setting-label">Density</span>
-            <span class="gfo-setting-hint">Compact fits more rows in every table.</span>
-        </div>
-        <SegmentedControl TValue="Density" Label="Density" Options="DensityOptions" Value="@_appearance.Density"
-                          ValueChanged="@(value => SaveAsync(_appearance with { Density = value }))" data-testid="density" />
-    </div>
-</section>
+        <FluentStack HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="24px" Padding="@Padding.Vertical3">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="2px" Width="auto">
+                <FluentText Weight="TextWeight.Semibold">Density</FluentText>
+                <FluentText Size="TextSize.Size200" Color="Color.Custom" CustomColor="@HintColor">Compact fits more rows in every table.</FluentText>
+            </FluentStack>
+            <SegmentedControl TValue="Density" Label="Density" Options="DensityOptions" Value="@_appearance.Density"
+                              ValueChanged="@(value => SaveAsync(_appearance with { Density = value }))" data-testid="density" />
+        </FluentStack>
+    </FluentCard>
 
-<section class="gfo-settings-panel" aria-labelledby="about-heading">
-    <h2 id="about-heading" class="gfo-settings-heading">About</h2>
+    <FluentCard Role="region" aria-labelledby="about-heading" Width="@PanelWidth" Shadow="CardShadow.None" Padding="@Padding.All5">
+        <FluentText As="TextTag.H2" Id="about-heading" Size="TextSize.Size400" Weight="TextWeight.Bold">About</FluentText>
 
-    <div class="gfo-setting">
-        <div class="gfo-setting-text">
-            <span class="gfo-setting-label">Version</span>
-            <span class="gfo-setting-value" data-testid="version">@VersionLine</span>
-        </div>
-        <FluentButton IconStart="@IconCatalog.Create(IconName.Copy)" OnClick="CopyVersionAsync" data-testid="copy-version">Copy</FluentButton>
-    </div>
-</section>
+        <FluentStack HorizontalAlignment="HorizontalAlignment.SpaceBetween" VerticalAlignment="VerticalAlignment.Center"
+                     HorizontalGap="24px" Padding="@Padding.Vertical3">
+            <FluentStack Orientation="Orientation.Vertical" VerticalGap="2px" Width="auto">
+                <FluentText Weight="TextWeight.Semibold">Version</FluentText>
+                @* A value to read or copy into a bug report *@
+                <FluentText Font="TextFont.Monospace" data-testid="version">@VersionLine</FluentText>
+            </FluentStack>
+            <FluentButton IconStart="@IconCatalog.Create(IconName.Copy)" OnClick="CopyVersionAsync" data-testid="copy-version">Copy</FluentButton>
+        </FluentStack>
+    </FluentCard>
+
+    @if (Saves.Current is null)
+    {
+        <FluentButton IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
+                      OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
+    }
+</FluentStack>
 
 @code {
+    // The shell's page padding (AppShell: 20 × 24), as Fluent's spacing utilities: py-5 is 20 px, px-6 is 24 px
+    private const string Gutter = Padding.Vertical5 + " " + Padding.Horizontal6;
+
+    // The panels' width: a line of hint beside its control. The content area is wider at every window size.
+    private const string PanelWidth = "880px";
+
+    // Muted (VISUAL_DESIGN.md §3.1): a setting's hint under its name. FluentText's colors stop at Foreground1.
+    private const string HintColor = "var(--colorNeutralForeground2)";
+
     private static readonly IReadOnlyList<SegmentedOption<ThemeChoice>> ThemeOptions =
     [
         new(ThemeChoice.Dark, "Dark", IconName.WeatherMoon),

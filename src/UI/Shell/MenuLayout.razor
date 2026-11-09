@@ -1,0 +1,18 @@
+@inherits LayoutComponentBase
+@* The menu shell (M1 WP8 §2) for the New League steps: the app bar as the title bar, with no league context or
+   navigation, even once the league is open. MainLayout switches to the league shell on SaveOpened, which arrives
+   before the wizard moves on. *@
+<AppearanceSync />
+<AppShell Brand="NoBrand" Bleed="true">
+    <PageErrorBoundary>
+        @Body
+    </PageErrorBoundary>
+</AppShell>
+
+@* As in MainLayout: the providers live in the layout, and Start over's confirmation and every toast need them. *@
+<ClientDiagnostics />
+<FluentProviders />
+
+@code {
+    private static readonly RenderFragment NoBrand = _ => { };
+}

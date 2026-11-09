@@ -19,7 +19,7 @@ namespace GridironFrontOffice.UI.Tests.State;
 /// </summary>
 public sealed class GameStateStoreTests(GeneratedSeed42 seed) : IClassFixture<GeneratedSeed42>
 {
-	private static readonly LeagueHeaderDto AtCamp = new("Seed 42", 2026, Phase.TrainingCamp, LeagueCalendar.TrainingCampOpens(2026), null);
+	private static readonly LeagueHeaderDto AtCamp = new("Seed 42", 42, 2026, Phase.TrainingCamp, LeagueCalendar.TrainingCampOpens(2026), null);
 
 	private static CancellationToken Ct => TestContext.Current.CancellationToken;
 

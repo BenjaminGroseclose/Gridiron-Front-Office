@@ -151,10 +151,17 @@ internal sealed class FakePlatformServices : IPlatformServices
 {
     public List<string> ShownInFolder { get; } = [];
 
+    /// <summary>Every path sent to the Recycle Bin. The files stay where they are: a build never touches the real bin.</summary>
+    public List<string> Recycled { get; } = [];
+
     /// <summary>How many times a screen asked the host to quit.</summary>
     public int Quits { get; private set; }
 
-    public bool SendToRecycleBin(IReadOnlyList<string> paths) => true;
+    public bool SendToRecycleBin(IReadOnlyList<string> paths)
+    {
+        Recycled.AddRange(paths);
+        return true;
+    }
 
     public void ShowInFolder(string path) => ShownInFolder.Add(path);
 

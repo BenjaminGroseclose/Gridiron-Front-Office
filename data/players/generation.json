@@ -7,7 +7,7 @@
   "tiers": {
     "Starter": {
       "skillShift": 10.5,
-      "spread": 8.5,
+      "spread": 7,
       "athleticShift": 0.5,
       "target": {
         "mean": 74,
@@ -265,7 +265,7 @@
     }
   },
   "teamStrength": {
-    "range": 0.7,
+    "range": 1.5,
     "youngWeight": 1.6,
     "veteranWeight": 0.7
   }

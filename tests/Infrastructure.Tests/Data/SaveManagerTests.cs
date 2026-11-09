@@ -43,8 +43,10 @@ public sealed class SaveManagerTests
         await using var save = await TestSave.CreateAsync("Wolves: Year 1?");
 
         Path.GetFileName(save.Save.FilePath).ShouldBe("Wolves_ Year 1_.gfo");
-        (await save.Saves.CreateAsync("   ", Ct)).Error!.Code.ShouldBe("InvalidLeagueName");
-        (await save.Saves.CreateAsync(new string('x', SaveRules.MaxLeagueNameLength + 1), Ct)).Error!.Code.ShouldBe("InvalidLeagueName");
+        // SaveManager refuses with SaveRules' own words (M1 WP8: New League checks the same rule before it generates)
+        (await save.Saves.CreateAsync("   ", Ct)).Error.ShouldBe(SaveRules.CheckLeagueName("   ").Error);
+        var tooLong = new string('x', SaveRules.MaxLeagueNameLength + 1);
+        (await save.Saves.CreateAsync(tooLong, Ct)).Error.ShouldBe(SaveRules.CheckLeagueName(tooLong).Error);
 
         var second = await save.Saves.CreateAsync("Wolves: Year 1?", Ct);
         Path.GetFileName(second.Value.FilePath).ShouldBe("Wolves_ Year 1_ (2).gfo");

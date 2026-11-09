@@ -4,6 +4,7 @@ using GridironFrontOffice.Application.Saves;
 using GridironFrontOffice.UI.League;
 using GridironFrontOffice.UI.Menu;
 using GridironFrontOffice.UI.Pages;
+using GridironFrontOffice.UI.Tests.State;
 using GridironFrontOffice.UI.Tests.TestDoubles;
 using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
@@ -62,18 +63,19 @@ public sealed class MainMenuTests : SaveScreenContext
     }
 
     [Fact]
-    public void Continue_opens_the_most_recently_played_save_that_can_open()
+    public async Task Continue_opens_the_most_recently_played_save_that_can_open()
     {
         Catalog.Add("Older League", daysAgo: 3);
         Catalog.Add("Newer Version", daysAgo: 0, SaveCardStatus.FromNewerVersion);
         var latest = Catalog.Add("Saturday League", daysAgo: 1);
+        await RealApp.GenerateLeagueAsync();   // what the landing reads: a league without a team
         var cut = Render<MainMenu>();
 
         cut.Find("[data-testid=continue-target]").TextContent.ShouldContain("Saturday League");
-        cut.Find("[data-testid=continue]").Click();
+        await cut.Find("[data-testid=continue]").ClickAsync(new());
 
         Saves.Opened.ShouldBe([latest.FilePath]);
-        Location.ShouldBe("league");
+        Location.ShouldBe("pick-team");
     }
 
     [Fact]
@@ -116,44 +118,6 @@ public sealed class MainMenuTests : SaveScreenContext
     }
 }
 
-public sealed class NewLeaguePageTests : SaveScreenContext
-{
-    [Fact]
-    public async Task Creating_opens_the_new_league_at_its_home()
-    {
-        var cut = Render<NewLeaguePage>();
-        var name = cut.FindComponent<Microsoft.FluentUI.AspNetCore.Components.FluentTextInput>().Instance;
-
-        await cut.InvokeAsync(() => name.ValueChanged.InvokeAsync("Saturday League"));
-        await cut.Find("[data-testid=create]").ClickAsync(new());
-
-        Saves.Current!.LeagueName.ShouldBe("Saturday League");
-        Location.ShouldBe("league");
-    }
-
-    [Fact]
-    public void A_refused_name_is_explained_under_the_field_and_nothing_happens()
-    {
-        var cut = Render<NewLeaguePage>();
-
-        cut.Find("[data-testid=create]").Click();
-
-        Saves.Current.ShouldBeNull();
-        Location.ShouldBe("");
-        cut.FindComponent<Microsoft.FluentUI.AspNetCore.Components.FluentTextInput>().Instance.Message.ShouldBe("A league needs a name.");
-    }
-
-    [Fact]
-    public void Main_menu_goes_back()
-    {
-        var cut = Render<NewLeaguePage>();
-
-        cut.Find("[data-testid=back]").Click();
-
-        Location.ShouldBe("");
-    }
-}
-
 public sealed class LoadScreenTests : SaveScreenContext
 {
     [Fact]
@@ -190,16 +154,17 @@ public sealed class LoadScreenTests : SaveScreenContext
     }
 
     [Fact]
-    public void Open_goes_to_the_leagues_home_and_says_when_the_file_was_upgraded()
+    public async Task Open_lands_the_league_and_says_when_the_file_was_upgraded()
     {
         var card = Catalog.Add("Old League", status: SaveCardStatus.NeedsUpgrade);
         Saves.OpenUpgrades = true;
+        await RealApp.GenerateLeagueAsync();   // what the landing reads: a league without a team
         var cut = Render<LoadScreen>();
 
-        cut.Find("[data-testid=open]").Click();
+        await cut.Find("[data-testid=open]").ClickAsync(new());
 
         Saves.Opened.ShouldBe([card.FilePath]);
-        Location.ShouldBe("league");
+        Location.ShouldBe("pick-team");
         Toasts.Shown.ShouldHaveSingleItem().Title.ShouldBe("Old League was upgraded");
     }
 
@@ -269,28 +234,89 @@ public sealed class LoadScreenTests : SaveScreenContext
     }
 }
 
-public sealed class LeagueHomeTests : SaveScreenContext
+public sealed class LeagueHomeTests(GeneratedSeed42 seed) : RealScreenContext, IClassFixture<GeneratedSeed42>
 {
     [Fact]
-    public void It_names_the_league_and_says_what_comes_next()
+    public async Task It_names_the_league_and_says_what_comes_next()
     {
-        Saves.Open(new OpenSave(Guid.NewGuid(), "Saturday League", @"C:\Saves\a.gfo", 1, Upgraded: false));
+        await OpenLeagueAsync(seed.League);
+        await PickAsync(5);
+        GoTo("/league");
 
         var cut = Render<LeagueHome>();
 
-        cut.Find("h1").TextContent.ShouldBe("Saturday League");
+        cut.Find("h1").TextContent.ShouldBe("Seed 42");
         cut.Find("[data-testid=league-empty]").TextContent.ShouldContain("Your league will live here");
+        await cut.WaitForStateAsync(() => cut.RenderCount > 1, Bound);   // ComponentBase renders again once OnInitializedAsync is done
+        Location.ShouldBe("league", "A league with a team stays home.");
+    }
+
+    [Fact]
+    public async Task A_league_without_a_team_goes_to_the_picker()
+    {
+        await OpenLeagueAsync(seed.League);
+        GoTo("/league");
+
+        var cut = Render<LeagueHome>();
+
+        await cut.WaitForAssertionAsync(() => Location.ShouldBe("pick-team"), Bound);
     }
 
     [Fact]
     public void Without_an_open_league_it_goes_to_the_main_menu()
     {
-        Services.GetRequiredService<NavigationManager>().NavigateTo("/league");
+        GoTo("/league");
 
         var cut = Render<LeagueHome>();
 
         Location.ShouldBe("");
         cut.Markup.Trim().ShouldBeEmpty();
+    }
+}
+
+/// <summary>M1 WP8 (guide §4): Continue and Load land a real league where LandingAsync says.</summary>
+public sealed class MenuLandingTests(GeneratedSeed42 seed) : RealScreenContext, IClassFixture<GeneratedSeed42>
+{
+    [Theory]
+    [InlineData(false, "pick-team")]
+    [InlineData(true, "league")]
+    public async Task Continue_lands_a_league_on_the_picker_until_it_has_a_team(bool picked, string landing)
+    {
+        await SavedLeagueAsync(picked);
+        var cut = Render<MainMenu>();
+        await cut.WaitForAssertionAsync(() => cut.Find("[data-testid=continue]").HasAttribute("disabled").ShouldBeFalse(), Bound);   // the list is read off the thread
+
+        await cut.Find("[data-testid=continue]").ClickAsync(new());
+
+        Saves.Current.ShouldNotBeNull().LeagueName.ShouldBe("Seed 42");
+        Location.ShouldBe(landing);
+    }
+
+    [Theory]
+    [InlineData(false, "pick-team")]
+    [InlineData(true, "league")]
+    public async Task Load_lands_a_league_on_the_picker_until_it_has_a_team(bool picked, string landing)
+    {
+        await SavedLeagueAsync(picked);
+        var cut = Render<LoadScreen>();
+        await cut.WaitForElementAsync("[data-testid=open]", Bound);   // the list is read off the thread
+
+        await cut.Find("[data-testid=open]").ClickAsync(new());
+
+        Saves.Current.ShouldNotBeNull().LeagueName.ShouldBe("Seed 42");
+        Location.ShouldBe(landing);
+    }
+
+    // A league on disk, closed, as the menu finds it
+    private async Task SavedLeagueAsync(bool picked)
+    {
+        await OpenLeagueAsync(seed.League);
+        if (picked)
+        {
+            await PickAsync(5);
+        }
+
+        await Saves.CloseAsync(Xunit.TestContext.Current.CancellationToken);
     }
 }
 

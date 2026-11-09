@@ -1,8 +1,10 @@
+using GridironFrontOffice.Application;
 using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Application.Players;
 using GridironFrontOffice.Core.IDs;
 using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.Core.Players;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GridironFrontOffice.Infrastructure.Tests.Leagues;
 
@@ -49,7 +51,7 @@ public sealed class LeagueQueriesTests(QueriedSeed42 league)
 
 	[Fact]
 	public void Before_the_pick_the_header_is_the_league_at_camp_with_no_user_team() =>
-		league.HeaderBeforePick.ShouldBe(new LeagueHeaderDto("Seed 42", QueriedSeed42.Season, Phase.TrainingCamp, QueriedSeed42.CampDate, null));
+		league.HeaderBeforePick.ShouldBe(new LeagueHeaderDto("Seed 42", 42, QueriedSeed42.Season, Phase.TrainingCamp, QueriedSeed42.CampDate, null));
 
 	[Fact]
 	public async Task After_the_pick_the_header_carries_the_user_teams_summary()
@@ -148,4 +150,23 @@ public sealed class LeagueQueriesTests(QueriedSeed42 league)
 
 	// The same numbers averaged in another order can differ in the last bit
 	private static bool Close(PerceivedRating actual, double expected) => Math.Abs(actual.Estimate - expected) < 1e-9 && actual.Sigma == 0;
+}
+
+/// <summary>
+/// M1 WP8 (F-01 §8, §10): a save with the current schema and no league in it (made by M0's name-only New League) has
+/// no teams to summarize, so the picker can say so instead of failing.
+/// </summary>
+public sealed class EmptySaveQueriesTests
+{
+	private static CancellationToken Ct => TestContext.Current.CancellationToken;
+
+	[Fact]
+	public async Task A_save_without_a_league_has_no_summaries()
+	{
+		await using var save = await Data.TestSave.CreateAsync("Empty League", services => services.AddGfoApplication());
+		var leagues = save.Services.GetRequiredService<LeagueQueries>();
+
+		(await leagues.GetTeamSummariesAsync(Ct)).ShouldBeEmpty();
+		(await leagues.GetTeamSummaryAsync(new TeamID(1), Ct)).ShouldBeNull();
+	}
 }

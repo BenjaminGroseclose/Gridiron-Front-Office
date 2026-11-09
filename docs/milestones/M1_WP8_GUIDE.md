@@ -1,8 +1,8 @@
 # M1 · WP8 builder's guide: the New League wizard v0 and team tint
 
-> **Status:** **Ready to build** ([F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md) accepted 2026-11-05 as [D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted); this guide written 2026-11-04, §10 answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP8](M1_THE_LEAGUE.md#wp8--new-league-wizard-v0-and-team-tint-m) · **Size:** M
+> **Status:** **Ready to build** ([F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md) accepted 2026-11-05 as [D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted); this guide written 2026-11-04 and checked against the code 2026-11-07, step one amended the same day by [D-097](../DECISIONS.md#d-097-the-seed-field-opens-with-a-random-seed-start-over-brings-back-only-the-name-only-the-button-generates), the pick moved to a summary page the same day by [D-099](../DECISIONS.md#d-099-new-league-ends-on-a-summary-of-the-league-and-the-team-where-take-over-picks-it-the-leagues-settings-join-it-later), §10 answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP8](M1_THE_LEAGUE.md#wp8--new-league-wizard-v0-and-team-tint-m) · **Size:** M
 >
-> WP8 is the first time you can start a real league and play as a team. M0's name-only New League page becomes a two-step wizard. Step one takes a name and an optional seed, then **Generate** runs WP5's `CreateLeague` with progress. Step two shows all 32 teams as cards (crest, roster strength, cap space) from WP6's summaries, drawn with WP7's components. A click marks a card, and **Take over** runs WP5's `PickUserTeamAsync` and opens the league at its home. From then on the app wears the team's primary color through M0's `GfoThemeService`, and the load screen and Continue name each league's team, season and phase. Nothing in Core or the schema changes. When WP8 is done, the M1 plan's item 1 works end to end, and the exit's "the app wears the user team's colors in both modes, with readable text" holds for all 32 teams.
+> WP8 is the first time you can start a real league and play as a team. M0's name-only New League page becomes a three-step wizard. Step one takes a name and an optional seed, then **Generate** runs WP5's `CreateLeague` with progress. Step two shows all 32 teams as cards (crest, roster strength, cap space) from WP6's summaries, drawn with WP7's components. A click marks a card, and **Next** opens step three, a summary of the league and that team, whose **Take over** runs WP5's `PickUserTeamAsync` and opens the league at its home. From then on the app wears the team's primary color through M0's `GfoThemeService`, and the load screen and Continue name each league's team, season and phase. Nothing in Core or the schema changes. When WP8 is done, the M1 plan's item 1 works end to end, and the exit's "the app wears the user team's colors in both modes, with readable text" holds for all 32 teams.
 
 ---
 
@@ -43,18 +43,20 @@ src/UI.Components/Theming/
 ├─ AccentColors.cs                     + StateFills: hover, pressed and selected, away from the text (§3.2)
 └─ StadiumTheme.cs                     sets Fluent's three brand state slots from them
 src/UI/
-├─ _Imports.razor                      + @using …UI.Football, …Application.Leagues (WP7's files bring their own)
+├─ _Imports.razor                      + @using …UI.Football, …UI.State, …Application.Leagues (WP7's files bring their own)
 ├─ Menu/NewLeaguePage.razor (+ .css)   step one: the name, the seed, Generate with progress (§3.1)
-├─ Menu/SeedText.cs                    the seed field: empty is random, digits are the seed
-├─ Menu/TeamPickerPage.razor (+ .css)  /pick-team: the 32 cards by division, the marked card, Take over, Start over
+├─ Menu/SeedText.cs                    the seed field: a random seed to start, digits are the seed
+├─ Menu/TeamPickerPage.razor (+ .css)  /pick-team: the league's hero band, the 32 cards by conference, Next, Start over
 ├─ Menu/TeamPickCard.razor (+ .css)    one team: crest, name, division, strength, cap space; marked or not
-├─ Menu/SaveActions.cs                 + LandingAsync, CreateLeagueAsync, PickAsync, StartOverAsync; − CreateAsync (M0's)
+├─ Menu/Finalize.razor (+ .css)        /finalize: the league's hero band, the marked team, Back, Take over (D-099)
+├─ Menu/LeagueHero.razor (+ .css)      the hero band: the step's heading, the league's name, season and seed
+├─ Menu/SaveActions.cs                 + LandingAsync, CreateLeagueAsync, PickAsync, StartOverAsync, WithTeam; − CreateAsync (M0's)
 ├─ Menu/SaveCardView.razor (+ .css)    + the crest and the league line (§3.3)
 ├─ Menu/SaveCardText.cs                + League: "New York Excelsiors · 2026 · Training Camp"
 ├─ Menu/MainMenu.razor (+ .css)        Continue names the team, with its crest
 ├─ Football/Phases.cs                  Phase.Text(): "Training Camp", "Re-sign & Tag Window", …
 ├─ League/LeagueHome.razor             a league without a team goes to the picker
-├─ Shell/MenuLayout.razor              the menu shell, for the two wizard pages (§2)
+├─ Shell/MenuLayout.razor              the menu shell, for the wizard's three pages (§2)
 └─ Shell/AppearanceSync.razor          + the user team's primary, from GameStateStore (§3.2)
 src/DevHost/Components/ (Claude)
 ├─ GalleryLayout.razor                 + the 32 team colors beside the sample tints
@@ -70,20 +72,24 @@ D-095 settled §10's four questions. These are the smaller choices, so the code,
 
 | Choice | Rule | Why |
 |---|---|---|
-| **Two routes, one per step** | `/new` takes the name and seed; `/pick-team` is the picker. The picker serves any open league without a user team, not only one just generated | An unpicked league must reopen to the picker after a close, a crash or restoring its `created` snapshot (WP5 §2). One route for all of them |
-| **Where a league lands** | `SaveActions.LandingAsync()`: the picker while the open league's header has no user team, its home once it does. `OpenAsync` (Continue and Load) uses it. `LeagueHome` sends a league without a team to the picker, and the picker sends a league with one home | One rule, in the class that already turns save results into navigation. No second pick ever shows (WP5 §2) |
-| **The menu shell for both steps** | `/new` and `/pick-team` declare `@layout MenuLayout`: the app bar as the title bar, no league context, no navigation. `MainLayout` stays as it is | `MainLayout` switches to the league shell on `SaveOpened`, which `CreateLeague` raises before the wizard navigates: without this, step one would flash inside the league shell. And the league's navigation has nothing to show before there's a team |
+| **Three routes, one per step** | `/new` takes the name and seed; `/pick-team` is the picker; `/finalize?team={TeamID}` is the summary (D-099). The picker serves any open league without a user team, not only one just generated | An unpicked league must reopen to the picker after a close, a crash or restoring its `created` snapshot (WP5 §2). One route for all of them |
+| **Where a league lands** | `SaveActions.LandingAsync()`: the picker while the open league's header has no user team, its home once it does. `OpenAsync` (Continue and Load) uses it, and so does `LeagueHome` to send a league without a team to the picker. The picker and the summary send a league with one home. No league lands on the summary | One rule, in the class that already turns save results into navigation. It reads the header fresh: `GameStateStore` is still reloading when Take over lands on Home (§7). No second pick ever shows (WP5 §2) |
+| **The menu shell for every step** | `/new`, `/pick-team` and `/finalize` declare `@layout MenuLayout`: the app bar as the title bar, no league context, no navigation, plus `ClientDiagnostics` and `FluentProviders` as `MainLayout` has them. `MainLayout` stays as it is | `MainLayout` switches to the league shell on `SaveOpened`, which `CreateLeague` raises before the wizard navigates: without this, step one would flash inside the league shell. And the league's navigation has nothing to show before there's a team. The providers live in the layout, so a page without them has no dialogs or toasts |
 | **The name is checked before generating** | `SaveRules.CheckLeagueName(name)` returns the trimmed name or `SaveErrors.InvalidName`, with M0's two messages. `SaveManager.CreateAsync` calls it, and so does step one before it generates | Generating first would cost half a second to learn the name was blank. One rule, so the field and the save say the same thing |
-| **The seed** | A `FluentTextInput` with `InputMode="TextInputMode.Numeric"` and the placeholder "Random". Empty draws 1–999,999,999 (`SeedText.Random`). Typed, digits only, any `ulong`. Anything else: "A seed is a whole number, up to 18446744073709551615." under the field | A random seed short enough to read out. A number input can't hold a `ulong` (JavaScript numbers lose digits past 2^53), so the field is text |
+| **The seed** | A required `FluentTextInput` with `InputMode="TextInputMode.Numeric"`. It opens holding a random seed from 1–999,999,999 (`SeedText.Random`), after Start over too. Typed, digits only, any `ulong`. Anything else, empty included: "A seed is a whole number, up to 18446744073709551615." under the field | You see the seed before you generate (D-097), and the field always holds the seed you'll get. A random seed is short enough to read out. A number input can't hold a `ulong` (JavaScript numbers lose digits past 2^53), so the field is text |
 | **The year** | `TimeProvider.GetLocalNow().Year`, injected into step one | D-073. `TimeProvider` is already registered (Infrastructure), and the UI may read the clock |
 | **Progress** | An indeterminate `FluentProgressBar` and the step's name ("Generating the league", "Saving it") in a `role="status"` line, from `IProgress<LeagueCreationStep>`. The fields and buttons wait while it runs | WP5 reports two steps. Under a second in Debug, so a percentage would be invented |
 | **No Cancel button** | The token stays unused in v0 | Generation can't be interrupted (it's pure) and the whole create takes under a second (WP5 §2). M5's simulated prior season, at about 15 s, brings a real cancel |
-| **The picker reads once** | `GetHeaderAsync()` then `GetTeamSummariesAsync()`, each on the thread pool (`Task.Run`), grouped by `(ConferenceName, DivisionName)` in the summaries' order, which is the team set's: 8 groups of 4 | SQLite's async calls complete synchronously (WP6 §8), so without `Task.Run` the read holds the render thread and the progress bar never paints. The summaries are already in TeamID order |
-| **The card is a toggle button** | A native `<button type="button" aria-pressed>` styled as a card with tokens only: the crest at 48 px (`Decorative`), "City Nickname", "Conference · Division", three labelled `RatingChip`s (OVR, OFF, DEF) and "Cap space" with `Money.Format`. Its text is its accessible name. Disabled while a pick runs | The whole card is the target. A native button brings its role, its place in the Tab order, and Enter and Space, with no code. `aria-pressed` says which card is marked |
-| **Select, then take over** (D-095 #3) | A click marks one card, and a second card moves the mark. The footer's primary button reads "Take over the New York Excelsiors" once a card is marked, and "Take over" disabled before. It runs `PickUserTeamAsync`, then goes home. There's no dialog | Nothing is final until Take over, and the button names what it does |
-| **The marked card's look** | A 2 px `--gfo-accent` outline inside the card's radius, on `--gfo-selection`, the opaque row selection. Before the pick the accent is neutral, so the mark is the neutral blue | The marks VISUAL_DESIGN §3.3 gives selection. Opaque, so the chips keep their 4.5:1 (WP7 §7) |
-| **The footer stays in view** | `position: sticky; bottom: 0` on Surface 1 with a top Border, inside the page's scroll: Take over, Start over and Close league | Eight divisions run past one screen, and the button for the marked card must stay reachable |
-| **The seed on the picker** | `LeagueHeaderDto` gains `Seed` (`ulong`), read by `GetHeaderAsync`. The picker shows "Saturday League · seed 482913377 · 2026" | The seed is worth sharing at the moment you decide whether to keep the league. Starting over reads the name and seed from the same header |
+| **The picker reads once** | `GetHeaderAsync()` then `GetTeamSummariesAsync()`, each on the thread pool (`Task.Run`), grouped by `ConferenceName` in the summaries' order, which is the team set's: 2 groups of 16, each conference's divisions in turn. Each card names its division | SQLite's async calls complete synchronously (WP6 §8), so without `Task.Run` the read holds the render thread and the progress bar never paints. The summaries are already in TeamID order |
+| **The card is a toggle button** | A `FluentCard` with `Role="button"`, `aria-pressed` and its `OnClick`, in a slot `<div>` that fills the grid cell: the crest at 48 px (`Decorative`), "City Nickname · Division", three labelled `RatingChip`s (OVR, OFF, DEF) and "Cap space" with `Money.Format`. Its text is its accessible name. While Start over runs, a click does nothing and the card says `aria-disabled` | The whole card is the target. Fluent's card with a click handler is in the Tab order and presses on Enter and Space; `Role` turns its default `group` into a button, and `aria-pressed` says which card is marked. Fluent's card over a styled native button is the owner's choice (2026-11-07) |
+| **Select, then take over** (D-095 #3, D-099 #2) | A click marks one card, and a second card moves the mark. The footer's primary button is **Next**, disabled until a card is marked: it opens the summary with that team. The summary's primary button reads "Take over the New York Excelsiors": it runs `PickUserTeamAsync`, then goes home. There's no dialog | Nothing is final until Take over, and the button names what it does. The pick is confirmed on a page that shows only the league and the team, where the league's settings join it later |
+| **The marked card's look** | A 2 px `--gfo-accent` line inside the card's radius (its 1 px border in the accent plus a 1 px inset shadow), on `--gfo-selection`, the opaque row selection. It's set through the `is-marked` class the card gives `FluentCard`, more specific than Fluent's hover, so a marked card stays marked under the pointer. Before the pick the accent is neutral, so the mark is the neutral blue | The marks VISUAL_DESIGN §3.3 gives selection. Opaque, so the chips keep their 4.5:1 (WP7 §7) |
+| **The footer stays in view** | `position: sticky; bottom: 0` on Surface 1 with a top Border, inside the page's scroll: Next, Start over and Close league | Two conferences of 16 run past one screen, and the button for the marked card must stay reachable |
+| **The seed on the picker** | `LeagueHeaderDto` gains `Seed` (`ulong`), read by `GetHeaderAsync`. The picker's hero band shows it beside the season | The seed is worth sharing at the moment you decide whether to keep the league. Starting over reads the name from the same header |
+| **The picker's header** | `LeagueHero`, the hero band the summary shares (VISUAL_DESIGN §6): accent fill, Radius L, padding 28 × 30, on-accent text. "Pick your team" (the `h1`, Body L semibold) above the league's name in Display L, with Season and Seed beside it in Title, as a `<dl>`. No other text: the page says only that you pick a team. The conference headings are Title | The league's name, season and seed are what you'd share or come back to, so they're the page's biggest type. Before the pick the accent is neutral, so the band is the neutral blue |
+| **The summary** (D-099) | `LeagueHero` ("Ready to take over"), then "Your team" (Title) over a `FluentCard`: the crest at 96 px, "City Nickname" in Display M, "Conference · Division" Muted, and a `<dl>` of OVR, OFF and DEF chips, cap space and the stadium's name. Below it, "League settings" (Title) over another `FluentCard` holding an `EmptyState` (the Settings icon, "Nothing to set yet", and a line that injury frequency, Ironman, the clock and more arrive later and are set here). The footer has Back and Take over. The settings replace the empty state with their milestones | What you're taking, and nothing else: the league's name and seed above, the team below |
+| **The marked team travels in the route** | Next goes to `/finalize?team=7`, and Back to `/pick-team?team=7`, which marks that card on arrival (`SaveActions.WithTeam`). The summary reads the team with `GetTeamSummaryAsync`: with no team or an unknown one it goes to the picker, and after the pick it goes home | Nothing is saved between the steps (D-099 #4). A route survives a reload and needs no state service |
+| **The picker's grid** | `repeat(auto-fill, minmax(320px, 1fr))` with 12 px gaps: four cards to a row at the default window (1440 px), which is one division to a row, and three at the minimum (1280 px) | A card under 320 px wraps its chips under their labels: the chip row needs 228 px beside the crest (measured 2026-11-07) |
 | **Team tint** | `AppearanceSync` re-applies when Settings → Appearance or `GameStateStore.Header?.UserTeam?.Identity.PrimaryColor` changes, through `AppearanceMapping.From(settings, teamPrimary)`, which already takes the color | The store already reloads on `SaveOpened`, `UserTeamPicked` and `SaveClosed` (WP6). Before the pick and at the menus there's no user team, so the accent is neutral |
 | **The button states** (D-095 #1) | `AccentColors.StateFills(fill)`, set on Fluent's `Brand.BackgroundHover`, `BackgroundPressed` and `BackgroundSelected` by `StadiumTheme`: away from the text by 10%, 20% and 15% | Fluent's ramp always darkens, which buries the near-black text of 7 teams (§8) |
 | **The load screen reads the league only at this app's schema** | `SaveCatalog` reads the season, the phase and the user's team only for a `Ready` card. Other cards keep M0's columns | Another version's tables may differ, which is why the card's columns are read with raw SQL (PERSISTENCE §9). Until 1.0 every openable save is `Ready` (D-090) |
@@ -133,7 +139,7 @@ In `SaveManager.CreateAsync`, the two `if`s become a call to it, and `name` is i
 **The seed field** (`UI/Menu/SeedText.cs`):
 
 ```csharp
-/// <summary>New League's seed field (F-01 §4): empty is a random seed, digits are the seed, anything else is refused.</summary>
+/// <summary>New League's seed field (F-01 §4): it opens with a random seed, digits are the seed, anything else is refused.</summary>
 public static class SeedText
 {
     /// <summary>The largest random seed: nine digits, short enough to read out.</summary>
@@ -141,17 +147,11 @@ public static class SeedText
 
     public const string Refused = "A seed is a whole number, up to 18446744073709551615.";
 
-    /// <summary>The typed seed, <paramref name="random"/>'s when the field is empty, or null when it isn't a whole number.</summary>
-    public static ulong? Read(string? text, Func<ulong> random)
+    /// <summary>The seed in the field, or null when it isn't a whole number (an empty field isn't).</summary>
+    public static ulong? Read(string? text)
     {
-        ArgumentNullException.ThrowIfNull(random);
         var trimmed = text?.Trim() ?? "";
-        if (trimmed.Length == 0)
-        {
-            return random();
-        }
-
-        return trimmed.All(char.IsAsciiDigit)
+        return trimmed.Length > 0 && trimmed.All(char.IsAsciiDigit)
             && ulong.TryParse(trimmed, NumberStyles.None, CultureInfo.InvariantCulture, out var seed) ? seed : null;
     }
 
@@ -168,6 +168,16 @@ public static class SeedText
 
     /// <summary>New League's first step.</summary>
     public const string Wizard = "/new";
+
+    /// <summary>
+    /// New League's last step (D-099): the league and the marked team, where Take over picks it. The league's settings
+    /// join it with their milestones.
+    /// </summary>
+    public const string Finalize = "/finalize";
+
+    /// <summary>A route with the marked team: the summary shows it, and the picker marks it again.</summary>
+    public static string WithTeam(string route, TeamID team) =>
+        $"{route}?team={team.Value.ToString(CultureInfo.InvariantCulture)}";
 
     /// <summary>Where the open league lands: the picker until it has a user team, then its home.</summary>
     public async Task<string> LandingAsync()
@@ -190,7 +200,7 @@ public static class SeedText
     }
 
     /// <summary>
-    /// Makes the marked team the user's and opens the league's home (D-095 #3: the picker's Take over is the
+    /// Makes the marked team the user's and opens the league's home (D-095 #3, D-099: the summary's Take over is the
     /// confirmation). True when picked.
     /// </summary>
     public async Task<bool> PickAsync(TeamIdentityDto team)
@@ -209,7 +219,7 @@ public static class SeedText
 
     /// <summary>
     /// Asks first, then sends the open, unpicked league to the Recycle Bin and goes back to the first step with its
-    /// name and seed filled in (D-095 #2). False when it stays.
+    /// name filled in and a new random seed (D-095 #2, D-097 #3). False when it stays open.
     /// </summary>
     public async Task<bool> StartOverAsync()
     {
@@ -220,7 +230,7 @@ public static class SeedText
         }
 
         var header = await Task.Run(() => queries.GetHeaderAsync());
-        if (!await dialogs.ConfirmAsync("Start over?", $"{header.LeagueName} goes to the Recycle Bin, and you're back at the first step with its name and seed.",
+        if (!await dialogs.ConfirmAsync("Start over?", $"{header.LeagueName} goes to the Recycle Bin, and you're back at the first step with its name and a new seed.",
                 confirm: "Start over", cancel: "Keep this league"))
         {
             return false;
@@ -229,14 +239,16 @@ public static class SeedText
         var deleted = await saves.DeleteAsync(current.FilePath);
         if (deleted.IsFailure)
         {
+            // DeleteAsync closes the league before the Recycle Bin: it's closed either way, so back to the menu,
+            // where Continue still offers it
             await toasts.ErrorAsync("Couldn't start over", deleted.Error!.Message);
-            return false;
+            navigation.NavigateTo(MainMenu);
+            return true;
         }
 
         navigation.NavigateTo(navigation.GetUriWithQueryParameters(Wizard, new Dictionary<string, object?>
         {
             ["name"] = header.LeagueName,
-            ["seed"] = header.Seed.ToString(CultureInfo.InvariantCulture),
         }));
         return true;
     }
@@ -244,7 +256,7 @@ public static class SeedText
 
 `OpenAsync`'s last line becomes `navigation.NavigateTo(await LandingAsync());`.
 
-**Step one** (`UI/Menu/NewLeaguePage.razor`) keeps M0's frame, field and Enter handling, and gains the seed, the progress and the query parameters:
+**Step one** (`UI/Menu/NewLeaguePage.razor`) keeps M0's frame and field, drops M0's Enter handling (only the button generates, F-01 §8), and gains the seed, the progress and the query parameters:
 
 ```razor
 @page "/new"
@@ -261,11 +273,10 @@ public static class SeedText
 
     <FluentTextInput Label="League name" @bind-Value="_name" MaxLength="SaveRules.MaxLeagueNameLength" Autofocus="true"
                      Required="true" Disabled="_busy" Message="@_nameError" MessageState="@State(_nameError)"
-                     ChangeAfterKeyPress="SubmitKeys" OnChangeAfterKeyPress="OnNameEnterAsync" data-testid="league-name" />
-    <FluentTextInput Label="Seed" @bind-Value="_seed" Placeholder="Random" InputMode="TextInputMode.Numeric"
-                     Disabled="_busy" Message="@(_seedError ?? "Leave it empty for a random league. The same seed makes the same league.")"
-                     MessageState="@State(_seedError)" ChangeAfterKeyPress="SubmitKeys" OnChangeAfterKeyPress="OnSeedEnterAsync"
-                     data-testid="league-seed" />
+                     data-testid="league-name" />
+    <FluentTextInput Label="Seed" @bind-Value="_seed" InputMode="TextInputMode.Numeric" Required="true"
+                     Disabled="_busy" Message="@(_seedError ?? "Picked at random. The same seed makes the same league.")"
+                     MessageState="@State(_seedError)" data-testid="league-seed" />
 
     @if (_step is { } step)
     {
@@ -280,10 +291,7 @@ public static class SeedText
 </MenuFrame>
 
 @code {
-    private static readonly KeyPress[] SubmitKeys = [KeyPress.For(KeyCode.Enter)];
-
     [SupplyParameterFromQuery(Name = "name")] public string? StartName { get; set; }
-    [SupplyParameterFromQuery(Name = "seed")] public string? StartSeed { get; set; }
 
     private string? _name = "";
     private string? _seed = "";
@@ -300,15 +308,14 @@ public static class SeedText
             return;
         }
 
-        (_name, _seed) = (StartName ?? "", StartSeed ?? "");   // Start over brings them back (D-095 #2)
+        // Start over brings the name back (D-095 #2); the seed is always a new random one (D-097)
+        (_name, _seed) = (StartName ?? "", SeedText.Random().ToString(CultureInfo.InvariantCulture));
     }
 
     private static MessageState? State(string? error) => error is null ? null : MessageState.Error;
 
-    private Task OnNameEnterAsync(FluentKeyPressEventArgs e) { _name = e.Value; return GenerateAsync(); }
-
-    private Task OnSeedEnterAsync(FluentKeyPressEventArgs e) { _seed = e.Value; return GenerateAsync(); }
-
+    // Only the button generates (F-01 §8). Clicking it takes the focus off the field first, so the field's change
+    // event has already updated _name or _seed.
     private async Task GenerateAsync()
     {
         if (_busy)
@@ -317,7 +324,7 @@ public static class SeedText
         }
 
         var name = SaveRules.CheckLeagueName(_name);
-        var seed = SeedText.Read(_seed, SeedText.Random);
+        var seed = SeedText.Read(_seed);
         _nameError = name.IsFailure ? name.Error!.Message : null;
         _seedError = seed is null ? SeedText.Refused : null;
         if (name.IsFailure || seed is null)
@@ -353,6 +360,10 @@ On success the page is gone (the picker replaced it), so `_busy` stays set.
     </PageErrorBoundary>
 </AppShell>
 
+@* As in MainLayout: the providers live in the layout, and Start over's confirmation and every toast need them. *@
+<ClientDiagnostics />
+<FluentProviders />
+
 @code {
     private static readonly RenderFragment NoBrand = _ => { };
 }
@@ -370,15 +381,9 @@ On success the page is gone (the picker replaced it), so `_busy` stays set.
 
 <PageTitle>Pick your team · Gridiron Front Office</PageTitle>
 
-<main class="gfo-picker" aria-labelledby="picker-title">
-    <header class="gfo-picker-header">
-        <h1 id="picker-title" class="gfo-display">Pick your team</h1>
-        @if (_header is { } header)
-        {
-            <p class="gfo-num" data-testid="picker-league">@header.LeagueName · seed @header.Seed · @header.Season</p>
-        }
-        <p>You're taking over a team whose GM was just let go. A stronger roster is an easier start.</p>
-    </header>
+@* A section, not a main: AppShell's content area is the page's one main landmark *@
+<section class="gfo-picker" aria-labelledby="picker-title">
+    <LeagueHero Heading="Pick your team" HeadingID="picker-title" League="_header" />
 
     @if (_teams is null)
     {
@@ -392,12 +397,14 @@ On success the page is gone (the picker replaced it), so `_busy` stays set.
     }
     else
     {
-        @foreach (var division in _teams.GroupBy(t => (t.ConferenceName, t.DivisionName)))
+        @* Two conferences of 16, each in the team set's order, so a conference's divisions follow one another and each
+           card names its own *@
+        @foreach (var conference in _teams.GroupBy(t => t.ConferenceName))
         {
-            <section class="gfo-picker-division" aria-label="@($"{division.Key.ConferenceName} {division.Key.DivisionName}")">
-                <h2>@division.Key.ConferenceName · @division.Key.DivisionName</h2>
+            <section class="gfo-picker-conference" aria-label="@conference.Key">
+                <h2 class="gfo-display">@conference.Key</h2>
                 <div class="gfo-picker-grid">
-                    @foreach (var team in division)
+                    @foreach (var team in conference)
                     {
                         <TeamPickCard Team="team" Selected="@(_selected?.Identity.TeamID == team.Identity.TeamID)"
                                       Disabled="_busy" OnSelect="Select" />
@@ -407,21 +414,22 @@ On success the page is gone (the picker replaced it), so `_busy` stays set.
         }
     }
 
-    @* Sticky at the bottom of the page's scroll (§2), so Take over stays in reach of any card *@
+    @* Sticky at the bottom of the page's scroll (§2), so Next stays in reach of any card *@
     <footer class="gfo-picker-actions">
         <FluentButton Disabled="_busy" OnClick="StartOverAsync" data-testid="start-over">Start over</FluentButton>
         <FluentButton Disabled="_busy" OnClick="Actions.CloseAsync" data-testid="close-league">Close league</FluentButton>
-        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_selected is null || _busy)" Loading="_busy"
-                      OnClick="TakeOverAsync" data-testid="take-over">
-            @(_selected is { } marked ? $"Take over the {marked.Identity.City} {marked.Identity.Nickname}" : "Take over")
-        </FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_selected is null || _busy)" OnClick="NextAsync"
+                      data-testid="next">Next</FluentButton>
     </footer>
-</main>
+</section>
 
 @code {
+    /// <summary>The team to mark on arrival: the summary's Back brings its team (D-099).</summary>
+    [SupplyParameterFromQuery(Name = "team")] public int? MarkedTeam { get; set; }
+
     private LeagueHeaderDto? _header;
     private IReadOnlyList<TeamSummaryDto>? _teams;
-    private TeamSummaryDto? _selected;   // the marked card (D-095 #3); nothing is picked until Take over
+    private TeamSummaryDto? _selected;   // the marked card (D-095 #3); nothing is picked until the summary's Take over
     private bool _busy;
 
     protected override async Task OnInitializedAsync()
@@ -441,6 +449,7 @@ On success the page is gone (the picker replaced it), so `_busy` stays set.
         }
 
         _teams = await Task.Run(() => Queries.GetTeamSummariesAsync());
+        _selected = _teams.FirstOrDefault(t => t.Identity.TeamID.Value == MarkedTeam);
     }
 
     private Task Select(TeamSummaryDto team)
@@ -449,15 +458,15 @@ On success the page is gone (the picker replaced it), so `_busy` stays set.
         return Task.CompletedTask;
     }
 
-    private async Task TakeOverAsync()
+    // To the summary (D-099), which picks nothing until its Take over
+    private Task NextAsync()
     {
-        if (_selected is not { } team)
+        if (_selected is { } team)
         {
-            return;
+            Navigation.NavigateTo(SaveActions.WithTeam(SaveActions.Finalize, team.Identity.TeamID));
         }
 
-        _busy = true;
-        _busy = await Actions.PickAsync(team.Identity);   // true: the page is going away
+        return Task.CompletedTask;
     }
 
     private async Task StartOverAsync()
@@ -468,38 +477,246 @@ On success the page is gone (the picker replaced it), so `_busy` stays set.
 }
 ```
 
-**One card** (`UI/Menu/TeamPickCard.razor`). Style it with tokens only: Surface 1, Radius M, a 1 px Border, Surface 2 on hover, Fluent's focus ring on `:focus-visible`, and the marked look (§2) on `[aria-pressed="true"]`.
+The picker's stylesheet (`TeamPickerPage.razor.css`) brings its own padding (20 px 24 px, as `.gfo-menu` does): `MenuLayout` bleeds, so the content area adds none. It's a flex column at least the content area's height. The content area is the scroll, so the footer's `position: sticky` sticks to its bottom, and its `margin-top: auto` keeps it there when the page is short (the empty state). The band is `LeagueHero`'s (below), and the grid and the footer follow §2.
+
+**One card** (`UI/Menu/TeamPickCard.razor`, with `TeamPickCard.razor.css`). Fluent paints the card (Surface 1, Radius M, a 1 px Border, its hover and its focus ring). The stylesheet adds three things: the slot is a grid, so the card's `Height="100%"` fills the cell (Fluent's card is `height: fit-content`); the cap space line is Small, its label Muted and its amount in the text color, semibold; and `.gfo-pick-card-slot ::deep .gfo-pick-card.is-marked` paints the marked look (§2).
 
 ```razor
-@* UI/Menu/TeamPickCard.razor: one team on the picker (F-01 §8). The whole card is a toggle button: a click marks it
-   (D-095 #3), and its text is its name. *@
-<button type="button" class="gfo-pick-card" aria-pressed="@(Selected ? "true" : "false")" disabled="@Disabled"
-        @onclick="() => OnSelect.InvokeAsync(Team)" data-testid="pick-card">
-    <TeamMark Team="Team.Identity" Size="48" Decorative="true" />
-    <span class="gfo-pick-name">@Team.Identity.City @Team.Identity.Nickname</span>
-    <span class="gfo-pick-division">@Team.ConferenceName · @Team.DivisionName</span>
-    <span class="gfo-pick-strength">
-        <span>OVR <RatingChip Value="Team.RosterStrength.Overall" /></span>
-        <span>OFF <RatingChip Value="Team.RosterStrength.Offense" /></span>
-        <span>DEF <RatingChip Value="Team.RosterStrength.Defense" /></span>
-    </span>
-    <span class="gfo-pick-cap">Cap space <span class="gfo-num">@Money.Format(Team.CapSpace)</span></span>
-</button>
+@* One team on the picker (F-01 §8). The whole card is a toggle button: a click, Enter or Space marks it (D-095 #3).
+   The slot is the scoped stylesheet's anchor: FluentCard's own element doesn't carry this component's scope, so the
+   marked look reaches it through ::deep and the class given here. *@
+<div class="gfo-pick-card-slot">
+<FluentCard Class="@(Selected ? "gfo-pick-card is-marked" : "gfo-pick-card")" Width="100%" Height="100%" Role="button"
+            OnClick="MarkAsync" aria-pressed="@(Selected ? "true" : "false")" aria-disabled="@(Disabled ? "true" : null)"
+            data-testid="pick-card">
+    <FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12px">
+        <TeamMark Team="Team.Identity" Size="48" Decorative="true" />
+        <FluentStack Orientation="Orientation.Vertical">
+            <FluentText Size="TextSize.Size400">@Team.Identity.City @Team.Identity.Nickname · <span class="gfo-pick-division">@Team.DivisionName</span></FluentText>
+            <FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12px">
+                <span>OVR <RatingChip Value="Team.RosterStrength.Overall" /></span>
+                <span>OFF <RatingChip Value="Team.RosterStrength.Offense" /></span>
+                <span>DEF <RatingChip Value="Team.RosterStrength.Defense" /></span>
+            </FluentStack>
+            <span class="gfo-pick-cap">Cap space <span class="gfo-num">@Money.Format(Team.CapSpace)</span></span>
+        </FluentStack>
+    </FluentStack>
+</FluentCard>
+</div>
 
 @code {
     [Parameter, EditorRequired] public TeamSummaryDto Team { get; set; } = default!;
 
-    /// <summary>The marked card: the one Take over would pick.</summary>
+    /// <summary>The marked card: the one Next takes to the summary.</summary>
     [Parameter] public bool Selected { get; set; }
 
-    /// <summary>A pick is running: every card waits.</summary>
+    /// <summary>Start over is running: every card waits.</summary>
     [Parameter] public bool Disabled { get; set; }
 
     [Parameter] public EventCallback<TeamSummaryDto> OnSelect { get; set; }
+
+    // While Start over runs, the mark stays where it is
+    private Task MarkAsync() => Disabled ? Task.CompletedTask : OnSelect.InvokeAsync(Team);
 }
 ```
 
-**`LeagueHome`** keeps its redirect to the menu, and adds the other one: once `GameStateStore.Header` has loaded with no user team, `Navigation.NavigateTo(SaveActions.TeamPicker, replace: true)`. WP9 rebuilds Home at `/home` (the plan's route fix); the rule moves with it.
+**The hero band** (`UI/Menu/LeagueHero.razor`, with `LeagueHero.razor.css`), shared by the picker and the summary. Its stylesheet is the band of §2: the accent fill, Radius L, 28 × 30 padding and on-accent text; the heading Body L semibold; the name Display L (56 px); Season and Seed as a `<dl>` in Title (30 px), the seed selectable.
+
+```razor
+@using GridironFrontOffice.Application.Leagues
+@* The hero band of the New League steps after Generate (VISUAL_DESIGN.md §6, F-01 §8): the step's heading above the
+   league's name, with its season and seed beside it. Before the pick the accent is neutral, so the band is too. *@
+<header class="gfo-league-hero">
+    <div>
+        <h1 id="@HeadingID" class="gfo-league-hero-heading">@Heading</h1>
+        @if (League is { } league)
+        {
+            <p class="gfo-league-hero-name gfo-display" data-testid="hero-league">@league.LeagueName</p>
+        }
+    </div>
+    @if (League is { } facts)
+    {
+        <dl class="gfo-league-hero-facts">
+            <div>
+                <dt>Season</dt>
+                <dd class="gfo-display gfo-num" data-testid="hero-season">@facts.Season</dd>
+            </div>
+            <div>
+                <dt>Seed</dt>
+                <dd class="gfo-display gfo-num" data-testid="hero-seed">@facts.Seed</dd>
+            </div>
+        </dl>
+    }
+</header>
+
+@code {
+    /// <summary>The page's heading: what the step asks.</summary>
+    [Parameter, EditorRequired] public string Heading { get; set; } = "";
+
+    /// <summary>The heading's id, for the page's <c>aria-labelledby</c>.</summary>
+    [Parameter, EditorRequired] public string HeadingID { get; set; } = "";
+
+    /// <summary>The open league; null while it loads, when only the heading shows.</summary>
+    [Parameter] public LeagueHeaderDto? League { get; set; }
+}
+```
+
+**The summary** (`UI/Menu/Finalize.razor`, with `Finalize.razor.css`, D-099). Its stylesheet repeats the picker's page padding and sticky footer. The card's padding (24 px) reaches `FluentCard` through `.gfo-finalize-team ::deep .gfo-finalize-card`; the card's content is the page's own markup, so it's scoped as usual: the identity is a flex row (crest, then the name in Display M, 40 px, over the division, Muted), and the facts are a wrapping flex `<dl>`, each label Muted and each value semibold at a chip's height. The settings placeholder's `EmptyState` sits in the second card, its own padding cut to 8 px through `.gfo-finalize ::deep .gfo-finalize-placeholder`. At the minimum window the page then scrolls about 55 px under the sticky footer.
+
+```razor
+@page "/finalize"
+@using GridironFrontOffice.Application.Leagues
+@using GridironFrontOffice.Core.IDs
+@layout MenuLayout
+@inject ISaveManager Saves
+@inject LeagueQueries Queries
+@inject SaveActions Actions
+@inject NavigationManager Navigation
+
+<PageTitle>Take over · Gridiron Front Office</PageTitle>
+
+@* New League's last step (F-01 §4, D-099): the league and the team marked on the picker, and Take over, which picks it.
+   Nothing is picked before Take over. A section, not a main: AppShell's content area is the page's one main landmark. *@
+<section class="gfo-finalize" aria-labelledby="finalize-title">
+    <LeagueHero Heading="Ready to take over" HeadingID="finalize-title" League="_header" />
+
+    @if (_team is not { } team)
+    {
+        <FluentProgressBar />
+    }
+    else
+    {
+        <section class="gfo-finalize-team" aria-labelledby="finalize-team-title">
+            <h2 id="finalize-team-title" class="gfo-display">Your team</h2>
+            <FluentCard Class="gfo-finalize-card" Width="100%" data-testid="finalize-team">
+                <div class="gfo-finalize-body">
+                    <div class="gfo-finalize-identity">
+                        <TeamMark Team="team.Identity" Size="96" Decorative="true" />
+                        <div>
+                            <p class="gfo-finalize-name gfo-display">@team.Identity.City @team.Identity.Nickname</p>
+                            <p class="gfo-finalize-division">@team.ConferenceName · @team.DivisionName</p>
+                        </div>
+                    </div>
+                    <dl class="gfo-finalize-facts">
+                        <div>
+                            <dt>OVR</dt>
+                            <dd><RatingChip Value="team.RosterStrength.Overall" /></dd>
+                        </div>
+                        <div>
+                            <dt>OFF</dt>
+                            <dd><RatingChip Value="team.RosterStrength.Offense" /></dd>
+                        </div>
+                        <div>
+                            <dt>DEF</dt>
+                            <dd><RatingChip Value="team.RosterStrength.Defense" /></dd>
+                        </div>
+                        <div>
+                            <dt>Cap space</dt>
+                            <dd class="gfo-num">@Money.Format(team.CapSpace)</dd>
+                        </div>
+                        <div>
+                            <dt>Stadium</dt>
+                            <dd>@team.StadiumName</dd>
+                        </div>
+                    </dl>
+                </div>
+            </FluentCard>
+        </section>
+
+        @* The league's settings (D-099 #3) arrive in this section with their milestones (F-01 §2: injury frequency in M3,
+           Ironman in M5, the clock in M6), and Take over confirms them with the pick. Until the first one, a placeholder
+           holds their place. *@
+        <section class="gfo-finalize-settings" aria-labelledby="finalize-settings-title">
+            <h2 id="finalize-settings-title" class="gfo-display">League settings</h2>
+            <FluentCard Class="gfo-finalize-card" Width="100%" data-testid="finalize-settings">
+                <EmptyState Title="Nothing to set yet" Icon="IconName.Settings" Class="gfo-finalize-placeholder">
+                    Injury frequency, Ironman, the clock and more arrive in later versions. You'll set them here before
+                    you take over.
+                </EmptyState>
+            </FluentCard>
+        </section>
+    }
+
+    @* At the bottom of the content area, as on the picker *@
+    <footer class="gfo-finalize-actions">
+        <FluentButton Disabled="_busy" OnClick="BackAsync" data-testid="back">Back</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(_team is null || _busy)" Loading="_busy"
+                      OnClick="TakeOverAsync" data-testid="take-over">
+            @(_team is { } marked ? $"Take over the {marked.Identity.City} {marked.Identity.Nickname}" : "Take over")
+        </FluentButton>
+    </footer>
+</section>
+
+@code {
+    /// <summary>The team marked on the picker.</summary>
+    [SupplyParameterFromQuery(Name = "team")] public int? MarkedTeam { get; set; }
+
+    private LeagueHeaderDto? _header;
+    private TeamSummaryDto? _team;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Saves.Current is null)
+        {
+            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            return;
+        }
+
+        // On the thread pool: SQLite's async calls complete synchronously, and the bar must paint
+        _header = await Task.Run(() => Queries.GetHeaderAsync());
+        if (_header.UserTeam is not null)
+        {
+            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);   // no second pick
+            return;
+        }
+
+        _team = MarkedTeam is { } id ? await Task.Run(() => Queries.GetTeamSummaryAsync(new TeamID(id))) : null;
+        if (_team is null)
+        {
+            Navigation.NavigateTo(SaveActions.TeamPicker, replace: true);   // no team to take over: pick one
+        }
+    }
+
+    // Back to the picker with this team still marked
+    private Task BackAsync()
+    {
+        Navigation.NavigateTo(_team is { } team ? SaveActions.WithTeam(SaveActions.TeamPicker, team.Identity.TeamID) : SaveActions.TeamPicker);
+        return Task.CompletedTask;
+    }
+
+    private async Task TakeOverAsync()
+    {
+        if (_team is not { } team)
+        {
+            return;
+        }
+
+        _busy = true;
+        _busy = await Actions.PickAsync(team.Identity);   // true: the page is going away
+    }
+}
+```
+
+**`LeagueHome`** keeps its redirect to the menu, and adds the other one through `LandingAsync` (§2), never through `GameStateStore.Header`, which still has no team for a moment after Take over (§7):
+
+```csharp
+    protected override async Task OnInitializedAsync()
+    {
+        if (Saves.Current is null)
+        {
+            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            return;
+        }
+
+        if (await Actions.LandingAsync() == SaveActions.TeamPicker)
+        {
+            Navigation.NavigateTo(SaveActions.TeamPicker, replace: true);
+        }
+    }
+```
+
+WP9 rebuilds Home at `/home` (the plan's route fix); the rule moves with it.
 
 ### 3.2 Slice 2: team tint
 
@@ -650,7 +867,7 @@ public static class Phases
 ### 3.4 The gallery (Claude)
 
 - **The toolbar** gets the 32 team colors next to the three sample tints, so any gallery page can be checked in any team's colors.
-- **`/_gallery/team-picker`:** the 32 `TeamPickCard`s grouped by division, built from the shipped data with fixed sample strengths and cap space (as the Teams page builds identities), including the 7 dark-text teams.
+- **`/_gallery/team-picker`:** the 32 `TeamPickCard`s grouped by conference, built from the shipped data with fixed sample strengths and cap space (as the Teams page builds identities), including the 7 dark-text teams.
 - **`/_gallery/save-cards`:** a `SaveCardView` in each state: a picked league, an unpicked one, an upgrade, a newer and an older build, and an unreadable file.
 - **The Theme page** gains the three button states, each with its contrast against the on-accent text.
 
@@ -658,28 +875,38 @@ public static class Phases
 
 Per slice, each proven to fail on a planted problem.
 
+**The setup (built with slice 1).** A screen that reads or writes a league runs on `TestDoubles/RealScreenContext`: the hosts' Infrastructure, Application and UI services in bUnit over a temp folder (D-093), with fakes only for the platform (its Recycle Bin records the paths), dialogs, toasts, settings and the clock, a `FixedClock` in 2031. M0's menu tests keep `SaveScreenContext`'s fakes, which now take `LeagueQueries`, `CreateLeague` and `LeagueCommands` from a `RealApp` beside them: a test whose screen lands a league generates one there first. Planted bugs in `.razor` files go through a `CustomAfterMicrosoftCommonTargets` swap (CLAUDE.md has the recipe).
+
 **Slice 1**
 - **`SaveRulesTests`** (Application.Tests): a blank or all-space name, 60 and 61 characters, trimming; `SaveManager`'s messages unchanged.
-- **`SeedTextTests`** (UI.Tests): empty → the random one; "42", " 42 ", "007" → 42, 42, 7; 0 and `ulong.MaxValue`; refused: "-1", "4.2", "1e9", "12a", one past `ulong.MaxValue`; `Random` stays within 1–999,999,999.
+- **`SeedTextTests`** (UI.Tests): "42", " 42 ", "007" → 42, 42, 7; 0 and `ulong.MaxValue`; refused: empty, all spaces, "-1", "4.2", "1e9", "12a", one past `ulong.MaxValue`; `Random` stays within 1–999,999,999.
 - **`NewLeagueWizardTests`** (UI.Tests, `RealApp`):
-  - a refused name or seed is explained under its field, and no save exists;
+  - the seed field opens with a random seed in 1–999,999,999, and Generate without touching it makes the league with that seed;
+  - a refused name or seed (a cleared field included) is explained under its field, and no save exists;
   - Generate shows its steps, creates the league with the typed seed and this year (a `FakeTimeProvider`), and lands on the picker;
-  - Start over's name and seed come back in the fields.
+  - Start over's name comes back in its field, with a new random seed.
 - **`TeamPickerTests`** (UI.Tests, `RealApp`):
-  - 32 cards in team-set order, in 8 labelled divisions;
+  - 32 cards in team-set order, in 2 labelled conferences;
   - a card's name, division, three chips and cap space;
-  - the header's league, seed and year;
-  - nothing is marked at first, and Take over waits;
-  - a click marks one card (`aria-pressed`) and names it on Take over, and a second click moves the mark;
+  - the hero band's league name, season and seed;
+  - nothing is marked at first, and Next waits;
+  - a click marks one card (`aria-pressed`), and a second click moves the mark;
   - marking alone picks nothing (the header still has no user team);
-  - Take over sets the marked team as the user's and goes home;
-  - Start over asks, deletes the league (the fake Recycle Bin) and goes to `/new` with the name and seed;
+  - Next opens `/finalize?team=` for the marked team, and `?team=` marks that card on arrival;
+  - Start over asks, deletes the league (the fake Recycle Bin) and goes to `/new` with the name;
   - a league with a team goes home, and no league goes to the menu;
   - a save with no teams shows the empty state.
+- **`FinalizeTests`** (UI.Tests, `RealApp`, D-099):
+  - the hero band's league name, season and seed, and the team's name, division, three chips, cap space and stadium;
+  - League settings shows its placeholder;
+  - Take over names the team, sets it as the user's and goes home; nothing is picked before it;
+  - Back goes to the picker with the team, and picks nothing;
+  - no team or an unknown one goes to the picker, a league with a team goes home, and no league goes to the menu.
+- **`EmptySaveQueriesTests`** (Infrastructure.Tests): a save with no league in it has no team summaries, and no summary for team 1, so the picker can show its empty state.
 - **`MenuScreenTests`:**
-  - Continue and Load land an unpicked league on the picker and a picked one at home;
+  - Continue and Load land an unpicked league on the picker and a picked one at home (`MenuLandingTests`, on real saves);
   - `LeagueHome` sends an unpicked league to the picker;
-  - M0's two New League cases are replaced by the wizard's.
+  - M0's New League cases are replaced by the wizard's, and its upgrade and Continue cases land on the picker.
 
 **Slice 2**
 - **`AccentColorsTests`** (UI.Components.Tests):
@@ -723,7 +950,7 @@ Per slice, each proven to fail on a planted problem.
 - [ ] Checked in a visible pane: create → pick → Home, Start over, Continue to an unpicked league, and the load screen, in Dark and Light with the 7 dark-text teams and a few others. Every button state holds 4.5:1 (§8's measurement, repeated on the built code), and the marked card's text and chips hold theirs on `--gfo-selection`. Then the same flow in the desktop app (D-095 #4).
 - [ ] `./build.ps1` green.
 - [ ] Reviewed against this guide, F-01, F-02 §8, PERSISTENCE §9, UI_DESIGN_SYSTEM §3.2 and §7, VISUAL_DESIGN §3.3 and §10, and D-095 (your §10 answers).
-- [ ] Docs: F-01 as built; the plan's WP8 results; PERSISTENCE §9 (the card's league line); UI_DESIGN_SYSTEM §3.2 (the button states) and §7 (the two wizard routes, `MenuLayout`); VISUAL_DESIGN §3.3 (the state rule); CLAUDE.md's gotchas.
+- [ ] Docs: F-01 as built; the plan's WP8 results; PERSISTENCE §9 (the card's league line); UI_DESIGN_SYSTEM §3.2 (the button states) and §7 (the three wizard routes, `MenuLayout`); VISUAL_DESIGN §3.3 (the state rule); CLAUDE.md's gotchas.
 - [ ] Committed by you: one commit per slice, each with its tests (D-076), then the docs.
 
 ## 6. Order of work
@@ -738,6 +965,9 @@ Delete your dev saves made by M0's New League page since WP5: they have the curr
 ## 7. Gotchas
 
 - **`SaveOpened` arrives before the wizard moves on.** `CreateLeague` returns after `SaveManager` has raised it, and `MainLayout` switches to the league shell on it. That's why both wizard pages use `MenuLayout`: in `MainLayout`, step one would flash inside the league shell before the picker replaces it.
+- **The providers live in the layout.** `FluentProviders` (dialogs, toasts, tooltips) and `ClientDiagnostics` are in `MainLayout`, not the router's root, so `MenuLayout` carries its own. Without them, Start over's confirmation has nowhere to render.
+- **The store lags the pick.** `UserTeamPicked` starts `GameStateStore`'s reload on the thread pool, and `PickAsync` navigates home at once: `Header` still has no user team when `LeagueHome` first renders. Decide where a league lands from a fresh read (`LandingAsync`), never from the store. Following the store, Home would bounce to the picker and back.
+- **A failed Start over has already closed the league.** `SaveManager.DeleteAsync` closes the open save before it calls the Recycle Bin, so a cancelled or failed delete leaves no league open: go to the main menu.
 - **Read on the thread pool in a page.** SQLite's async calls complete synchronously (WP6 §8), so `await Queries.GetTeamSummariesAsync()` in `OnInitializedAsync` holds the render thread until it's done, and the progress bar never shows. Wrap each read in `Task.Run`, as `GameStateStore` does.
 - **`Progress<T>` posts to the context it was created on.** Create it in the handler, on the renderer's context, and its callback can call `StateHasChanged`. A report can land after `RunAsync` has returned, so ignore reports once the page has moved on (the `_busy` check).
 - **A seed is a `ulong`, so the field is text.** `FluentNumberInput` goes through JavaScript numbers, which lose digits past 2^53. `ulong.TryParse` with `NumberStyles.None` refuses signs, decimals, exponents and spaces inside, after the trim.
@@ -747,6 +977,7 @@ Delete your dev saves made by M0's New League page since WP5: they have the curr
 - **`AppearanceSync` renders in both layouts,** so each layout switch builds a new one, which applies on its first render. With the tuple check, that's one apply per switch, as M0's was.
 - **Fluent's typed theme has the state slots** (`Theme.Colors.Brand.BackgroundHover`, `BackgroundPressed`, `BackgroundSelected`, checked in the 5.0.1 package). `StadiumTheme` sets them like the brand slots it already sets. Set them after `CreateCustomThemeAsync`, never with CSS: no deep selectors into Fluent (UI_DESIGN_SYSTEM §4).
 - **Your M0-era dev saves have no teams.** Made by the name-only page after WP5's schema, they're `Ready` and open to the picker's empty state. Delete them from the load screen.
+- **`FluentCard` becomes a toggle button through its own parameters.** With `OnClick` it's focusable (`tabindex="0"`) and presses on Enter and Space. `Role="button"` replaces its default `group`, and `aria-pressed`, `aria-disabled` and `data-testid` pass through to its element. Its CSS is `height: fit-content`, so a row of cards evens out only with `Height="100%"` in a stretched slot. Its element doesn't carry the card component's scope: style it through a class given with `Class`, under `::deep` from an element of the component's own.
 - **The DevHost locks its DLLs,** and the watcher only knows files that existed when it started: restart it after slice 1's new files, and stop it before `./build.ps1`.
 
 ## 8. What Claude checked (2026-11-04)
@@ -773,6 +1004,6 @@ Delete your dev saves made by M0's New League page since WP5: they have the curr
 
 Answered one by one ([D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)), three as recommended:
 1. ~~The button states for the 7 teams with near-black text?~~ → **One rule for all 32:** each state moves away from its text, by 10% (hover), 15% (selected) and 20% (pressed).
-2. ~~Trying another seed from the picker?~~ → **Start over:** after a confirmation, the unpicked league goes to the Recycle Bin and step one comes back with its name and seed.
+2. ~~Trying another seed from the picker?~~ → **Start over:** after a confirmation, the unpicked league goes to the Recycle Bin and step one comes back with its name and seed. Amended 2026-11-07 by [D-097](../DECISIONS.md#d-097-the-seed-field-opens-with-a-random-seed-start-over-brings-back-only-the-name-only-the-button-generates): the name only, with a new random seed.
 3. ~~Picking a team?~~ → **Select, then confirm** (your choice over the recommended dialog): a click marks a card, and Take over picks it.
 4. ~~The plan's end-to-end test in the desktop app?~~ → **A UI flow plus Claude's check** in the desktop app after each slice.

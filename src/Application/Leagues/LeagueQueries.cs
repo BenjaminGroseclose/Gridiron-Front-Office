@@ -24,7 +24,7 @@ public sealed class LeagueQueries(ISaveReader reader, IPerception perception)
 				? (await SummariesAsync(db, saveInfo, team, ct).ConfigureAwait(false)).Single()
 				: null;
 
-			return new LeagueHeaderDto(saveInfo.LeagueName, saveInfo.CurrentSeason, saveInfo.CurrentPhase,
+			return new LeagueHeaderDto(saveInfo.LeagueName, saveInfo.Seed, saveInfo.CurrentSeason, saveInfo.CurrentPhase,
 				saveInfo.CurrentDate, userTeam);
 		}, cancellationToken);
 

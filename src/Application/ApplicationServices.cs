@@ -18,6 +18,9 @@ public static class ApplicationServices
 		services.AddSingleton<IPerception, Perception>();
 		services.AddSingleton<LeagueQueries>();
 		services.AddSingleton<PlayerQueries>();
+		services.AddSingleton<LeagueGenerator>();
+		services.AddSingleton<CreateLeague>();
+		services.AddSingleton<LeagueCommands>();
 		return services;
 	}
 }

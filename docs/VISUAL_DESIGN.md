@@ -138,6 +138,8 @@ Rating chips are **pills**: background = the rating color at 20% (dark) / 14% (l
 | Label | 12 px / 1.3 | 600 | Section and field labels (sentence case) |
 | Micro | 11 px | 700, +0.04em | Position pills, badges |
 
+Where `FluentText` draws them ([D-100](DECISIONS.md#d-100-screens-are-built-from-fluents-layout-and-text-components-scoped-css-covers-only-what-they-cant)), Body L is Fluent's 16 px and Small its 12 px; Label, Body and the display sizes are unchanged. [UI_DESIGN_SYSTEM.md §3.5](architecture/UI_DESIGN_SYSTEM.md#35-typography) has the mapping.
+
 ---
 
 ## 5. Shape, space and elevation

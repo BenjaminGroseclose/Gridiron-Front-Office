@@ -70,7 +70,16 @@ internal sealed class RealApp : IAsyncDisposable
 		return created.Value;
 	}
 
-	/// <summary>Picks the user's team, as WP8's wizard will (UserTeamPicked).</summary>
+	/// <summary>Generates the seed-42 league for 2026 and opens it, as New League does: about half a second.</summary>
+	public async Task<OpenSave> GenerateLeagueAsync()
+	{
+		var created = await Services.GetRequiredService<CreateLeague>().RunAsync(new NewLeague("Seed 42", 42, 2026),
+			cancellationToken: TestContext.Current.CancellationToken);
+		created.IsSuccess.ShouldBeTrue(created.ToString());
+		return created.Value;
+	}
+
+	/// <summary>Picks the user's team, as the wizard's summary does (UserTeamPicked).</summary>
 	public async Task PickAsync(int team)
 	{
 		var picked = await new LeagueCommands(Writer, NullLogger<LeagueCommands>.Instance)

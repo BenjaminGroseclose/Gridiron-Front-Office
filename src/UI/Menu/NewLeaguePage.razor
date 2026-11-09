@@ -1,57 +1,84 @@
 @page "/new"
+@using GridironFrontOffice.Application.Leagues
+@layout MenuLayout
 @inject ISaveManager Saves
 @inject SaveActions Actions
 @inject NavigationManager Navigation
-@* New League, M0 version: a name only. The real wizard (team set, your team, settings) arrives in M1 (F-01).
-   Enter in the field creates, like the button. *@
+@inject TimeProvider Time
 
 <PageTitle>New league · Gridiron Front Office</PageTitle>
 
 <MenuFrame LabelledBy="new-title">
     <h1 id="new-title" class="gfo-new-title gfo-display">New league</h1>
-    <p class="gfo-new-hint">Just a name for now. Teams and players come with the league wizard.</p>
 
     <FluentTextInput Label="League name" @bind-Value="_name" MaxLength="SaveRules.MaxLeagueNameLength" Autofocus="true"
-                     Required="true" Message="@_error" MessageState="@(_error is null ? null : MessageState.Error)"
-                     ChangeAfterKeyPress="SubmitKeys" OnChangeAfterKeyPress="OnEnterAsync" data-testid="league-name" />
+                     Required="true" Disabled="_busy" Message="@_nameError" MessageState="@State(_nameError)"
+                     data-testid="league-name" />
+    <FluentTextInput Label="Seed" @bind-Value="_seed" InputMode="TextInputMode.Numeric" Required="true"
+                     Disabled="_busy" Message="@(_seedError ?? "Picked at random. The same seed makes the same league.")"
+                     MessageState="@State(_seedError)" data-testid="league-seed" />
+
+    @if (_step is { } step)
+    {
+        <FluentProgressBar />
+        <p class="gfo-new-step" role="status" data-testid="step">@(step == LeagueCreationStep.Generating ? "Generating the league" : "Saving it")</p>
+    }
 
     <div class="gfo-new-actions">
-				<FluentButton Appearance="ButtonAppearance.Outline" Color="var(--gfo-status-negative)" Loading="_busy" 
-						OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Back</FluentButton>
-        <FluentButton Appearance="ButtonAppearance.Primary" Loading="_busy" OnClick="CreateAsync" data-testid="create">Create league</FluentButton>
+        <FluentButton Disabled="_busy" OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Back</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Primary" Loading="_busy" OnClick="GenerateAsync" data-testid="generate">Generate</FluentButton>
     </div>
 </MenuFrame>
 
 @code {
-    private static readonly KeyPress[] SubmitKeys = [KeyPress.For(KeyCode.Enter)];
+    [SupplyParameterFromQuery(Name = "name")] public string? StartName { get; set; }
 
     private string? _name = "";
-    private string? _error;
+    private string? _seed = "";
+    private string? _nameError;
+    private string? _seedError;
+    private LeagueCreationStep? _step;
     private bool _busy;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (Saves.Current is not null)
         {
-            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);
+            Navigation.NavigateTo(await Actions.LandingAsync(), replace: true);
+            return;
         }
+
+        // Start over brings the name back (D-095 #2); the seed is always a new random one (D-097)
+        (_name, _seed) = (StartName ?? "", SeedText.Random().ToString(CultureInfo.InvariantCulture));
     }
 
-    private Task OnEnterAsync(FluentKeyPressEventArgs e)
-    {
-        _name = e.Value;
-        return CreateAsync();
-    }
+    private static MessageState? State(string? error) => error is null ? null : MessageState.Error;
 
-    private async Task CreateAsync()
+    // Only the button generates (D-097 #1). Clicking it takes the focus off the field first, so the field's change
+    // event has already updated _name or _seed.
+    private async Task GenerateAsync()
     {
         if (_busy)
         {
             return;
         }
 
+        var name = SaveRules.CheckLeagueName(_name);
+        var seed = SeedText.Read(_seed);
+        _nameError = name.IsFailure ? name.Error!.Message : null;
+        _seedError = seed is null ? SeedText.Refused : null;
+        if (name.IsFailure || seed is null)
+        {
+            return;
+        }
+
         _busy = true;
-        _error = (await Actions.CreateAsync(_name ?? ""))?.Message;
-        _busy = false;
+        // Created here, so each report is posted back to the renderer's context
+        var progress = new Progress<LeagueCreationStep>(s => { if (_busy) { _step = s; StateHasChanged(); } });
+        var refused = await Actions.CreateLeagueAsync(new NewLeague(name.Value, seed.Value, Time.GetLocalNow().Year), progress);
+        if (refused is not null)
+        {
+            (_busy, _step, _nameError) = (false, null, refused.Message);   // the only refusal is the name's
+        }
     }
 }

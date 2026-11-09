@@ -1,0 +1,25 @@
+/* The slot is the grid cell, and the card fills it (Height="100%": Fluent's card is fit-content), so a row's cards are
+   one height. */
+.gfo-pick-card-slot {
+  display: grid;
+}
+
+/* Small, Muted: the label; the amount in the text color */
+.gfo-pick-cap {
+  color: var(--colorNeutralForeground2);
+  font-size: 13px;
+}
+
+.gfo-pick-cap .gfo-num {
+  color: var(--colorNeutralForeground1);
+  font-weight: 600;
+}
+
+/* The marked card (M1 WP8 §2): a 2 px accent line inside the card's radius (its 1 px border plus 1 px inset) on the
+   opaque selection, so the chips keep their contrast. More specific than Fluent's hover, so a marked card stays
+   marked under the pointer. */
+.gfo-pick-card-slot ::deep .gfo-pick-card.is-marked {
+  border-color: var(--gfo-accent);
+  background-color: var(--gfo-selection);
+  box-shadow: inset 0 0 0 1px var(--gfo-accent);
+}

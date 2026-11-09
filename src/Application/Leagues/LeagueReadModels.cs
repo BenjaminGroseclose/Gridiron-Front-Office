@@ -17,4 +17,4 @@ public sealed record ConferenceDto(ConferenceID ConferenceID, string Key, string
 public sealed record DivisionDto(DivisionID DivisionID, string Key, string Name, IReadOnlyList<TeamIdentityDto> Teams);
 
 /// <summary>"Where am I": what the shell and Home show of the open league.</summary>
-public sealed record LeagueHeaderDto(string LeagueName, int Season, Phase Phase, DateOnly Date, TeamSummaryDto? UserTeam);
+public sealed record LeagueHeaderDto(string LeagueName, ulong Seed, int Season, Phase Phase, DateOnly Date, TeamSummaryDto? UserTeam);

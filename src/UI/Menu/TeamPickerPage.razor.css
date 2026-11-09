@@ -1,0 +1,39 @@
+/* The picker owns the content area (MenuLayout bleeds, so the shell adds no padding). The content area is the scroll,
+   so the footer's sticky bottom is the window's bottom. */
+.gfo-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 20px 24px 0;
+}
+
+/* Title */
+.gfo-picker-conference h2 {
+  margin: 0 0 12px;
+  font-size: 28px;
+}
+
+/* A card is at least 320 px, the widest name with its division and the three chips on one line each: four to a row at
+   the default window size (1440 px, one division to a row in the shipped team set), three at the minimum (1280 px) */
+.gfo-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+}
+
+/* Sticky at the bottom of the page's scroll (M1 WP8 §2), so Next stays in reach of any card. Its negative
+   margins take it to the content area's edges. */
+.gfo-picker-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: auto -24px 0;
+  padding: 12px 24px;
+  border-top: 1px solid var(--colorNeutralStroke2);
+  background: var(--colorNeutralBackground1);
+}

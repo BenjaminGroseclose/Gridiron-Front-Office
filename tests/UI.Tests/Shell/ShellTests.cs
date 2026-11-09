@@ -107,7 +107,8 @@ public sealed class MainNavTests : GfoTestContext
     }
 }
 
-public sealed class AppearanceSyncTests : GfoTestContext
+// On the real app: AppearanceSync follows GameStateStore's user team (M1 WP8 slice 2), and nothing is open here
+public sealed class AppearanceSyncTests : TestDoubles.RealScreenContext
 {
     private readonly FakeSettingsStore _settings = new(new AppSettings { Appearance = new AppearanceSettings { Theme = ThemeChoice.Light } });
 

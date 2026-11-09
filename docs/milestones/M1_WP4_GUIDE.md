@@ -86,7 +86,7 @@ D-081 settled the four big questions, and D-082 added the strength ladder. These
 
 | Choice | Rule | Why |
 |---|---|---|
-| **Team strength** (D-082) | 32 values evenly spaced from −0.7 to +0.7, shuffled across the teams. Each rostered player's quality draw moves by `strength × 1.6` if he's within rookie-deal experience, else `strength × 0.7` | Independent players average out: without it, the best and worst teams' starters are 5 OVR apart. Strength carried by the young core is cheap (rookie deals), so the cap trades keep most of it |
+| **Team strength** (D-082) | 32 values evenly spaced from −0.7 to +0.7 (±1.5 since D-098), shuffled across the teams. Each rostered player's quality draw moves by `strength × 1.6` if he's within rookie-deal experience, else `strength × 0.7` | Independent players average out: without it, the best and worst teams' starters are 5 OVR apart. Strength carried by the young core is cheap (rookie deals), so the cap trades keep most of it |
 | **Roster mix** | Team *i* is paired with team *i* + 16. Each pair makes `mixSwaps` (3) ±1 position swaps in opposite directions, inside each position's min–max | Every team varies, and the league average equals the target exactly for every seed (F-03 §4.1's "averages, not rules") |
 | **Output** | Plain records that refer to each other (`TeamDefinition`, `CollegeDefinition`), with no IDs | WP5 assigns IDs while it writes; generation stays free of persistence |
 | **Numbers** | Ratings, measurables and traits are `IReadOnlyDictionary<TEnum, double>` filled in enum order, like WP3's records. `double` everywhere | One numeric type from the data to the save (SQLite's REAL is a double). F-03 §4.9's `float` becomes `double` in WP6 |
@@ -105,7 +105,7 @@ D-081 settled the four big questions, and D-082 added the strength ladder. These
 
 - `data/players/positions.json`: every archetype skill mean shifted by position: **WR −3.5, CB −3, RB −3, QB +1, TE +1**. Speed-heavy OVR weights put receivers, corners and backs 3–4 points over every tier target, and quarterbacks and tight ends ran slightly under (§9).
 - `data/players/positions.json` again, for [D-084](../DECISIONS.md#d-084-ovr-is-one-yardstick-per-position-archetypes-are-balanced-in-the-data): each archetype's skill means shifted by one constant (−2.5 to +4) so every archetype at a position has the same expected OVR. Gaps of up to 3.8 (CB Zone, WR Deep Threat, TE Blocking, FB H-Back, LB Blitzer, QB Scrambler) are now at most 0.3 expected and 0.5 simulated; the position averages didn't move.
-- `data/players/generation.json`: the Starter tier's `spread` 9 → **8.5** (D-082's ladder had pushed players at 90+ over 25 per league).
+- `data/players/generation.json`: the Starter tier's `spread` 9 → **8.5** (D-082's ladder had pushed players at 90+ over 25 per league). D-098 (2026-11-07) widened the ladder to 1.5 and the spread went to 7 with it.
 - `data/contracts/contracts.json`: `curve` 3.5 → **2.5** (D-081 #2). R10 is now 1.21 × cap, still inside its 0.8–1.3 band.
 
 ### 3.2 `generation.json` grows (you, with the records)
@@ -115,6 +115,8 @@ D-081 settled the four big questions, and D-082 added the strength ladder. These
 "draft": { "draftedShare": 0.70, "rankNoiseSd": 6, "entryAge": { "min": 21, "max": 23 } },
 "teamStrength": { "range": 0.7, "youngWeight": 1.6, "veteranWeight": 0.7 }
 ```
+
+`range` is 1.5 since D-098.
 
 `draft` and `teamStrength` go after `targets`, at the end of the file. The records in `PlayerData.cs`:
 
@@ -317,7 +319,7 @@ Nothing registers it yet: WP5's `CreateLeague` is its first caller, and the test
 | # | Step | Rule |
 |---|---|---|
 | 1 | **Roster mix** | Every team starts at each position's `roster.average` (whole numbers; a data test checks). For pair *k* (teams *k* and *k* + 16), `random = Derive(seed, RosterMix, season, k)`, repeated `mixSwaps` times: *up* = a random position (enum order, `Next`) where team *k* is under `max` and its partner over `min`; *down* = a random other position where team *k* is over `min` and its partner under `max`. Team *k* gets +1 *up* and −1 *down*, and its partner the opposite. If either list is empty, that swap is skipped |
-| 2 | **Team strength** (D-082) | `random = Derive(seed, TeamStrength, season)`. The ladder `range × (2(i + 0.5) / teams − 1)` for i = 0–31 (−0.68 to +0.68, mean exactly 0), shuffled across the teams in their file order by Fisher–Yates (`Next(0, i + 1)` from the last index down). Free agents have none |
+| 2 | **Team strength** (D-082) | `random = Derive(seed, TeamStrength, season)`. The ladder `range × (2(i + 0.5) / teams − 1)` for i = 0–31 (−0.68 to +0.68 at 0.7, −1.45 to +1.45 at D-098's 1.5; mean exactly 0), shuffled across the teams in their file order by Fisher–Yates (`Next(0, i + 1)` from the last index down). Free agents have none |
 | 3 | **Slots and tiers** | Team *t*'s players: positions in enum order, the first `roster.starters` at each **Starter**, the rest **Backup**; `slot = t × active + i`. Free agents: the 150 split by `average / 53` (largest remainder, ties in enum order), all **Fringe**, `slot = teams × active + j` |
 | 4 | **Players** | `PlayerGenerator.Generate` for every slot, with his team's strength (0 for free agents) |
 | 5 | **Draft classes** (D-081 #3) | Per entry season `E = season − experience`, ascending, over every player (free agents too), in slot order: `random = Derive(seed, Draft, season, E)`; `score = Overall + Normal(0, rankNoiseSd) − draftPenalty` (D-088); order by score descending, then slot. With `picks = rounds × teams` (7 × 32 = 224) and `n = Min(picks, round(draftedShare × class size))`, the *k*-th slot (from 0, while *k* < *n*) is `Pick = k × picks / n + 1` (integer division), in `Round = (Pick − 1) / teams + 1`. It takes the best-scored player left whose position's `earliestRound` is at most that round (D-088), and if none is left, it goes unused. The drafting team is his own if he's on a roster and `experience < rookieScale.years`; otherwise `Teams[random.Next(0, teams)]`, drawn in this order. The rest are undrafted |

@@ -44,16 +44,13 @@ internal sealed class SaveManager(
 		CancellationToken cancellationToken = default)
 	{
 		ArgumentNullException.ThrowIfNull(write);
-		var name = leagueName?.Trim() ?? "";
-		if (name.Length == 0)
+		var nameResult = SaveRules.CheckLeagueName(leagueName);
+		if (!nameResult.IsSuccess)
 		{
-			return Result.Fail<OpenSave>(SaveErrors.InvalidName("A league needs a name."));
+			return Result.Fail<OpenSave>(nameResult.Error);
 		}
 
-		if (name.Length > SaveRules.MaxLeagueNameLength)
-		{
-			return Result.Fail<OpenSave>(SaveErrors.InvalidName($"League names are at most {SaveRules.MaxLeagueNameLength} characters."));
-		}
+		var name = nameResult.Value;
 
 		var dispatch = new List<IDomainEvent>();
 		OpenSave created;
