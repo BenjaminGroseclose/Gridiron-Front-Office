@@ -2,7 +2,7 @@
   GFO extension tokens and the few global rules (UI_DESIGN_SYSTEM.md §3.4, §4; values: VISUAL_DESIGN.md §3–5, §8).
   Fluent's tokens cover surfaces, text, borders, brand, type, radius and motion: reference them (var(--colorNeutral…)),
   never copy them. GfoThemeService writes the Stadium palette into Fluent's tokens and sets data-theme and data-density
-  on <html>. The only raw colors in the app are the rating, status and urgent scales below.
+  on <html>. The only raw colors in the app are the rating, status, urgent and danger scales below.
 */
 @layer reset, fluent-overrides, gfo-tokens, components, utilities;
 

@@ -15,12 +15,6 @@
   font-size: 28px;
 }
 
-/* The card's own element doesn't carry this page's scope: its padding reaches it through the page and the class
-   given to it */
-.gfo-finalize ::deep .gfo-finalize-card {
-  padding: 24px;
-}
-
 /* The settings placeholder: an empty state inside the card, which already pads it */
 .gfo-finalize ::deep .gfo-finalize-placeholder {
   padding: 8px 0;

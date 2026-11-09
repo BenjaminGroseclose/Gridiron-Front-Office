@@ -9,7 +9,7 @@ public static class ApplicationServices
 {
 	/// <summary>
 	/// Registers perception and the query services (M1 WP6 §2). They hold no state and read through ISaveReader, so they're
-	/// singletons. CreateLeague and LeagueCommands join in WP8, with their first consumer.
+	/// singletons. LeagueGenerator, CreateLeague and LeagueCommands joined in M1 WP8, with the New League wizard.
 	/// </summary>
 	public static IServiceCollection AddGfoApplication(this IServiceCollection services)
 	{

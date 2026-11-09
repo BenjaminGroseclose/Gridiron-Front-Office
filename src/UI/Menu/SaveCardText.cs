@@ -1,11 +1,27 @@
 using System.Globalization;
 using GridironFrontOffice.Application.Saves;
+using GridironFrontOffice.UI.Football;
 
 namespace GridironFrontOffice.UI.Menu;
 
-/// <summary>The words on a save card and under Continue (PERSISTENCE.md §9). Until M1 there's no team, season or record.</summary>
+/// <summary>The words on a save card and under Continue (PERSISTENCE.md §9, F-01 §4).</summary>
 public static class SaveCardText
 {
+    /// <summary>
+    /// "New York Excelsiors · 2026 · Training Camp", "No team picked yet", or null for a card with no league to show (a
+    /// save that isn't Ready, or one with no league in it).
+    /// </summary>
+    public static string? League(SaveCard card)
+    {
+        ArgumentNullException.ThrowIfNull(card);
+        if (card.Season is not { } season || card.Phase is not { } phase)
+        {
+            return null;
+        }
+
+        return card.Team is { } team ? $"{team.City} {team.Nickname} · {season} · {phase.Text()}" : "No team picked yet";
+    }
+
     /// <summary>The league's name, or the file name when the file can't be read.</summary>
     public static string Title(SaveCard card)
     {

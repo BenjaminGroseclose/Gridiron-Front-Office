@@ -9,7 +9,12 @@
   gap: 10px;
 }
 
+/* The crest sits in front of the line, the pair centered under Continue */
 .gfo-menu-continue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   margin: -4px 0 6px;
   color: var(--colorNeutralForeground3);
   font-size: 13px;

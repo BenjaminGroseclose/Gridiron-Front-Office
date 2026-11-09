@@ -1,6 +1,6 @@
 # M1 · WP8 builder's guide: the New League wizard v0 and team tint
 
-> **Status:** **Ready to build** ([F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md) accepted 2026-11-05 as [D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted); this guide written 2026-11-04 and checked against the code 2026-11-07, step one amended the same day by [D-097](../DECISIONS.md#d-097-the-seed-field-opens-with-a-random-seed-start-over-brings-back-only-the-name-only-the-button-generates), Start over dropped 2026-11-08 by [D-101](../DECISIONS.md#d-101-start-over-is-dropped-another-league-is-close-league-then-new-league), the pick moved to a summary page the same day by [D-099](../DECISIONS.md#d-099-new-league-ends-on-a-summary-of-the-league-and-the-team-where-start-picks-it-the-leagues-settings-join-it-later), §10 answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP8](M1_THE_LEAGUE.md#wp8--new-league-wizard-v0-and-team-tint-m) · **Size:** M
+> **Status:** **Done 2026-11-09** (every slice, and the close-out in §5; [F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md) accepted 2026-11-05 as [D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted); this guide written 2026-11-04 and checked against the code 2026-11-07, step one amended the same day by [D-097](../DECISIONS.md#d-097-the-seed-field-opens-with-a-random-seed-start-over-brings-back-only-the-name-only-the-button-generates), Start over dropped 2026-11-08 by [D-101](../DECISIONS.md#d-101-start-over-is-dropped-another-league-is-close-league-then-new-league), the pick moved to a summary page the same day by [D-099](../DECISIONS.md#d-099-new-league-ends-on-a-summary-of-the-league-and-the-team-where-start-picks-it-the-leagues-settings-join-it-later), §10 answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check)) · **For:** the owner, who builds M1's production code ([M1_THE_LEAGUE.md §11](M1_THE_LEAGUE.md#11-how-m1-lands)) · **Work package:** [WP8](M1_THE_LEAGUE.md#wp8--new-league-wizard-v0-and-team-tint-m) · **Size:** M
 >
 > WP8 is the first time you can start a real league and play as a team. M0's name-only New League page becomes a three-step wizard. Step one takes a name and an optional seed, then **Generate** runs WP5's `CreateLeague` with progress. Step two shows all 32 teams as cards (crest, roster strength, cap space) from WP6's summaries, drawn with WP7's components. A click marks a card, and **Next** opens step three, a summary of the league and that team, whose **Start** runs WP5's `PickUserTeamAsync` and opens the league at its home. From then on the app wears the team's primary color through M0's `GfoThemeService`, and the load screen and Continue name each league's team, season and phase. Nothing in Core or the schema changes. When WP8 is done, the M1 plan's item 1 works end to end, and the exit's "the app wears the user team's colors in both modes, with readable text" holds for all 32 teams.
 
@@ -777,7 +777,7 @@ WP9 rebuilds Home at `/home` (the plan's route fix); the rule moves with it.
         "FROM SaveInfo s LEFT JOIN Teams t ON t.TeamID = s.UserTeamID LIMIT 1;";
 ```
 
-Build the `TeamIdentityDto` when `t.TeamID` isn't null, and leave all three null when the count is 0. Parse the enum columns with `Enum.TryParse`, and treat a name it doesn't know as no league (§7).
+Build the `TeamIdentityDto` when `t.TeamID` isn't null, and leave all three null when the count is 0. Parse the enum columns with `Enum.TryParse` plus `Enum.IsDefined` (TryParse alone also takes "42"), and treat a name it doesn't know as no league (§7). **As built:** the card's own reader closes first, then `WithLeague` runs the league query for a `Ready` card only.
 
 **The words** (`UI/Menu/SaveCardText.cs`):
 
@@ -878,6 +878,7 @@ Per slice, each proven to fail on a planted problem.
 **Slice 3**
 - **`SaveCatalogTests`** (Infrastructure.Tests):
   - a seed-42 save's card has its season and Training Camp, with no team before the pick and its team after;
+  - a phase or crest name the build doesn't know (a word, or a number) shows no league and keeps the card;
   - a save made by the empty overload has none of the three;
   - so do a newer and an older-build save.
 - **`SaveCardText`:** the league line's three forms. **`SaveCardView` and `MainMenu`:** the crest and the team on a card and under Continue, and no crest without a team.
@@ -888,7 +889,7 @@ Per slice, each proven to fail on a planted problem.
 **Slice 1: the wizard**
 - [x] `AddGfoApplication` registers the three; `SaveRules.CheckLeagueName`, used by `SaveManager`; `LeagueHeaderDto.Seed`.
 - [x] `SeedText`, `NewLeaguePage`, `MenuLayout`, `TeamPickerPage`, `TeamPickCard`, `SaveActions`' three actions and `WithTeam`, `LeagueHero`, `Finalize`, and `LeagueHome`'s redirect.
-- [ ] Claude: `/_gallery/team-picker` and the team colors in the toolbar. *(Built and compiled; the toolbar checked in the DevHost. The page waits for a watcher restart to be looked at.)*
+- [x] Claude: `/_gallery/team-picker` and the team colors in the toolbar. *(Checked in the DevHost 2026-11-09.)*
 - [x] Claude's slice 1 tests pass, each proven to fail on a planted problem (§4).
 
 **Slice 2: team tint**
@@ -897,20 +898,20 @@ Per slice, each proven to fail on a planted problem.
 - [x] Claude's slice 2 tests pass, each proven to fail on a planted problem.
 
 **Slice 3: the load screen and Continue**
-- [ ] `SaveCard`'s three properties, `SaveCatalog`'s league query, `SaveCardText.League`, `SaveCardView`, `MainMenu` and `Phases`.
-- [ ] Claude: `/_gallery/save-cards`.
-- [ ] Claude's slice 3 tests pass, each proven to fail on a planted problem.
+- [x] `SaveCard`'s three properties, `SaveCatalog`'s league query, `SaveCardText.League`, `SaveCardView`, `MainMenu` and `Phases`. *(Written by Claude at the owner's request, 2026-11-09.)*
+- [x] Claude: `/_gallery/save-cards`.
+- [x] Claude's slice 3 tests pass, each proven to fail on a planted problem.
 
 **Close-out (Claude)**
-- [ ] Checked in a visible pane: create → pick → Home, Close league, Continue to an unpicked league, and the load screen, in Dark and Light with the 7 dark-text teams and a few others. Every button state holds 4.5:1 (§8's measurement, repeated on the built code), and the marked card's text and chips hold theirs on `--gfo-selection`. Then the same flow in the desktop app (D-095 #4).
-- [ ] `./build.ps1` green.
-- [ ] Reviewed against this guide, F-01, F-02 §8, PERSISTENCE §9, UI_DESIGN_SYSTEM §3.2 and §7, VISUAL_DESIGN §3.3 and §10, and D-095 (your §10 answers).
-- [ ] Docs: F-01 as built; the plan's WP8 results; PERSISTENCE §9 (the card's league line); UI_DESIGN_SYSTEM §3.2 (the button states) and §7 (the three wizard routes, `MenuLayout`); VISUAL_DESIGN §3.3 (the state rule); CLAUDE.md's gotchas.
+- [x] Checked in a visible pane: create → pick → Home, Close league, Continue to an unpicked league, and the load screen, in Dark and Light with the 7 dark-text teams and a few others. Every button state holds 4.5:1 (§8's measurement, repeated on the built code), and the marked card's text and chips hold theirs on `--gfo-selection`. Then the same flow in the desktop app (D-095 #4).
+- [x] `./build.ps1` green. *(2026-11-09: every gate, 1,040 fast tests.)*
+- [x] Reviewed against this guide, F-01, F-02 §8, PERSISTENCE §9, UI_DESIGN_SYSTEM §3.2 and §7, VISUAL_DESIGN §3.3 and §10, and D-095 (your §10 answers).
+- [x] Docs: F-01 as built; the plan's WP8 results; PERSISTENCE §9 (the card's league line); UI_DESIGN_SYSTEM §3.2 (the button states) and §7 (the three wizard routes, `MenuLayout`); VISUAL_DESIGN §3.3 (the state rule); CLAUDE.md's gotchas.
 - [ ] Committed by you: one commit per slice, each with its tests (D-076), then the docs.
 
 ## 6. Order of work
 
-1. **Slice 1.** The registration and `CheckLeagueName` first (pure, and the tests need them), then `SeedText`, `SaveActions`, the two pages and the card. Restart the DevHost watcher after adding the new files: it only knows files that existed when it started.
+1. **Slice 1.** The registration and `CheckLeagueName` first (pure, and the tests need them), then `SeedText`, `SaveActions`, the pages and the card. Restart the DevHost watcher after adding the new files: it only knows files that existed when it started.
 2. **Slice 2.** `StateFills` and `StadiumTheme` (pure, tested on all 32 colors), then `AppearanceSync`.
 3. **Slice 3.** `SaveCard` and `SaveCatalog`, then the card's words and markup.
 4. **Close-out:** Claude's checks and the docs, then your commits.
@@ -919,7 +920,7 @@ Delete your dev saves made by M0's New League page since WP5: they have the curr
 
 ## 7. Gotchas
 
-- **`SaveOpened` arrives before the wizard moves on.** `CreateLeague` returns after `SaveManager` has raised it, and `MainLayout` switches to the league shell on it. That's why both wizard pages use `MenuLayout`: in `MainLayout`, step one would flash inside the league shell before the picker replaces it.
+- **`SaveOpened` arrives before the wizard moves on.** `CreateLeague` returns after `SaveManager` has raised it, and `MainLayout` switches to the league shell on it. That's why the wizard's three pages use `MenuLayout`: in `MainLayout`, step one would flash inside the league shell before the picker replaces it.
 - **The providers live in the layout.** `FluentProviders` (dialogs, toasts, tooltips) and `ClientDiagnostics` are in `MainLayout`, not the router's root, so `MenuLayout` carries its own. Without them, a toast has nowhere to render.
 - **The store lags the pick.** `UserTeamPicked` starts `GameStateStore`'s reload on the thread pool, and `PickAsync` navigates home at once: `Header` still has no user team when `LeagueHome` first renders. Decide where a league lands from a fresh read (`LandingAsync`), never from the store. Following the store, Home would bounce to the picker and back.
 - **Read on the thread pool in a page.** SQLite's async calls complete synchronously (WP6 §8), so `await Queries.GetTeamSummariesAsync()` in `OnInitializedAsync` holds the render thread until it's done, and the progress bar never shows. Wrap each read in `Task.Run`, as `GameStateStore` does.

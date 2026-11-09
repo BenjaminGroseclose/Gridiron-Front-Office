@@ -1,6 +1,12 @@
-@* One save on the load screen (PERSISTENCE.md §9): the league, when it was last played, a note for anything that isn't
-   simply ready, and its actions. An unreadable file keeps a card, named by its file, with Show in folder and Delete. *@
+@* One save on the load screen (PERSISTENCE.md §9): the league, its team, season and phase (F-01 §4), when it was last
+   played, a note for anything that isn't simply ready, and its actions. An unreadable file keeps a card, named by its
+   file, with Show in folder and Delete. *@
 <article class="gfo-save-card" data-status="@Card.Status" aria-labelledby="@_titleID" data-testid="save-card">
+    @if (Card.Team is { } team)
+    {
+        @* Beside the team's name in the league line, so it's decorative *@
+        <TeamMark Team="team" Size="40" Decorative="true" data-testid="save-crest" />
+    }
     <div class="gfo-save-card-text">
         <div class="gfo-save-card-heading">
             <h2 id="@_titleID" class="gfo-save-card-title gfo-display">@SaveCardText.Title(Card)</h2>
@@ -9,6 +15,10 @@
                 <FluentBadge Appearance="BadgeAppearance.Tint" Color="BadgeColor.Important">Ironman</FluentBadge>
             }
         </div>
+        @if (SaveCardText.League(Card) is { } league)
+        {
+            <p class="gfo-save-card-league" data-testid="save-league">@league</p>
+        }
         @if (SaveCardText.Details(Card, CultureInfo.CurrentCulture) is { } details)
         {
             <p class="gfo-save-card-details">@details</p>

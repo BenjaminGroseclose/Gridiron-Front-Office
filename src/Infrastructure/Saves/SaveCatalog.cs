@@ -1,6 +1,9 @@
 using System.Globalization;
+using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Application.Platform;
 using GridironFrontOffice.Application.Saves;
+using GridironFrontOffice.Core.IDs;
+using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.Infrastructure.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging;
@@ -18,6 +21,13 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
     // The catalog's columns. They're read from saves made by any version, so they're never renamed or removed.
     private const string CardQuery =
         "SELECT SaveID, LeagueName, CreatedAtUtc, LastPlayedAtUtc, PlayTimeSeconds, AppVersionLastOpened, IsIronman FROM SaveInfo LIMIT 1;";
+
+    // The league's position and the user's team (M1 WP8, F-01 §4). Read only from a Ready save: another version's tables
+    // may differ. The Teams count tells a league from a save made by M0's name-only New League, which has none.
+    private const string LeagueQuery =
+        "SELECT s.CurrentSeason, s.CurrentPhase, (SELECT COUNT(*) FROM Teams), t.TeamID, t.Abbreviation, t.City, t.Nickname, " +
+        "t.PrimaryColor, t.SecondaryColor, t.AccentColor, t.CrestShape, t.CrestMonogram, t.CrestStripe " +
+        "FROM SaveInfo s LEFT JOIN Teams t ON t.TeamID = s.UserTeamID LIMIT 1;";
 
     public Task<IReadOnlyList<SaveCard>> ListAsync(CancellationToken cancellationToken = default) =>
         Task.Run(() => List(cancellationToken), cancellationToken);
@@ -64,29 +74,34 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
 
             var schema = Integer(connection, "PRAGMA user_version;");
             var mismatch = LeagueSchema.Mismatch(MigrationIDs(connection), schema);
-            using var command = connection.CreateCommand();
-            command.CommandText = CardQuery;
-            using var reader = command.ExecuteReader();
-            if (!reader.Read())
+            SaveCard card;
+            using (var command = connection.CreateCommand())
             {
-                return Unreadable(path, size, "This save has no league in it.");
+                command.CommandText = CardQuery;
+                using var reader = command.ExecuteReader();
+                if (!reader.Read())
+                {
+                    return Unreadable(path, size, "This save has no league in it.");
+                }
+
+                // OpenAsync's check, so the list never offers a save that can't be opened
+                var status = mismatch ?? (schema < LeagueSchema.CurrentVersion ? SaveCardStatus.NeedsUpgrade : SaveCardStatus.Ready);
+
+                card = new SaveCard(path, status)
+                {
+                    SaveID = reader.GetGuid(0),
+                    LeagueName = reader.GetString(1),
+                    CreatedAtUtc = DateTime.SpecifyKind(reader.GetDateTime(2), DateTimeKind.Utc),
+                    LastPlayedAtUtc = DateTime.SpecifyKind(reader.GetDateTime(3), DateTimeKind.Utc),
+                    PlayTimeSeconds = reader.GetInt64(4),
+                    AppVersionLastOpened = reader.GetString(5),
+                    IsIronman = reader.GetBoolean(6),
+                    SchemaVersion = schema,
+                    SizeBytes = size,
+                };
             }
 
-            // OpenAsync's check, so the list never offers a save that can't be opened
-            var status = mismatch ?? (schema < LeagueSchema.CurrentVersion ? SaveCardStatus.NeedsUpgrade : SaveCardStatus.Ready);
-
-            return new SaveCard(path, status)
-            {
-                SaveID = reader.GetGuid(0),
-                LeagueName = reader.GetString(1),
-                CreatedAtUtc = DateTime.SpecifyKind(reader.GetDateTime(2), DateTimeKind.Utc),
-                LastPlayedAtUtc = DateTime.SpecifyKind(reader.GetDateTime(3), DateTimeKind.Utc),
-                PlayTimeSeconds = reader.GetInt64(4),
-                AppVersionLastOpened = reader.GetString(5),
-                IsIronman = reader.GetBoolean(6),
-                SchemaVersion = schema,
-                SizeBytes = size,
-            };
+            return card.Status == SaveCardStatus.Ready ? WithLeague(connection, card) : card;
         }
         catch (SqliteException ex) when (ex.SqliteErrorCode is 26)   // SQLITE_NOTADB
         {
@@ -101,6 +116,40 @@ internal sealed class SaveCatalog(IAppPaths paths, ILogger<SaveCatalog> log) : I
             return Unreadable(path, size, "This save couldn't be read: " + ex.Message);
         }
     }
+
+    /// <summary>
+    /// The card with its league's season, phase and user team. A save with no league in it, or a phase or crest name
+    /// this build doesn't know, keeps the card as it is: one odd save mustn't break the load screen (Enum.Parse throws
+    /// ArgumentException, which the catch above doesn't list).
+    /// </summary>
+    private static SaveCard WithLeague(SqliteConnection connection, SaveCard card)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = LeagueQuery;
+        using var reader = command.ExecuteReader();
+        if (!reader.Read() || reader.GetInt64(2) == 0 || !Known(reader.GetString(1), out Phase phase))
+        {
+            return card;
+        }
+
+        TeamIdentityDto? team = null;
+        if (!reader.IsDBNull(3))
+        {
+            if (!Known(reader.GetString(10), out CrestShape shape) || !Known(reader.GetString(12), out CrestStripe stripe))
+            {
+                return card;
+            }
+
+            team = new TeamIdentityDto(new TeamID(reader.GetInt32(3)), reader.GetString(4), reader.GetString(5), reader.GetString(6),
+                reader.GetString(7), reader.GetString(8), reader.GetString(9), shape, reader.GetString(11), stripe);
+        }
+
+        return card with { Season = reader.GetInt32(0), Phase = phase, Team = team };
+    }
+
+    // A name the enum defines: TryParse alone also takes numbers ("42") and gives values the enum doesn't have
+    private static bool Known<T>(string text, out T value)
+        where T : struct, Enum => Enum.TryParse(text, out value) && Enum.IsDefined(value);
 
     private SaveCard Unreadable(string path, long size, string problem)
     {

@@ -14,7 +14,7 @@
 
     @if (_teams is null)
     {
-        <FluentProgressBar />
+        <FluentProgressBar aria-label="Loading the teams" />
     }
     else if (_teams.Count == 0)
     {

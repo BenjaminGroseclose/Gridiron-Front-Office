@@ -13,7 +13,7 @@ public interface ISaveCatalog
 	Task<IReadOnlyList<SaveCard>> ListAsync(CancellationToken cancellationToken = default);
 }
 
-/// <summary>What a save card can show. Until M1 there's no team, season or record yet.</summary>
+/// <summary>What a save card can show: the save itself, and for a Ready save its league's position and user team.</summary>
 public sealed record SaveCard(string FilePath, SaveCardStatus Status)
 {
 	public string FileName => Path.GetFileName(FilePath);

@@ -20,7 +20,7 @@
 
     @if (_step is { } step)
     {
-        <FluentProgressBar />
+        <FluentProgressBar aria-label="Creating the league" />
         <p class="gfo-new-step" role="status" data-testid="step">@(step == LeagueCreationStep.Generating ? "Generating the league" : "Saving it")</p>
     }
 

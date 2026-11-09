@@ -37,7 +37,7 @@
                      HorizontalGap="24px" Padding="@Padding.Vertical3">
             <FluentStack Orientation="Orientation.Vertical" VerticalGap="2px" Width="auto">
                 <FluentText Weight="TextWeight.Semibold">Accent</FluentText>
-                <FluentText Size="TextSize.Size200" Color="Color.Custom" CustomColor="@HintColor">Team uses your team's primary color once a league is open. Neutral is Fluent blue.</FluentText>
+                <FluentText Size="TextSize.Size200" Color="Color.Custom" CustomColor="@HintColor">Team uses your team's primary color once you've picked a team. Neutral is Fluent blue.</FluentText>
             </FluentStack>
             <SegmentedControl TValue="AccentMode" Label="Accent" Options="AccentOptions" Value="@_appearance.Accent"
                               ValueChanged="@(value => SaveAsync(_appearance with { Accent = value }))" data-testid="accent" />

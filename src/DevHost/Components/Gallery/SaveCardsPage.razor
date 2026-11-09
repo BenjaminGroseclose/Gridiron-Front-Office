@@ -1,0 +1,59 @@
+@page "/_gallery/save-cards"
+@using GridironFrontOffice.Application.Saves
+@using GridironFrontOffice.UI.Menu
+@inject ISeedData Seed
+<PageTitle>Save cards · Gallery</PageTitle>
+
+<h1 class="gallery-title gfo-display">Save cards</h1>
+
+<GallerySection Title="SaveCardView in every state (PERSISTENCE.md §9, F-01 §4)" Plain="true"
+                Check="A picked league shows its crest (40 px, beside the team's name, so decorative) and “City Nickname · season · phase”; an unpicked one says “No team picked yet” with no crest. Saves from another version or build, and an unreadable file, show no league line: their notes say what to do. Delete is the danger button on every card; Open only where the save can open. Long names end in an ellipsis on one line.">
+    <FluentStack Orientation="Orientation.Vertical" VerticalGap="12px" HorizontalAlignment="HorizontalAlignment.Stretch" Width="min(100%, 880px)">
+        @foreach (var card in _cards)
+        {
+            <SaveCardView Card="card" />
+        }
+    </FluentStack>
+</GallerySection>
+
+<GallerySection Title="While an action runs" Plain="true" Check="Every button waits.">
+    <FluentStack Orientation="Orientation.Vertical" HorizontalAlignment="HorizontalAlignment.Stretch" Width="min(100%, 880px)">
+        <SaveCardView Card="_cards[0]" Busy="true" />
+    </FluentStack>
+</GallerySection>
+
+@code {
+    private SaveCard[] _cards = [];
+
+    // The shipped team set's first team, numbered as LeagueWriter numbers it, so no league has to be open
+    protected override void OnInitialized()
+    {
+        var t = Seed.TeamSet.Teams[0];
+        var team = new TeamIdentityDto(new TeamID(1), t.Abbr, t.City, t.Nickname, t.Colors.Primary, t.Colors.Secondary, t.Colors.Accent,
+            t.Crest.Shape, t.Crest.Monogram, t.Crest.Stripe);
+        var played = new DateTime(2026, 11, 8, 19, 30, 0, DateTimeKind.Utc);
+
+        SaveCard Card(string name, SaveCardStatus status, int daysAgo = 0) => new($@"C:\Saves\{name}.gfo", status)
+        {
+            LeagueName = name,
+            CreatedAtUtc = played.AddDays(-30),
+            LastPlayedAtUtc = played.AddDays(-daysAgo),
+            PlayTimeSeconds = 8_100 + (daysAgo * 3_600),
+            AppVersionLastOpened = "0.2.7",
+        };
+
+        _cards =
+        [
+            Card("Saturday League", SaveCardStatus.Ready) with { Season = 2026, Phase = Phase.TrainingCamp, Team = team },
+            Card("Sunday League", SaveCardStatus.Ready, 1) with { Season = 2026, Phase = Phase.TrainingCamp },
+            Card("An Unusually Long League Name That Runs Past The Card's Width", SaveCardStatus.Ready, 2) with
+            {
+                Season = 2031, Phase = Phase.ResignWindow, Team = team, IsIronman = true,
+            },
+            Card("Old League", SaveCardStatus.NeedsUpgrade, 5),
+            Card("Future League", SaveCardStatus.FromNewerVersion, 6),
+            Card("Stale League", SaveCardStatus.FromOlderBuild, 9),
+            new($@"C:\Saves\broken.gfo", SaveCardStatus.Unreadable) { Problem = "This save is damaged." },
+        ];
+    }
+}

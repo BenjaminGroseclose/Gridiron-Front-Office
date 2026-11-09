@@ -1,4 +1,8 @@
+using GridironFrontOffice.Application;
+using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Application.Saves;
+using GridironFrontOffice.Core.IDs;
+using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.Core.Results;
 using GridironFrontOffice.Infrastructure.Tests.Data;
 using Microsoft.EntityFrameworkCore;
@@ -152,6 +156,63 @@ public sealed class SaveCatalogTests
 
         cards.ShouldBeEmpty();
         cards.ContinueTarget().ShouldBeNull();
+    }
+
+    // M1 WP8 slice 3 (F-01 §4): a Ready save's card shows its league's season, phase and user team
+    [Fact]
+    public async Task A_leagues_card_has_its_season_and_phase_with_no_team_before_the_pick_and_its_team_after()
+    {
+        await using var save = await TestSave.CreateAsync("No League", services => services.AddGfoApplication());   // M0's name-only save
+        var league = await save.Services.GetRequiredService<CreateLeague>().RunAsync(new NewLeague("Seed 42", 42, 2026), cancellationToken: Ct);
+        await save.Saves.CloseAsync(Ct);
+
+        var before = (await save.Catalog.ListAsync(Ct)).Single(c => c.LeagueName == "Seed 42");
+
+        await save.Saves.OpenAsync(league.Value.FilePath, Ct);
+        (await save.Services.GetRequiredService<LeagueCommands>().PickUserTeamAsync(new TeamID(5), Ct)).IsSuccess.ShouldBeTrue();
+        var team = (await save.Services.GetRequiredService<LeagueQueries>().GetTeamIdentitiesAsync(Ct)).Single(t => t.TeamID == new TeamID(5));
+        await save.Saves.CloseAsync(Ct);
+        var cards = await save.Catalog.ListAsync(Ct);
+
+        (before.Status, before.Season, before.Phase, before.Team).ShouldBe((SaveCardStatus.Ready, 2026, Phase.TrainingCamp, (TeamIdentityDto?)null));
+        var after = cards.Single(c => c.LeagueName == "Seed 42");
+        (after.Season, after.Phase, after.Team).ShouldBe((2026, Phase.TrainingCamp, team));
+        var empty = cards.Single(c => c.LeagueName == "No League");
+        (empty.Status, empty.Season, empty.Phase, empty.Team).ShouldBe((SaveCardStatus.Ready, (int?)null, (Phase?)null, (TeamIdentityDto?)null), "A save with no league in it.");
+    }
+
+    [Fact]
+    public async Task Only_a_ready_save_shows_its_league_and_a_name_this_build_doesnt_know_shows_none()
+    {
+        await using var save = await TestSave.CreateAsync("No League", services => services.AddGfoApplication());
+        var league = await save.Services.GetRequiredService<CreateLeague>().RunAsync(new NewLeague("Seed 42", 42, 2026), cancellationToken: Ct);
+        (await save.Services.GetRequiredService<LeagueCommands>().PickUserTeamAsync(new TeamID(5), Ct)).IsSuccess.ShouldBeTrue();
+        await save.Saves.CloseAsync(Ct);
+        var tampers = new Dictionary<string, string>
+        {
+            ["Older.gfo"] = "PRAGMA user_version = 0;",
+            ["Newer.gfo"] = "PRAGMA user_version = 99;",
+            ["Stale.gfo"] = "UPDATE __EFMigrationsHistory SET MigrationId = '20261016174102_InitialCreate';",
+            ["Odd phase.gfo"] = "UPDATE SaveInfo SET CurrentPhase = 'Halftime';",
+            ["Numbered phase.gfo"] = "UPDATE SaveInfo SET CurrentPhase = '42';",
+            ["Odd crest.gfo"] = "UPDATE Teams SET CrestShape = 'Blob' WHERE TeamID = 5;",
+        };
+        foreach (var (file, sql) in tampers)
+        {
+            var copy = Path.Combine(save.SavesPath, file);
+            File.Copy(league.Value.FilePath, copy);
+            TestSave.Tamper(copy, sql);
+        }
+
+        var cards = await save.Catalog.ListAsync(Ct);
+
+        cards.Single(c => c.FilePath == league.Value.FilePath).Team.ShouldNotBeNull("The untouched league shows its team.");
+        foreach (var file in tampers.Keys)
+        {
+            var card = cards.Single(c => c.FileName == file);
+            card.Status.ShouldNotBe(SaveCardStatus.Unreadable, $"{file} still gets its card.");
+            (card.Season, card.Phase, card.Team).ShouldBe(((int?)null, (Phase?)null, (TeamIdentityDto?)null), file);
+        }
     }
 
     private static string[] Folder(string path) =>

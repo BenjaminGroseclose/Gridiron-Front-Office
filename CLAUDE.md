@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project status
 
-Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is complete** (tagged `m0-complete`, 2026-10-20; `docs/milestones/M0_FOUNDATIONS.md` records what was built). **M1 · The League Exists is in progress** (`docs/milestones/M1_THE_LEAGUE.md`: WP1–WP7 are done, WP8 is next). Design changes from the Claude Design review land throughout development. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
+Gridiron Front Office (GFO) is a single-player pro football GM simulation for Windows desktop. It was **restarted from scratch on 2026-10-13. Ignore all git history before that.** **M0 is complete** (tagged `m0-complete`, 2026-10-20; `docs/milestones/M0_FOUNDATIONS.md` records what was built). **M1 · The League Exists is in progress** (`docs/milestones/M1_THE_LEAGUE.md`: WP1–WP8 are done, WP9 is next). Design changes from the Claude Design review land throughout development. `docs/` is the source of truth. Start with `docs/README.md` (reading order), `docs/DECISIONS.md` (what's Accepted vs. Proposed) and `docs/ROADMAP.md` (the current milestone and its exit criteria).
 
 ## Commands
 
@@ -61,6 +61,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - `FluentText`'s `Color` never gives Foreground2 or 3: Muted is `Color="Color.Custom"` with `CustomColor="var(--colorNeutralForeground2)"`. Body L is `Size400` (16 px), Small `Size200` (12 px).
   - `FluentCard` defaults to a shadow and 12 px padding: a panel sets `Shadow="CardShadow.None"` and `Padding="@Padding.All5"`.
   - Fluent's button has no danger appearance: a destructive action is `<FluentButton Appearance="ButtonAppearance.Primary" Class="gfo-danger">` (gfo-tokens.css sets the primary button's four brand tokens to `--gfo-danger` on that button; UI_DESIGN_SYSTEM §5.1).
+  - A Razor attribute value isn't HTML-decoded: `Check="… &quot;Start&quot; …"` shows `&quot;` on the page. Use typographic quotes (“ ”) in text passed to a component.
   - Fluent's `Id` parameter fails D-069's naming test (`NamingRulesTests`): write the HTML `id`, which binds the same, since Blazor matches parameter names without regard to case.
   - The Settings page sits in both shells: without a league `MainLayout` bleeds (no page padding), so it pads itself only when `Saves.Current is null`.
 - **`FluentDataGrid` rules** (UI_DESIGN_SYSTEM §5.3):
@@ -91,6 +92,7 @@ Run `./build.ps1` before every commit. CI doesn't exist yet. It's deferred to F-
   - `VACUUM INTO` writes a rollback-journal file, so a snapshot that becomes the live save is switched back to WAL.
   - Every host registers `IPlatformServices` (the Crasher too); `AddGfoInfrastructure` doesn't. Tests use `FakePlatformServices`, so a build never touches the real Recycle Bin.
   - Restore and delete are `SaveManager` operations, and their rules (`SaveRules`) are checked there, not just in the UI.
+  - A name read back from a save goes through `Enum.TryParse` **and** `Enum.IsDefined`: TryParse alone takes "42" and returns a value the enum doesn't have, and `Enum.Parse` throws `ArgumentException`, which `SaveCatalog`'s filter doesn't list (one odd save would break the load screen).
 - **Design system (WP8, UI_DESIGN_SYSTEM.md):**
   - `UI.Components` can't see Application, so `GfoThemeService.ApplyAsync` takes a `GfoAppearance`; `AppearanceSync` maps the settings onto it and re-applies on every change.
   - Fluent's grid only collects columns rendered directly in its content: GFO's `DataGridColumn`/`DataGridTemplateColumn` subclass Fluent's columns. Set `TItem` explicitly on `DataGrid` when binding its callbacks.

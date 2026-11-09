@@ -1,6 +1,10 @@
 using System.Globalization;
 using Bunit;
+using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Application.Saves;
+using GridironFrontOffice.Core.IDs;
+using GridironFrontOffice.Core.Leagues;
+using GridironFrontOffice.UI.Football;
 using GridironFrontOffice.UI.League;
 using GridironFrontOffice.UI.Menu;
 using GridironFrontOffice.UI.Pages;
@@ -78,6 +82,33 @@ public sealed class MainMenuTests : SaveScreenContext
         Location.ShouldBe("pick-team");
     }
 
+    // M1 WP8 slice 3 (F-01 §4): Continue names its league's team, with the crest
+    [Fact]
+    public void Continue_names_its_team_with_the_crest()
+    {
+        var card = Catalog.Add("Saturday League");
+        Catalog.Cards[^1] = card with { Season = 2026, Phase = Phase.TrainingCamp, Team = SaveCardSamples.Excelsiors };
+
+        var cut = Render<MainMenu>();
+
+        var line = cut.Find("[data-testid=continue-target]");
+        line.QuerySelector("span")!.TextContent.ShouldStartWith("Saturday League · New York Excelsiors · last played ");
+        line.QuerySelector("[data-testid=continue-crest]")!.GetAttribute("aria-hidden").ShouldBe("true", "The team is named beside it.");
+    }
+
+    [Fact]
+    public void Continue_without_a_team_names_only_the_league()
+    {
+        var card = Catalog.Add("Saturday League");
+        Catalog.Cards[^1] = card with { Season = 2026, Phase = Phase.TrainingCamp };
+
+        var cut = Render<MainMenu>();
+
+        var line = cut.Find("[data-testid=continue-target]");
+        line.QuerySelector("span")!.TextContent.ShouldStartWith("Saturday League · last played ");
+        line.QuerySelector("[data-testid=continue-crest]").ShouldBeNull();
+    }
+
     [Fact]
     public void A_save_that_fails_to_open_is_reported_and_the_menu_stays()
     {
@@ -153,6 +184,25 @@ public sealed class LoadScreenTests : SaveScreenContext
 
         static string Buttons(AngleSharp.Dom.IElement card) =>
             string.Join(' ', card.QuerySelectorAll("[data-testid]").Select(b => b.GetAttribute("data-testid")).Where(id => id is "open" or "delete" or "show-in-folder"));
+    }
+
+    // M1 WP8 slice 3 (F-01 §4): a card shows its team's crest and the league line; a league without a team says so
+    [Fact]
+    public void A_card_names_its_team_season_and_phase()
+    {
+        var picked = Catalog.Add("Saturday League");
+        Catalog.Cards[^1] = picked with { Season = 2026, Phase = Phase.TrainingCamp, Team = SaveCardSamples.Excelsiors };
+        var unpicked = Catalog.Add("Sunday League", daysAgo: 1);
+        Catalog.Cards[^1] = unpicked with { Season = 2026, Phase = Phase.TrainingCamp };
+        Catalog.Add("Old League", daysAgo: 2, status: SaveCardStatus.NeedsUpgrade);
+
+        var cut = Render<LoadScreen>();
+
+        var cards = cut.FindAll("[data-testid=save-card]");
+        cards.Select(c => c.QuerySelector("[data-testid=save-league]")?.TextContent)
+            .ShouldBe(["New York Excelsiors · 2026 · Training Camp", "No team picked yet", null]);
+        cards.Select(c => c.QuerySelector("[data-testid=save-crest]") is not null).ShouldBe([true, false, false]);
+        cards[0].QuerySelector("[data-testid=save-crest]")!.GetAttribute("aria-hidden").ShouldBe("true");
     }
 
     [Fact]
@@ -334,6 +384,16 @@ public sealed class SaveCardTextTests
     public void Play_time_reads_naturally(long seconds, string expected) => SaveCardText.PlayTime(seconds).ShouldBe(expected);
 
     [Fact]
+    public void The_league_line_names_the_team_season_and_phase_or_says_there_is_no_team()
+    {
+        var card = new SaveCard(@"C:\Saves\a.gfo", SaveCardStatus.Ready) { LeagueName = "A", Season = 2027, Phase = Phase.ResignWindow };
+
+        SaveCardText.League(card with { Team = SaveCardSamples.Excelsiors }).ShouldBe("New York Excelsiors · 2027 · Re-sign & Tag Window");
+        SaveCardText.League(card).ShouldBe("No team picked yet");
+        SaveCardText.League(card with { Season = null, Phase = null }).ShouldBeNull("No league to show: a save from another version, or none in it.");
+    }
+
+    [Fact]
     public void An_unreadable_file_is_named_by_its_file_and_has_no_details()
     {
         var card = new SaveCard(@"C:\Saves\broken.gfo", SaveCardStatus.Unreadable) { Problem = "Damaged." };
@@ -428,4 +488,26 @@ public sealed class SettingsFromTheMenuTests : SaveScreenContext
 
         cut.FindAll("[data-testid=back]").ShouldBeEmpty();
     }
+}
+
+/// <summary>CALENDAR_AND_PHASES.md §2: the phases as the screens name them (M1 WP8 slice 3).</summary>
+public sealed class PhasesTests
+{
+    [Fact]
+    public void Every_phase_has_a_name_of_its_own()
+    {
+        var names = Enum.GetValues<Phase>().Select(p => p.Text()).ToList();
+
+        names.ShouldAllBe(n => n.Length > 0);
+        names.Distinct().Count().ShouldBe(names.Count);
+        (Phase.TrainingCamp.Text(), Phase.ResignWindow.Text(), Phase.PreDraft.Text())
+            .ShouldBe(("Training Camp", "Re-sign & Tag Window", "Pre-Draft"));
+    }
+}
+
+/// <summary>A team for cards made by hand: the Excelsiors as the shipped team set has them.</summary>
+internal static class SaveCardSamples
+{
+    public static TeamIdentityDto Excelsiors { get; } = new(new TeamID(1), "NYX", "New York", "Excelsiors", "#A6192E", "#2B2E34",
+        "#C9CDD2", CrestShape.Shield, "NY", CrestStripe.TwinBars);
 }

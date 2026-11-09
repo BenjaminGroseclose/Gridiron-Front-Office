@@ -30,12 +30,17 @@
             </FluentButton>
             @if (_continue is { } target)
             {
+                @* The league, its team once it's picked (F-01 §4), and when it was last played *@
                 <p class="gfo-menu-continue" data-testid="continue-target">
-                    @target.LeagueName · last played @SaveCardText.Date(target.LastPlayedAtUtc, CultureInfo.CurrentCulture)
+                    @if (target.Team is { } team)
+                    {
+                        <TeamMark Team="team" Size="20" Decorative="true" data-testid="continue-crest" />
+                    }
+                    <span>@target.LeagueName@(target.Team is { } t ? $" · {t.City} {t.Nickname}" : "") · last played @SaveCardText.Date(target.LastPlayedAtUtc, CultureInfo.CurrentCulture)</span>
                 </p>
             }
 
-            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Navigation.NavigateTo("/new"))" data-testid="new-league">
+            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Navigation.NavigateTo(SaveActions.Wizard))" data-testid="new-league">
                 <Icon Name="IconName.Add" Color="IconColor.Inherit" slot="start" />
                 Start new league
             </FluentButton>

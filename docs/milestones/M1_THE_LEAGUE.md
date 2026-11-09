@@ -191,7 +191,7 @@
   - `Money` is `Money.Format`, a function.
   - Claude built the gallery pages and, at the owner's request, `PositionPill`'s markup and the chip's tint.
 
-### WP8 · New League wizard v0 and team tint (M)
+### WP8 · New League wizard v0 and team tint (M) ✅ Done 2026-11-09
 
 **Goal:** start a real league. **Builder's guide:** [M1_WP8_GUIDE.md](M1_WP8_GUIDE.md), with [F-01's M1 spec](../features/F-01_LEAGUE_CREATION.md).
 
@@ -200,6 +200,33 @@
 - **The load screen and Continue** gain the crest, team, season and phase (PERSISTENCE.md §9).
 - **AI counterpart:** none; every team is generated the same way.
 - **Tests:** bUnit for each wizard step and the error cases, and the whole create → pick → home flow over a real save. Claude runs the same flow in the desktop app after each slice, through WebView2's DevTools port ([D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check) #4).
+
+**Results (2026-11-09):**
+- **Built:**
+  - Application: `SaveRules.CheckLeagueName` (used by `SaveManager`), `LeagueHeaderDto.Seed`, `SaveCard`'s team, season and phase, and the wizard's services registered; `LeagueQueries` returns no summaries for a save with no league in it.
+  - Infrastructure: `SaveCatalog` reads a Ready save's league position and user team.
+  - UI.Components: `AccentColors.StateFills` and `StadiumTheme`'s three brand state slots (D-095 #1); the danger button (`.gfo-danger`).
+  - UI: the wizard's three steps in `MenuLayout` (`NewLeaguePage` with `SeedText`, `TeamPickerPage` with `TeamPickCard`, and the summary `Finalize`, sharing `LeagueHero`); `SaveActions`' landing, create and pick; `AppearanceSync` on `GameStateStore`; the crest and league line on save cards and Continue; `Phases.Text`; and the Settings page in Fluent's components (D-100).
+  - DevHost (Claude): `/_gallery/team-picker`, `/_gallery/save-cards`, the Theme page's button states and danger button, and the 32 team colors in the toolbar.
+- **Tests:** about 140 new ones (1,040 in all), on real saves through `RealScreenContext` (D-093), each proven to fail on planted problems (71 plants, all caught, `.razor` files included):
+  - the name rule and the seed field;
+  - each wizard step, the picker, the summary, and where a league lands;
+  - every button state for the neutral blue and all 32 teams, the theme's slots, and the tint following the pick and the close;
+  - the catalog's league line, from seed-42 saves and tampered copies;
+  - the danger button's colors, read from the stylesheet.
+- **Checked:**
+  - **In the DevHost:** all three gallery pages, in Dark and Light. For the 7 dark-text teams, every live button state matches its computed fill, at 5.33–10.91:1.
+  - **In the desktop app** (D-095 #4), over WebView2's DevTools port: create → pick → summary → Start → Home in the team's color, Close league back to neutral, Continue naming the team, the load screen, and Continue on an unpicked league landing on the picker.
+  - **The marked card** holds 12.9:1 (Dark) and 16.5:1 (Light) for its name, and 7.0:1 and 5.0:1 for its chips.
+- **More:** details are in [M1_WP8_GUIDE.md §5](M1_WP8_GUIDE.md#5-done-when).
+- **Changed from this plan:**
+  - D-097: the seed field opens with a random seed, and only Generate generates.
+  - D-098: the strength ladder widens to ±1.5, so teams sit about 10 OVR apart.
+  - D-099: a summary page after the picker, where Start makes the pick, with a placeholder for the league's settings.
+  - D-100: screens are built from Fluent's layout and text components.
+  - D-101: Start over is dropped; another league is Close league, then New league.
+  - The danger button, at the owner's request.
+  - Claude wrote slice 3's code and parts of slices 1 and 2 at the owner's request.
 
 ### WP9 · The screens (L)
 

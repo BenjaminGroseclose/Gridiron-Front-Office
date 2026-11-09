@@ -3,12 +3,12 @@
    The slot is the scoped stylesheet's anchor: FluentCard's own element doesn't carry this component's scope, so the
    marked look reaches it through ::deep and the class given here. *@
 <div class="gfo-pick-card-slot">
-<FluentCard Class="@(Selected ? "gfo-pick-card is-marked" : "gfo-pick-card")" Width="100%" Height="100%" Role="button"
+<FluentCard Class="@(Selected ? "gfo-pick-card is-marked" : "gfo-pick-card")" Width="100%" Height="100%" Shadow="CardShadow.None" Role="button"
             OnClick="MarkAsync" aria-pressed="@(Selected ? "true" : "false")"
             data-testid="pick-card">
 	<FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12px">
 		<TeamMark Team="Team.Identity" Size="48" Decorative="true" />
-		<FluentStack Orientation="Orientation.Vertical">
+		<FluentStack Orientation="Orientation.Vertical" Width="auto">
 		<FluentText Size="TextSize.Size400">@Team.Identity.City @Team.Identity.Nickname · <span class="gfo-pick-division">@Team.DivisionName</span></FluentText>
 			<FluentStack VerticalAlignment="VerticalAlignment.Center" HorizontalGap="12px">
 		    <span>OVR <RatingChip Value="Team.RosterStrength.Overall" /></span>

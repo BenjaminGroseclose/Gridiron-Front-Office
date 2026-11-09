@@ -16,13 +16,13 @@
 
     @if (_team is not { } team)
     {
-        <FluentProgressBar />
+        <FluentProgressBar aria-label="Loading the team" />
     }
     else
     {
         <section class="gfo-finalize-team" aria-labelledby="finalize-team-title">
             <h2 id="finalize-team-title" class="gfo-display">Your team</h2>
-            <FluentCard Class="gfo-finalize-card" Width="100%" data-testid="finalize-team">
+            <FluentCard Width="100%" Shadow="CardShadow.None" Padding="@Padding.All6" data-testid="finalize-team">
                 <div class="gfo-finalize-body">
                     <div class="gfo-finalize-identity">
                         <TeamMark Team="team.Identity" Size="96" Decorative="true" />
@@ -62,7 +62,7 @@
            holds their place. *@
         <section class="gfo-finalize-settings" aria-labelledby="finalize-settings-title">
             <h2 id="finalize-settings-title" class="gfo-display">League settings</h2>
-            <FluentCard Class="gfo-finalize-card" Width="100%" data-testid="finalize-settings">
+            <FluentCard Width="100%" Shadow="CardShadow.None" Padding="@Padding.All6" data-testid="finalize-settings">
                 <EmptyState Title="Nothing to set yet" Icon="IconName.Settings" Class="gfo-finalize-placeholder">
                     Injury frequency, Ironman, the clock and more arrive in later versions. You'll set them here before
                     you take over.
