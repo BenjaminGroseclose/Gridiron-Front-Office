@@ -23,6 +23,8 @@ public sealed class MainLayoutTests : SaveScreenContext
         cut.Find("main.gfo-shell-content").ClassList.ShouldContain("is-bleed", "The menu screens paint their own backdrop to the edges.");
     }
 
+    // The fake save isn't open in the real app the store reads from, so the store never has a header here: this is the
+    // top bar before the header loads. MainLayoutTopBarTests has it after, on a real save.
     [Fact]
     public void With_a_league_open_the_shell_names_it_and_shows_the_navigation()
     {
@@ -30,7 +32,8 @@ public sealed class MainLayoutTests : SaveScreenContext
 
         var cut = RenderLayout();
 
-        cut.Find("[data-testid=league-name]").TextContent.ShouldBe("Saturday League");
+        cut.Find("[data-testid=league-name]").TextContent.Trim().ShouldBe("Saturday League");
+        cut.Find(".gfo-appbar-brand").ChildElementCount.ShouldBe(0, "No team yet, and no wordmark either.");
         cut.Find("nav.gfo-shell-nav");
         cut.Find("[data-testid=close-league]");
         cut.Find("main .page").TextContent.ShouldBe("Page");
@@ -58,7 +61,7 @@ public sealed class MainLayoutTests : SaveScreenContext
 
         Saves.Open(League);
 
-        cut.WaitForAssertion(() => cut.Find("[data-testid=league-name]").TextContent.ShouldBe("Saturday League"));
+        cut.WaitForAssertion(() => cut.Find("[data-testid=league-name]").TextContent.Trim().ShouldBe("Saturday League"));
     }
 
     [Fact]

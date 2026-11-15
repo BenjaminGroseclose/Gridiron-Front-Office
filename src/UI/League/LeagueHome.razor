@@ -20,13 +20,13 @@
     {
         if (Saves.Current is null)
         {
-            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            Navigation.NavigateTo(Routes.MainMenu, replace: true);
             return;
         }
 
-        if (await Actions.LandingAsync() == SaveActions.TeamPicker)
+        if (await Actions.LandingAsync() == Routes.TeamPicker)
         {
-            Navigation.NavigateTo(SaveActions.TeamPicker, replace: true);
+            Navigation.NavigateTo(Routes.TeamPicker, replace: true);
         }
     }
 }

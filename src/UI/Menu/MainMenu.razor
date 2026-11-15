@@ -26,7 +26,9 @@
         <div class="gfo-menu-actions">
             <FluentButton Appearance="ButtonAppearance.Primary" Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="@(_continue is null || _busy)"
                           IconStart="@IconCatalog.Create(IconName.Play, 20, filled: true)" OnClick="ContinueAsync" data-testid="continue">
-                Continue
+								<FluentStack HorizontalAlignment="HorizontalAlignment.Center" HorizontalGap="8px">
+                	Continue 
+								</FluentStack>
             </FluentButton>
             @if (_continue is { } target)
             {
@@ -34,9 +36,9 @@
                 <p class="gfo-menu-continue" data-testid="continue-target">
                     @if (target.Team is { } team)
                     {
-                        <TeamMark Team="team" Size="20" Decorative="true" data-testid="continue-crest" />
+                        <TeamMark Team="@_continue?.Team" Size="32" Decorative="true" Class="gfo-menu-continue-mark" data-testid="continue-crest" />
                     }
-                    <span>@target.LeagueName@(target.Team is { } t ? $" · {t.City} {t.Nickname}" : "") · last played @SaveCardText.Date(target.LastPlayedAtUtc, CultureInfo.CurrentCulture)</span>
+                    <span>@(target.Team is { } t ? $"{t.City} {t.Nickname}" : "") · last played @SaveCardText.Date(target.LastPlayedAtUtc, CultureInfo.CurrentCulture)</span>
                 </p>
             }
 
@@ -86,7 +88,7 @@
     {
         if (Saves.Current is not null)
         {
-            Navigation.NavigateTo(SaveActions.LeagueHome, replace: true);
+            Navigation.NavigateTo(SaveActions.Home, replace: true);
             return;
         }
 

@@ -259,7 +259,7 @@ None in M1: there are no actions. Every team, the user's included, gets its cont
 
 ## 8. UI
 
-- **Player page (WP9):** a contract block: "3 years left · $12.4M APY · cap hit this season $14.1M · $9.0M guaranteed remaining", and a small per-season table (base, bonus share, cap hit). Money through `Money.Format` (`GridironFrontOffice.UI.Components.Formatting`, M1 WP7); tabular figures.
+- **Player page (WP9):** a contract block: "3 years left · $12.4M APY · cap hit this season $14.1M · $9.0M guaranteed remaining", and a small per-season table (base, bonus share, cap hit) of this season and the ones left ([D-102](../DECISIONS.md#d-102-the-roster-opens-on-your-team-and-picks-any-team-or-all-of-them-and-a-position-the-top-bar-names-your-team-the-contract-table-runs-from-this-season-every-team-name-links-to-its-page) #3; past seasons are parked in [IDEAS.md](../IDEAS.md)). Money through `Money.Format` (`GridironFrontOffice.UI.Components.Formatting`, M1 WP7); tabular figures.
 - **`Money.Format(long dollars)`:**
   - From $999,500 it shows millions with one decimal (`$12.4M`, `$9.0M`, `$300.0M`). From $1,000 it shows whole thousands (`$850K`). Below that, whole dollars (`$0`, `$999`).
   - It rounds half up on the magnitude, uses a real minus for a negative (`−$3.2M`, U+2212), and ignores the current culture.

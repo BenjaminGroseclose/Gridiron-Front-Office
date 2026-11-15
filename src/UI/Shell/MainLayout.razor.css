@@ -1,0 +1,5 @@
+/* The brand's team name: display type, a little smaller than the wordmark's 18 px. */
+.gfo-appbar-team {
+	font-size: 16px;
+	white-space: nowrap;
+}

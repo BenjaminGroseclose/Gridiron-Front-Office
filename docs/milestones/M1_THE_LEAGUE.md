@@ -230,14 +230,15 @@
 
 ### WP9 · The screens (L)
 
-**Goal:** browse every team and player.
+**Goal:** browse every team and player. **Builder's guide:** [M1_WP9_GUIDE.md](M1_WP9_GUIDE.md).
 
 - **Home** (`/home`): a stub dashboard (your team's identity, record placeholder, top players).
 - **League** (`/league`): both conferences, four division cards each, every team a link (F-02 §8).
 - **Team** (`/team/{id}`): the hero band in the team color with the ghost monogram, crest, stadium, its roster, and its cap totals (cap, committed, space).
-- **Roster** (DataGrid v1): virtualized, sticky header, pinned name column, sorting, the M0 keyboard map, Enter opens the peek. Name, position, age, OVR chip, potential grade, archetype, cap hit.
-- **Player** (`/player/{id}`): the header, attributes grouped as in F-03 §4.2 with `RatingBar`, measurables, bio, personality descriptors, and the contract panel (each year's base, bonus, guarantee and cap hit).
-- **`PlayerPeekSheet`** and `PeekService.OpenPlayer(id)`: **every player name is a link that opens it**; "Open full profile" navigates.
+- **Roster** (DataGrid v1): virtualized, sticky header, pinned name column, sorting, the M0 keyboard map, Enter opens the peek. Name, position, age, OVR chip, potential grade, archetype, cap hit. It opens on your team, with a Team picker (All teams, then the 32) and a Position picker ([D-102](../DECISIONS.md#d-102-the-roster-opens-on-your-team-and-picks-any-team-or-all-of-them-and-a-position-the-top-bar-names-your-team-the-contract-table-runs-from-this-season-every-team-name-links-to-its-page) #1).
+- **Player** (`/player/{id}`): the header, attributes grouped as in F-03 §4.2 with `RatingBar`, measurables, bio, personality descriptors, and the contract panel (each year's base, bonus, guarantee and cap hit, from this season on, D-102 #3).
+- **`PlayerPeekSheet`** and `PeekService.OpenPlayer(id)`: **every player name is a link that opens it**; "Open full profile" navigates. **Every team name is a link to its Team page** (D-102 #4).
+- **The top bar** names your team once it's picked: crest, "City Nickname" and "League · season · phase" (D-102 #2).
 - **The nav** grows: Home, Roster, League (team pages from links), Settings.
 - **Tests:** bUnit per screen; the 2,000-row grid sorts and scrolls under budget (Spike S0b's numbers as the bar).
 

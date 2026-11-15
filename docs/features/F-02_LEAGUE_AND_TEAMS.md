@@ -133,7 +133,7 @@ None. Structure and identity are static data. (Every team, user or AI, is define
 
 ## 8. UI
 
-- **League page** (`/league`): 2 conference columns × 4 division cards, each team row showing crest, city + nickname and (from M3) record. Every team name is a link to its Team page and opens a peek on click.
+- **League page** (`/league`): 2 conference columns × 4 division cards, each team row showing crest, city + nickname and (from M3) record. Every team name is a link to its Team page, here and everywhere else a team is named; there's no team peek ([D-102](../DECISIONS.md#d-102-the-roster-opens-on-your-team-and-picks-any-team-or-all-of-them-and-a-position-the-top-bar-names-your-team-the-contract-table-runs-from-this-season-every-team-name-links-to-its-page) #4).
 - **Team page header:** the **hero band** in the team's accent with the ghost monogram ([VISUAL_DESIGN.md](../VISUAL_DESIGN.md)), crest, city and nickname, and the stadium as a subtitle.
 - **New League wizard, team selection** (F-01): a grid of all 32 cards (crest, name, and from M5 the inherited situation).
 - **Theme tint:** taking over a team re-tints the app through `GfoThemeService` (accent from Primary, contrast-adjusted).

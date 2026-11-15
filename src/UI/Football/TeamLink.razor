@@ -1,0 +1,22 @@
+@using GridironFrontOffice.Application.Leagues
+<a href="@Routes.Team(Team.TeamID)" class="gfo-team-link @Class" @attributes="AdditionalAttributes">
+		@if (CrestSize is { } size)
+    {
+        <TeamMark Team="Team" Size="size" Decorative="true" />
+    }
+    @Team.Nickname
+</a>
+
+@code {
+	[Parameter, EditorRequired]
+	public TeamIdentityDto Team { get; set; } = default!;
+
+	/// <summary>The crest's size in px, or null for the name alone.</summary>
+    [Parameter] public int? CrestSize { get; set; }
+
+	[Parameter]
+	public string Class { get; set; } = string.Empty;
+
+	[Parameter(CaptureUnmatchedValues = true)]
+	public Dictionary<string, object?>? AdditionalAttributes { get; set; }
+}

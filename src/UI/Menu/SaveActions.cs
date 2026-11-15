@@ -14,24 +14,6 @@ namespace GridironFrontOffice.UI.Menu;
 /// </summary>
 public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToasts toasts, NavigationManager navigation, LeagueQueries queries, CreateLeague create, LeagueCommands commands)
 {
-	/// <summary>The open league's home.</summary>
-	public const string LeagueHome = "/league";
-
-	/// <summary>The main menu.</summary>
-	public const string MainMenu = "/";
-
-	/// <summary>The team picker: where an open league without a user team lands (F-01 §4).</summary>
-	public const string TeamPicker = "/pick-team";
-
-	/// <summary>New League's first step.</summary>
-	public const string Wizard = "/new";
-
-	/// <summary>
-	/// New League's last step (D-099): the league and the marked team, where Start picks it. The league's settings
-	/// join it with their milestones.
-	/// </summary>
-	public const string Finalize = "/finalize";
-
 	/// <summary>A route with the marked team: the summary shows it, and the picker marks it again.</summary>
 	public static string WithTeam(string route, TeamID team) =>
 		$"{route}?team={team.Value.ToString(CultureInfo.InvariantCulture)}";
@@ -60,7 +42,7 @@ public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToa
 	public async Task<string> LandingAsync()
 	{
 		var header = await Task.Run(() => queries.GetHeaderAsync());
-		return header.UserTeam is null ? TeamPicker : LeagueHome;
+		return header.UserTeam is null ? Routes.TeamPicker : Routes.Home;
 	}
 
 	/// <summary>
@@ -74,7 +56,7 @@ public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToa
 			return created.Error;
 		}
 
-		navigation.NavigateTo(TeamPicker);
+		navigation.NavigateTo(Routes.TeamPicker);
 		return null;
 	}
 
@@ -92,7 +74,7 @@ public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToa
 			return false;
 		}
 
-		navigation.NavigateTo(LeagueHome);
+		navigation.NavigateTo(Routes.Home);
 		return true;
 	}
 
@@ -135,10 +117,10 @@ public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToa
 		return false;
 	}
 
-	/// <summary>Closes the open league and goes back to the main menu.</summary>
+	/// <summary>Closes the open league and goes back to the main menu (Routes.MainMenu).</summary>
 	public async Task CloseAsync()
 	{
 		await saves.CloseAsync();
-		navigation.NavigateTo(MainMenu);
+		navigation.NavigateTo(Routes.MainMenu);
 	}
 }

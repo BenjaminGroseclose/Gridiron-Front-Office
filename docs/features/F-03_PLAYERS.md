@@ -251,7 +251,7 @@ public readonly record struct PerceivedRating(double Estimate, double Sigma);  /
 - Generation is neutral: AI teams' rosters come from the same targets as the user's.
 
 ## 8. UI
-- **Roster** (DataGrid v1): name, position, age, OVR chip, potential grade, archetype, contract. Sticky name column. Every name opens the `PlayerPeekSheet`.
+- **Roster** (DataGrid v1): name, position, age, OVR chip, potential grade, archetype, contract. Sticky name column. Every name opens the `PlayerPeekSheet`. It opens on your team, with a Team picker (All teams, then the 32) and a Position picker; All teams is every player, with a Team column ([D-102](../DECISIONS.md#d-102-the-roster-opens-on-your-team-and-picks-any-team-or-all-of-them-and-a-position-the-top-bar-names-your-team-the-contract-table-runs-from-this-season-every-team-name-links-to-its-page) #1).
 - **Player page:** a header (photo-less silhouette, name, position, number, team colors), an attributes panel grouped as in §4.2 with `RatingBar` (a range from M6), measurables, bio, personality descriptors (or "Unknown"), and the contract.
 - **`RatingChip` / `RatingBar`:** a plain value while σ = 0 (M1–M5). From M6, an estimate plus its 80% range when σ > 0, and the potential grade chip shows its spread ([D-078](../DECISIONS.md#d-078-m1-builds-for-todays-consumers-fifteen-simplifications)).
 - **As built (M1 WP7, `GridironFrontOffice.UI.Football`):**

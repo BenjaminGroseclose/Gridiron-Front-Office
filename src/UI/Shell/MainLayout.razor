@@ -1,8 +1,11 @@
+@using GridironFrontOffice.Application.Leagues
 @inherits LayoutComponentBase
 @implements IDisposable
 @inject ISaveManager Saves
 @inject IDomainEventDispatcher Events
 @inject SaveActions Actions
+@inject GameStateStore State
+
 @* The layout both hosts use: the AppShell around the routed page. With a league open, the app bar names it and offers
    Close league, and the navigation column shows. At the main menu (no league), the menu screens own the page: the app
    bar stays as the title bar but leaves the wordmark to the menu panel. It follows SaveOpened and SaveClosed, which
@@ -11,9 +14,16 @@
 
 @if (_league is { } league)
 {
-    <AppShell>
+    <AppShell Brand="@Brand">
         <Context>
-            <span class="gfo-league-context" data-testid="league-name">@league.LeagueName</span>
+            @if (_leagueHeader is { } header)
+            {
+                <span class="gfo-league-context" data-testid="league-name">@header.LeagueName @header.Season @header.Phase</span>
+            }
+						else 
+						{
+							@league.LeagueName
+						}
         </Context>
         <Actions>
             <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.Dismiss)"
@@ -31,7 +41,7 @@
 }
 else
 {
-    <AppShell Brand="NoBrand" Bleed="true">
+    <AppShell Brand="@Brand" Bleed="true">
         <PageErrorBoundary>
             @Body
         </PageErrorBoundary>
@@ -45,28 +55,47 @@ else
 <FluentProviders />
 
 @code {
-    private static readonly RenderFragment NoBrand = _ => { };
+	private static readonly RenderFragment NoBrand = _ => { };
+	private RenderFragment Brand
+	{
+		get => _leagueHeader is { } header ? header.UserTeam is { } team ? TeamBrand(team.Identity) : NoBrand : NoBrand;
+	}
 
-    private OpenSave? _league;
-    private IDisposable? _opened;
-    private IDisposable? _closed;
+	private OpenSave? _league;
+	private LeagueHeaderDto? _leagueHeader;
+	private IDisposable? _opened;
+	private IDisposable? _closed;
 
-    protected override void OnInitialized()
-    {
-        _league = Saves.Current;
-        _opened = Events.Subscribe<SaveOpened>(e => Follow(e.Save));
-        _closed = Events.Subscribe<SaveClosed>(_ => Follow(null));
-    }
+	protected override void OnInitialized()
+	{
+		_opened = Events.Subscribe<SaveOpened>(e => Follow(e.Save));
+		_closed = Events.Subscribe<SaveClosed>(_ => Follow(null));
+		State.Changed += OnHeaderChanged;
+		_league = Saves.Current;
+		_leagueHeader = State.Header;
+	}
 
-    private void Follow(OpenSave? league) => _ = InvokeAsync(() =>
-    {
-        _league = league;
-        StateHasChanged();
-    });
+	private void Follow(OpenSave? league) => _ = InvokeAsync(() =>
+	{
+		_league = league;
+		StateHasChanged();
+	});
 
-    public void Dispose()
-    {
-        _opened?.Dispose();
-        _closed?.Dispose();
-    }
+	private void OnHeaderChanged() => _ = InvokeAsync(() =>
+	{
+		_leagueHeader = State.Header;
+		StateHasChanged();
+	});
+
+	public void Dispose()
+	{
+		_opened?.Dispose();
+		_closed?.Dispose();
+		State.Changed -= OnHeaderChanged;
+	}
+
+	private static RenderFragment TeamBrand(TeamIdentityDto team) =>
+    @<span class="gfo-appbar-team gfo-display" data-testid="user-team">
+        <TeamLink Team="team" CrestSize="20" />
+    </span>;
 }
