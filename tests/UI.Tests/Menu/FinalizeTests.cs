@@ -69,7 +69,7 @@ public sealed class FinalizeTests(GeneratedSeed42 seed) : RealScreenContext, ICl
         await start.ClickAsync(new());
 
         (await HeaderAsync()).UserTeam.ShouldNotBeNull().Identity.TeamID.ShouldBe(new TeamID(Team));
-        Location.ShouldBe("league");
+        Location.ShouldBe("home");
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public sealed class FinalizeTests(GeneratedSeed42 seed) : RealScreenContext, ICl
 
         var cut = Render<Finalize>();
 
-        await cut.WaitForAssertionAsync(() => Location.ShouldBe("league"), Bound);
+        await cut.WaitForAssertionAsync(() => Location.ShouldBe("home"), Bound);
         (await HeaderAsync()).UserTeam!.Identity.TeamID.ShouldBe(new TeamID(5), "No second pick.");
     }
 

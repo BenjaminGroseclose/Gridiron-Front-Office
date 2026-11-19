@@ -72,7 +72,7 @@
     @if (Saves.Current is null)
     {
         <FluentButton IconStart="@IconCatalog.Create(IconName.ArrowLeft)"
-                      OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Main menu</FluentButton>
+                      OnClick="@(() => Navigation.NavigateTo(Routes.MainMenu))" data-testid="back">Main menu</FluentButton>
     }
 </FluentStack>
 

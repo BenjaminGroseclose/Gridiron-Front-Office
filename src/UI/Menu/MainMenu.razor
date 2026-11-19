@@ -38,11 +38,11 @@
                     {
                         <TeamMark Team="@_continue?.Team" Size="32" Decorative="true" Class="gfo-menu-continue-mark" data-testid="continue-crest" />
                     }
-                    <span>@(target.Team is { } t ? $"{t.City} {t.Nickname}" : "") · last played @SaveCardText.Date(target.LastPlayedAtUtc, CultureInfo.CurrentCulture)</span>
+                    <span>@target.LeagueName@(target.Team is { } t ? $" · {t.City} {t.Nickname}" : "") · last played @SaveCardText.Date(target.LastPlayedAtUtc, CultureInfo.CurrentCulture)</span>
                 </p>
             }
 
-            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Navigation.NavigateTo(SaveActions.Wizard))" data-testid="new-league">
+            <FluentButton Size="ButtonSize.Large" Class="gfo-menu-action" Disabled="_busy" OnClick="@(() => Navigation.NavigateTo(Routes.Wizard))" data-testid="new-league">
                 <Icon Name="IconName.Add" Color="IconColor.Inherit" slot="start" />
                 Start new league
             </FluentButton>
@@ -88,7 +88,7 @@
     {
         if (Saves.Current is not null)
         {
-            Navigation.NavigateTo(SaveActions.Home, replace: true);
+            Navigation.NavigateTo(Routes.Home, replace: true);
             return;
         }
 

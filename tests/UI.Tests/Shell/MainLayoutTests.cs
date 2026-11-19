@@ -44,7 +44,7 @@ public sealed class MainLayoutTests : SaveScreenContext
     public void Close_league_closes_it_and_returns_to_the_main_menu()
     {
         Saves.Open(League);
-        Services.GetRequiredService<NavigationManager>().NavigateTo("/league");
+        Services.GetRequiredService<NavigationManager>().NavigateTo("/home");
         var cut = RenderLayout();
 
         cut.Find("[data-testid=close-league]").Click();

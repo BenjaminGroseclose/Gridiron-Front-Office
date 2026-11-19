@@ -93,16 +93,18 @@ public sealed class AppShellTests : GfoTestContext
 public sealed class MainNavTests : GfoTestContext
 {
     [Theory]
-    [InlineData("/league", "Home")]
+    [InlineData("/home", "Home")]
+    [InlineData("/roster", "Roster")]
+    [InlineData("/league", "League")]
     [InlineData("/settings", "Settings")]
-    public void Home_and_Settings_with_the_current_one_active(string uri, string active)
+    public void Home_Roster_League_and_Settings_with_the_current_one_active(string uri, string active)   // S-001 #3
     {
         Services.GetRequiredService<NavigationManager>().NavigateTo(uri);
 
         var cut = Render<MainNav>();
 
         var items = cut.FindAll(".fluent-navitem");
-        items.Select(i => i.TextContent.Trim()).ShouldBe(["Home", "Settings"]);
+        items.Select(i => i.TextContent.Trim()).ShouldBe(["Home", "Roster", "League", "Settings"]);
         items.Single(i => i.ClassList.Contains("gfo-nav-active")).TextContent.Trim().ShouldBe(active);
     }
 }

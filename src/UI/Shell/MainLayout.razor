@@ -16,14 +16,16 @@
 {
     <AppShell Brand="@Brand">
         <Context>
-            @if (_leagueHeader is { } header)
-            {
-                <span class="gfo-league-context" data-testid="league-name">@header.LeagueName @header.Season @header.Phase</span>
-            }
-						else 
-						{
-							@league.LeagueName
-						}
+					<span class="gfo-league-context" data-testid="league-name">
+							@if (_leagueHeader is { } header)
+							{
+									<text>@header.LeagueName · @header.Season · @header.Phase.Text()</text>
+							}
+							else
+							{
+									@league.LeagueName
+							}
+					</span>
         </Context>
         <Actions>
             <FluentButton Appearance="ButtonAppearance.Subtle" IconStart="@IconCatalog.Create(IconName.Dismiss)"

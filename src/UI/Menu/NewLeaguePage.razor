@@ -25,7 +25,7 @@
     }
 
     <div class="gfo-new-actions">
-        <FluentButton Disabled="_busy" OnClick="@(() => Navigation.NavigateTo(SaveActions.MainMenu))" data-testid="back">Back</FluentButton>
+        <FluentButton Disabled="_busy" OnClick="@(() => Navigation.NavigateTo(Routes.MainMenu))" data-testid="back">Back</FluentButton>
         <FluentButton Appearance="ButtonAppearance.Primary" Loading="_busy" OnClick="GenerateAsync" data-testid="generate">Generate</FluentButton>
     </div>
 </MenuFrame>

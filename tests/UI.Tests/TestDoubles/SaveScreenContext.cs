@@ -20,54 +20,54 @@ namespace GridironFrontOffice.UI.Tests.TestDoubles;
 /// </summary>
 public abstract class SaveScreenContext : GfoTestContext
 {
-    protected SaveScreenContext()
-    {
-        Saves = new FakeSaveManager(Events);
-        Services.AddGfoUi();
-        Services.AddSingleton(RealApp.Queries);
-        Services.AddSingleton(RealApp.Services.GetRequiredService<CreateLeague>());
-        Services.AddSingleton(RealApp.Services.GetRequiredService<LeagueCommands>());
-        Services.AddSingleton<ISaveManager>(Saves);
-        Services.AddSingleton<ISaveCatalog>(Catalog);
-        Services.AddSingleton<IDomainEventDispatcher>(Events);
-        Services.AddSingleton<IPlatformServices>(Platform);
-        Services.AddSingleton<IGfoDialogs>(Dialogs);
-        Services.AddSingleton<IGfoToasts>(Toasts);
-        Services.AddSingleton<ISettingsStore>(new FakeSettingsStore(new AppSettings()));
-        Services.AddSingleton(App);
-    }
+	protected SaveScreenContext()
+	{
+		Saves = new FakeSaveManager(Events);
+		Services.AddGfoUi();
+		Services.AddSingleton(RealApp.Queries);
+		Services.AddSingleton(RealApp.Services.GetRequiredService<CreateLeague>());
+		Services.AddSingleton(RealApp.Services.GetRequiredService<LeagueCommands>());
+		Services.AddSingleton<ISaveManager>(Saves);
+		Services.AddSingleton<ISaveCatalog>(Catalog);
+		Services.AddSingleton<IDomainEventDispatcher>(Events);
+		Services.AddSingleton<IPlatformServices>(Platform);
+		Services.AddSingleton<IGfoDialogs>(Dialogs);
+		Services.AddSingleton<IGfoToasts>(Toasts);
+		Services.AddSingleton<ISettingsStore>(new FakeSettingsStore(new AppSettings()));
+		Services.AddSingleton(App);
+	}
 
-    /// <summary>The build the screens show: version 0.0.1 from commit 94b9338, a Debug build.</summary>
-    internal static AppIdentity App { get; } = AppIdentity.Parse("0.0.1+94b9338c0ffee", "Debug");
+	/// <summary>The build the screens show: version 0.0.1 from commit 94b9338, a Debug build.</summary>
+	internal static AppIdentity App { get; } = AppIdentity.Parse("0.0.1+94b9338c0ffee", "Debug");
 
-    /// <summary>The real app the league reads come from.</summary>
-    internal RealApp RealApp { get; } = new();
+	/// <summary>The real app the league reads come from.</summary>
+	internal RealApp RealApp { get; } = new();
 
-    internal FakeDomainEvents Events { get; } = new();
+	internal FakeDomainEvents Events { get; } = new();
 
-    internal FakeSaveManager Saves { get; }
+	internal FakeSaveManager Saves { get; }
 
-    internal FakeSaveCatalog Catalog { get; } = new();
+	internal FakeSaveCatalog Catalog { get; } = new();
 
-    internal FakePlatformServices Platform { get; } = new();
+	internal FakePlatformServices Platform { get; } = new();
 
-    internal FakeDialogs Dialogs { get; } = new();
+	internal FakeDialogs Dialogs { get; } = new();
 
-    internal FakeToasts Toasts { get; } = new();
+	internal FakeToasts Toasts { get; } = new();
 
-    /// <summary>Where the app is now, relative to the base: "", "league", "load"…</summary>
-    protected string Location
-    {
-        get
-        {
-            var navigation = Services.GetRequiredService<NavigationManager>();
-            return navigation.ToBaseRelativePath(navigation.Uri);
-        }
-    }
+	/// <summary>Where the app is now, relative to the base: "", "home", "load"…</summary>
+	protected string Location
+	{
+		get
+		{
+			var navigation = Services.GetRequiredService<NavigationManager>();
+			return navigation.ToBaseRelativePath(navigation.Uri);
+		}
+	}
 
-    protected override async ValueTask DisposeAsyncCore()
-    {
-        await base.DisposeAsyncCore();
-        await RealApp.DisposeAsync();
-    }
+	protected override async ValueTask DisposeAsyncCore()
+	{
+		await base.DisposeAsyncCore();
+		await RealApp.DisposeAsync();
+	}
 }

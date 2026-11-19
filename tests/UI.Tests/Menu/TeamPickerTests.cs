@@ -128,7 +128,7 @@ public sealed class TeamPickerTests(GeneratedSeed42 seed) : RealScreenContext, I
 
         var cut = Render<TeamPickerPage>();
 
-        await cut.WaitForAssertionAsync(() => Location.ShouldBe("league"), Bound);
+        await cut.WaitForAssertionAsync(() => Location.ShouldBe("home"), Bound);
         cut.FindAll("[data-testid=pick-card]").ShouldBeEmpty();
     }
 

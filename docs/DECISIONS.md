@@ -73,7 +73,7 @@
 | D-063 | "Career can end" is a creation setting, off by default | **Accepted** |
 | D-064 | F-02 team set accepted; shared city labels | **Accepted** |
 | D-065 | F-03 player model accepted: 42 attributes, 80% ranges, roster mix as averages | **Accepted** |
-| D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** (branching amended by D-076) |
+| D-066 | Git workflow: GFO commit format, one branch per milestone | **Accepted** (branching amended by D-076; commit size and the card ID by D-103) |
 | D-067 | Spike S0b: Fluent UI v5 fits; `DataGrid<T>` keeps `FluentDataGrid` | **Accepted** |
 | D-068 | Host shell: the app bar is the title bar | **Accepted** |
 | D-069 | Write `ID`, never `Id` | **Accepted** |
@@ -83,7 +83,7 @@
 | D-073 | A league's first season is the real-world year it's created in | **Accepted** |
 | D-074 | Contracts are real from M1; contract actions arrive in M4 | **Accepted** |
 | D-075 | Color-blind tuning is reviewed before a public release | **Accepted** |
-| D-076 | Work happens on `main`; no milestone branches | **Accepted** |
+| D-076 | Work happens on `main`; no milestone branches | **Accepted** (a commit per card from D-103) |
 | D-077 | Data files carry no version numbers; they change only additively | **Accepted** (scope of the defaults clarified by D-083) |
 | D-078 | M1 builds for today's consumers: fifteen simplifications | **Accepted** |
 | D-079 | WP3 player data: traits in generation.json, measurable priors deferred, F-12 before contracts | **Accepted** |
@@ -110,6 +110,7 @@
 | D-100 | Screens are built from Fluent's layout and text components; scoped CSS covers only what they can't | **Accepted** |
 | D-101 | Start over is dropped: another league is Close league, then New league | **Accepted** |
 | D-102 | The Roster opens on your team and picks any team or all of them, and a position; the top bar names your team; the contract table runs from this season; every team name links to its page | **Accepted** |
+| D-103 | Work is planned as story cards; their tests come first | **Accepted** |
 
 ---
 
@@ -581,7 +582,7 @@
   - **Per-position roster targets are league averages**, not rules. Each team varies within a typical range, above a floor that keeps every package fieldable ([F-03 §4.1](features/F-03_PLAYERS.md#41-positions)). The only hard rule stays F-05's "required depth chart slots filled".
 
 ## D-066: Git workflow: GFO commit format, one branch per milestone
-- **Status:** **Accepted**; the branching part is **amended by [D-076](#d-076-work-happens-on-main-no-milestone-branches)** (work happens on `main`).
+- **Status:** **Accepted**; the branching part is **amended by [D-076](#d-076-work-happens-on-main-no-milestone-branches)** (work happens on `main`), and **[D-103](#d-103-work-is-planned-as-story-cards-their-tests-come-first)** ends each message with its story card's ID.
 - **Originally:** **Accepted** (owner, 2026-10-15, answering the M0 plan's questions: chose "Your current format" for commits, "One M0 branch" for landing work, and "Delete it" for spike code).
 - **Decision:**
   - **Commit messages** use the owner's existing format, `(type) *module* : summary` (e.g., `(feat) *m0* : scaffold solution, projects and guardrails`), replacing the Conventional Commits rule in TESTING_AND_QUALITY.md §8.4. Types follow the commit-review skill: `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`. **Branches** are `type/short-name`, reusing the same types.
@@ -703,7 +704,7 @@
 - **Decision:** no color-blind re-tuning during development. M0's finding stays recorded (in Light mode, the Average, Below and Poor rating colors merge for deuteranopia; VISUAL_DESIGN.md §3.4), and the review is a required item of the M11 accessibility audit (F-27) before any public or paid release. Numbers on rating chips stay, so color is never the only signal.
 
 ## D-076: Work happens on `main`; no milestone branches
-- **Status:** **Accepted** (owner, 2026-10-20: *"From now on lets stay on main, branching does not matter to me in this repo"*).
+- **Status:** **Accepted** (owner, 2026-10-20: *"From now on lets stay on main, branching does not matter to me in this repo"*). Its "a commit per work package" is **amended by [D-103](#d-103-work-is-planned-as-story-cards-their-tests-come-first)**: a commit per story card.
 - **Decision:** commits go straight to `main`. No milestone branches and no merge step; this amends D-066's "one branch per milestone".
 - **Unchanged:** the commit format (`(type) *module* : summary`), a commit per work package (or per meaningful slice), `./build.ps1` before every commit, and a tag per milestone (`m1-complete`, …) when its exit checklist passes, which is also when the version's middle number goes up (D-072).
 - **History:** M0 used `feat/m0-foundations`, merged into `main` with `m0-complete` on the merge commit; M1's first commits came through PR #2.
@@ -987,3 +988,16 @@
   4. **Every team name is a link to its Team page,** as every player name opens its peek: the League page, the grids' Team column, the Player page's band and bio (the drafting team too), the peek sheet, Home and the top bar. Not the Team page's own heading, and not the menu screens, where no league is open to browse. **No team peek.**
 - **Options not taken:** your team with a single "All players" switch (the guide's recommendation, before the team and position pickers); a separate `/players` page; every season of the contract, the past ones muted; a team peek beside the link (F-02 §8 as written); the wordmark in the brand until the pick (#2 as first written).
 - **Consequences:** + One page answers "who plays this position for that team", and Back keeps the list. + A team is one click from anywhere it's named. − Two pickers to build and test, and Fluent's `FluentSelect` is new to GFO (Spike S0b didn't cover it). − The position filter over 1,846 players joins the grid's budget (ARCHITECTURE.md: a sort or filter under 100 ms).
+
+## D-103: Work is planned as story cards; their tests come first
+- **Status:** **Accepted** (owner, 2026-11-17: *"I think I want to switch things up a bit. Is it possible make more traditional feature / story card breakdown?"*, then, choosing among options: *"Markdown in docs/"* for where cards live, "Criteria + links" for how much a card carries, "Tests first", "Now, on M1's remainder" for when to start, and "Claude drafts, you approve" for who writes them; and *"Yes, draft them"* to the drafts with Claude writing the empty shells). Amends [D-066](#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone) (the commit message ends with the card's ID), [D-076](#d-076-work-happens-on-main-no-milestone-branches) (a commit per card, not per work package) and the [M1 plan](milestones/M1_THE_LEAGUE.md)'s §3, §4 (WP9, WP10) and §11.
+- **Why:** a work package ran a week or more. Its builder's guide (250–960 lines) was a design doc, a task list and a checklist at once, and its status lived in checkboxes deep in the guide. WP1–WP7 were horizontal layers, so nothing a player could see happened until WP8.
+- **Decision:**
+  1. **A story card** (`docs/stories/S-xxx_SHORT_NAME.md`, from [the template](stories/_TEMPLATE.md)) is one outcome a player can see, or a test or measurement can prove. It's S or M (an L is two cards), and it lands as one commit with its code, tests and docs. Work that isn't player-facing is an **enabler** card with measurable criteria; a defect is a **bug** card. IDs run in the order cards are written and are never reused.
+  2. **A card carries** its outcome, numbered acceptance criteria, the **surface** the tests depend on (routes, components and parameters, `data-testid`s, new DTO or query members), links into the spec and DECISIONS, and a code sketch only when it settles a choice. The rules stay in the feature spec and the choices in DECISIONS. No new builder's guides.
+  3. **The board is the milestone plan's card table,** in the order of work, and a card's status lives only there: **Draft** (Claude wrote it) → **Ready** (you approved its criteria; Claude writes its tests) → **Building** (the tests are in; you build until they pass) → **Checking** (Claude proves each test on a planted bug, checks the screens, builds the gallery and updates the docs) → **Done** (`./build.ps1` green, committed). One card is in Building or Checking at a time.
+  4. **Tests come first.** At Ready, Claude writes the failing tests from the criteria, plus empty shells for the surface (a route and parameters, no markup), so the solution compiles. You write the code. A test changes only when its card's criteria change, and the card changes first.
+  5. **Commits** keep the format and end with the card: `(feat) *league* : browse the league by conference and division (S-002)`. You make every commit.
+  6. **It starts with M1's remainder:** WP9's unbuilt work and WP10's palette are S-001 to S-011. WP1–WP8 and their guides stay as written. The WP9 guide's §2 rules and §7 gotchas still hold, and the cards link to them. M1's exit (the checklist, the tag, the version) stays on the plan.
+- **Options not taken:** GitHub Projects (a real board, but a second source of truth outside the repository, and every card Claude writes there a post to approve); cards with guide-style code for every part; cards with criteria only; tests after the code, as before; starting at M2 (mostly enabler work, a weak first test of the format); you writing the cards and Claude reviewing them.
+- **Consequences:** + Units of one to three days, the state of a milestone at a glance, and "done" defined before the code. + The tests compile against an agreed surface, so the routine of checking in a scratch copy while the tree doesn't build goes away. − The surface pins names before the build: less freedom to rename while building, and a rename is a card change first. − Claude writes src, but only empty shells whose names you approved on the card. − For the rest of M1 the WP9 guide and the cards sit side by side.

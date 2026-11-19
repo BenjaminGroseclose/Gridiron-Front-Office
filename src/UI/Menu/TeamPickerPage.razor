@@ -61,7 +61,7 @@
     {
         if (Saves.Current is null)
         {
-            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            Navigation.NavigateTo(Routes.MainMenu, replace: true);
             return;
         }
 
@@ -69,7 +69,7 @@
         _header = await Task.Run(() => Queries.GetHeaderAsync());
         if (_header.UserTeam is not null)
         {
-            Navigation.NavigateTo(SaveActions.Home, replace: true);   // no second pick
+            Navigation.NavigateTo(Routes.Home, replace: true);   // no second pick
             return;
         }
 
@@ -93,7 +93,7 @@
     {
         if (_selected is { } team)
         {
-            Navigation.NavigateTo(SaveActions.WithTeam(SaveActions.Finalize, team.Identity.TeamID));
+            Navigation.NavigateTo(Routes.WithTeam(Routes.Finalize, team.Identity.TeamID));
         }
 
         return Task.CompletedTask;

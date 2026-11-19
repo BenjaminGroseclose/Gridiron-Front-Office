@@ -45,6 +45,11 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 | Document | Scope |
 |---|---|
 | [milestones/M0_FOUNDATIONS.md](milestones/M0_FOUNDATIONS.md) | M0 in detail: ten work packages, every file and package that changes, risks, the exit checklist, and progress |
+| [milestones/M1_THE_LEAGUE.md](milestones/M1_THE_LEAGUE.md) | M1 in detail: the work packages, then **the board** (§3.1): the story cards still to build, and where each one stands |
+
+### Story cards
+
+Work is planned as story cards in [stories/](stories/) ([D-103](DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first)): one outcome each, small, with acceptance criteria whose tests are written before the code. A card's status lives on its milestone plan's board.
 
 ### Feature specs
 
@@ -58,12 +63,13 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 | Document | Use |
 |---|---|
 | [features/_TEMPLATE.md](features/_TEMPLATE.md) | Template for a detailed feature spec. Write one right before building a feature, not before. |
+| [stories/_TEMPLATE.md](stories/_TEMPLATE.md) | Template for a story card. Claude drafts cards from the specs; you approve one by moving it to Ready on the board. |
 
 ---
 
 ## Conventions
 
-- **IDs.** Features `F-xx`, milestones `M-x`, decisions `D-xxx`, open questions `Q-xx`. Use the IDs when one doc refers to another.
+- **IDs.** Features `F-xx`, milestones `M-x`, story cards `S-xxx`, decisions `D-xxx`, open questions `Q-xx`. Use the IDs when one doc refers to another.
 - **Feature specs.** These live in `docs/features/F-xx_NAME.md`. Write each one just before its milestone starts. A spec written two milestones early goes stale.
 - **Answering questions.** When a `Q-xx` is answered, add a `D-xxx` entry to DECISIONS.md, delete the question (leave a one-line pointer), and update every doc it affects in the same change.
 - **Docs vs. code.** The docs describe intent. If code and docs disagree, fix one of them in the same pull request.

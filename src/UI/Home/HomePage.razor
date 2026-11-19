@@ -1,0 +1,32 @@
+@page "/home"
+@inject ISaveManager Saves
+@inject NavigationManager Navigation
+@inject SaveActions Actions
+@* The open league's home (S-001). Until S-004 it names the league and says what comes next. Without an open league it
+   goes back to the main menu, and a league without a user team goes to the picker. *@
+
+@if (Saves.Current is { } league)
+{
+    <PageTitle>@league.LeagueName · Gridiron Front Office</PageTitle>
+
+    <h1 class="gfo-league-title gfo-display">@league.LeagueName</h1>
+    <EmptyState Title="Your league will live here" Icon="IconName.Trophy" data-testid="league-empty">
+        Teams, players and the season come next.
+    </EmptyState>
+}
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        if (Saves.Current is null)
+        {
+            Navigation.NavigateTo(Routes.MainMenu, replace: true);
+            return;
+        }
+
+        if (await Actions.LandingAsync() == Routes.TeamPicker)
+        {
+            Navigation.NavigateTo(Routes.TeamPicker, replace: true);
+        }
+    }
+}

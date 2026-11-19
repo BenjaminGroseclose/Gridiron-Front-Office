@@ -4,7 +4,7 @@
     {
         <TeamMark Team="Team" Size="size" Decorative="true" />
     }
-    @Team.Nickname
+    @Team.City @Team.Nickname
 </a>
 
 @code {
@@ -12,7 +12,7 @@
 	public TeamIdentityDto Team { get; set; } = default!;
 
 	/// <summary>The crest's size in px, or null for the name alone.</summary>
-    [Parameter] public int? CrestSize { get; set; }
+  [Parameter] public int? CrestSize { get; set; }
 
 	[Parameter]
 	public string Class { get; set; } = string.Empty;

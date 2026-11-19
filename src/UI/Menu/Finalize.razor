@@ -91,7 +91,7 @@
     {
         if (Saves.Current is null)
         {
-            Navigation.NavigateTo(SaveActions.MainMenu, replace: true);
+            Navigation.NavigateTo(Routes.MainMenu, replace: true);
             return;
         }
 
@@ -99,21 +99,21 @@
         _header = await Task.Run(() => Queries.GetHeaderAsync());
         if (_header.UserTeam is not null)
         {
-            Navigation.NavigateTo(SaveActions.Home, replace: true);   // no second pick
+            Navigation.NavigateTo(Routes.Home, replace: true);   // no second pick
             return;
         }
 
         _team = MarkedTeam is { } id ? await Task.Run(() => Queries.GetTeamSummaryAsync(new TeamID(id))) : null;
         if (_team is null)
         {
-            Navigation.NavigateTo(SaveActions.TeamPicker, replace: true);   // no team to take over: pick one
+            Navigation.NavigateTo(Routes.TeamPicker, replace: true);   // no team to take over: pick one
         }
     }
 
     // Back to the picker with this team still marked
     private Task BackAsync()
     {
-        Navigation.NavigateTo(_team is { } team ? SaveActions.WithTeam(SaveActions.TeamPicker, team.Identity.TeamID) : SaveActions.TeamPicker);
+        Navigation.NavigateTo(_team is { } team ? Routes.WithTeam(Routes.TeamPicker, team.Identity.TeamID) : Routes.TeamPicker);
         return Task.CompletedTask;
     }
 

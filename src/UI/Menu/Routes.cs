@@ -35,4 +35,8 @@ public sealed class Routes
 	/// <summary>A team's page.</summary>
 	public static string Team(TeamID team) => string.Create(CultureInfo.InvariantCulture, $"/team/{team.Value}");
 
+	/// <summary>A route with the marked team: the summary shows it, and the picker marks it again.</summary>
+	public static string WithTeam(string route, TeamID team) =>
+		$"{route}?team={team.Value.ToString(CultureInfo.InvariantCulture)}";
+
 }

@@ -5,7 +5,6 @@ using GridironFrontOffice.Application.Saves;
 using GridironFrontOffice.Core.IDs;
 using GridironFrontOffice.Core.Leagues;
 using GridironFrontOffice.UI.Football;
-using GridironFrontOffice.UI.League;
 using GridironFrontOffice.UI.Menu;
 using GridironFrontOffice.UI.Pages;
 using GridironFrontOffice.UI.Tests.State;
@@ -145,7 +144,7 @@ public sealed class MainMenuTests : SaveScreenContext
 
         Render<MainMenu>();
 
-        Location.ShouldBe("league");
+        Location.ShouldBe("home");
     }
 }
 
@@ -286,52 +285,12 @@ public sealed class LoadScreenTests : SaveScreenContext
     }
 }
 
-public sealed class LeagueHomeTests(GeneratedSeed42 seed) : RealScreenContext, IClassFixture<GeneratedSeed42>
-{
-    [Fact]
-    public async Task It_names_the_league_and_says_what_comes_next()
-    {
-        await OpenLeagueAsync(seed.League);
-        await PickAsync(5);
-        GoTo("/league");
-
-        var cut = Render<LeagueHome>();
-
-        cut.Find("h1").TextContent.ShouldBe("Seed 42");
-        cut.Find("[data-testid=league-empty]").TextContent.ShouldContain("Your league will live here");
-        await cut.WaitForStateAsync(() => cut.RenderCount > 1, Bound);   // ComponentBase renders again once OnInitializedAsync is done
-        Location.ShouldBe("league", "A league with a team stays home.");
-    }
-
-    [Fact]
-    public async Task A_league_without_a_team_goes_to_the_picker()
-    {
-        await OpenLeagueAsync(seed.League);
-        GoTo("/league");
-
-        var cut = Render<LeagueHome>();
-
-        await cut.WaitForAssertionAsync(() => Location.ShouldBe("pick-team"), Bound);
-    }
-
-    [Fact]
-    public void Without_an_open_league_it_goes_to_the_main_menu()
-    {
-        GoTo("/league");
-
-        var cut = Render<LeagueHome>();
-
-        Location.ShouldBe("");
-        cut.Markup.Trim().ShouldBeEmpty();
-    }
-}
-
 /// <summary>M1 WP8 (guide §4): Continue and Load land a real league where LandingAsync says.</summary>
 public sealed class MenuLandingTests(GeneratedSeed42 seed) : RealScreenContext, IClassFixture<GeneratedSeed42>
 {
     [Theory]
     [InlineData(false, "pick-team")]
-    [InlineData(true, "league")]
+    [InlineData(true, "home")]
     public async Task Continue_lands_a_league_on_the_picker_until_it_has_a_team(bool picked, string landing)
     {
         await SavedLeagueAsync(picked);
@@ -346,7 +305,7 @@ public sealed class MenuLandingTests(GeneratedSeed42 seed) : RealScreenContext, 
 
     [Theory]
     [InlineData(false, "pick-team")]
-    [InlineData(true, "league")]
+    [InlineData(true, "home")]
     public async Task Load_lands_a_league_on_the_picker_until_it_has_a_team(bool picked, string landing)
     {
         await SavedLeagueAsync(picked);

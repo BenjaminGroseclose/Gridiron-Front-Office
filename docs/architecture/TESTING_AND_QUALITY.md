@@ -152,11 +152,16 @@ jobs:
 Decided in [D-066](../DECISIONS.md#d-066-git-workflow-gfo-commit-format-one-branch-per-milestone), with branching replaced by [D-076](../DECISIONS.md#d-076-work-happens-on-main-no-milestone-branches).
 
 - **Commit messages:** `(type) *module* : summary`, for example `(feat) *m0* : scaffold solution, projects and guardrails` or `(doc) *docs* : resolve open questions`. Types (the commit-review skill's list): `feat`, `bugfix`, `fix`, `refactor`, `perf`, `test`, `doc`, `style`, `chore`, `revert`. Branch prefixes reuse the same types.
-- **Work on `main`** (D-076): no branches and no merge step. A commit per work package, or per meaningful slice of a large one.
+- **Work on `main`** (D-076): no branches and no merge step. A commit per story card, with its code, tests and docs, and the card's ID at the end of the message: `(feat) *league* : browse the league by conference and division (S-002)` ([D-103](../DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first); before it, a commit per work package).
 - Run `./build.ps1` before every commit.
 - Tag milestones (`m0-complete`, …) as save-compatible checkpoints.
 
 ### 8.5 Definition of Done (per feature)
+A story card ([D-103](../DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first)) is done when the items below that apply to it hold, and:
+- [ ] Each acceptance criterion has its test, written from the card before the code, and each test was proven to fail on a planted bug
+- [ ] The card's Built section says what changed from the card, and the board says Done
+
+For every feature:
 - [ ] The rules are covered by unit tests (Core/Application)
 - [ ] The AI counterpart exists and passes autoplay (if the feature has one)
 - [ ] The UI uses design system components only, with empty, loading and error states

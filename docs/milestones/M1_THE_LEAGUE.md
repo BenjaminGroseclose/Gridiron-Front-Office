@@ -2,11 +2,11 @@
 
 > **Status:** **Accepted** (owner answered §12 on 2026-10-20) · 2026-10-20 · Milestone definition: [ROADMAP.md §M1](../ROADMAP.md#m1--the-league-exists) · Branch: `main` (D-076) · Version: `0.1.x` ([D-072](../DECISIONS.md#d-072-versions-are-0milestonebuild-until-10))
 >
-> This is the detailed plan for M1. It turns the roadmap's scope into **eleven ordered work packages**, names what each one builds and how it's checked, and ends with the exit checklist and the questions only the owner can answer. **M1 is the first football:** a generated, believable league you can browse, with no games yet (those are M2 and M3).
+> This is the detailed plan for M1. It turns the roadmap's scope into **eleven ordered work packages** (from WP9 on, **story cards** on the board in §3.1, [D-103](../DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first)), names what each one builds and how it's checked, and ends with the exit checklist and the questions only the owner can answer. **M1 is the first football:** a generated, believable league you can browse, with no games yet (those are M2 and M3).
 >
 > **Specs for M1:** [F-02 League & teams](../features/F-02_LEAGUE_AND_TEAMS.md), [F-03 Players](../features/F-03_PLAYERS.md) and [F-01's M1 slice](../features/F-01_LEAGUE_CREATION.md) (the New League wizard v0, [D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted)) are accepted. F-12's M1 slice (the contract structure and generation, D-074) gets a short spec in WP0.
 >
-> **Who builds it:** the owner writes the code. Claude writes a builder's guide per work package (files, signatures, the tests to pass, reference values), prepares the data files, and reviews each package before it's committed (§11). Start here: [M1_WP1_GUIDE.md](M1_WP1_GUIDE.md). Everything else is specified by [PERSISTENCE.md](../architecture/PERSISTENCE.md), [DATA_ACCESS_GUIDE.md](../architecture/DATA_ACCESS_GUIDE.md), [UI_DESIGN_SYSTEM.md](../architecture/UI_DESIGN_SYSTEM.md) and [VISUAL_DESIGN.md](../VISUAL_DESIGN.md).
+> **Who builds it:** the owner writes the code. Claude writes a builder's guide per work package (files, signatures, the tests to pass, reference values), prepares the data files, and reviews each package before it's committed (§11). From WP9 on, Claude drafts story cards instead of guides, and writes each card's tests before the code (D-103). Start here: [M1_WP1_GUIDE.md](M1_WP1_GUIDE.md). Everything else is specified by [PERSISTENCE.md](../architecture/PERSISTENCE.md), [DATA_ACCESS_GUIDE.md](../architecture/DATA_ACCESS_GUIDE.md), [UI_DESIGN_SYSTEM.md](../architecture/UI_DESIGN_SYSTEM.md) and [VISUAL_DESIGN.md](../VISUAL_DESIGN.md).
 
 ---
 
@@ -55,8 +55,26 @@
 | WP6  | Perception and read models         | M    | WP5      | ✅ Done 2026-11-04                                                                                       |
 | WP7  | Football components                | M    | WP6      | ✅ Done 2026-11-04                                                                                       |
 | WP8  | New League wizard v0 and team tint | M    | WP5–WP7  | Name + seed → generate → pick a team → the app in your colors                                           |
-| WP9  | The screens                        | L    | WP6, WP7 | Home, League, Team, Roster (DataGrid v1), Player, the peek sheet                                        |
-| WP10 | Command palette v0 and the M1 exit | S–M  | WP9      | Ctrl+K works; the exit checklist (§10) passes; tag `m1-complete`                                        |
+| WP9  | The screens                        | L    | WP6, WP7 | Cards S-001 to S-010 (§3.1)                                                                             |
+| WP10 | Command palette v0 and the M1 exit | S–M  | WP9      | Card S-011 (§3.1); the exit checklist (§10) passes; tag `m1-complete`                                   |
+
+### 3.1 The board (D-103)
+
+The rest of M1 is story cards, in the order of work. A card's status lives only here: **Draft** (Claude wrote it) → **Ready** (you approved its criteria; Claude writes its tests and shells) → **Building** (you build until the tests pass) → **Checking** (Claude proves each test on a planted bug, checks the screens, builds the gallery and updates the docs) → **Done** (`./build.ps1` green, committed). One card is in Building or Checking at a time.
+
+| Card | Outcome | Status |
+| --- | --- | --- |
+| [S-001](../stories/S-001_HOME_AND_TOP_BAR.md) | Home at `/home`, and the top bar names your team (half-built; finishing it makes `main` build again) | ✅ Done 2026-11-19 |
+| [S-002](../stories/S-002_LEAGUE_PAGE.md) | Browse the league by conference and division | Draft |
+| [S-003](../stories/S-003_TEAM_PAGE.md) | Every team has a page | Draft |
+| [S-004](../stories/S-004_HOME.md) | Home shows your team | Draft |
+| [S-005](../stories/S-005_PLAYER_PAGE.md) | A player's full profile | Draft |
+| [S-006](../stories/S-006_CONTRACT_BLOCK.md) | A player's contract, season by season | Draft |
+| [S-007](../stories/S-007_PLAYER_PEEK.md) | Every player name opens the peek | Draft |
+| [S-008](../stories/S-008_ROSTER_GRID.md) | A team's roster in a grid | Draft |
+| [S-009](../stories/S-009_ROSTER_PAGE.md) | Browse any roster by team and position | Draft |
+| [S-010](../stories/S-010_GRID_BUDGET.md) | The grid stays fast at 2,000 rows (enabler) | Draft |
+| [S-011](../stories/S-011_COMMAND_PALETTE.md) | Ctrl+K jumps to any player or team (three questions first) | Draft |
 
 ## 4. The work packages in detail
 
@@ -67,7 +85,7 @@
 - ✅ Your answers to §12 (2026-10-20): D-012 accepted, D-073, D-074, D-075, the route change, the data downloads, saved views in M3.
 - **F-12's M1 spec** (`docs/features/F-12_CONTRACTS.md`, the M1 slice; Claude drafts, you review): the contract structure, the cap-hit formula, the first-season cap, salary bands by position and tier, contract length by age and tier, bonus and guarantee shares, rookie-style deals, and how a team's total is kept under the cap. Checked against real references. _Drafted 2026-10-21 ([F-12](../features/F-12_CONTRACTS.md), Proposed): its §14 lists six questions for you; `contracts.json` follows its acceptance._
 - **F-01's M1 spec** (`docs/features/F-01_LEAGUE_CREATION.md`, from the template; Claude drafts, you review): the wizard steps, what the team picker shows, progress, cancel, the error cases, and what the load screen's cards gain (crest, team, season, phase). _Drafted 2026-11-04 with the WP8 guide ([F-01](../features/F-01_LEAGUE_CREATION.md)); its four questions were answered the same day as [D-095](../DECISIONS.md#d-095-accent-states-move-away-from-their-text-the-picker-can-start-over-a-team-is-selected-then-taken-the-desktop-end-to-end-is-a-ui-flow-plus-a-check), and you accepted it on 2026-11-05 ([D-096](../DECISIONS.md#d-096-f-01s-m1-slice-accepted))._
-- **Route fix from M0:** F-02 puts the League page (all teams) at `/league`, which M0 used for the league home. The home becomes `/home`, the League page `/league` (UI_DESIGN_SYSTEM.md §7, `SaveActions.LeagueHome`).
+- **Route fix from M0:** F-02 puts the League page (all teams) at `/league`, which M0 used for the league home. The home becomes `/home`, the League page `/league` (UI_DESIGN_SYSTEM.md §7; done in [S-001](../stories/S-001_HOME_AND_TOP_BAR.md): `Routes.Home`).
 
 ### WP1 · Core: IDs, positions and the PRNG (M) ✅ Done 2026-10-20
 
@@ -230,7 +248,7 @@
 
 ### WP9 · The screens (L)
 
-**Goal:** browse every team and player. **Builder's guide:** [M1_WP9_GUIDE.md](M1_WP9_GUIDE.md).
+**Goal:** browse every team and player. **Builder's guide:** [M1_WP9_GUIDE.md](M1_WP9_GUIDE.md). **Planned as cards S-001 to S-010** (§3.1, D-103, 2026-11-17): the guide's §2 rules and §7 gotchas still hold, and the cards link to them.
 
 - **Home** (`/home`): a stub dashboard (your team's identity, record placeholder, top players).
 - **League** (`/league`): both conferences, four division cards each, every team a link (F-02 §8).
@@ -247,6 +265,8 @@
 **Goal:** jump anywhere, then prove the milestone.
 
 - **Command palette v0** (`Ctrl+K`): a Fluent dialog with a search box and results; players and teams by name, through `PlayerQueries.SearchPlayers`, built here with its first consumer ([D-092](../DECISIONS.md#d-092-before-the-pick-an-outsider-looks-personality-shows-for-your-own-roster-roster-strength-is-the-starters-mean-ovr)); Enter navigates. The command registry comes later (P1).
+- **The palette is card [S-011](../stories/S-011_COMMAND_PALETTE.md)** (D-103), with three questions to answer before it's Ready.
+- **The walk-through** (Claude, before the tag): Home → League → a rival's Team page → a name's peek → Open full profile → the Player page → its team's name, and the Roster through both pickers, then Back. In a visible pane in Dark and Light with several team colors, then in the desktop app (D-095 #4).
 - **Run the exit checklist** (§10), record the generation time, update the docs, tag **`m1-complete`**, set `VersionPrefix` to `0.2.0`.
 
 ## 5. What the repository gains in M1
@@ -319,7 +339,7 @@ From [ROADMAP.md §M1](../ROADMAP.md#m1--the-league-exists) and the specs' test 
 
 ## 11. How M1 lands
 
-On `main` (D-076): a commit per work package (or per meaningful slice of a large one), `./build.ps1` before every commit, and the `m1-complete` tag when §10 passes.
+On `main` (D-076): a commit per work package (or per meaningful slice of a large one; from WP9 on, a commit per story card, D-103), `./build.ps1` before every commit, and the `m1-complete` tag when §10 passes.
 
 **The owner writes the production code** (2026-10-20), **and Claude writes the tests** (2026-10-21). For each work package:
 
@@ -327,6 +347,8 @@ On `main` (D-076): a commit per work package (or per meaningful slice of a large
 2. **Claude prepares the package's data files** (team and college JSON, blocklists, the downloaded name and place lists after approval), so the code has real inputs.
 3. **You build the production code.** Claude writes the tests the guide specifies, and proves each one can fail.
 4. **Ask for a review:** Claude runs `./build.ps1`, reads the diff against the guide and the specs, and reports what to fix before you commit.
+
+**From WP9 on, story cards replace the guides** ([D-103](../DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first), 2026-11-17). Claude drafts each card from the specs; you approve it by moving it to Ready on the board (§3.1); Claude writes its failing tests and empty shells; you build until they pass; Claude proves the tests, checks the screens and updates the docs; you commit once, with the card's ID at the end of the message.
 
 ## 12. Questions for the owner (answered 2026-10-20)
 

@@ -1,7 +1,5 @@
-using System.Globalization;
 using GridironFrontOffice.Application.Leagues;
 using GridironFrontOffice.Application.Saves;
-using GridironFrontOffice.Core.IDs;
 using GridironFrontOffice.Core.Results;
 using GridironFrontOffice.UI.Components.Overlays;
 using Microsoft.AspNetCore.Components;
@@ -14,9 +12,6 @@ namespace GridironFrontOffice.UI.Menu;
 /// </summary>
 public sealed class SaveActions(ISaveManager saves, IGfoDialogs dialogs, IGfoToasts toasts, NavigationManager navigation, LeagueQueries queries, CreateLeague create, LeagueCommands commands)
 {
-	/// <summary>A route with the marked team: the summary shows it, and the picker marks it again.</summary>
-	public static string WithTeam(string route, TeamID team) =>
-		$"{route}?team={team.Value.ToString(CultureInfo.InvariantCulture)}";
 
 	/// <summary>Opens a save and goes to its home. A failure is reported and returns false.</summary>
 	public async Task<bool> OpenAsync(SaveCard card)

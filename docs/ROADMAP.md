@@ -100,7 +100,7 @@ flowchart TD
 
 **Goal:** generate a believable fictional league and browse every team and player.
 
-**Detailed plan:** [milestones/M1_THE_LEAGUE.md](milestones/M1_THE_LEAGUE.md), eleven work packages in build order (proposed, 2026-10-20).
+**Detailed plan:** [milestones/M1_THE_LEAGUE.md](milestones/M1_THE_LEAGUE.md), eleven work packages in build order (proposed, 2026-10-20); from WP9 on, story cards on the plan's board ([D-103](DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first)).
 
 **Specs (accepted):** [F-02 League & teams](features/F-02_LEAGUE_AND_TEAMS.md), [F-03 Players](features/F-03_PLAYERS.md).
 
