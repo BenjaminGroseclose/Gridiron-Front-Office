@@ -1,5 +1,7 @@
 # S-011 · Ctrl+K jumps to any player or team
 
+> **Status:** Draft · 2026-11-19
+>
 > **Kind:** Story · **Feature:** F-03, F-02 · **Milestone:** M1 · **Size:** M · **Needs:** S-003, S-005
 
 ## Outcome

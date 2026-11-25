@@ -1,5 +1,7 @@
 # S-007 · Every player name opens the peek
 
+> **Status:** Draft · 2026-11-19
+>
 > **Kind:** Story · **Feature:** F-03 · **Milestone:** M1 · **Size:** M · **Needs:** S-004, S-006
 
 ## Outcome

@@ -1,0 +1,44 @@
+/* Display type (VISUAL_DESIGN.md §4): the page title in Display L, the conference names in Title.
+   The weight is set here because Fluent's unlayered h1–h6 rule (weight Medium) beats .gfo-display's
+   800, which sits in @layer utilities. */
+.gfo-league-title {
+	margin: 4px 0 20px;
+	font-size: 52px;
+	font-weight: 800;
+}
+
+.gfo-conference-name {
+	margin: 0;
+	font-size: 26px;
+	font-weight: 800;
+	white-space: nowrap;
+}
+
+/* The two conferences side by side, one column under 1,100 px (S-002 #5). minmax(0, 1fr) keeps the
+   columns equal: a plain 1fr would let a wide card stretch its column. */
+.gfo-league-conferences {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 24px;
+}
+
+@media (width < 1100px) {
+	.gfo-league-conferences {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+
+.gfo-conference-header {
+	display: flex;
+	align-items: center;
+	gap: 16px; /* the space between the name and the line */
+	width: 100%;
+}
+
+/* Fluent sets every horizontal divider to width: 100%, which squeezed the name until it wrapped.
+   This line starts at 0 and grows into what the name leaves. */
+.gfo-conference-header ::deep .gfo-conference-rule {
+	flex: 1 1 0;
+	width: auto;
+	min-width: 0;
+}

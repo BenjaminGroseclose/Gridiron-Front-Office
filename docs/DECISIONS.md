@@ -110,7 +110,8 @@
 | D-100 | Screens are built from Fluent's layout and text components; scoped CSS covers only what they can't | **Accepted** |
 | D-101 | Start over is dropped: another league is Close league, then New league | **Accepted** |
 | D-102 | The Roster opens on your team and picks any team or all of them, and a position; the top bar names your team; the contract table runs from this season; every team name links to its page | **Accepted** |
-| D-103 | Work is planned as story cards; their tests come first | **Accepted** |
+| D-103 | Work is planned as story cards; their tests come first | **Accepted** (status on the card too, by D-104) |
+| D-104 | A card's status is on the card and on the board: one word and a date | **Accepted** |
 
 ---
 
@@ -995,9 +996,19 @@
 - **Decision:**
   1. **A story card** (`docs/stories/S-xxx_SHORT_NAME.md`, from [the template](stories/_TEMPLATE.md)) is one outcome a player can see, or a test or measurement can prove. It's S or M (an L is two cards), and it lands as one commit with its code, tests and docs. Work that isn't player-facing is an **enabler** card with measurable criteria; a defect is a **bug** card. IDs run in the order cards are written and are never reused.
   2. **A card carries** its outcome, numbered acceptance criteria, the **surface** the tests depend on (routes, components and parameters, `data-testid`s, new DTO or query members), links into the spec and DECISIONS, and a code sketch only when it settles a choice. The rules stay in the feature spec and the choices in DECISIONS. No new builder's guides.
-  3. **The board is the milestone plan's card table,** in the order of work, and a card's status lives only there: **Draft** (Claude wrote it) → **Ready** (you approved its criteria; Claude writes its tests) → **Building** (the tests are in; you build until they pass) → **Checking** (Claude proves each test on a planted bug, checks the screens, builds the gallery and updates the docs) → **Done** (`./build.ps1` green, committed). One card is in Building or Checking at a time.
+  3. **The board is the milestone plan's card table,** in the order of work, and a card's status lives only there (amended by [D-104](#d-104-a-cards-status-is-on-the-card-and-on-the-board-one-word-and-a-date): on the card too): **Draft** (Claude wrote it) → **Ready** (you approved its criteria; Claude writes its tests) → **Building** (the tests are in; you build until they pass) → **Checking** (Claude proves each test on a planted bug, checks the screens, builds the gallery and updates the docs) → **Done** (`./build.ps1` green, committed). One card is in Building or Checking at a time.
   4. **Tests come first.** At Ready, Claude writes the failing tests from the criteria, plus empty shells for the surface (a route and parameters, no markup), so the solution compiles. You write the code. A test changes only when its card's criteria change, and the card changes first.
   5. **Commits** keep the format and end with the card: `(feat) *league* : browse the league by conference and division (S-002)`. You make every commit.
   6. **It starts with M1's remainder:** WP9's unbuilt work and WP10's palette are S-001 to S-011. WP1–WP8 and their guides stay as written. The WP9 guide's §2 rules and §7 gotchas still hold, and the cards link to them. M1's exit (the checklist, the tag, the version) stays on the plan.
 - **Options not taken:** GitHub Projects (a real board, but a second source of truth outside the repository, and every card Claude writes there a post to approve); cards with guide-style code for every part; cards with criteria only; tests after the code, as before; starting at M2 (mostly enabler work, a weak first test of the format); you writing the cards and Claude reviewing them.
 - **Consequences:** + Units of one to three days, the state of a milestone at a glance, and "done" defined before the code. + The tests compile against an agreed surface, so the routine of checking in a scratch copy while the tree doesn't build goes away. − The surface pins names before the build: less freedom to rename while building, and a rename is a card change first. − Claude writes src, but only empty shells whose names you approved on the card. − For the rest of M1 the WP9 guide and the cards sit side by side.
+
+## D-104: A card's status is on the card and on the board: one word and a date
+- **Status:** **Accepted** (owner, 2026-11-24: *"Can we add a clear status on all of our cards."*, then, choosing among three options: *"Both, kept short (Recommended)"*). Amends [D-103](#d-103-work-is-planned-as-story-cards-their-tests-come-first) #3, [the card template](stories/_TEMPLATE.md) and the [M1 plan](milestones/M1_THE_LEAGUE.md)'s §3.1.
+- **Why:** D-103 kept the status only on the board, so a card opened on its own didn't say where it stood. The board's S-002 cell had grown into a sentence about what blocked the commit.
+- **Decision:**
+  1. **A card's first line is its status:** `> **Status:** Building · 2026-11-24`, one of D-103's five words and the date the card got there.
+  2. **The board shows the same word and date,** and both change in the same edit. Claude makes the change at each step it owns (Draft, Ready, Checking) and when the owner's commit makes a card Done.
+  3. **Anything more than the word** (what's blocking, what's left) goes in the card's Work list, never on the board.
+- **Options not taken:** the card only, with the board a plain list (one place, but no view of the milestone at a glance); the board only, with a link from each card (D-103 as it was: nothing to drift, but a click to see where a card stands).
+- **Consequences:** + A card says where it stands, and the board still shows the whole milestone. − The status is in two places: an edit that changes one and not the other leaves them disagreeing, so a check of the board compares them.

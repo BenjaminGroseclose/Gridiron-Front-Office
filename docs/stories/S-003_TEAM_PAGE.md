@@ -1,5 +1,7 @@
 # S-003 · Every team has a page
 
+> **Status:** Draft · 2026-11-19
+>
 > **Kind:** Story · **Feature:** F-02, F-12 · **Milestone:** M1 · **Size:** M · **Needs:** S-001
 
 ## Outcome

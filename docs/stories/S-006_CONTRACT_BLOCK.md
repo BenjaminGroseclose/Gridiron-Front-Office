@@ -1,5 +1,7 @@
 # S-006 · A player's contract, season by season
 
+> **Status:** Draft · 2026-11-19
+>
 > **Kind:** Story · **Feature:** F-12 · **Milestone:** M1 · **Size:** S · **Needs:** S-005
 
 ## Outcome

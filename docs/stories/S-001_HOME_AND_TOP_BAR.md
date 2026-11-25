@@ -1,5 +1,7 @@
 # S-001 · Home at `/home`, and the top bar names your team
 
+> **Status:** Done · 2026-11-19
+>
 > **Kind:** Story · **Feature:** F-01, F-02 · **Milestone:** M1 · **Size:** S · **Needs:** —
 
 ## Outcome

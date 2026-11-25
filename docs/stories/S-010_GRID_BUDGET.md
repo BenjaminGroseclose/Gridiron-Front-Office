@@ -1,5 +1,7 @@
 # S-010 · The grid stays fast at 2,000 rows
 
+> **Status:** Draft · 2026-11-19
+>
 > **Kind:** Enabler · **Feature:** F-03 · **Milestone:** M1 · **Size:** S · **Needs:** S-009
 
 ## Outcome

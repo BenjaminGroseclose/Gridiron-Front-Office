@@ -1,0 +1,58 @@
+@page "/league"
+@using GridironFrontOffice.Application.Leagues
+
+@inject ISaveManager Saves
+@inject NavigationManager Navigation
+@inject LeagueQueries LeagueQueries
+
+@if (Saves.Current is { } league)
+{
+	<PageTitle>@league.LeagueName · League</PageTitle>
+
+	@if (_structure is null)
+	{
+		<FluentSpinner />
+	}
+	else
+	{
+		<h1 class="gfo-league-title gfo-display">League</h1>
+		<div class="gfo-league-conferences">
+			@foreach (var conference in _structure.Conferences)
+			{
+				<FluentStack Orientation="Orientation.Vertical" VerticalGap="16px" data-testid="conference">
+					<div class="gfo-conference-header">
+						<h2 class="gfo-conference-name gfo-display">@conference.Name</h2>
+						<FluentDivider Class="gfo-conference-rule" />
+					</div>
+					@foreach (var division in conference.Divisions)
+					{
+						<FluentCard Width="100%" Shadow="CardShadow.None" Padding="@Padding.All5" data-testid="division">
+							<FluentText As="TextTag.H3" Size="TextSize.Size200" Weight="TextWeight.Semibold" Color="Color.Custom" CustomColor="var(--colorNeutralForeground2)" Block="true" Margin="@Margin.Bottom3">@division.Name</FluentText>
+							<FluentStack Orientation="Orientation.Vertical" VerticalGap="12px">
+								@foreach (var team in division.Teams)
+								{
+									<TeamLink Team="@team" CrestSize="24" />
+								}
+							</FluentStack>
+						</FluentCard>
+					}
+				</FluentStack>
+			}
+		</div>
+	}
+}
+
+@code {
+	private LeagueStructureDto? _structure;
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (Saves.Current is null)
+		{
+			Navigation.NavigateTo(Routes.MainMenu, replace: true);
+			return;
+		}
+
+		_structure = await Task.Run(() => LeagueQueries.GetStructureAsync());
+	}
+}

@@ -60,21 +60,21 @@
 
 ### 3.1 The board (D-103)
 
-The rest of M1 is story cards, in the order of work. A card's status lives only here: **Draft** (Claude wrote it) → **Ready** (you approved its criteria; Claude writes its tests and shells) → **Building** (you build until the tests pass) → **Checking** (Claude proves each test on a planted bug, checks the screens, builds the gallery and updates the docs) → **Done** (`./build.ps1` green, committed). One card is in Building or Checking at a time.
+The rest of M1 is story cards, in the order of work. A card's status is one word and the date it got there, the same here and on the card's first line, both changed in the same edit (D-104); what's blocking or left is on the card. **Draft** (Claude wrote it) → **Ready** (you approved its criteria; Claude writes its tests and shells) → **Building** (you build until the tests pass) → **Checking** (Claude proves each test on a planted bug, checks the screens, builds the gallery and updates the docs) → **Done** (`./build.ps1` green, committed). One card is in Building or Checking at a time.
 
 | Card | Outcome | Status |
 | --- | --- | --- |
-| [S-001](../stories/S-001_HOME_AND_TOP_BAR.md) | Home at `/home`, and the top bar names your team (half-built; finishing it makes `main` build again) | ✅ Done 2026-11-19 |
-| [S-002](../stories/S-002_LEAGUE_PAGE.md) | Browse the league by conference and division | Draft |
-| [S-003](../stories/S-003_TEAM_PAGE.md) | Every team has a page | Draft |
-| [S-004](../stories/S-004_HOME.md) | Home shows your team | Draft |
-| [S-005](../stories/S-005_PLAYER_PAGE.md) | A player's full profile | Draft |
-| [S-006](../stories/S-006_CONTRACT_BLOCK.md) | A player's contract, season by season | Draft |
-| [S-007](../stories/S-007_PLAYER_PEEK.md) | Every player name opens the peek | Draft |
-| [S-008](../stories/S-008_ROSTER_GRID.md) | A team's roster in a grid | Draft |
-| [S-009](../stories/S-009_ROSTER_PAGE.md) | Browse any roster by team and position | Draft |
-| [S-010](../stories/S-010_GRID_BUDGET.md) | The grid stays fast at 2,000 rows (enabler) | Draft |
-| [S-011](../stories/S-011_COMMAND_PALETTE.md) | Ctrl+K jumps to any player or team (three questions first) | Draft |
+| [S-001](../stories/S-001_HOME_AND_TOP_BAR.md) | Home at `/home`, and the top bar names your team (half-built; finishing it makes `main` build again) | ✅ Done · 2026-11-19 |
+| [S-002](../stories/S-002_LEAGUE_PAGE.md) | Browse the league by conference and division | Checking · 2026-11-24 |
+| [S-003](../stories/S-003_TEAM_PAGE.md) | Every team has a page | Draft · 2026-11-19 |
+| [S-004](../stories/S-004_HOME.md) | Home shows your team | Draft · 2026-11-19 |
+| [S-005](../stories/S-005_PLAYER_PAGE.md) | A player's full profile | Draft · 2026-11-19 |
+| [S-006](../stories/S-006_CONTRACT_BLOCK.md) | A player's contract, season by season | Draft · 2026-11-19 |
+| [S-007](../stories/S-007_PLAYER_PEEK.md) | Every player name opens the peek | Draft · 2026-11-19 |
+| [S-008](../stories/S-008_ROSTER_GRID.md) | A team's roster in a grid | Draft · 2026-11-19 |
+| [S-009](../stories/S-009_ROSTER_PAGE.md) | Browse any roster by team and position | Draft · 2026-11-19 |
+| [S-010](../stories/S-010_GRID_BUDGET.md) | The grid stays fast at 2,000 rows (enabler) | Draft · 2026-11-19 |
+| [S-011](../stories/S-011_COMMAND_PALETTE.md) | Ctrl+K jumps to any player or team (three questions first) | Draft · 2026-11-19 |
 
 ## 4. The work packages in detail
 

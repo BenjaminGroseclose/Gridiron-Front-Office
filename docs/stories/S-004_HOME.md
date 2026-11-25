@@ -1,5 +1,7 @@
 # S-004 · Home shows your team
 
+> **Status:** Draft · 2026-11-19
+>
 > **Kind:** Story · **Feature:** F-02 · **Milestone:** M1 · **Size:** S · **Needs:** S-003
 
 ## Outcome

@@ -49,7 +49,7 @@ Gridiron Front Office (GFO) is a single-player professional football franchise s
 
 ### Story cards
 
-Work is planned as story cards in [stories/](stories/) ([D-103](DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first)): one outcome each, small, with acceptance criteria whose tests are written before the code. A card's status lives on its milestone plan's board.
+Work is planned as story cards in [stories/](stories/) ([D-103](DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first)): one outcome each, small, with acceptance criteria whose tests are written before the code. A card's status (one word and a date) is on its first line and on its milestone plan's board ([D-104](DECISIONS.md#d-104-a-cards-status-is-on-the-card-and-on-the-board-one-word-and-a-date)).
 
 ### Feature specs
 

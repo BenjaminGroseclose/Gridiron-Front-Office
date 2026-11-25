@@ -1,8 +1,10 @@
 # S-xxx · <The outcome, in a few words>
 
+> **Status:** Draft · YYYY-MM-DD
+>
 > **Kind:** Story | Enabler | Bug · **Feature:** F-xx · **Milestone:** Mx · **Size:** S | M · **Needs:** S-xxx | —
 >
-> Copy this file to `docs/stories/S-xxx_SHORT_NAME.md`. IDs run in the order cards are written and are never reused. A card's status lives only on its milestone plan's board, never here ([D-103](../DECISIONS.md#d-103-work-is-planned-as-story-cards-their-tests-come-first)). An L is two cards. Keep it short: the rules live in the feature spec, the choices in DECISIONS.
+> Copy this file to `docs/stories/S-xxx_SHORT_NAME.md`. IDs run in the order cards are written and are never reused. The status is one word (Draft, Ready, Building, Checking, Done) and the date the card got there. It's on this first line and on the milestone plan's board, and both change in the same edit ([D-104](../DECISIONS.md#d-104-a-cards-status-is-on-the-card-and-on-the-board-one-word-and-a-date)). Anything more than the word (what's blocking, what's left) goes in the card's Work list. An L is two cards. Keep it short: the rules live in the feature spec, the choices in DECISIONS.
 
 ## Outcome
 

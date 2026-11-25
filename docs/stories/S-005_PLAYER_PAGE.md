@@ -1,5 +1,7 @@
 # S-005 · A player's full profile
 
+> **Status:** Draft · 2026-11-19
+>
 > **Kind:** Story · **Feature:** F-03 · **Milestone:** M1 · **Size:** M · **Needs:** S-003
 
 ## Outcome
