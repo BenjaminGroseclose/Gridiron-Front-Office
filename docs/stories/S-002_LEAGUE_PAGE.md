@@ -43,7 +43,7 @@ How the tests read the page (`tests/UI.Tests/League/LeaguePageTests.cs`):
 - [x] You, then Claude at your request (2026-11-24): the page, until the tests pass. The four `LeaguePageTests` pass.
 - [x] Claude: each test proven to fail on a planted bug; the page checked in a visible pane in Dark and Light with several team colors, at 1,280 px and under 1,100 px
 - [x] Docs: F-02 §8, the League page as built
-- [ ] You: `./build.ps1` green, then one commit: `(feat) *league* : browse the league by conference and division (S-002)`. **Blocked (2026-11-24):** the uncommitted `CrestSize="28"` in `MainLayout.razor` fails S-001's `A_pick_puts_your_teams_crest_and_name_in_the_brand_as_a_link_to_its_page`, which pins S-001 #4's 20 px crest. Either put it back to 20, or change S-001 #4 first and then its test. Stop `watch: DevHost` before `./build.ps1`: it locks the DevHost's DLLs.
+- [ ] You: `./build.ps1` green, then one commit: `(feat) *league* : browse the league by conference and division (S-002)`. The crest blocker is cleared (2026-11-25): the owner keeps the top bar's 28 px crest, so S-001 #4 and then its test now say 28, and all 284 UI tests pass. Stop `watch: DevHost` before `./build.ps1`: it locks the DevHost's DLLs.
 
 ## Built
 
@@ -67,7 +67,7 @@ How the tests read the page (`tests/UI.Tests/League/LeaguePageTests.cs`):
 | The heading "Leagues" | #3 |
 | No redirect without a league | #4 (`failed (canceled)`, the 10 s wait) |
 
-**Build:** every project except the DevHost (locked by the owner's running `watch: DevHost`) builds with `--no-incremental -warnaserror`. Fast tests: 1,050 of 1,051 pass. The one failure is S-001's top bar crest, from the uncommitted `CrestSize="28"`.
+**Build:** every project except the DevHost (locked by the owner's running `watch: DevHost`) builds with `--no-incremental -warnaserror`. Fast tests: 1,050 of 1,051 pass. The one failure was S-001's top bar crest, from the owner's `CrestSize="28"`; S-001 #4 now says 28, and the UI tests pass, 284 of 284 (2026-11-25).
 
 **Screens:**
 - **Setup:** the DevHost in a visible Chrome window, on the owner's "Start Check" save (Minneapolis Millers, #343A40).

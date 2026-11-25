@@ -34,7 +34,7 @@ public sealed class MainLayoutTopBarTests(GeneratedSeed42 seed) : RealScreenCont
 		link.GetAttribute("href").ShouldBe("/team/5");
 		Words(link).ShouldBe($"{team.City} {team.Nickname}");
 		var crest = link.QuerySelector("svg.gfo-team-mark").ShouldNotBeNull("The crest goes inside the link, before the name.");
-		crest.GetAttribute("width").ShouldBe("20");
+		crest.GetAttribute("width").ShouldBe("28");
 		crest.GetAttribute("aria-hidden").ShouldBe("true", "The name beside it already says which team it is.");
 		cut.FindAll(".gfo-wordmark").ShouldBeEmpty();
 		ContextOf(cut).ShouldBe(Context);
